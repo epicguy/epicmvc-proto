@@ -1,0 +1,4 @@
+#!/bin/sh
+cd util
+
+node makeit-view.js $1

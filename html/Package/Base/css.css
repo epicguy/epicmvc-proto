@@ -1,0 +1,6 @@
+.qq-upload-button-focus {border:1px dotted #FFF}
+.qq-upload-message {display:none}
+.qq-upload-message.qq-upload-spinner {
+    display:inline-block; background: url("loading.gif"); width:15px; height:15px; vertical-align:text-bottom;
+}
+

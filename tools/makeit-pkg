@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# TODO More logic to check user error $1 must be a dir under DevHtml/DeployHtml Package/$1
+
+rm -Ir DeployHtml/Package/$1
+cp -r DevHtml/Package/$1 DeployHtml/Package/.
+rm -r DeployHtml/Package/$1/{Extras,Model,view,*.coffee}
+
+cat \
+DevHtml/Package/$1/Model/*.coffee \
+DevHtml/Package/$1/Extras/*.coffee \
+| grep -v "'use strict'" > tmp0.coffee
+coffee -c tmp0.coffee
+cat copyright.js tmp0.js > DeployHtml/Package/$1/tmp.js
+uglifyjs DeployHtml/Package/$1/tmp.js > DeployHtml/Package/$1/min.js
+rm tmp0.{js,coffee}
+
+

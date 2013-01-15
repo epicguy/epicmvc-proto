@@ -1,0 +1,23 @@
+#!/bin/sh
+
+mkdir DeployHtml/js
+mkdir DeployHtml/Package
+cat \
+EpicMvc/Epic.coffee \
+EpicMvc/util.coffee \
+EpicMvc/ModelJS.coffee \
+EpicMvc/Issue.coffee \
+EpicMvc/Request.coffee \
+EpicMvc/AppConf.coffee \
+EpicMvc/ClickAction.coffee \
+EpicMvc/ConfExe.coffee \
+EpicMvc/ViewExe.coffee \
+EpicMvc/FistGroupCache.coffee \
+EpicMvc/Fist.coffee \
+EpicMvc/FistBack.coffee \
+EpicMvc/FistFilt.coffee \
+| grep -v "'use strict'" > EpicMvc-tmp0.coffee
+coffee -c EpicMvc-tmp0.coffee
+cat copyright.js EpicMvc-tmp0.js > EpicMvc-tmp.js
+uglifyjs EpicMvc-tmp.js > DeployHtml/js/EpicMvc-min.js
+rm EpicMvc-tmp0.*
