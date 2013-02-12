@@ -17,8 +17,14 @@ class bootstrap
 		@prefix= 'epic-dc-'
 		@firstId= 'epic-dc-first'
 		$('body').html @basePage
-		setTimeout (=> @Epic.click 0), 0
+		setTimeout (=> @HashCheck()), 0
 		true
+	HashCheck: () ->
+		req_inx= 0
+		if location.hash.length
+			oR= @Epic.request()
+			req_inx= oR.addLink _a:'external', hash:location.hash
+		@Epic.click req_inx
 	render: (content, first_time) ->
 		# TODO Could Implement a history-based method
 		# Must be in the DOM, before handler returns, to allow 'defered' logic to work properly

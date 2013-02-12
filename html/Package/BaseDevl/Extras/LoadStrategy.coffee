@@ -2,10 +2,12 @@
 class LoadStrategy
 	constructor: (@Epic) ->
 		@path= 'Package/Base/view/'
+		@cache= {}
 	getTmplNm: (nm) -> nm+ '.tmpl.html'
 	getPageNm: (nm) -> 'page/'+ nm+ '.page.html'
 	getPartNm: (nm) -> 'part/'+ nm+ '.part.html'
 	getFile: (nm) ->
+		return @cache[nm] if @cache[nm]?
 		results= false
 		@reverse_packages?=( @Epic.appconfs[i] for i in [@Epic.appconfs.length- 1..0])
 		for pkg in @reverse_packages
@@ -20,7 +22,7 @@ class LoadStrategy
 					console.log 'AJAX ERROR '
 			break if results isnt false
 		console.log 'NO FILE FOUND! '+ nm if results is false
-		String results
+		@cache[nm]= String results
 	getCombinedAppConfs: ->
 		result= {}
 		for pkg in @Epic.appconfs

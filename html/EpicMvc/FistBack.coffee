@@ -18,10 +18,11 @@ class FistBack
 	constructor: (@Epic,@fieldDef) ->
 		@filt= window.EpicMvc.FistFilt # Static class of filters
 		@ClearValues()
+		@Epic.log2 'FistBack.cons', @fieldDef
 
 	# These three functions constitute the public interface to a Fist
 
-	SetDbValues: (data) -> # Not from Html post, calls Db2Html
+	SetHtmlValuesFromDb: (data) -> # Not from Html post, calls Db2Html
 		@Epic.log2 'SetDbValues data:', data
 		@DbNames() # Load up the local list
 		@Epic.log2 'SetDbValues DbNames:', @DbNames()
@@ -29,6 +30,7 @@ class FistBack
 		@Db2Html()
 		@Epic.log2 'SetDbValues fb_HTML:', @fb_HTML
 	ClearValues: () ->
+		@Epic.log2 'FistBack.ClearValues'
 		@fb_DB= {} # Hash
 		@fb_HTML= {} # Hash
 	FistValidate: (data) -> # Data is from an html post (not a hash of db names)
@@ -49,42 +51,49 @@ class FistBack
 	# Below are all 'internanl' functions
 
 	DbNames: () -> # list of fields at DB level (no psuedo fields)
-		@fb_DB_names?= (nm for nm of @fieldDef) #TODO Use db_nm & build a hash
+		if not @fb_DB_names?
+			@dbNm2HtmlNm= {}
+			@dbNm2HtmlNm[rec.db_nm]= nm for nm,rec of @fieldDef
+			@fb_DB_names?=( db_nm for db_nm of @dbNm2HtmlNm)
+		@fb_DB_names
 
 	Make: (token, data) -> window.EpicMvc.Issue.Make @Epic, token, data
 
 	Html2Html: (p) ->
-		for nm in @DbNames() # TODO @getHtmlPostedFieldsList()
+		for nm of @fieldDef # TODO HANDLE 'SUB' FISTS?
 			@fb_HTML[ nm]= @filt.H2H_generic nm, @fieldDef[ nm].h2h, p[ nm]
 		return
 
 	Html2Db: () ->
-		for nm in @DbNames()
-			field = @fieldDef[ nm]
+		f= 'FistBack.Html2Db'
+		for nm,field of @fieldDef
 			psuedo_prefix = ""
 			# Psuedo fields need data pulled from other fields
 			if field.type isnt 'psuedo' then value= @fb_HTML[ nm]
 			else
 				psuedo_prefix= '_psuedo'
 				# Multiple fields in one, make a list; filter will combine them
-				value = (@fb_HTML[nm + '-' + nm] for nm in field.cdata)
-			@fb_DB[ nm]= @filt['H2D_' + field.h2d + psuedo_prefix] nm, field.h2d_expr, value
+				value=( @fb_HTML[nm + '-' + p_nm] for p_nm in field.cdata)
+			@Epic.log2 f, 'H2D_', nm, field.db_nm, value
+			@fb_DB[ field.db_nm]= @filt['H2D_' + field.h2d + psuedo_prefix] nm, field.h2d_expr, value
+		@Epic.log2 f, 'fb_DB', @fb_DB
 		return
 
 	Check: () ->
 		@Epic.log2 'Check: ', @DbNames()
 		issue = new window.EpicMvc.Issue @Epic
-		for nm in @DbNames()
+		for db_nm in @DbNames()
+			nm= @dbNm2HtmlNm[ db_nm]
 			#if not (nm of @fieldDef) then throw 'What is up with DbNames? '+ nm
 			field = @fieldDef[ nm]
 			# If psuedo, validate sub fields first, then main field's value if no errors
-			if field.type isnt 'psuedo'then issue.call @Validate nm, @fb_DB[ nm]
+			if field.type isnt 'psuedo' then issue.call @Validate nm, @fb_DB[ db_nm]
 			else
 				start_issue_count = issue.count(); # Increases if psuedo and has sub-field errors
 				for p_nm in field.cdata
 					issue.call @Validate p_nm, @fb_HTML[ nm+ '-'+ p_nm]
 				if start_issue_count is issue.count()
-					issue.call @Validate nm, @fb_DB[ nm]
+					issue.call @Validate nm, @fb_DB[ db_nm]
 		issue
 	Validate: (fieldName, value) ->
 		@Epic.log2 'Validate:', fieldName, value
@@ -102,27 +111,28 @@ class FistBack
 		return true # Value passes filter check
 
 	Db2Html: () ->
-		for nm in @DbNames()
+		for db_nm in @DbNames()
+			nm= @dbNm2HtmlNm[db_nm]
 			field= @fieldDef[ nm]
 			psuedo_fl= if field?.type is 'psuedo' then true else false
 			# Not all fields are populated, TagExe display the default value in that case
-			if not (nm of @fb_DB)
+			if not (db_nm of @fb_DB)
 				if not psuedo_fl then delete @fb_HTML[ nm]
 				else delete @fb_HTML[ subfield] for subfield in field.cdata
 				continue
 			# Pull from DB, then put in various places in Html (if psuedo)
-			value = @fb_DB[ nm]
+			value = @fb_DB[ db_nm]
 			psuedo_prefix = ""
 			# Psuedo fields need data pulled other fields
-			if not psuedo_fl then @fb_HTML[ nm]= @filt['D2H_'+ field.d2h] nm, field.d2h_expr, value
+			if not psuedo_fl then @fb_HTML[ nm]= @filt['D2H_'+ field.d2h] db_nm+'%'+nm, field.d2h_expr, value
 			else
 				# filter will know what to do, and then move a 'list' to the right place
 				switch field.cdata.length
-					when 0 then throw 'Requires cdata with psuedo: '+ nm
+					when 0 then throw 'Requires cdata with psuedo: '+ db_nm+'%'+nm
 					when 1 then BROKEN()
 					else
 						# Multiple fields in one, make a list; filter will combine them
-						list= @filt['D2H_' + field.d2h + '_psuedo'] nm, field.d2h_expr, value
+						list= @filt['D2H_' + field.d2h + '_psuedo'] db_nm+'%'+nm, field.d2h_expr, value
 						@fb_HTML[ nm+ '-'+ p_nm]= list[ i] for p_nm, i in field.cdata
 
 window.EpicMvc.FistBack= FistBack # Pubilc API

@@ -59,7 +59,7 @@ class Fist
 		if @form_state is 'empty'
 			@oM.fistLoadData @ # Delegate to our 'model'
 			@form_state= 'loaded' # Consider it loaded, no matter what
-	setDbValuesFromModel: (data) -> @fb.SetDbValues data; @form_state= 'loaded'; return
+	setFromDbValues: (data) -> @fb.SetHtmlValuesFromDb data; @form_state= 'loaded'; return
 	eventNewRequest: -> @clearValues(); @upload_todo= []; @uploaded_fl= {}; return
 	clearValues: ->
 		if @form_state isnt 'empty' then @fb.ClearValues(); @form_state= 'empty'

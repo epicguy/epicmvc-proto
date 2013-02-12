@@ -20,7 +20,7 @@ class Epic
 		@guard_run= false; # Protect @run from being called more than once
 
 	#log2: (s,o,a,b) -> console.log s, o #TODO
-	#log2: console.log #TODO
+	#log2: window.Function.prototype.bind.call( window.console.log, window.console)
 	log2: () -> null
 	nextCounter: -> ++@counter
 	getInstanceNm: (view_nm) ->
@@ -37,7 +37,7 @@ class Epic
 		@getInstance( a[0]).getTable a[1]
 	getLookaheadClick: (planned_action) ->
 		sp= @getInstance( 'Pageflow').getStepPath()
-		@oAppConf.findClick sp, planned_action
+		@oAppConf.findClick planned_action, sp
 	getDomCache: ->
 		sp= @getInstance( 'Pageflow').getStepPath()
 		attr= @oAppConf.getS( sp[0], sp[1], sp[2]).dom_cache

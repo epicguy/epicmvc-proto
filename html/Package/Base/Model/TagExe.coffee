@@ -23,7 +23,7 @@ class TagExe
 					# Default spec
 					# if val is set, xlate spec to a string w/replaced spaces using first char
 					# Ex. &Model/Table/flag#.Replace.with.this.string; (Don't use / or ; or # in the string though)
-					if (typeof val== 'number' && val) || val?.length
+					if (val is true or (typeof val== 'number' && val)) or val?.length
 						spec.substr(1).replace (new RegExp '['+ spec.substr(0,1)+ ']', 'g'), ' '
 					else ''
 				else val
@@ -127,18 +127,20 @@ class TagExe
 			oMd= @Epic.getInstance lh
 			tbl= oMd.getTable rh
 		return '' if tbl.length is 0 # No rows means no output
-		@info_foreach[rh]= {}
+		rh_alias= rh # User may alias the tbl name, for e.g. reusable include-parts
+		rh_alias= @viewExe.handleIt oPt.attrs.alias if 'alias' of oPt.attrs
+		@info_foreach[rh_alias]= {}
 		break_rows_list= @calcBreak tbl.length, oPt
 		out= ''
 		limit= tbl.length
 		limit= Number( @viewExe.handleIt oPt.attrs.limit)- 1 if 'limit' of oPt.attrs
 		for row, count in tbl
 			break if count> limit
-			@info_foreach[rh].row= $.extend true, {}, row,
+			@info_foreach[rh_alias].row= $.extend true, {}, row,
 				_FIRST: count is 0, _LAST: count is tbl.length- 1,
 				_SIZE:tbl.length, _COUNT:count, _BREAK: count+ 1 in break_rows_list
 			out+= @viewExe.doAllParts oPt.parts
-		@info_foreach[rh]= null
+		delete @info_foreach[rh_alias]
 		out
 	calcBreak: (sZ,oPt) -> # Using oPt, build list of row#s to break on
 		p= oPt.attrs # shortcut
