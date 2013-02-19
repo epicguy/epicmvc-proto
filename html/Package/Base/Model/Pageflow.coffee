@@ -4,8 +4,8 @@
 class Pageflow extends window.EpicMvc.ModelJS
 	constructor: (epic,view_nm) ->
 		super epic, view_nm # Inits @Epic, @view_nm, @Table
-		@sp= [] # Save-path stack
-		@state_nms= ['f', 't', 's', 'sp']
+		#@sp= [] # Save-path stack
+		@ss= f: null, t: null, s: null, sp: [] # Save-path stack
 		@eventNewRequest()
 	eventNewRequest: ->
 		@issues= new window.EpicMvc.Issue @Epic
@@ -35,8 +35,8 @@ class Pageflow extends window.EpicMvc.ModelJS
 			when 'save_path' then @sp.push [@f, @t, @s]
 			when 'path'
 				q= p.path.split '/'
-				for v,i in [@f, @t, @s]
-					if not (q[i]?.length) then q[i]= v else break # Stop at first set value, rest will default
+				for v,ix in [@f, @t, @s]
+					if not (q[ix]?.length) then q[ix]= v else break # Stop at first set value, rest will default
 				@goTo q[0], q[1], q[2]
 			when 'restore_path'
 				if @sp.length then q= @sp.pop(); @goTo q[0], q[1], q[2]

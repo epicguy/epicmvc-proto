@@ -3,6 +3,7 @@ class LoadStrategy
 	constructor: (@Epic) ->
 		@path= 'Package/Base/view/'
 		@cache= {}
+		@cache_local_flag= true # False if we want browser to cache responses
 	getTmplNm: (nm) -> nm+ '.tmpl.html'
 	getPageNm: (nm) -> 'page/'+ nm+ '.page.html'
 	getPartNm: (nm) -> 'part/'+ nm+ '.part.html'
@@ -15,14 +16,14 @@ class LoadStrategy
 			window.$.ajax
 				url: path+ nm
 				async:false
-				cache:false
+				cache: if @cache_local_flag then false else true
 				dataType: 'text',
 				success: (data) -> results= data
 				error: (jqXHR,textStatus,errorThrown) ->
 					console.log 'AJAX ERROR '
 			break if results isnt false
 		console.log 'NO FILE FOUND! '+ nm if results is false
-		@cache[nm]= String results
+		@cache[nm]= String results if @cache_local_flag
 	getCombinedAppConfs: ->
 		result= {}
 		for pkg in @Epic.appconfs

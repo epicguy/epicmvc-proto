@@ -4,13 +4,13 @@
 class ViewExe
 	constructor: (@Epic,@loadStrategy) ->
 	init: (template, page) ->
-		@Epic.log2 'Page:'+ page, (v for v in (@Epic.getInstance 'Pageflow').getStepPath()).join '/'
+		@Epic.log2 'Template:', template, 'Page:'+ page, (v for v in (@Epic.getInstance 'Pageflow').getStepPath()).join '/'
 		@oTemplate= @loadStrategy.template template
 		@oPage= @loadStrategy.page page
 		@stack= []
 		@defer= []
 		@TagExe= @Epic.getInstance 'Tag'
-		@TagExe.resetForNextRequest()
+		@TagExe.resetForNextRequest template, page
 		@current= null
 	pushDefer: (code) -> @defer.push code
 	doDefer: ->

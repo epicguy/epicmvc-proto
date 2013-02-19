@@ -5,7 +5,7 @@ class Request
 	constructor: (@Epic) ->
 		@click_link= ['zero']
 		@link= []
-	start: (link_index) ->
+	start: (link_index) -> # Gather form data; restore pageflow state
 		@link= @click_link[link_index]
 		if @link._b? # It was a 'button'; grab the form data
 			form_data= @Epic.getFormData()

@@ -17,9 +17,12 @@ class Epic
 		@oModel= {} # Model instances, including e.g. Pageflow, Tag, Security
 		@oFist= {} # Fist instances
 		@counter= 0 # A counter value to get unique numbers per epic instance
-		@guard_run= false; # Protect @run from being called more than once
+		@guard_run= false # Protect @run from being called more than once
+		@inClick= false
+		@modelState= {}
 
-	#log2: (s,o,a,b) -> console.log s, o #TODO
+	#log1: window.Function.prototype.bind.call( window.console.log, window.console)
+	log1: () -> null
 	#log2: window.Function.prototype.bind.call( window.console.log, window.console)
 	log2: () -> null
 	nextCounter: -> ++@counter
@@ -29,8 +32,10 @@ class Epic
 		inst_nm= @oAppConf.getObj view_nm, 'inst'
 		if inst_nm not of @oModel
 			cls= @oAppConf.getObj view_nm, 'class'
-			BROKE() if cls not of window.EpicMvc.Model
+			UNKOWN_MODEL() if cls not of window.EpicMvc.Model
 			@oModel[inst_nm]= new window.EpicMvc.Model[ cls] @, view_nm
+			#@log2 ':getInstance', inst_nm, @modelState
+			@oModel[inst_nm].restoreState @modelState[inst_nm] if inst_nm of @modelState
 		@oModel[inst_nm]
 	getViewTable: (view_tbl_nm) ->
 		a= view_tbl_nm.split '/'
@@ -86,26 +91,28 @@ class Epic
 		false
 	getFormData: -> @renderer.getFormData()
 	renderStrategy: (content,first_time) ->
-		@renderer.render content, first_time
+		@renderer.render content, @inClick
 		null
-	render: (template,page,first_time,avoid_form_reset) ->
+	render: (template,page,avoid_form_reset) ->
 		@oView.init template, page
 		try
 			stuff= @oView.run()
 		catch e
 			if @isSecurityError e then return e
 			else throw e
-		@renderStrategy stuff, first_time
+		@renderStrategy stuff
 		o.eventInitializePage?() for k,o of @oFist if avoid_form_reset isnt true # Load widgets (i.e. fileuploader)
 		true # No security issues
 	refresh: (forTables) =>
 		if @inClick is true
 			setTimeout (=> @refresh forTables), 500
-		else @renderSecure false, true if @oView.checkRefresh forTables
+		else @renderSecure true if @oView.checkRefresh forTables
 	click: (click_index) ->
-		if @inClick is true then alert 'WARNING: You are already in click'
+		f= ':click'
+		@log2 f, click_index
+		if @inClick isnt false then alert 'WARNING: You are already in click'
+		@inClick= click_index
 		window.event?.returnValue = false #IE
-		@inClick= true
 		o.eventNewRequest?() for k,o of @oFist # Removing state where appropriate
 		o.eventNewRequest?() for k,o of @oModel
 		@oRequest.start click_index if click_index
@@ -114,9 +121,11 @@ class Epic
 		oPf= @getInstance 'Pageflow'
 		oPf.setIssues click_result[0]
 		oPf.setMessages click_result[1]
-		@renderSecure !click_index
+		@modelState= {}
+		@modelState[k]= ss for k,o of @oModel when o.saveState? and ss= o.saveState()
+		@renderSecure()
 		@inClick= false
-	renderSecure: (first_time,avoid_form_reset) ->
+	renderSecure: (avoid_form_reset) ->
 		oC= new window.EpicMvc.ClickAction @
 		oPf= @getInstance 'Pageflow'
 		render_result= false
@@ -129,8 +138,14 @@ class Epic
 			sp= oPf.getStepPath()
 			template= @oAppConf.findTemplate sp
 			# Attempt to render view (by loading template, page, etc.)
-			render_result= @render template, @oAppConf.getPage( sp), first_time, avoid_form_reset
+			render_result= @render template, @oAppConf.getPage( sp), avoid_form_reset
 		# Process defered logic (e.g. generate keyup in a listview-filter) <epic:defer>
 		@oView.doDefer()
+	getModelState: -> @modelState
+	setModelState: (s) ->
+		@modelState= s if s?
+		#@log2 ':setModelState', s, @modelState
+		for inst_nm of @oModel
+			@oModel[inst_nm].restoreState? @modelState[inst_nm]
 
 window.EpicMvc= Extras: {}, Model: {}, Epic: new Epic() # Singleton, Public API

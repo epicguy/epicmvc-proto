@@ -12,3 +12,11 @@ logs
 results
 
 npm-debug.log
+
+tools/DeployHtml
+tools/DevHtml
+tools/EpicMvc
+tools/EpicMvc-tmp.js
+
+tools/util/node_modules
+

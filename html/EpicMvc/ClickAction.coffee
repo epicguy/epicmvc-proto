@@ -4,13 +4,14 @@
 class ClickAction
 	constructor: (@Epic) ->
 	click: (action_token, path) ->
+		f= ":ClickAction.click(#{action_token})"
 		issue= new window.EpicMvc.Issue @Epic
 		message= new window.EpicMvc.Issue @Epic
 		if not action_token?
 			if not action_token= @Epic.request().haveAction()
 				return [issue, message] # No action
 			path= @Epic.getInstance('Pageflow').getStepPath()
-		@Epic.log2 'click:'+ action_token
+		#@Epic.log2 'click:'+ action_token
 		click_node= @Epic.appConf().findClick path, action_token
 		if not click_node? then return [issue, message] # No recognized action
 		r= @doAction click_node, {}
@@ -20,24 +21,27 @@ class ClickAction
 		while rNode
 			if --limit< 0 then throw 'Max recurse limit ClickAction.click'
 			r= @doAction rNode, rResults
+			#@Epic.log2 f, '@doAction-result', r
 			[rNode, rResults, rIssues, rMessages]= r
 			issue.addObj rIssues; message.addObj rMessages
 		[issue, message]
 	doAction: (node, prev_action_result) ->
-		@Epic.log2 'doAction ', node.getTarget(), ("#{k}=#{v}" for k,v of node.getPAttrs()).join ', '
+		f= ":ClickAction.doAction(#{node.getTarget()})"
+		#@Epic.log2 f, 'getPAttrs', ("#{k}=#{v}" for k,v of node.getPAttrs()).join ', '
 		r_vals= @Epic.request().getValues()
 		a_params_list= @pullValueUsingAttr node, r_vals, prev_action_result
 		class_method= node.getTarget() # Call= or Macro= 's value
-		@Epic.log2 'doAction[r_vals,a_params_list,class_method]', r_vals, a_params_list, class_method
+		#@Epic.log2 f, pul_val: a_params_list, ep_req_vals: r_vals, prev_actn_res: prev_action_result
 		look_for_macro_result_tags= false
 		if node.hasMacro()
-			macro_node= @Epic.appConf().getMacro class_method
+			macro_node= @Epic.appConf().getMacroNode class_method
 			alias_params= @pullValueUsingAttr macro_node, r_vals, prev_action_result
 			class_method= macro_node.getTarget()
-			if macro_node.hasResult() then look_for_macro_result_tags= true
+			if macro_node.hasResult() then look_for_macro_result_tags= true # Else use caller node's RESULT?
 			for own k,v of alias_params
 				a_params_list[k]= v
 		r= @Epic.Execute class_method, a_params_list
+		#@Epic.log2 f, '@Epic.Execute-result', r
 		[rResults, rIssues, rMessages]= r
 		found_result_tag=
 			(if look_for_macro_result_tags then macro_node else node).matchResult rResults
@@ -54,12 +58,15 @@ class ClickAction
 			$.extend a_params_list, @pullValues prev_action_result, attr.split( ','), 'use_result'
 		a_params_list
 	pullValues: (source,value_list,attr_nm) ->
+		f= ':ClickAction.pullValues'
+		#@Epic.log2 f, source:source,value_list:value_list,attr_nm:attr_nm
 		out_list= {}
 		for nm_alias in value_list
 			switch attr_nm
-				when 'use_fields' then [nm, alias]= nm_alias.split ':'; alias?= nm
+				when 'use_fields','use_result' then [nm, alias]= nm_alias.split ':'; alias?= nm
 				else nm= alias= nm_alias
 			out_list[ alias]= source[ nm]
+		#@Epic.log2 f, out_list: out_list
 		out_list
 
 window.EpicMvc.ClickAction= ClickAction # Public API

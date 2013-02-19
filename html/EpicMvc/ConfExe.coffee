@@ -28,6 +28,7 @@ class ConfExe
 		true
 	getTarget: -> @node.call || @node.macro
 	hasMacro: -> if @node.call? then false else true
+	hasResult: -> if @node.RESULTS? then true else false
 	getPAttrs: -> @node.p || null
 	getRAttrs: -> @node.r || null
 	hasAttr: (nm) -> @node[nm] || false

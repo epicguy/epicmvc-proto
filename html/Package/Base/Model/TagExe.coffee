@@ -40,7 +40,6 @@ class TagExe
 	getFistForField: (fl_nm) ->
 		for flist_nm, oFi of @fist_objects
 			return oFi # TODO First entry for now
-	Tag_TOP_TAG: (oPt) -> @viewExe.doAllParts oPt.parts
 	Tag_page_part: (oPt) -> @viewExe.includePart @viewExe.handleIt oPt.attrs.part
 	Tag_page: (oPt) -> @viewExe.includePage()
 	Tag_defer: (oPt) -> #TODO OUTPUT CODE INTO SCRIPT TAG WITH FUNCTION WRAPPER TO CALL, FOR BETTER DEBUG
@@ -104,8 +103,8 @@ class TagExe
 					break
 				when 'not_set', 'set'
 					flip= true if nm is 'not_set'
-					found_true= if (typeof val== 'number' && val) ||
-						(typeof val== 'string' && val.length> 0 and not val.match(/^no|false|n|0$/i) )
+					found_true= if val is true or (typeof val is 'number' && val) or
+						(typeof val is 'string' && val.length> 0 and not val.match(/^no|false|n|0$/i) )
 						then true else false
 					break
 			found_true= not found_true if flip

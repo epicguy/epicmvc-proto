@@ -2,14 +2,18 @@
 (function() {
   'use strict';
 
-  var bootstrap;
+  var bootstrap,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   bootstrap = (function() {
 
     function bootstrap(Epic) {
       var _this = this;
       this.Epic = Epic;
+      this.onPopState = __bind(this.onPopState, this);
+
       this.very_first = true;
+      this.was_popped = false;
       this.baseUrl = window.document.location.pathname;
       this.baseId = "epic-new-page";
       this.basePage = '<div data-role="page" id="epic-new-page" data-theme="a" data-url="empty"></div>';
@@ -17,27 +21,11 @@
       this.firstId = 'epic-dc-first';
       $('body').html(this.basePage);
       setTimeout((function() {
-        return _this.HashCheck();
+        return _this.onPopState(true);
       }), 0);
+      window.onpopstate = this.onPopState;
       true;
     }
-
-    bootstrap.prototype.HashCheck = function() {
-      var oR, req_inx;
-      req_inx = 0;
-      if (location.hash.length) {
-        oR = this.Epic.request();
-        req_inx = oR.addLink({
-          _a: 'external',
-          hash: location.hash
-        });
-      }
-      return this.Epic.click(req_inx);
-    };
-
-    bootstrap.prototype.render = function(content, first_time) {
-      return $('#' + this.baseId).html(content);
-    };
 
     bootstrap.prototype.getFormData = function() {
       return $('form').serializeArray();
@@ -105,6 +93,58 @@
           html += "\n</select>";
       }
       return html;
+    };
+
+    bootstrap.prototype.onPopState = function(event) {
+      var f, req_inx;
+      f = 'E:bootstrap.onPopState: ';
+      if (event === true) {
+        if (this.was_popped || !this.very_first) {
+          return;
+        }
+      }
+      this.was_popped = true;
+      if (this.very_first) {
+        req_inx = this.Epic.request().addLink({
+          _a: 'browser_hash',
+          hash: location.hash.substr(1)
+        });
+        this.Epic.click(req_inx);
+      } else {
+        if (event.state) {
+          this.Epic.setModelState(event.state);
+        }
+        this.Epic.renderSecure();
+      }
+    };
+
+    bootstrap.prototype.render = function(content, click_index) {
+      var f;
+      f = 'E:bootstrap.render: ';
+      $('#' + this.baseId).html(content);
+      this.handleRenderState(click_index);
+      this.was_popped = false;
+      this.very_first = false;
+    };
+
+    bootstrap.prototype.handleRenderState = function(click_index) {
+      var displayHash, f, model_state, new_hash;
+      f = 'E:bootstrap.handleRenderState';
+      displayHash = this.very_first ? '' : 'click-' + click_index;
+      new_hash = this.Epic.getDomCache();
+      if (new_hash === false) {
+        new_hash = this.Epic.getExternalUrl();
+      }
+      if (new_hash !== false) {
+        displayHash = new_hash;
+      }
+      model_state = this.Epic.getModelState();
+      if (this.very_first) {
+        window.history.replaceState(model_state, displayHash, '#' + displayHash);
+      } else if (!this.was_popped) {
+        window.history.pushState(model_state, displayHash, '#' + displayHash);
+      }
+      this.very_first = false;
     };
 
     return bootstrap;

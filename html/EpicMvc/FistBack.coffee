@@ -18,19 +18,19 @@ class FistBack
 	constructor: (@Epic,@fieldDef) ->
 		@filt= window.EpicMvc.FistFilt # Static class of filters
 		@ClearValues()
-		@Epic.log2 'FistBack.cons', @fieldDef
+		#@Epic.log2 'FistBack.cons', @fieldDef
 
 	# These three functions constitute the public interface to a Fist
 
 	SetHtmlValuesFromDb: (data) -> # Not from Html post, calls Db2Html
-		@Epic.log2 'SetDbValues data:', data
+		#@Epic.log2 'SetDbValues data:', data
 		@DbNames() # Load up the local list
-		@Epic.log2 'SetDbValues DbNames:', @DbNames()
+		##@Epic.log2 'SetDbValues DbNames:', @DbNames()
 		@fb_DB[k]= v for k,v of data # Clone
 		@Db2Html()
-		@Epic.log2 'SetDbValues fb_HTML:', @fb_HTML
+		#@Epic.log2 'SetDbValues fb_HTML:', @fb_HTML
 	ClearValues: () ->
-		@Epic.log2 'FistBack.ClearValues'
+		#@Epic.log2 'FistBack.ClearValues'
 		@fb_DB= {} # Hash
 		@fb_HTML= {} # Hash
 	FistValidate: (data) -> # Data is from an html post (not a hash of db names)
@@ -74,13 +74,13 @@ class FistBack
 				psuedo_prefix= '_psuedo'
 				# Multiple fields in one, make a list; filter will combine them
 				value=( @fb_HTML[nm + '-' + p_nm] for p_nm in field.cdata)
-			@Epic.log2 f, 'H2D_', nm, field.db_nm, value
+			#@Epic.log2 f, 'H2D_', nm, field.db_nm, value
 			@fb_DB[ field.db_nm]= @filt['H2D_' + field.h2d + psuedo_prefix] nm, field.h2d_expr, value
-		@Epic.log2 f, 'fb_DB', @fb_DB
+		#@Epic.log2 f, 'fb_DB', @fb_DB
 		return
 
 	Check: () ->
-		@Epic.log2 'Check: ', @DbNames()
+		#@Epic.log2 'Check: ', @DbNames()
 		issue = new window.EpicMvc.Issue @Epic
 		for db_nm in @DbNames()
 			nm= @dbNm2HtmlNm[ db_nm]
@@ -96,7 +96,7 @@ class FistBack
 					issue.call @Validate nm, @fb_DB[ db_nm]
 		issue
 	Validate: (fieldName, value) ->
-		@Epic.log2 'Validate:', fieldName, value
+		#@Epic.log2 'Validate:', fieldName, value
 		field= @fieldDef[ fieldName]
 		if (not value?) or value.length is 0
 			if field.req is true # Value is empty, but required

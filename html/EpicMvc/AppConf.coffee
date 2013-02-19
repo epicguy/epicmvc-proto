@@ -11,7 +11,7 @@ class AppConf
 	getObj: (view_name,attribute) ->
 
 		if view_name not of @config.MODELS
-			a= @config.XXX[ view_name+'#the-view-name#'+(nm for nm of @config.MODELS)]
+			throw new Error 'APP_MODELS_UNKNOWN_VIEW_NAME::'+view_name
 		if attribute not of @config.MODELS[view_name]
 			a= @confiig.XXX[ view_name+'#'+attribute+'#'+(nm for nm of @config.MODELS[view_name])]
 
@@ -59,6 +59,10 @@ class AppConf
 	getPage: (p) -> @getS(p[0],p[1],p[2]).page
 
 	getMacro: (nm) -> @config.MACROS[nm]
+	getMacroNode: (nm) ->
+		node= @getMacro nm
+		return new window.EpicMvc.ConfExe node if node
+		false
 
 	loginF: -> @config.OPTIONS.login.flow
 

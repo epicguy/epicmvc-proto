@@ -11,24 +11,19 @@
       this.fieldDef = fieldDef;
       this.filt = window.EpicMvc.FistFilt;
       this.ClearValues();
-      this.Epic.log2('FistBack.cons', this.fieldDef);
     }
 
     FistBack.prototype.SetHtmlValuesFromDb = function(data) {
       var k, v;
-      this.Epic.log2('SetDbValues data:', data);
       this.DbNames();
-      this.Epic.log2('SetDbValues DbNames:', this.DbNames());
       for (k in data) {
         v = data[k];
         this.fb_DB[k] = v;
       }
-      this.Db2Html();
-      return this.Epic.log2('SetDbValues fb_HTML:', this.fb_HTML);
+      return this.Db2Html();
     };
 
     FistBack.prototype.ClearValues = function() {
-      this.Epic.log2('FistBack.ClearValues');
       this.fb_DB = {};
       return this.fb_HTML = {};
     };
@@ -101,15 +96,12 @@
             return _results;
           }).call(this);
         }
-        this.Epic.log2(f, 'H2D_', nm, field.db_nm, value);
         this.fb_DB[field.db_nm] = this.filt['H2D_' + field.h2d + psuedo_prefix](nm, field.h2d_expr, value);
       }
-      this.Epic.log2(f, 'fb_DB', this.fb_DB);
     };
 
     FistBack.prototype.Check = function() {
       var db_nm, field, issue, nm, p_nm, start_issue_count, _i, _j, _len, _len1, _ref, _ref1;
-      this.Epic.log2('Check: ', this.DbNames());
       issue = new window.EpicMvc.Issue(this.Epic);
       _ref = this.DbNames();
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -135,7 +127,6 @@
 
     FistBack.prototype.Validate = function(fieldName, value) {
       var field;
-      this.Epic.log2('Validate:', fieldName, value);
       field = this.fieldDef[fieldName];
       if ((!(value != null)) || value.length === 0) {
         if (field.req === true) {

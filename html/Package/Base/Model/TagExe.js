@@ -78,10 +78,6 @@
       }
     };
 
-    TagExe.prototype.Tag_TOP_TAG = function(oPt) {
-      return this.viewExe.doAllParts(oPt.parts);
-    };
-
     TagExe.prototype.Tag_page_part = function(oPt) {
       return this.viewExe.includePart(this.viewExe.handleIt(oPt.attrs.part));
     };
@@ -231,7 +227,7 @@
             if (nm === 'not_set') {
               flip = true;
             }
-            found_true = (typeof val === 'number' && val) || (typeof val === 'string' && val.length > 0 && !val.match(/^no|false|n|0$/i)) ? true : false;
+            found_true = val === true || (typeof val === 'number' && val) || (typeof val === 'string' && val.length > 0 && !val.match(/^no|false|n|0$/i)) ? true : false;
             break;
         }
         if (flip) {

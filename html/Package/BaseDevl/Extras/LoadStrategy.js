@@ -8,6 +8,7 @@
       this.Epic = Epic;
       this.path = 'Package/Base/view/';
       this.cache = {};
+      this.cache_local_flag = true;
     }
 
     LoadStrategy.prototype.getTmplNm = function(nm) {
@@ -45,7 +46,7 @@
         window.$.ajax({
           url: path + nm,
           async: false,
-          cache: false,
+          cache: this.cache_local_flag ? false : true,
           dataType: 'text',
           success: function(data) {
             return results = data;
@@ -61,7 +62,9 @@
       if (results === false) {
         console.log('NO FILE FOUND! ' + nm);
       }
-      return this.cache[nm] = String(results);
+      if (this.cache_local_flag) {
+        return this.cache[nm] = String(results);
+      }
     };
 
     LoadStrategy.prototype.getCombinedAppConfs = function() {

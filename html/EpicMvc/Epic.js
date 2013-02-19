@@ -33,7 +33,13 @@
       this.oFist = {};
       this.counter = 0;
       this.guard_run = false;
+      this.inClick = false;
+      this.modelState = {};
     }
+
+    Epic.prototype.log1 = function() {
+      return null;
+    };
 
     Epic.prototype.log2 = function() {
       return null;
@@ -54,9 +60,12 @@
       if (!(inst_nm in this.oModel)) {
         cls = this.oAppConf.getObj(view_nm, 'class');
         if (!(cls in window.EpicMvc.Model)) {
-          BROKE();
+          UNKOWN_MODEL();
         }
         this.oModel[inst_nm] = new window.EpicMvc.Model[cls](this, view_nm);
+        if (inst_nm in this.modelState) {
+          this.oModel[inst_nm].restoreState(this.modelState[inst_nm]);
+        }
       }
       return this.oModel[inst_nm];
     };
@@ -160,11 +169,11 @@
     };
 
     Epic.prototype.renderStrategy = function(content, first_time) {
-      this.renderer.render(content, first_time);
+      this.renderer.render(content, this.inClick);
       return null;
     };
 
-    Epic.prototype.render = function(template, page, first_time, avoid_form_reset) {
+    Epic.prototype.render = function(template, page, avoid_form_reset) {
       var k, o, stuff, _ref;
       this.oView.init(template, page);
       try {
@@ -176,7 +185,7 @@
           throw e;
         }
       }
-      this.renderStrategy(stuff, first_time);
+      this.renderStrategy(stuff);
       if (avoid_form_reset !== true) {
         _ref = this.oFist;
         for (k in _ref) {
@@ -197,20 +206,22 @@
         }), 500);
       } else {
         if (this.oView.checkRefresh(forTables)) {
-          return this.renderSecure(false, true);
+          return this.renderSecure(true);
         }
       }
     };
 
     Epic.prototype.click = function(click_index) {
-      var click_result, k, o, oC, oPf, _ref, _ref1, _ref2;
-      if (this.inClick === true) {
+      var click_result, f, k, o, oC, oPf, ss, _ref, _ref1, _ref2, _ref3;
+      f = ':click';
+      this.log2(f, click_index);
+      if (this.inClick !== false) {
         alert('WARNING: You are already in click');
       }
+      this.inClick = click_index;
       if ((_ref = window.event) != null) {
         _ref.returnValue = false;
       }
-      this.inClick = true;
       _ref1 = this.oFist;
       for (k in _ref1) {
         o = _ref1[k];
@@ -233,11 +244,19 @@
       oPf = this.getInstance('Pageflow');
       oPf.setIssues(click_result[0]);
       oPf.setMessages(click_result[1]);
-      this.renderSecure(!click_index);
+      this.modelState = {};
+      _ref3 = this.oModel;
+      for (k in _ref3) {
+        o = _ref3[k];
+        if ((o.saveState != null) && (ss = o.saveState())) {
+          this.modelState[k] = ss;
+        }
+      }
+      this.renderSecure();
       return this.inClick = false;
     };
 
-    Epic.prototype.renderSecure = function(first_time, avoid_form_reset) {
+    Epic.prototype.renderSecure = function(avoid_form_reset) {
       var oC, oPf, render_attempts, render_result, sp, template;
       oC = new window.EpicMvc.ClickAction(this);
       oPf = this.getInstance('Pageflow');
@@ -250,9 +269,25 @@
         }
         sp = oPf.getStepPath();
         template = this.oAppConf.findTemplate(sp);
-        render_result = this.render(template, this.oAppConf.getPage(sp), first_time, avoid_form_reset);
+        render_result = this.render(template, this.oAppConf.getPage(sp), avoid_form_reset);
       }
       return this.oView.doDefer();
+    };
+
+    Epic.prototype.getModelState = function() {
+      return this.modelState;
+    };
+
+    Epic.prototype.setModelState = function(s) {
+      var inst_nm, _base, _results;
+      if (s != null) {
+        this.modelState = s;
+      }
+      _results = [];
+      for (inst_nm in this.oModel) {
+        _results.push(typeof (_base = this.oModel[inst_nm]).restoreState === "function" ? _base.restoreState(this.modelState[inst_nm]) : void 0);
+      }
+      return _results;
     };
 
     return Epic;
