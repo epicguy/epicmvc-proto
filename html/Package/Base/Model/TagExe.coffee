@@ -104,7 +104,7 @@ class TagExe
 				when 'not_set', 'set'
 					flip= true if nm is 'not_set'
 					found_true= if val is true or (typeof val is 'number' && val) or
-						(typeof val is 'string' && val.length> 0 and not val.match(/^no|false|n|0$/i) )
+						(typeof val is 'string' && val.length> 0 and not val.match(/^(no|false|n|0)$/i) )
 						then true else false
 					break
 			found_true= not found_true if flip

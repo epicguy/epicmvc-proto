@@ -227,7 +227,7 @@
             if (nm === 'not_set') {
               flip = true;
             }
-            found_true = val === true || (typeof val === 'number' && val) || (typeof val === 'string' && val.length > 0 && !val.match(/^no|false|n|0$/i)) ? true : false;
+            found_true = val === true || (typeof val === 'number' && val) || (typeof val === 'string' && val.length > 0 && !val.match(/^(no|false|n|0)$/i)) ? true : false;
             break;
         }
         if (flip) {
