@@ -17,7 +17,8 @@
     TagExe.prototype.resetForNextRequest = function(bd_template, bd_page) {
       this.bd_template = bd_template;
       this.bd_page = bd_page;
-      return TagExe.__super__.resetForNextRequest.apply(this, arguments);
+      TagExe.__super__.resetForNextRequest.apply(this, arguments);
+      return this.Epic.log1("T:" + this.bd_template + ", P:" + this.bd_page);
     };
 
     TagExe.prototype.Tag_page_part = function(oPt) {
@@ -36,7 +37,7 @@
         if (this.Epic.isSecurityError(e)) {
           throw e;
         }
-        val = "&amp;" + view_nm + "/" + tbl_nm + "/" + col_nm + ";[" + e.message + "]";
+        val = "&amp;" + view_nm + "/" + tbl_nm + "/" + col_nm + ";[" + e.message + "] <pre>" + e.stack + "</pre>";
       }
       if (val === void 0) {
         val = "&amp;" + view_nm + "/" + tbl_nm + "/" + col_nm + ";";
@@ -46,7 +47,14 @@
 
     TagExe.prototype.varGet2 = function(tbl_nm, col_nm, format_spec, sub_nm) {
       var val;
-      val = TagExe.__super__.varGet2.call(this, tbl_nm, col_nm, format_spec, sub_nm);
+      try {
+        val = TagExe.__super__.varGet2.call(this, tbl_nm, col_nm, format_spec, sub_nm);
+      } catch (e) {
+        if (this.Epic.isSecurityError(e)) {
+          throw e;
+        }
+        val = "&amp;" + view_nm + "/" + tbl_nm + "/" + col_nm + ";[" + e.message + "] <pre>" + e.stack + "</pre>";
+      }
       if (val === void 0) {
         val = "&amp;" + tbl_nm + "/" + col_nm + ";";
       }
@@ -60,7 +68,7 @@
         if (this.Epic.isSecurityError(e)) {
           throw e;
         }
-        return '&lt;epic:foreach table="' + oPt.attrs.table + '"&gt; - ' + e.message;
+        return '&lt;epic:foreach table="' + oPt.attrs.table + '"&gt; - ' + e.message + '<pre>\n' + e.stack + '</pre>';
       }
     };
 

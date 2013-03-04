@@ -1,0 +1,7 @@
+.dbg-part { border: solid 8px #888; }
+.dbg-part-box { font-size: .5em;
+  -webkit-box-shadow: 10px 10px 5px #888;
+  padding: 5px 5px 5px 15px;
+  width: 300px;
+}
+

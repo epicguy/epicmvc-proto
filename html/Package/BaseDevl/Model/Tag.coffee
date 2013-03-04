@@ -2,7 +2,7 @@
 
 # Enhance with error checking/reporting for Devl mode
 class TagExe extends window.EpicMvc.Model.TagExe$Base
-	resetForNextRequest: (@bd_template,@bd_page) -> super
+	resetForNextRequest: (@bd_template,@bd_page) -> super; @Epic.log1 "T:#{@bd_template}, P:#{@bd_page}"
 	Tag_page_part: (oPt) ->
 		#_log2 'page_part', oPt
 		#"<table><caption>PART:#{oPt.attrs.part}</caption><tr><td>#{super oPt}</td></tr></table>"
@@ -22,22 +22,27 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 			val= super view_nm, tbl_nm, col_nm, format_spec
 		catch e
 			throw e if @Epic.isSecurityError e
-			val= "&amp;#{view_nm}/#{tbl_nm}/#{col_nm};[#{e.message}]" # Give back a visual of what is in the HTML
+			val= "&amp;#{view_nm}/#{tbl_nm}/#{col_nm};[#{e.message}] <pre>#{e.stack}</pre>" # Give back a visual of what is in the HTML
 		if val is undefined
 			#window.alert "Unknown column-name (#{col_nm}) for view-name/table-name (#{view_nm}/#{tbl_nm})."
 			val= "&amp;#{view_nm}/#{tbl_nm}/#{col_nm};" # Give back a visual of what is in the HTML
 		val
 	varGet2: (tbl_nm, col_nm, format_spec, sub_nm) ->
-		val= super tbl_nm, col_nm, format_spec, sub_nm
+		try
+			val= super tbl_nm, col_nm, format_spec, sub_nm
+		catch e
+			throw e if @Epic.isSecurityError e
+			val= "&amp;#{view_nm}/#{tbl_nm}/#{col_nm};[#{e.message}] <pre>#{e.stack}</pre>" # Give back a visual of what is in the HTML
 		if val is undefined
 			#window.alert "Unknown column-name (#{col_nm}) for table-name (#{tbl_nm})."
 			val= "&amp;#{tbl_nm}/#{col_nm};" # Give back a visual of what is in the HTML
 		val
 	Tag_foreach: (oPt) ->
+		# TODO VALIDATE TABLE= VALUE AS VALID TABLE REFERENCE, ELSE GIVE NICE MEANINGFUL ALERT MESSAGE
 		try
 			super oPt
 		catch e
 			throw e if @Epic.isSecurityError e
-			'&lt;epic:foreach table="'+ oPt.attrs.table+ '"&gt; - '+ e.message
+			'&lt;epic:foreach table="'+ oPt.attrs.table+ '"&gt; - '+ e.message + '<pre>\n'+ e.stack+ '</pre>'
 
 window.EpicMvc.Model.TagExe$BaseDevl= TagExe # Public API
