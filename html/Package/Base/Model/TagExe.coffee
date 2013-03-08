@@ -15,6 +15,7 @@ class TagExe
 	formatFromSpec: (spec, val) ->
 		switch spec
 			when 'count' then val?.length
+			when 'bytes' then window.bytesToSize Number val
 			when 'ucFirst'
 				str= (String str).toLowerCase()
 				str.slice( 0, 1).toUpperCase()+ str.slice 1
