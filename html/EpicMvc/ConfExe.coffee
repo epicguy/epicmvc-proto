@@ -18,8 +18,8 @@ class ConfExe
 
 		debug_results= ("#{k}=#{v}" for k,v of results).join ', '
 		if found_node is false
-			EpicMvc.Epic.log2 'matchResult ', found_node, debug_results if debug_results.length
-		else EpicMvc.Epic.log2 'matchResult ', found_node.node, found_node.getPAttrs?(), debug_results
+			EpicMvc.Epic.log2 ':matchResult ', found_node, debug_results if debug_results.length
+		else EpicMvc.Epic.log2 ':matchResult ', found_node.node, 'p:', found_node.getPAttrs?(), "{#{debug_results}}"
 		found_node
 	match: (results) ->
 		r_attrs= @getRAttrs()

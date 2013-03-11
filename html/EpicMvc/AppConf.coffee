@@ -11,7 +11,7 @@ class AppConf
 	getObj: (view_name,attribute) ->
 
 		if view_name not of @config.MODELS
-			throw new Error 'APP_MODELS_UNKNOWN_VIEW_NAME::'+view_name
+			alert ":AppConf.getObj: (app.js) MODELS: #{view_name}: [(#{view_name}) not in MODELS:, check spelling/case]"
 		if attribute not of @config.MODELS[view_name]
 			a= @confiig.XXX[ view_name+'#'+attribute+'#'+(nm for nm of @config.MODELS[view_name])]
 
@@ -71,6 +71,8 @@ class AppConf
 		if node== false and (n= @config.CLICKS[a])? then node= n
 		return new window.EpicMvc.ConfExe node if node
 		null
+	mapModalTemplate: (modal) ->
+		@config.OPTIONS.template[modal] || modal
 	findTemplate: (f,t,s) ->
 		if typeof t is 'undefined' then s= f[2]; t=f[1]; f= f[0]
 		template= ( @findAttr f, t, s, 'template' ) || @config.OPTIONS.template.default

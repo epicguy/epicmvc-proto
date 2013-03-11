@@ -13,7 +13,7 @@
 
     ViewExe.prototype.init = function(template, page) {
       var v;
-      this.Epic.log2('Template:', template, 'Page:' + page, ((function() {
+      this.Epic.log2(':view T:' + template, 'P:' + page, ((function() {
         var _i, _len, _ref, _results;
         _ref = (this.Epic.getInstance('Pageflow')).getStepPath();
         _results = [];

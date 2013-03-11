@@ -51,10 +51,10 @@
       })()).join(', ');
       if (found_node === false) {
         if (debug_results.length) {
-          EpicMvc.Epic.log2('matchResult ', found_node, debug_results);
+          EpicMvc.Epic.log2(':matchResult ', found_node, debug_results);
         }
       } else {
-        EpicMvc.Epic.log2('matchResult ', found_node.node, typeof found_node.getPAttrs === "function" ? found_node.getPAttrs() : void 0, debug_results);
+        EpicMvc.Epic.log2(':matchResult ', found_node.node, 'p:', typeof found_node.getPAttrs === "function" ? found_node.getPAttrs() : void 0, "{" + debug_results + "}");
       }
       return found_node;
     };

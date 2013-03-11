@@ -6,9 +6,12 @@
 
   ModelJS = (function() {
 
-    function ModelJS(Epic, view_nm) {
+    function ModelJS(Epic, view_nm, ss) {
       this.Epic = Epic;
       this.view_nm = view_nm;
+      this._ModelJS = {
+        ss: ss || false
+      };
       this.restoreState(false);
     }
 
@@ -24,9 +27,8 @@
     };
 
     ModelJS.prototype.restoreState = function(copy_of_state) {
-      this.Epic.log2(':restoreState+' + this.view_nm, copy_of_state);
-      if (this.ss != null) {
-        $.extend(true, this, this.ss);
+      if (this._ModelJS.ss != null) {
+        $.extend(true, this, this._ModelJS.ss);
       }
       if (copy_of_state) {
         $.extend(true, this, copy_of_state);
@@ -35,15 +37,19 @@
     };
 
     ModelJS.prototype.saveState = function() {
-      var nm, st;
-      if (this.ss == null) {
+      var nm, ss, st;
+      ss = this._ModelJS.ss;
+      if (!ss) {
         return false;
       }
       st = {};
-      for (nm in this.ss) {
-        if (this[nm] !== this.ss[nm]) {
+      for (nm in ss) {
+        if (this[nm] !== ss[nm]) {
           st[nm] = this[nm];
         }
+      }
+      if ($.isEmptyObject(st)) {
+        return false;
       }
       return $.extend(true, {}, st);
     };

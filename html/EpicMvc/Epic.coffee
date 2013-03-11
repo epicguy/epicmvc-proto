@@ -19,12 +19,13 @@ class Epic
 		@counter= 0 # A counter value to get unique numbers per epic instance
 		@guard_run= false # Protect @run from being called more than once
 		@inClick= false
+		@wasModal= false
 		@modelState= {}
 
-	#log1: window.Function.prototype.bind.call( window.console.log, window.console)
-	log1: () -> null
-	#log2: window.Function.prototype.bind.call( window.console.log, window.console)
-	log2: () -> null
+	log1: window.Function.prototype.bind.call( window.console.log, window.console)
+	#log1: () -> null
+	log2: window.Function.prototype.bind.call( window.console.log, window.console)
+	#log2: () -> null
 	nextCounter: -> ++@counter
 	getInstanceNm: (view_nm) ->
 		inst_nm= @oAppConf.getObj view_nm, 'inst'
@@ -32,7 +33,8 @@ class Epic
 		inst_nm= @oAppConf.getObj view_nm, 'inst'
 		if inst_nm not of @oModel
 			cls= @oAppConf.getObj view_nm, 'class'
-			UNKOWN_MODEL() if cls not of window.EpicMvc.Model
+			if not window.EpicMvc.Model[cls]? # TODO CALL A DEBUG THINGY W/TOKEN AND view_nm/cls
+				alert ":Epic.getInstance: (app.js) MODELS: #{view_nm}: class: #{cls} [(#{cls}) not in window.EpicMvc.Model]"
 			@oModel[inst_nm]= new window.EpicMvc.Model[ cls] @, view_nm
 			#@log2 ':getInstance', inst_nm, @modelState
 			@oModel[inst_nm].restoreState @modelState[inst_nm] if inst_nm of @modelState
@@ -67,7 +69,7 @@ class Epic
 			@oFist[inst_nm]= new window.EpicMvc.Fist @, g, fist_nm, view_nm
 		@oFist[inst_nm]
 	Execute: (va,params) ->
-		@log2 'Epic.Execute', va, params
+		@log2 ':Execute', va, params
 		[view_nm, action]= va.split '/'
 		oM= @getInstance view_nm
 		oM.action action, params
@@ -90,29 +92,51 @@ class Epic
 		return true if e?.message?.substring? and (e.message.substring 0, special.length) is special
 		false
 	getFormData: -> @renderer.getFormData()
-	renderStrategy: (content,first_time) ->
-		@renderer.render content, @inClick
+	renderStrategy: (content,history,click_index,modal) ->
+		@renderer.render content, history, click_index, modal
 		null
-	render: (template,page,avoid_form_reset) ->
+	render: (template,sp,avoid_form_reset) ->
+		page= @oAppConf.getPage sp
+		modal= @oAppConf.findAttr sp[0], sp[1], sp[2], 'modal'
+		if modal
+			template= @oAppConf.mapModalTemplate modal
+			modal= true
+		#TODO IS THIS SET ON ACTCION, NOT PAGE? SHOULD I USE FIND-ATTR? history= @oAppConf.getHistory sp
+		history= switch "#{Number @wasModal}:#{Number modal}"
+			when '0:0' then true
+			when '1:0' then 'replace'
+			when '0:1' then false
+			when '1:1' then false
+			else alert 'my code is hosed'
 		@oView.init template, page
 		try
 			stuff= @oView.run()
 		catch e
 			if @isSecurityError e then return e
-			else throw e
-		@renderStrategy stuff
+			else inClick= false; throw e
+		@renderStrategy stuff, history, @inClick, modal
 		o.eventInitializePage?() for k,o of @oFist if avoid_form_reset isnt true # Load widgets (i.e. fileuploader)
+		@wasModal= modal
 		true # No security issues
 	refresh: (forTables) =>
 		if @inClick is true
 			setTimeout (=> @refresh forTables), 500
 		else @renderSecure true if @oView.checkRefresh forTables
+	makeClick: (form_flag,action,params,render_flag) -> # Convience method to build click on the fly
+		f= ':makeClick:'+action
+		@log2 f, 'form?'+(if form_flag then 'Y' else 'N'), 'render'+(if render_flag then 'Y' else 'N'), params
+		p_action= {}
+		p_action[ if form_flag then '_b' else '_a']= action
+		click_index= @oRequest.addLink $.extend p_action, params
+		@click click_index if render_flag # Consider still calling ClickAction if not render_flag?
+		click_index
 	click: (click_index) ->
 		f= ':click'
 		@log2 f, click_index
 		if @inClick isnt false then alert 'WARNING: You are already in click'
 		@inClick= click_index
 		window.event?.returnValue = false #IE
+		#TODO ALSO DO PREVENT DEFAULT, AND REMOVE THOSE RETURN FALSE'S
 		o.eventNewRequest?() for k,o of @oFist # Removing state where appropriate
 		o.eventNewRequest?() for k,o of @oModel
 		@oRequest.start click_index if click_index
@@ -138,7 +162,7 @@ class Epic
 			sp= oPf.getStepPath()
 			template= @oAppConf.findTemplate sp
 			# Attempt to render view (by loading template, page, etc.)
-			render_result= @render template, @oAppConf.getPage( sp), avoid_form_reset
+			render_result= @render template, sp, avoid_form_reset
 		# Process defered logic (e.g. generate keyup in a listview-filter) <epic:defer>
 		@oView.doDefer()
 	getModelState: -> @modelState

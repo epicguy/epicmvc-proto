@@ -2,8 +2,10 @@
 (function() {
   'use strict';
 
-  var bootstrap,
+  var bootstrap, _log2,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+  _log2 = function() {};
 
   bootstrap = (function() {
 
@@ -14,11 +16,11 @@
 
       this.very_first = true;
       this.was_popped = false;
+      this.was_modal = false;
       this.baseUrl = window.document.location.pathname;
       this.baseId = "epic-new-page";
-      this.basePage = '<div data-role="page" id="epic-new-page" data-theme="a" data-url="empty"></div>';
-      this.prefix = 'epic-dc-';
-      this.firstId = 'epic-dc-first';
+      this.modalId = "epic-new-modal";
+      this.basePage = '<div id="' + this.baseId + '"></div><div id="' + this.modalId + '"></div>';
       $('body').html(this.basePage);
       setTimeout((function() {
         return _this.onPopState(true);
@@ -98,6 +100,11 @@
     bootstrap.prototype.onPopState = function(event) {
       var f, req_inx;
       f = 'E:bootstrap.onPopState: ';
+      _log2(f, {
+        was_popped: this.was_popped,
+        very_first: this.very_first,
+        special: event === true
+      });
       if (event === true) {
         if (this.was_popped || !this.very_first) {
           return;
@@ -118,18 +125,39 @@
       }
     };
 
-    bootstrap.prototype.render = function(content, click_index) {
+    bootstrap.prototype.render = function(content, history, click_index, modal) {
       var f;
-      f = 'E:bootstrap.render: ';
-      $('#' + this.baseId).html(content);
-      this.handleRenderState(click_index);
+      f = 'E:bootstrap.render2: ';
+      _log2(f, history);
+      if (typeof history === 'undefined') {
+        throw new Error('History is hosed!');
+      }
+      if (this.was_modal) {
+        window.$('#' + this.modalId + '>div').modal('hide');
+        $('#' + this.modalId).html('');
+      }
+      if (modal) {
+        $('#' + this.modalId).html(content);
+        window.$('#' + this.modalId + ' div.modal').modal();
+      } else {
+        $('#' + this.baseId).html(content);
+      }
+      this.handleRenderState(history, click_index);
+      this.was_modal = modal;
       this.was_popped = false;
       this.very_first = false;
     };
 
-    bootstrap.prototype.handleRenderState = function(click_index) {
+    bootstrap.prototype.handleRenderState = function(history, click_index) {
       var displayHash, f, model_state, new_hash;
-      f = 'E:bootstrap.handleRenderState';
+      f = 'E:bootstrap.handleRenderState:' + history + ':' + click_index;
+      _log2(f, {
+        vf: this.very_first,
+        wp: this.was_popped
+      });
+      if (!history) {
+        return;
+      }
       displayHash = this.very_first ? '' : 'click-' + click_index;
       new_hash = this.Epic.getDomCache();
       if (new_hash === false) {
@@ -139,12 +167,12 @@
         displayHash = new_hash;
       }
       model_state = this.Epic.getModelState();
-      if (this.very_first) {
+      if (this.very_first || history === 'replace') {
         window.history.replaceState(model_state, displayHash, '#' + displayHash);
-      } else if (!this.was_popped) {
+      } else if (!this.was_popped && history === true) {
         window.history.pushState(model_state, displayHash, '#' + displayHash);
+        window.document.title = displayHash;
       }
-      this.very_first = false;
     };
 
     return bootstrap;

@@ -3,9 +3,8 @@
 
 class Pageflow extends window.EpicMvc.ModelJS
 	constructor: (epic,view_nm) ->
-		super epic, view_nm # Inits @Epic, @view_nm, @Table
-		#@sp= [] # Save-path stack
-		@ss= f: null, t: null, s: null, sp: [] # Save-path stack
+		ss= f: null, t: null, s: null, sp: [] # Save-path stack
+		super epic, view_nm, ss
 		@eventNewRequest()
 	eventNewRequest: ->
 		@issues= new window.EpicMvc.Issue @Epic

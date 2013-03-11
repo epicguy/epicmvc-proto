@@ -4,24 +4,24 @@
 #TODO Grab 'title' from Tag.head, and inject it?
 		
 # Put on-load event scripts here
-#window.$(window.document).bind "mobileinit", ->
 
 # Strategy(s) for rendering content
-
+_log2= -> # Turn off debug
 class bootstrap
 	constructor: (@Epic) ->
 		@very_first= true
 		@was_popped= false
+		@was_modal= false
 		@baseUrl= window.document.location.pathname
 		@baseId= "epic-new-page"
-		@basePage= '<div data-role="page" id="epic-new-page" data-theme="a" data-url="empty"></div>'
-		@prefix= 'epic-dc-'
-		@firstId= 'epic-dc-first'
+		@modalId= "epic-new-modal"
+		@basePage= '<div id="'+ @baseId+ '"></div><div id="'+ @modalId+ '"></div>'
 		$('body').html @basePage
 		#setTimeout (=> @Epic.click 0), 0
 		setTimeout (=> @onPopState true), 0
 		#setTimeout (=> @LocationHashChanged newURL: window.location.href), 0
 		#window.onhashchange = @LocationHashChanged
+		#TODO DETECT MANUAL HASHCHANGE window.onhashchange = (a) -> console.log 'onhashChange', a; alert 'hashChange'
 		window.onpopstate = @onPopState
 		true
 	getFormData: -> $('form').serializeArray() # TODO Any form in *active* page (if other pages cahced in DOM)
@@ -100,7 +100,7 @@ class bootstrap
 
 	onPopState: (event) =>
 		f= 'E:bootstrap.onPopState: '
-		#_log2 f, was_popped: @was_popped, very_first: @very_first, special: event is true
+		_log2 f, was_popped: @was_popped, very_first: @very_first, special: event is true
 		if event is true # Special processing - making sure this logic happens in FF as initial load
 			return if @was_popped or not @very_first # We did handle it already
 		@was_popped= true
@@ -112,19 +112,31 @@ class bootstrap
 			@Epic.renderSecure()
 		return
 		
-	render: (content, click_index) ->
-		f= 'E:bootstrap.render: '
-		# TODO Could Implement a history-based method
+	render: (content, history, click_index, modal) ->
+		f= 'E:bootstrap.render2: '
+		_log2 f, history
+		if typeof history is 'undefined' then throw new Error 'History is hosed!'
 		# Must be in the DOM, before handler returns, to allow 'defered' logic to work properly
-		$('#'+@baseId).html content
-		@handleRenderState(click_index)
+		if @was_modal
+			window.$('#'+@modalId+ '>div').modal 'hide' # Get rid of that backdrop
+			$('#'+@modalId).html ''
+		if modal
+			$('#'+@modalId).html content
+			window.$('#'+@modalId+ ' div.modal').modal() # Activate it (must include boostrap-modal.js)
+		else
+			$('#'+@baseId).html content
+		@handleRenderState(history, click_index)
+		@was_modal= modal
 		@was_popped= false
 		@very_first= false
 		return
 
-	handleRenderState: (click_index) ->
-		f= 'E:bootstrap.handleRenderState'
+	handleRenderState: (history, click_index) ->
+		# History can be: true, false, 'replace'
+		f= 'E:bootstrap.handleRenderState:'+ history+ ':'+ click_index
 		# Put a 'hash' into location bar, to match our current app location, for history
+		_log2 f, vf: @very_first, wp: @was_popped
+		return if not history
 		displayHash= if @very_first then '' else 'click-'+ click_index
 		# Does the current flow-path contain a 'dom_cache' value?
 		new_hash= @Epic.getDomCache()
@@ -132,11 +144,11 @@ class bootstrap
 		if new_hash isnt false then displayHash= new_hash
 		model_state= @Epic.getModelState()
 		#_log2 f, ms: model_state, ha: displayHash, cvw: [click_index, @very_first, @was_popped]
-		if @very_first
+		if @very_first or history is 'replace'
 			window.history.replaceState model_state, displayHash, '#'+displayHash
-		else if not @was_popped # click-action, create history item
+		else if not @was_popped and history is true # click-action, create history item
 			window.history.pushState model_state, displayHash, '#'+displayHash
-		@very_first= false
+			window.document.title= displayHash
 		return
 
 window.EpicMvc.Extras.bootstrap$bootstrap= bootstrap # Public API

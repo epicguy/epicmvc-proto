@@ -34,16 +34,13 @@
       this.counter = 0;
       this.guard_run = false;
       this.inClick = false;
+      this.wasModal = false;
       this.modelState = {};
     }
 
-    Epic.prototype.log1 = function() {
-      return null;
-    };
+    Epic.prototype.log1 = window.Function.prototype.bind.call(window.console.log, window.console);
 
-    Epic.prototype.log2 = function() {
-      return null;
-    };
+    Epic.prototype.log2 = window.Function.prototype.bind.call(window.console.log, window.console);
 
     Epic.prototype.nextCounter = function() {
       return ++this.counter;
@@ -59,8 +56,8 @@
       inst_nm = this.oAppConf.getObj(view_nm, 'inst');
       if (!(inst_nm in this.oModel)) {
         cls = this.oAppConf.getObj(view_nm, 'class');
-        if (!(cls in window.EpicMvc.Model)) {
-          UNKOWN_MODEL();
+        if (!(window.EpicMvc.Model[cls] != null)) {
+          alert(":Epic.getInstance: (app.js) MODELS: " + view_nm + ": class: " + cls + " [(" + cls + ") not in window.EpicMvc.Model]");
         }
         this.oModel[inst_nm] = new window.EpicMvc.Model[cls](this, view_nm);
         if (inst_nm in this.modelState) {
@@ -124,7 +121,7 @@
 
     Epic.prototype.Execute = function(va, params) {
       var action, oM, view_nm, _ref;
-      this.log2('Epic.Execute', va, params);
+      this.log2(':Execute', va, params);
       _ref = va.split('/'), view_nm = _ref[0], action = _ref[1];
       oM = this.getInstance(view_nm);
       return oM.action(action, params);
@@ -168,13 +165,33 @@
       return this.renderer.getFormData();
     };
 
-    Epic.prototype.renderStrategy = function(content, first_time) {
-      this.renderer.render(content, this.inClick);
+    Epic.prototype.renderStrategy = function(content, history, click_index, modal) {
+      this.renderer.render(content, history, click_index, modal);
       return null;
     };
 
-    Epic.prototype.render = function(template, page, avoid_form_reset) {
-      var k, o, stuff, _ref;
+    Epic.prototype.render = function(template, sp, avoid_form_reset) {
+      var history, inClick, k, modal, o, page, stuff, _ref;
+      page = this.oAppConf.getPage(sp);
+      modal = this.oAppConf.findAttr(sp[0], sp[1], sp[2], 'modal');
+      if (modal) {
+        template = this.oAppConf.mapModalTemplate(modal);
+        modal = true;
+      }
+      history = (function() {
+        switch ("" + (Number(this.wasModal)) + ":" + (Number(modal))) {
+          case '0:0':
+            return true;
+          case '1:0':
+            return 'replace';
+          case '0:1':
+            return false;
+          case '1:1':
+            return false;
+          default:
+            return alert('my code is hosed');
+        }
+      }).call(this);
       this.oView.init(template, page);
       try {
         stuff = this.oView.run();
@@ -182,10 +199,11 @@
         if (this.isSecurityError(e)) {
           return e;
         } else {
+          inClick = false;
           throw e;
         }
       }
-      this.renderStrategy(stuff);
+      this.renderStrategy(stuff, history, this.inClick, modal);
       if (avoid_form_reset !== true) {
         _ref = this.oFist;
         for (k in _ref) {
@@ -195,6 +213,7 @@
           }
         }
       }
+      this.wasModal = modal;
       return true;
     };
 
@@ -209,6 +228,19 @@
           return this.renderSecure(true);
         }
       }
+    };
+
+    Epic.prototype.makeClick = function(form_flag, action, params, render_flag) {
+      var click_index, f, p_action;
+      f = ':makeClick:' + action;
+      this.log2(f, 'form?' + (form_flag ? 'Y' : 'N'), 'render' + (render_flag ? 'Y' : 'N'), params);
+      p_action = {};
+      p_action[form_flag ? '_b' : '_a'] = action;
+      click_index = this.oRequest.addLink($.extend(p_action, params));
+      if (render_flag) {
+        this.click(click_index);
+      }
+      return click_index;
     };
 
     Epic.prototype.click = function(click_index) {
@@ -269,7 +301,7 @@
         }
         sp = oPf.getStepPath();
         template = this.oAppConf.findTemplate(sp);
-        render_result = this.render(template, this.oAppConf.getPage(sp), avoid_form_reset);
+        render_result = this.render(template, sp, avoid_form_reset);
       }
       return this.oView.doDefer();
     };

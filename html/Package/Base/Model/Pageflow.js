@@ -11,13 +11,14 @@
     __extends(Pageflow, _super);
 
     function Pageflow(epic, view_nm) {
-      Pageflow.__super__.constructor.call(this, epic, view_nm);
-      this.ss = {
+      var ss;
+      ss = {
         f: null,
         t: null,
         s: null,
         sp: []
       };
+      Pageflow.__super__.constructor.call(this, epic, view_nm, ss);
       this.eventNewRequest();
     }
 

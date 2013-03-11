@@ -24,7 +24,7 @@
     AppConf.prototype.getObj = function(view_name, attribute) {
       var a, nm;
       if (!(view_name in this.config.MODELS)) {
-        throw new Error('APP_MODELS_UNKNOWN_VIEW_NAME::' + view_name);
+        alert(":AppConf.getObj: (app.js) MODELS: " + view_name + ": [(" + view_name + ") not in MODELS:, check spelling/case]");
       }
       if (!(attribute in this.config.MODELS[view_name])) {
         a = this.confiig.XXX[view_name + '#' + attribute + '#' + ((function() {
@@ -165,6 +165,10 @@
         return new window.EpicMvc.ConfExe(node);
       }
       return null;
+    };
+
+    AppConf.prototype.mapModalTemplate = function(modal) {
+      return this.config.OPTIONS.template[modal] || modal;
     };
 
     AppConf.prototype.findTemplate = function(f, t, s) {
