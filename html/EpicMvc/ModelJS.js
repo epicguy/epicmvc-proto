@@ -54,6 +54,25 @@
       return $.extend(true, {}, st);
     };
 
+    ModelJS.prototype.invalidateTables = function(tbl_nms) {
+      var nm, _i, _len;
+      if (tbl_nms === true) {
+        tbl_nms = (function() {
+          var _results;
+          _results = [];
+          for (nm in this.Table) {
+            _results.push(nm);
+          }
+          return _results;
+        }).call(this);
+      }
+      for (_i = 0, _len = tbl_nms.length; _i < _len; _i++) {
+        nm = tbl_nms[_i];
+        delete this.Table[nm];
+      }
+      return this.Epic.oView.invalidateTables(this.view_nm, tbl_nms);
+    };
+
     return ModelJS;
 
   })();

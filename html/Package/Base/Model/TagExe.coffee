@@ -1,17 +1,18 @@
 'use strict'
 # Copyright 2007-2012 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
-
+$=window.jQuery
 class TagExe
 	constructor: (@Epic,@view_nm) ->
-		@resetForNextRequest()
 		@viewExe= @Epic.getView()
-	resetForNextRequest: ->
+		@resetForNextRequest()
+	resetForNextRequest: (state) ->
 		@forms_included= {}
 		@fist_objects= {}
 		@info_foreach= {} # [table-name|subtable-name]['table'&'row'&'size'&'count']=value
 		@info_if_nms= {} # [if-name]=boolean (from <if_xxx name="if-name" ..>
 		@info_varGet3= {} # for &obj/table/var; type variables
-		@refresh_names= {} # For a page refresh when targeted model/table's change state async (populated by varGet3/foreach
+		if state
+			@info_foreach= $.extend true, {}, state
 	formatFromSpec: (spec, val) ->
 		switch spec
 			when 'count' then val?.length
@@ -29,7 +30,7 @@ class TagExe
 					else ''
 				else val
 	varGet3: (view_nm, tbl_nm, key, format_spec) ->
-		@refresh_names[(@Epic.getInstanceNm view_nm)+':'+tbl_nm]= true
+		@viewExe.haveTableRefrence view_nm, tbl_nm
 		@info_varGet3[view_nm]?= {}
 		row= (@info_varGet3[view_nm][tbl_nm]?= ((@Epic.getInstance view_nm).getTable tbl_nm)[0])
 		@formatFromSpec format_spec, row[key]
@@ -41,8 +42,30 @@ class TagExe
 	getFistForField: (fl_nm) ->
 		for flist_nm, oFi of @fist_objects
 			return oFi # TODO First entry for now
-	Tag_page_part: (oPt) -> @viewExe.includePart @viewExe.handleIt oPt.attrs.part
-	Tag_page: (oPt) -> @viewExe.includePage()
+
+	checkForDynamic: (oPt) -> # dynamic="div" delay="2"
+		tag= if 'dynamic' of oPt.attrs then @viewExe.handleIt oPt.attrs.dynamic else ''
+		return ['', '', false] if tag.length is 0
+		delay= 1
+		id= 'epic-dynopart-'+ @Epic.nextCounter()
+		plain_attrs= []
+		for attr,val of oPt.attrs
+			switch attr
+				when 'part', 'dynamic' then continue
+				when 'delay' then delay= @viewExe.handleIt val
+				when 'id' then id= @viewExe.handleIt val
+				else plain_attrs.push "#{attr}=\"#{@viewExe.handleIt val}\""
+		state= $.extend true, {}, @info_foreach # TODO SNAPSHOT MORE STUFF?
+		return ["<#{tag} id=\"#{id}\" #{plain_attrs.join ' '}>", "</#{tag}>", id: id, delay: delay* 1000, state: state]
+	Tag_page_part: (oPt) ->
+		f= ':tag.page-part:'+ oPt.attrs.part
+		[before, after, dynamicInfo]= @checkForDynamic oPt
+		#@Epic.log2 f, dynamicInfo
+		before+ (@viewExe.includePart (@viewExe.handleIt oPt.attrs.part), dynamicInfo)+ after
+	Tag_page: (oPt) ->
+		[before, after, dynamicInfo]= @checkForDynamic oPt
+		before+ (@viewExe.includePage dynamicInfo)+ after
+
 	Tag_defer: (oPt) -> #TODO OUTPUT CODE INTO SCRIPT TAG WITH FUNCTION WRAPPER TO CALL, FOR BETTER DEBUG
 		name= 'anonymous'
 		if 'name' of oPt.attrs then name= @viewExe.handleIt oPt.attrs.name
@@ -63,6 +86,8 @@ class TagExe
 		found_true= not found_true if not is_if_true
 		out= if found_true then @viewExe.doAllParts oPt.parts else ''
 	ifAnyAll: (oPt, is_if_any) ->
+		f= ':TagExe.ifAnyAll'
+		#@Epic.log2 f, oPt.attrs
 		out= ''
 		fond_nm= false
 		for nm, val of oPt.attrs
@@ -73,7 +98,7 @@ class TagExe
 				when 'right' then right= val; continue
 				when 'left', 'val', 'value' then left= val; continue
 				when 'name' then found_nm= val; continue
-				when 'eq', 'ne', 'lt', 'gt', 'ge', 'le', 'op', 'in', 'in_list'
+				when 'eq', 'ne', 'lt', 'gt', 'ge', 'le', 'op'
 					if nm isnt 'op' then right= val; op= nm else op= val
 					use_op= op
 					if op.substr(0,1) is '!' then flip= true; use_op= op.substr(1)
@@ -89,6 +114,10 @@ class TagExe
 				when 'not_empty', 'empty'
 					flip= true if nm is 'not_empty'
 					found_true= val.length is 0
+					break
+				when 'in_list', 'not_in_list'
+					flip= true if nm is 'not_in_list'
+					found_true=(( val.split ',').indexOf left) isnt -1
 					break
 				when 'table_has_no_values', 'table_is_empty', 'table_is_not_empty', 'table_has_values'
 					flip= true if nm is 'table_has_no_values' or nm is 'table_is_empty'
@@ -123,7 +152,7 @@ class TagExe
 		if lh of @info_foreach
 			tbl= @info_foreach[lh].row[rh]
 		else
-			@refresh_names[(@Epic.getInstanceNm lh)+':'+rh]= true
+			@viewExe.haveTableRefrence lh, rh
 			oMd= @Epic.getInstance lh
 			tbl= oMd.getTable rh
 		return '' if tbl.length is 0 # No rows means no output
@@ -225,11 +254,9 @@ class TagExe
 			in_ct= @viewExe.run ['', [4], 'control', field: fl_nm, '', [1]]
 			#out.push( '<td>'+req+fl.label+'</td><td>'+in_ct+help_html+'</td>');
 			out.push """
-				<div data-theme="b" data-role="fieldcontain">
 				<label for="#{fl_nm}" class="ui-input-text">
 				#{req}#{fl.label||fl_nm}</label>
 				#{in_ct}#{help_html}
-				</div>
 				"""
 		if sh_req then out.push '<div><font color="red" size="-1">* required</font></div>'
 		[otr, ctr]= ['', '\n']
@@ -290,6 +317,7 @@ class TagExe
 						out_attrs.push """
 							#{attr}="#{window.EpicMvc.escape_html @viewExe.handleIt val}"
 							"""
+		out_attrs.push 'title='+ action # TODO MOVE TO BASE_DEVEL
 		link._b= action # _b instead of _a because we are a 'button'
 		click_index= @Epic.request().addLink link
 		o= @Epic.renderer.form_action out_attrs, click_index, action, value
@@ -298,7 +326,7 @@ class TagExe
 		action= @viewExe.handleIt oPt.attrs.action
 		link._a= action
 		# Add any 'p:*' (inline parameters in HTML) to the HREF
-		plain_attr= {}
+		plain_attr= title: action # TODO MOVE TO BASE_DEVL, THIS TITLE SETTING
 		for own attr, val of oPt.attrs
 			if (attr.substr 0, 2) is 'p:'
 				link[attr.substr 2]= @viewExe.handleIt val

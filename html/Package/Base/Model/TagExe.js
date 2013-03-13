@@ -2,26 +2,30 @@
 (function() {
   'use strict';
 
-  var TagExe,
+  var $, TagExe,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __hasProp = {}.hasOwnProperty;
+
+  $ = window.jQuery;
 
   TagExe = (function() {
 
     function TagExe(Epic, view_nm) {
       this.Epic = Epic;
       this.view_nm = view_nm;
-      this.resetForNextRequest();
       this.viewExe = this.Epic.getView();
+      this.resetForNextRequest();
     }
 
-    TagExe.prototype.resetForNextRequest = function() {
+    TagExe.prototype.resetForNextRequest = function(state) {
       this.forms_included = {};
       this.fist_objects = {};
       this.info_foreach = {};
       this.info_if_nms = {};
       this.info_varGet3 = {};
-      return this.refresh_names = {};
+      if (state) {
+        return this.info_foreach = $.extend(true, {}, state);
+      }
     };
 
     TagExe.prototype.formatFromSpec = function(spec, val) {
@@ -49,7 +53,7 @@
 
     TagExe.prototype.varGet3 = function(view_nm, tbl_nm, key, format_spec) {
       var row, _base, _base1, _ref, _ref1;
-      this.refresh_names[(this.Epic.getInstanceNm(view_nm)) + ':' + tbl_nm] = true;
+      this.viewExe.haveTableRefrence(view_nm, tbl_nm);
       if ((_ref = (_base = this.info_varGet3)[view_nm]) == null) {
         _base[view_nm] = {};
       }
@@ -80,12 +84,53 @@
       }
     };
 
+    TagExe.prototype.checkForDynamic = function(oPt) {
+      var attr, delay, id, plain_attrs, state, tag, val, _ref;
+      tag = 'dynamic' in oPt.attrs ? this.viewExe.handleIt(oPt.attrs.dynamic) : '';
+      if (tag.length === 0) {
+        return ['', '', false];
+      }
+      delay = 1;
+      id = 'epic-dynopart-' + this.Epic.nextCounter();
+      plain_attrs = [];
+      _ref = oPt.attrs;
+      for (attr in _ref) {
+        val = _ref[attr];
+        switch (attr) {
+          case 'part':
+          case 'dynamic':
+            continue;
+          case 'delay':
+            delay = this.viewExe.handleIt(val);
+            break;
+          case 'id':
+            id = this.viewExe.handleIt(val);
+            break;
+          default:
+            plain_attrs.push("" + attr + "=\"" + (this.viewExe.handleIt(val)) + "\"");
+        }
+      }
+      state = $.extend(true, {}, this.info_foreach);
+      return [
+        "<" + tag + " id=\"" + id + "\" " + (plain_attrs.join(' ')) + ">", "</" + tag + ">", {
+          id: id,
+          delay: delay * 1000,
+          state: state
+        }
+      ];
+    };
+
     TagExe.prototype.Tag_page_part = function(oPt) {
-      return this.viewExe.includePart(this.viewExe.handleIt(oPt.attrs.part));
+      var after, before, dynamicInfo, f, _ref;
+      f = ':tag.page-part:' + oPt.attrs.part;
+      _ref = this.checkForDynamic(oPt), before = _ref[0], after = _ref[1], dynamicInfo = _ref[2];
+      return before + (this.viewExe.includePart(this.viewExe.handleIt(oPt.attrs.part), dynamicInfo)) + after;
     };
 
     TagExe.prototype.Tag_page = function(oPt) {
-      return this.viewExe.includePage();
+      var after, before, dynamicInfo, _ref;
+      _ref = this.checkForDynamic(oPt), before = _ref[0], after = _ref[1], dynamicInfo = _ref[2];
+      return before + (this.viewExe.includePage(dynamicInfo)) + after;
     };
 
     TagExe.prototype.Tag_defer = function(oPt) {
@@ -133,7 +178,8 @@
     };
 
     TagExe.prototype.ifAnyAll = function(oPt, is_if_any) {
-      var flip, fond_nm, found_nm, found_true, left, nm, op, out, right, use_op, val, _ref;
+      var f, flip, fond_nm, found_nm, found_true, left, nm, op, out, right, use_op, val, _ref;
+      f = ':TagExe.ifAnyAll';
       out = '';
       fond_nm = false;
       _ref = oPt.attrs;
@@ -160,8 +206,6 @@
           case 'ge':
           case 'le':
           case 'op':
-          case 'in':
-          case 'in_list':
             if (nm !== 'op') {
               right = val;
               op = nm;
@@ -200,6 +244,13 @@
               flip = true;
             }
             found_true = val.length === 0;
+            break;
+          case 'in_list':
+          case 'not_in_list':
+            if (nm === 'not_in_list') {
+              flip = true;
+            }
+            found_true = ((val.split(',')).indexOf(left)) !== -1;
             break;
           case 'table_has_no_values':
           case 'table_is_empty':
@@ -262,7 +313,7 @@
       if (lh in this.info_foreach) {
         tbl = this.info_foreach[lh].row[rh];
       } else {
-        this.refresh_names[(this.Epic.getInstanceNm(lh)) + ':' + rh] = true;
+        this.viewExe.haveTableRefrence(lh, rh);
         oMd = this.Epic.getInstance(lh);
         tbl = oMd.getTable(rh);
       }
@@ -425,7 +476,7 @@
             field: fl_nm
           }, '', [1]
         ]);
-        out.push("<div data-theme=\"b\" data-role=\"fieldcontain\">\n<label for=\"" + fl_nm + "\" class=\"ui-input-text\">\n" + req + (fl.label || fl_nm) + "</label>\n" + in_ct + help_html + "\n</div>");
+        out.push("<label for=\"" + fl_nm + "\" class=\"ui-input-text\">\n" + req + (fl.label || fl_nm) + "</label>\n" + in_ct + help_html);
       }
       if (sh_req) {
         out.push('<div><font color="red" size="-1">* required</font></div>');
@@ -524,6 +575,7 @@
             }
         }
       }
+      out_attrs.push('title=' + action);
       link._b = action;
       click_index = this.Epic.request().addLink(link);
       return o = this.Epic.renderer.form_action(out_attrs, click_index, action, value);
@@ -534,7 +586,9 @@
       link = {};
       action = this.viewExe.handleIt(oPt.attrs.action);
       link._a = action;
-      plain_attr = {};
+      plain_attr = {
+        title: action
+      };
       _ref = oPt.attrs;
       for (attr in _ref) {
         if (!__hasProp.call(_ref, attr)) continue;

@@ -21,5 +21,9 @@ class ModelJS
 		st[nm]= @[nm] for nm of ss when @[nm] isnt ss[nm]
 		return false if $.isEmptyObject st
 		$.extend true, {}, st # clone and return
+	invalidateTables: (tbl_nms) -> # Use true for all
+		tbl_nms= (nm for nm of @Table) if tbl_nms is true
+		delete @Table[nm] for nm in tbl_nms
+		@Epic.oView.invalidateTables @view_nm, tbl_nms
 
 window.EpicMvc.ModelJS= ModelJS # Public API

@@ -14,11 +14,10 @@
       return TagExe.__super__.constructor.apply(this, arguments);
     }
 
-    TagExe.prototype.resetForNextRequest = function(bd_template, bd_page) {
-      this.bd_template = bd_template;
-      this.bd_page = bd_page;
-      TagExe.__super__.resetForNextRequest.apply(this, arguments);
-      return this.Epic.log1("T:" + this.bd_template + ", P:" + this.bd_page);
+    TagExe.prototype.resetForNextRequest = function(state) {
+      TagExe.__super__.resetForNextRequest.call(this, state);
+      this.bd_template = this.viewExe.template;
+      return this.bd_page = this.viewExe.page;
     };
 
     TagExe.prototype.Tag_page_part = function(oPt) {

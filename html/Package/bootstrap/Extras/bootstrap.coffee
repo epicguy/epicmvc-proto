@@ -123,6 +123,8 @@ class bootstrap
 		if modal
 			$('#'+@modalId).html content
 			window.$('#'+@modalId+ ' div.modal').modal() # Activate it (must include boostrap-modal.js)
+			.on 'hidden', =>
+				@Epic.makeClick false, 'close_modal', {}, true
 		else
 			$('#'+@baseId).html content
 		@handleRenderState(history, click_index)

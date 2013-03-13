@@ -126,7 +126,8 @@
     };
 
     bootstrap.prototype.render = function(content, history, click_index, modal) {
-      var f;
+      var f,
+        _this = this;
       f = 'E:bootstrap.render2: ';
       _log2(f, history);
       if (typeof history === 'undefined') {
@@ -138,7 +139,9 @@
       }
       if (modal) {
         $('#' + this.modalId).html(content);
-        window.$('#' + this.modalId + ' div.modal').modal();
+        window.$('#' + this.modalId + ' div.modal').modal().on('hidden', function() {
+          return _this.Epic.makeClick(false, 'close_modal', {}, true);
+        });
       } else {
         $('#' + this.baseId).html(content);
       }

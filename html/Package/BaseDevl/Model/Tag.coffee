@@ -2,7 +2,11 @@
 
 # Enhance with error checking/reporting for Devl mode
 class TagExe extends window.EpicMvc.Model.TagExe$Base
-	resetForNextRequest: (@bd_template,@bd_page) -> super; @Epic.log1 "T:#{@bd_template}, P:#{@bd_page}"
+	resetForNextRequest: (state) ->
+		super state
+		@bd_template= @viewExe.template
+		@bd_page= @viewExe.page
+		#@Epic.log1 "T:#{@bd_template}, P:#{@bd_page}"
 	Tag_page_part: (oPt) ->
 		#_log2 'page_part', oPt
 		#"<table><caption>PART:#{oPt.attrs.part}</caption><tr><td>#{super oPt}</td></tr></table>"
