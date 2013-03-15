@@ -55,7 +55,9 @@
     };
 
     ModelJS.prototype.invalidateTables = function(tbl_nms) {
-      var nm, _i, _len;
+      var f, nm, _i, _len;
+      f = ':ModelJs.invalidateTables';
+      this.Epic.log2(f, tbl_nms);
       if (tbl_nms === true) {
         tbl_nms = (function() {
           var _results;

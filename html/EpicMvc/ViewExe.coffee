@@ -48,6 +48,8 @@ class ViewExe
 			parent: @activeDynamicPartIx, pending: false, stamp: new Date().getTime()
 		@activeDynamicPartIx= @dynamicParts.length- 1
 	invalidateTables: (view_nm, tbl_nms) ->
+		f= ':ViewExe.addDynamicPart'
+		@Epic.log2 f, view_nm, tbl_nms, (if @Epic.inClick then 'IN'), @dynamicParts, @dynamicMap
 		sched= []
 		return 'no dynamic parts' if @dynamicParts.length is 1 # We have no dynamic parts
 		return 'in click' if @Epic.inClick

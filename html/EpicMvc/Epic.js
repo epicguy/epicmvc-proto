@@ -237,13 +237,11 @@
       p_action = {};
       p_action[form_flag ? '_b' : '_a'] = action;
       click_index = this.oRequest.addLink($.extend(p_action, params));
-      if (render_flag) {
-        this.click(click_index);
-      }
+      this.click(click_index, !render_flag);
       return click_index;
     };
 
-    Epic.prototype.click = function(click_index) {
+    Epic.prototype.click = function(click_index, no_render) {
       var click_result, f, k, o, oC, oPf, ss, _ref, _ref1, _ref2, _ref3;
       f = ':click';
       this.log2(f, click_index);
@@ -284,7 +282,9 @@
           this.modelState[k] = ss;
         }
       }
-      this.renderSecure();
+      if (no_render !== true) {
+        this.renderSecure();
+      }
       return this.inClick = false;
     };
 

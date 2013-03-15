@@ -128,9 +128,9 @@ class Epic
 		p_action= {}
 		p_action[ if form_flag then '_b' else '_a']= action
 		click_index= @oRequest.addLink $.extend p_action, params
-		@click click_index if render_flag # Consider still calling ClickAction if not render_flag?
+		@click click_index, not render_flag
 		click_index
-	click: (click_index) ->
+	click: (click_index,no_render) ->
 		f= ':click'
 		@log2 f, click_index
 		if @inClick isnt false then alert 'WARNING: You are already in click'
@@ -147,7 +147,7 @@ class Epic
 		oPf.setMessages click_result[1]
 		@modelState= {}
 		@modelState[k]= ss for k,o of @oModel when o.saveState? and ss= o.saveState()
-		@renderSecure()
+		@renderSecure() unless no_render is true
 		@inClick= false
 	renderSecure: (avoid_form_reset) ->
 		oC= new window.EpicMvc.ClickAction @

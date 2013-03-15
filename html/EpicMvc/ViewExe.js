@@ -120,8 +120,10 @@
     };
 
     ViewExe.prototype.invalidateTables = function(view_nm, tbl_nms) {
-      var delay, inst, ix, ix_list, nm, now, part, sched, sofar, tbl_nm, _i, _j, _len, _len1, _ref,
+      var delay, f, inst, ix, ix_list, nm, now, part, sched, sofar, tbl_nm, _i, _j, _len, _len1, _ref,
         _this = this;
+      f = ':ViewExe.addDynamicPart';
+      this.Epic.log2(f, view_nm, tbl_nms, (this.Epic.inClick ? 'IN' : void 0), this.dynamicParts, this.dynamicMap);
       sched = [];
       if (this.dynamicParts.length === 1) {
         return 'no dynamic parts';
