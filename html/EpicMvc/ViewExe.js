@@ -11,6 +11,7 @@
     function ViewExe(Epic, loadStrategy) {
       this.Epic = Epic;
       this.loadStrategy = loadStrategy;
+      this.dynamicParts = [];
     }
 
     ViewExe.prototype.init = function(template, page) {
@@ -54,7 +55,7 @@
     };
 
     ViewExe.prototype.doDynamicPart = function(ix, instance) {
-      var part;
+      var old_dynamic_ix, part;
       if (instance !== this.instance) {
         return;
       }
@@ -64,25 +65,36 @@
       }
       part.stamp = new Date().getTime();
       part.pending = false;
+      part.defer = [];
       $('#' + part.id).html('Changing...');
+      old_dynamic_ix = this.activeDynamicPartIx;
+      this.activeDynamicPartIx = ix;
       this.TagExe.resetForNextRequest(part.state);
-      return $('#' + part.id).html(this.run(this.loadStrategy.part(part.name)));
+      $('#' + part.id).html(this.run(this.loadStrategy.part(part.name)));
+      this.doDeferPart(part);
+      return this.activeDynamicPartIx = old_dynamic_ix;
     };
 
     ViewExe.prototype.pushDefer = function(code) {
       return this.part().defer.push(code);
     };
 
+    ViewExe.prototype.doDeferPart = function(part) {
+      var v, _i, _len, _ref;
+      _ref = part.defer;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        v = _ref[_i];
+        eval(v.code);
+      }
+      return true;
+    };
+
     ViewExe.prototype.doDefer = function() {
-      var part, v, _i, _j, _len, _len1, _ref, _ref1;
+      var part, _i, _len, _ref;
       _ref = this.dynamicParts;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         part = _ref[_i];
-        _ref1 = part.defer;
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          v = _ref1[_j];
-          eval(v.code);
-        }
+        this.doDeferPart(part);
       }
       return true;
     };
@@ -122,7 +134,7 @@
     ViewExe.prototype.invalidateTables = function(view_nm, tbl_nms) {
       var delay, f, inst, ix, ix_list, nm, now, part, sched, sofar, tbl_nm, _i, _j, _len, _len1, _ref,
         _this = this;
-      f = ':ViewExe.addDynamicPart';
+      f = ':ViewExe.invalidateTables';
       this.Epic.log2(f, view_nm, tbl_nms, (this.Epic.inClick ? 'IN' : void 0), this.dynamicParts, this.dynamicMap);
       sched = [];
       if (this.dynamicParts.length === 1) {

@@ -248,7 +248,9 @@
       if (this.inClick !== false) {
         alert('WARNING: You are already in click');
       }
+      if (!no_render) {
       this.inClick = click_index;
+      }
       if ((_ref = window.event) != null) {
         _ref.returnValue = false;
       }

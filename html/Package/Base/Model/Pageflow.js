@@ -98,6 +98,12 @@
             this.goTo(q[0], q[1], q[2]);
           }
           break;
+        case 'add_message':
+          m.add(p.type, p.msgs);
+          break;
+        case 'add_issue':
+          i.add(p.type, p.msgs);
+          break;
         default:
           Pageflow.__super__.action.call(this, a, p);
       }
@@ -106,8 +112,9 @@
 
     Pageflow.prototype.setIssues = function(issue_obj) {
       if ((issue_obj != null ? issue_obj.count() : void 0) !== 0) {
-        return this.issues.addObj(issue_obj);
+        this.issues.addObj(issue_obj);
       }
+      return this.invalidateTables(['Issue']);
     };
 
     Pageflow.prototype.setMessages = function(issue_obj) {

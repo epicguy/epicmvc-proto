@@ -17,6 +17,7 @@ class TagExe
 		switch spec
 			when 'count' then val?.length
 			when 'bytes' then window.bytesToSize Number val
+			when 'uriencode' then encodeURIComponent val
 			when 'ucFirst'
 				str= (String str).toLowerCase()
 				str.slice( 0, 1).toUpperCase()+ str.slice 1

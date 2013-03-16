@@ -35,6 +35,8 @@
           return val != null ? val.length : void 0;
         case 'bytes':
           return window.bytesToSize(Number(val));
+        case 'uriencode':
+          return encodeURIComponent(val);
         case 'ucFirst':
           str = (String(str)).toLowerCase();
           return str.slice(0, 1).toUpperCase() + str.slice(1);

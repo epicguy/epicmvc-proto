@@ -39,10 +39,13 @@ class Pageflow extends window.EpicMvc.ModelJS
 				@goTo q[0], q[1], q[2]
 			when 'restore_path'
 				if @sp.length then q= @sp.pop(); @goTo q[0], q[1], q[2]
+			when 'add_message' then m.add p.type, p.msgs
+			when 'add_issue'   then i.add p.type, p.msgs
 			else  super a, p
 		[r, i, m]
 	setIssues: (issue_obj) ->
 		@issues.addObj issue_obj if issue_obj?.count() isnt 0
+		@invalidateTables ['Issue']
 	setMessages: (issue_obj) ->
 		@messages.addObj issue_obj if issue_obj?.count() isnt 0
 	loadTable: (tbl_nm) ->

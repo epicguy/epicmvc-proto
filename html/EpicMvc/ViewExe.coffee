@@ -3,6 +3,7 @@
 $= window.jQuery
 class ViewExe
 	constructor: (@Epic,@loadStrategy) ->
+		@dynamicParts= []
 	init: (@template, @page) ->
 		@Epic.log2 ':view T:'+ @template, 'P:'+ page, (v for v in (@Epic.getInstance 'Pageflow').getStepPath()).join '/'
 		@instance= @Epic.nextCounter() # Use to ignore delayed requests after a new init occured
@@ -23,15 +24,22 @@ class ViewExe
 		return if part.pending is false # Must have gotten here already
 		part.stamp= new Date().getTime()
 		part.pending= false
+		part.defer= [] # Will be rebuild using new content
 		$('#'+part.id).html 'Changing...'
-		# TODO RUN THE PART, ALSO NEED TO GET TAGEXE'S SNAPSHOT TO RENDER THE PART IN
-		# TODO WORRY ABOUT NESTED CALLS COMING BACK TO US AS IF WE ARE AT THE TOP DOING A FRESH DISPLAY
+		old_dynamic_ix= @activeDynamicPartIx
+		@activeDynamicPartIx= ix
 		@TagExe.resetForNextRequest part.state
 		$('#'+part.id).html @run @loadStrategy.part part.name
+		@doDeferPart part
+		@activeDynamicPartIx= old_dynamic_ix
 	pushDefer: (code) ->
 		@part().defer.push code
+	doDeferPart: (part) ->
+		eval v.code for v in part.defer
+		true
 	doDefer: ->
-		(eval v.code for v in part.defer) for part in @dynamicParts
+		for part in @dynamicParts
+		 	@doDeferPart part
 		true
 	haveTableRefrence: (view_nm, tbl_nm) -> # Called from TagExe
 		return if @activeDynamicPartIx is 0
@@ -48,7 +56,7 @@ class ViewExe
 			parent: @activeDynamicPartIx, pending: false, stamp: new Date().getTime()
 		@activeDynamicPartIx= @dynamicParts.length- 1
 	invalidateTables: (view_nm, tbl_nms) ->
-		f= ':ViewExe.addDynamicPart'
+		f= ':ViewExe.invalidateTables'
 		@Epic.log2 f, view_nm, tbl_nms, (if @Epic.inClick then 'IN'), @dynamicParts, @dynamicMap
 		sched= []
 		return 'no dynamic parts' if @dynamicParts.length is 1 # We have no dynamic parts

@@ -134,7 +134,7 @@ class Epic
 		f= ':click'
 		@log2 f, click_index
 		if @inClick isnt false then alert 'WARNING: You are already in click'
-		@inClick= click_index
+		@inClick= click_index if not no_render
 		window.event?.returnValue = false #IE
 		#TODO ALSO DO PREVENT DEFAULT, AND REMOVE THOSE RETURN FALSE'S
 		o.eventNewRequest?() for k,o of @oFist # Removing state where appropriate
