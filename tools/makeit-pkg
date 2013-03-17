@@ -1,18 +1,45 @@
 #!/bin/sh
 
-# TODO More logic to check user error $1 must be a dir under DevHtml/DeployHtml Package/$1
+# TODO More logic to check user error
+# $3 must be a dir under $1/Package and $2/Package
 
-rm -Ir DeployHtml/Package/$1
-cp -r DevHtml/Package/$1 DeployHtml/Package/.
-rm -r DeployHtml/Package/$1/{Extras,Model,view,*.coffee}
+DevHtml=$1
+MinHtml=$2
+Pkg=$3
 
-cat \
-DevHtml/Package/$1/Model/*.coffee \
-DevHtml/Package/$1/Extras/*.coffee \
-| grep -v "'use strict'" > tmp0.coffee
-coffee -c tmp0.coffee
-cat copyright.js tmp0.js > DeployHtml/Package/$1/tmp.js
-uglifyjs DeployHtml/Package/$1/tmp.js > DeployHtml/Package/$1/min.js
-rm tmp0.{js,coffee}
+Stage0=tmp0
+#Stage1=$MinHtml/Package/$Pkg/tmp # Use this one to leave non-uglified source for debugging the compression step
+Stage1=tmp1
+StageM=$MinHtml/Package/$Pkg/min
 
+if [ ! -d $MinHtml/Package ] ; then mkdir $MinHtml/Package ; fi
 
+if [ -d $MinHtml/Package/$Pkg ] ; then rm -r $MinHtml/Package/$Pkg ; fi
+cp -r $DevHtml/Package/$Pkg $MinHtml/Package/.
+rm -rf $MinHtml/Package/$Pkg/{Extras,Model,view,*.coffee}
+
+COFFEE=''
+for DIR in Model Extras
+do
+  if [ -d $DevHtml/Package/$Pkg/$DIR ]
+  then
+    for FILE in `find $DevHtml/Package/$Pkg/$DIR -name \*.coffee` ; do COFFEE="$COFFEE $FILE" ; done
+  fi
+done
+
+if [ -z "$COFFEE" ]
+then
+  echo 'No coffee source found'
+  exit
+fi
+
+cat $COFFEE | grep -v "'use strict'" > $Stage0.coffee
+coffee -c $Stage0.coffee
+if [ -f $DevHtml/Package/$Pkg/copyright.js ]
+then
+  cat $DevHtml/Package/$Pkg/copyright.js $Stage0.js > $Stage1.js
+else
+  cp $Stage0.js $Stage1.js
+fi
+uglifyjs $Stage1.js > $StageM.js
+rm $Stage0.{js,coffee}

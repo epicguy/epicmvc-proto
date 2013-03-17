@@ -38,9 +38,13 @@
       this.modelState = {};
     }
 
-    Epic.prototype.log1 = window.Function.prototype.bind.call(window.console.log, window.console);
+    Epic.prototype.log1 = function() {
+      return null;
+    };
 
-    Epic.prototype.log2 = window.Function.prototype.bind.call(window.console.log, window.console);
+    Epic.prototype.log2 = function() {
+      return null;
+    };
 
     Epic.prototype.nextCounter = function() {
       return ++this.counter;
@@ -249,7 +253,7 @@
         alert('WARNING: You are already in click');
       }
       if (!no_render) {
-      this.inClick = click_index;
+        this.inClick = click_index;
       }
       if ((_ref = window.event) != null) {
         _ref.returnValue = false;

@@ -13,7 +13,9 @@ class ClickAction
 			path= @Epic.getInstance('Pageflow').getStepPath()
 		#@Epic.log2 'click:'+ action_token
 		click_node= @Epic.appConf().findClick path, action_token
-		if not click_node? then return [issue, message] # No recognized action
+		if not click_node?
+			@Epic.log1 f, 'no match', path: path, action_token: action_token
+			return [issue, message] # No recognized action
 		r= @doAction click_node, {}
 		[rNode, rResults, rIssues, rMessages]= r
 		issue.addObj rIssues; message.addObj rMessages
@@ -27,7 +29,7 @@ class ClickAction
 		[issue, message]
 	doAction: (node, prev_action_result) ->
 		f= ":ClickAction.doAction(#{node.getTarget()})"
-		#@Epic.log2 f, 'getPAttrs', ("#{k}=#{v}" for k,v of node.getPAttrs()).join ', '
+		@Epic.log2 f, 'getPAttrs', ("#{k}=#{v}" for k,v of node.getPAttrs()).join ', '
 		r_vals= @Epic.request().getValues()
 		a_params_list= @pullValueUsingAttr node, r_vals, prev_action_result
 		class_method= node.getTarget() # Call= or Macro= 's value

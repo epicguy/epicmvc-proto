@@ -4,26 +4,21 @@ jsdom = require "jsdom"
 testenv= require "../testlib/testenv"
 fs= require 'fs'
 
-doIt= (pkg_nm) ->
+doIt= (epic_path,dev_dir,pkg_nm) ->
 	jsdom.env
 		html: "<html><body><div id='fill_me'></div></body></html>"
 		scripts: [
-			#testenv.jquery
-			#testenv.testDir+ '/testlib/MockEpicSetup.js'
-			#testenv.testDir+ '/testlib/json2.js'
 			'..'+ '/testlib/MockEpicSetup.js'
 			'..'+ '/testlib/json2.js'
-			#testenv.baseDir+ '/EpicMvc/parse.js'
-			#testenv.baseDir+ '/EpicMvc/util.js'
-			'..'+ '/EpicMvc/parse.js'
-			'..'+ '/EpicMvc/util.js'
+			epic_path+ '/parse.js'
+			epic_path+ '/util.js'
 		],
 		(err, window)->
 			#console.log err
 			class MockLoadStrategy
-				constructor: (@pkg_nm) ->
+				constructor: (@Xdev_dir,@Xpkg_nm) ->
 					#@path= testenv.baseDir.substr( 'file://'.length)+ '/Package/'+ @pkg_nm+'/view/'
-					@path= '../DevHtml'+ '/Package/'+ @pkg_nm+'/view/'
+					@path= @Xdev_dir+ '/Package/'+ @Xpkg_nm+'/view/'
 				getTmplNm: (nm) -> @path+ nm+ '.tmpl.html'
 				getPageNm: (nm) -> @path+ 'page/'+ nm+ '.page.html'
 				getPartNm: (nm) -> @path+ 'part/'+ nm+ '.part.html'
@@ -58,7 +53,7 @@ doIt= (pkg_nm) ->
 					f[0] for f in (p.split '.' for p in files) when f?[1] is (if type is 'template' then 'tmpl' else type)
 
 			out= 'window.EpicMvc.view$'+ pkg_nm+ '={\n'
-			load= new MockLoadStrategy pkg_nm
+			load= new MockLoadStrategy dev_dir, pkg_nm
 			out+= 'tmpl: {\n'
 			for f in load.readdir 'template'
 				out+= "\"#{f}\": #{JSON.stringify load.template f},\n"
@@ -71,4 +66,4 @@ doIt= (pkg_nm) ->
 			out+= '}};\n'
 			console.log ''+ out
 
-doIt process.argv[ 2] || 'bad-arg'
+doIt (process.argv[ 2]+'/EpicMvc'), process.argv[ 3], process.argv[ 4]

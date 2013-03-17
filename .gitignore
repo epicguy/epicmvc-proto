@@ -13,10 +13,11 @@ results
 
 npm-debug.log
 
-tools/DeployHtml
-tools/DevHtml
-tools/EpicMvc
+tools/DevEpic
+tools/DevUser
+tools/MinHtml
 tools/EpicMvc-tmp.js
+tools/tmp?.js
 
 tools/util/node_modules
 

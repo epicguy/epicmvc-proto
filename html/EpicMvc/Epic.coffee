@@ -22,10 +22,10 @@ class Epic
 		@wasModal= false
 		@modelState= {}
 
-	log1: window.Function.prototype.bind.call( window.console.log, window.console)
-	#log1: () -> null
-	log2: window.Function.prototype.bind.call( window.console.log, window.console)
-	#log2: () -> null
+	#log1: window.Function.prototype.bind.call( window.console.log, window.console)
+	log1: () -> null
+	#log2: window.Function.prototype.bind.call( window.console.log, window.console)
+	log2: () -> null
 	nextCounter: -> ++@counter
 	getInstanceNm: (view_nm) ->
 		inst_nm= @oAppConf.getObj view_nm, 'inst'
@@ -137,6 +137,7 @@ class Epic
 		@inClick= click_index if not no_render
 		window.event?.returnValue = false #IE
 		#TODO ALSO DO PREVENT DEFAULT, AND REMOVE THOSE RETURN FALSE'S
+		#TODO CONSIDER NOT DOING NEW-REQUEST IF NO_RENDER?
 		o.eventNewRequest?() for k,o of @oFist # Removing state where appropriate
 		o.eventNewRequest?() for k,o of @oModel
 		@oRequest.start click_index if click_index

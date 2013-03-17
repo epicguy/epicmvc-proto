@@ -24,6 +24,10 @@
       }
       click_node = this.Epic.appConf().findClick(path, action_token);
       if (!(click_node != null)) {
+        this.Epic.log1(f, 'no match', {
+          path: path,
+          action_token: action_token
+        });
         return [issue, message];
       }
       r = this.doAction(click_node, {});
@@ -46,6 +50,16 @@
     ClickAction.prototype.doAction = function(node, prev_action_result) {
       var a_params_list, alias_params, class_method, f, found_result_tag, k, look_for_macro_result_tags, macro_node, r, rIssues, rMessages, rResults, r_vals, v;
       f = ":ClickAction.doAction(" + (node.getTarget()) + ")";
+      this.Epic.log2(f, 'getPAttrs', ((function() {
+        var _ref, _results;
+        _ref = node.getPAttrs();
+        _results = [];
+        for (k in _ref) {
+          v = _ref[k];
+          _results.push("" + k + "=" + v);
+        }
+        return _results;
+      })()).join(', '));
       r_vals = this.Epic.request().getValues();
       a_params_list = this.pullValueUsingAttr(node, r_vals, prev_action_result);
       class_method = node.getTarget();
