@@ -77,15 +77,6 @@
       return (_ref = (_base = this.fist_objects)[flist_nm]) != null ? _ref : _base[flist_nm] = this.Epic.getFistInstance(flist_nm);
     };
 
-    TagExe.prototype.getFistForField = function(fl_nm) {
-      var flist_nm, oFi, _ref;
-      _ref = this.fist_objects;
-      for (flist_nm in _ref) {
-        oFi = _ref[flist_nm];
-        return oFi;
-      }
-    };
-
     TagExe.prototype.checkForDynamic = function(oPt) {
       var attr, delay, id, plain_attrs, state, tag, val, _ref;
       tag = 'dynamic' in oPt.attrs ? this.viewExe.handleIt(oPt.attrs.dynamic) : '';
@@ -475,6 +466,7 @@
         }
         in_ct = this.viewExe.run([
           '', [4], 'control', {
+            form: fm_nm,
             field: fl_nm
           }, '', [1]
         ]);
@@ -534,9 +526,10 @@
     };
 
     TagExe.prototype.Tag_control = function(oPt) {
-      var control_html, fl_def, fl_nm, oFi, one, value;
+      var control_html, fl_def, fl_nm, fm_nm, oFi, one, value;
       fl_nm = oPt.attrs.field;
-      oFi = this.getFistForField(fl_nm);
+      fm_nm = this.viewExe.handleIt(oPt.attrs.form);
+      oFi = this.loadFistDef(fm_nm);
       fl_def = oFi.getFieldAttributes(fl_nm);
       value = oFi.getHtmlFieldValue(fl_nm);
       one = fl_def.type.substr(0, 5 === 'radio') ? oPt.attrs.value : null;

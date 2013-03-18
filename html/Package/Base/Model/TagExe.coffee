@@ -40,9 +40,9 @@ class TagExe
 		if sub_nm? then ans= ans[sub_nm]
 		@formatFromSpec format_spec, ans
 	loadFistDef: (flist_nm) -> @fist_objects[flist_nm]?= @Epic.getFistInstance flist_nm
-	getFistForField: (fl_nm) ->
-		for flist_nm, oFi of @fist_objects
-			return oFi # TODO First entry for now
+	#TODO PASSING NM INTO CONTROL FOR NOW getFistForField: (fl_nm) ->
+	#TODO PASSING NM INTO CONTROL FOR NOW 	for flist_nm, oFi of @fist_objects
+	#TODO PASSING NM INTO CONTROL FOR NOW 		return oFi # TODO First entry for now
 
 	checkForDynamic: (oPt) -> # dynamic="div" delay="2"
 		tag= if 'dynamic' of oPt.attrs then @viewExe.handleIt oPt.attrs.dynamic else ''
@@ -252,7 +252,7 @@ class TagExe
 			help_html= ''
 			if oPt.attrs.help is 'inline' and fl.help_text.length
 				help_html= """<br><font size="-2">{#{fl.help_text}}</font>"""
-			in_ct= @viewExe.run ['', [4], 'control', field: fl_nm, '', [1]]
+			in_ct= @viewExe.run ['', [4], 'control', form: fm_nm, field: fl_nm, '', [1]]
 			#out.push( '<td>'+req+fl.label+'</td><td>'+in_ct+help_html+'</td>');
 			out.push """
 				<label for="#{fl_nm}" class="ui-input-text">
@@ -292,7 +292,9 @@ class TagExe
 		o+= '</form>'
 	Tag_control: (oPt) ->
 		fl_nm= oPt.attrs.field
-		oFi= @getFistForField fl_nm
+		#TODO PASSING IN FORM NM INSTEAD OF THIS HERE TRICKY LOGIC: oFi= @getFistForField fl_nm
+		fm_nm= @viewExe.handleIt oPt.attrs.form
+		oFi= @loadFistDef fm_nm # Set state for viewExe.doAllParts/doTag calls
 		fl_def= oFi.getFieldAttributes fl_nm
 		value= oFi.getHtmlFieldValue fl_nm
 		one= if fl_def.type.substr 0, 5 is 'radio' then oPt.attrs.value else null
