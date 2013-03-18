@@ -55,7 +55,9 @@
     };
 
     ViewExe.prototype.doDynamicPart = function(ix, instance) {
-      var old_dynamic_ix, part;
+      var f, old_dynamic_ix, part;
+      f = ':ViewExe.doDynamicPart:' + ix;
+      this.Epic.log2(f, 'i,@i,p(i)', instance, this.instance, this.part(ix));
       if (instance !== this.instance) {
         return;
       }
@@ -158,14 +160,17 @@
       }
       now = new Date().getTime();
       for (ix in ix_list) {
+        ix = Number(ix);
         part = this.part(ix);
         if (part.pending === false) {
           sofar = now - part.stamp;
           delay = sofar > part.delay ? 0 : part.delay - sofar;
-          part.pending = window.setTimeout((function() {
-            return _this.doDynamicPart(ix, _this.instance);
-          }), delay);
-          sched.push(ix);
+          (function(ix) {
+            part.pending = window.setTimeout((function() {
+              return _this.doDynamicPart(ix, _this.instance);
+            }), delay);
+            return sched.push(ix);
+          })(ix);
         }
       }
       return sched;

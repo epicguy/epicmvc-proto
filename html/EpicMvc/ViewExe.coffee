@@ -19,12 +19,14 @@ class ViewExe
 	checkRefresh: (tables) -> alert 'Epic: ViewExec.checkRefresh was disabled.'; false
 	part: (ix) -> @dynamicParts[ix or @activeDynamicPartIx]
 	doDynamicPart: (ix, instance) ->
+		f= ':ViewExe.doDynamicPart:'+ix
+		@Epic.log2 f, 'i,@i,p(i)', instance, @instance, @part ix
 		return if instance isnt @instance
 		part= @part ix
 		return if part.pending is false # Must have gotten here already
 		part.stamp= new Date().getTime()
 		part.pending= false
-		part.defer= [] # Will be rebuild using new content
+		part.defer= [] # Will be rebuild using new content # TODO ALSO TAKE IX OUT OF ALL @dynamicMap LISTS TO BE REBUILT?
 		$('#'+part.id).html 'Changing...'
 		old_dynamic_ix= @activeDynamicPartIx
 		@activeDynamicPartIx= ix
@@ -70,12 +72,14 @@ class ViewExe
 		# TODO Weed out child parts
 		now= new Date().getTime()
 		for ix of ix_list
+			ix= Number ix
 			part= @part ix
 			if part.pending is false
 				sofar= now- part.stamp
 				delay= if sofar> part.delay then 0 else part.delay- sofar
-				part.pending= window.setTimeout (=> @doDynamicPart ix, @instance), delay
-				sched.push ix
+				do (ix) =>
+					part.pending= window.setTimeout (=> @doDynamicPart ix, @instance), delay
+					sched.push ix
 		sched
 	run: (current,dynoInfo) ->
 		current?= @oTemplate
