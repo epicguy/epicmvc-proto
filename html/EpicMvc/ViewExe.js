@@ -134,7 +134,7 @@
     };
 
     ViewExe.prototype.invalidateTables = function(view_nm, tbl_nms) {
-      var delay, f, inst, ix, ix_list, nm, now, part, sched, sofar, tbl_nm, _i, _j, _len, _len1, _ref,
+      var delay, f, inst, instance, ix, ix_list, nm, now, part, sched, sofar, tbl_nm, _i, _j, _len, _len1, _ref,
         _this = this;
       f = ':ViewExe.invalidateTables';
       this.Epic.log2(f, view_nm, tbl_nms, (this.Epic.inClick ? 'IN' : void 0), this.dynamicParts, this.dynamicMap);
@@ -165,12 +165,13 @@
         if (part.pending === false) {
           sofar = now - part.stamp;
           delay = sofar > part.delay ? 0 : part.delay - sofar;
-          (function(ix) {
+          instance = this.instance;
+          (function(ix, instance) {
             part.pending = window.setTimeout((function() {
-              return _this.doDynamicPart(ix, _this.instance);
+              return _this.doDynamicPart(ix, instance);
             }), delay);
             return sched.push(ix);
-          })(ix);
+          })(ix, instance);
         }
       }
       return sched;

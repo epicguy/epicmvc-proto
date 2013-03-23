@@ -77,8 +77,9 @@ class ViewExe
 			if part.pending is false
 				sofar= now- part.stamp
 				delay= if sofar> part.delay then 0 else part.delay- sofar
-				do (ix) =>
-					part.pending= window.setTimeout (=> @doDynamicPart ix, @instance), delay
+				instance= @instance
+				do (ix, instance) =>
+					part.pending= window.setTimeout (=> @doDynamicPart ix, instance), delay
 					sched.push ix
 		sched
 	run: (current,dynoInfo) ->
