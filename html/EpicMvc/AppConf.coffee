@@ -6,6 +6,7 @@ class AppConf
 		@config= @loadStrategy.getCombinedAppConfs()
 		@config.CLICKS?= {}
 		@config.MACROS?= {}
+		@config.OPTIONS.frame?= {}
 		@config.FORMS= false
 	# MODELS map functions
 	getObj: (view_name,attribute) ->
@@ -82,5 +83,9 @@ class AppConf
 		vars= $.extend {}, @config.FLOWS[f].v, @config.FLOWS[f].TRACKS[t].v, @config.FLOWS[f].TRACKS[t].STEPS[s].v
 		@Epic.log2 ( "#{k}:#{v}" for own k,v of vars).join ', '
 		vars
+
+	# returns: Object indexed by frame name (caller may alpha-sort for render order)
+	#Example: OPTIONS: frame: 499_BaseDevl: 'bdev' (view/bdev.frame.html)
+	getFrames: -> @config.OPTIONS.frame
 
 window.EpicMvc.AppConf= AppConf # Public API

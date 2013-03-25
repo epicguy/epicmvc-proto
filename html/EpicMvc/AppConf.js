@@ -8,7 +8,7 @@
   AppConf = (function() {
 
     function AppConf(Epic, loadStrategy) {
-      var _base, _base1, _ref, _ref1;
+      var _base, _base1, _base2, _ref, _ref1, _ref2;
       this.Epic = Epic;
       this.loadStrategy = loadStrategy;
       this.config = this.loadStrategy.getCombinedAppConfs();
@@ -17,6 +17,9 @@
       }
       if ((_ref1 = (_base1 = this.config).MACROS) == null) {
         _base1.MACROS = {};
+      }
+      if ((_ref2 = (_base2 = this.config.OPTIONS).frame) == null) {
+        _base2.frame = {};
       }
       this.config.FORMS = false;
     }
@@ -200,6 +203,10 @@
         return _results;
       })()).join(', '));
       return vars;
+    };
+
+    AppConf.prototype.getFrames = function() {
+      return this.config.OPTIONS.frame;
     };
 
     return AppConf;

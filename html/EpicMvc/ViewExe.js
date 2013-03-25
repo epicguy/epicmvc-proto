@@ -9,13 +9,33 @@
   ViewExe = (function() {
 
     function ViewExe(Epic, loadStrategy) {
+      var frames, ix, nm;
       this.Epic = Epic;
       this.loadStrategy = loadStrategy;
       this.dynamicParts = [];
+      frames = this.Epic.oAppConf.getFrames();
+      this.frames = (function() {
+        var _i, _len, _ref, _results;
+        _ref = ((function() {
+          var _results1;
+          _results1 = [];
+          for (nm in frames) {
+            _results1.push(nm);
+          }
+          return _results1;
+        })()).sort();
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          ix = _ref[_i];
+          _results.push(frames[ix]);
+        }
+        return _results;
+      })();
+      this.Epic.log1('ViewExec', this.frames);
     }
 
     ViewExe.prototype.init = function(template, page) {
-      var v;
+      var nm, v, _i, _len, _ref;
       this.template = template;
       this.page = page;
       this.Epic.log2(':view T:' + this.template, 'P:' + page, ((function() {
@@ -31,6 +51,13 @@
       this.instance = this.Epic.nextCounter();
       this.oTemplate = this.loadStrategy.template(this.template);
       this.oPage = this.loadStrategy.page(this.page);
+      this.pageStack = [];
+      _ref = this.frames;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        nm = _ref[_i];
+        this.pageStack.push(this.loadStrategy.template(nm));
+      }
+      this.pageStack.push(this.oTemplate, this.oPage);
       this.stack = [];
       this.TagExe = this.Epic.getInstance('Tag');
       this.TagExe.resetForNextRequest();
@@ -180,7 +207,7 @@
     ViewExe.prototype.run = function(current, dynoInfo) {
       var out, _ref;
       if (current == null) {
-        current = this.oTemplate;
+        current = this.pageStack.shift(0);
       }
       this.stack.push([this.current, this.activeDynamicPartIx]);
       this.current = current;
@@ -193,7 +220,7 @@
     };
 
     ViewExe.prototype.includePage = function() {
-      return this.run(this.oPage);
+      return this.run(this.pageStack.shift(0));
     };
 
     ViewExe.prototype.includePart = function(nm, dynoInfo) {

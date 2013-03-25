@@ -3,7 +3,6 @@
 
 class Epic
 	constructor: ->
-		#TODO CONSIDER CACHE OF PAGEFLOW IN EPIC, SINCE EPIC USES IT EXTENSIVLY
 		@appNm= 'Epic::appNm=NOT-SET'
 		@oView= null
 		@getView= -> @oView
@@ -82,8 +81,8 @@ class Epic
 	init: (@appconfs, @loader, @renderer) ->
 		@oRequest=        new window.EpicMvc.Request @
 		@oFistGroupCache= new window.EpicMvc.FistGroupCache @, @loader
-		@oAppConf=        new window.EpicMvc.AppConf @, @loader
-		@oView=           new window.EpicMvc.ViewExe @, @loader
+		@oAppConf=        new window.EpicMvc.AppConf @, @loader # Uses @loader in constructor
+		@oView=           new window.EpicMvc.ViewExe @, @loader # Uses AppConf in constructor
 		f= @oAppConf.loginF() # Find initial pageflow state
 		(@getInstance 'Pageflow').goTo f
 		true
@@ -101,7 +100,7 @@ class Epic
 		if modal
 			template= @oAppConf.mapModalTemplate modal
 			modal= true
-		#TODO IS THIS SET ON ACTCION, NOT PAGE? SHOULD I USE FIND-ATTR? history= @oAppConf.getHistory sp
+		#TODO IS THIS SET ON ACTION, NOT PAGE? SHOULD I USE FIND-ATTR? history= @oAppConf.getHistory sp
 		history= switch "#{Number @wasModal}:#{Number modal}"
 			when '0:0' then true
 			when '1:0' then 'replace'

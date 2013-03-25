@@ -4,6 +4,7 @@ class LoadStrategy
 		@path= 'Package/Base/view/'
 		@cache= {}
 		@cache_local_flag= true # False if we want browser to cache responses
+	clearCache: () -> @cache= {}
 	getTmplNm: (nm) -> nm+ '.tmpl.html'
 	getPageNm: (nm) -> 'page/'+ nm+ '.page.html'
 	getPartNm: (nm) -> 'part/'+ nm+ '.part.html'

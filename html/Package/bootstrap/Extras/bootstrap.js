@@ -17,6 +17,7 @@
       this.very_first = true;
       this.was_popped = false;
       this.was_modal = false;
+      this.unloadMsgs = {};
       this.baseUrl = window.document.location.pathname;
       this.baseId = "epic-new-page";
       this.modalId = "epic-new-modal";
@@ -28,6 +29,29 @@
       window.onpopstate = this.onPopState;
       true;
     }
+
+    bootstrap.prototype.UnloadMessage = function(ix, msg) {
+      var new_msg, nm, rec;
+      if (msg) {
+        this.unloadMsgs[ix] = msg;
+      } else {
+        delete this.unloadMsgs[ix];
+      }
+      new_msg = (function() {
+        var _ref, _results;
+        _ref = this.unloadMsgs;
+        _results = [];
+        for (nm in _ref) {
+          rec = _ref[nm];
+          _results.push(rec);
+        }
+        return _results;
+      }).call(this);
+      new_msg = new_msg.length ? new_msg.join("\n") : null;
+      return window.onbeforeunload = function() {
+        return new_msg;
+      };
+    };
 
     bootstrap.prototype.getFormData = function() {
       return $('form').serializeArray();

@@ -4,11 +4,18 @@ $= window.jQuery
 class ViewExe
 	constructor: (@Epic,@loadStrategy) ->
 		@dynamicParts= []
+		frames= @Epic.oAppConf.getFrames()
+		@frames=( frames[ix] for ix in (nm for nm of frames).sort())
+		@Epic.log1 'ViewExec', @frames
 	init: (@template, @page) ->
 		@Epic.log2 ':view T:'+ @template, 'P:'+ page, (v for v in (@Epic.getInstance 'Pageflow').getStepPath()).join '/'
 		@instance= @Epic.nextCounter() # Use to ignore delayed requests after a new init occured
 		@oTemplate= @loadStrategy.template @template
 		@oPage= @loadStrategy.page @page
+		@pageStack= []
+		(@pageStack.push @loadStrategy.template nm) for nm in @frames
+		@pageStack.push @oTemplate, @oPage
+		#@Epic.log1 'ViewExec.init', @pageStack
 		@stack= []
 		@TagExe= @Epic.getInstance 'Tag'
 		@TagExe.resetForNextRequest()
@@ -83,14 +90,15 @@ class ViewExe
 					sched.push ix
 		sched
 	run: (current,dynoInfo) ->
-		current?= @oTemplate
+		#current?= @oTemplate
+		current?= @pageStack.shift 0
 		@stack.push [@current, @activeDynamicPartIx]
 		@current= current
 		@addDynamicPart dynoInfo if dynoInfo
 		out= @doAllParts 0
 		[@current, @activeDynamicPartIx]= @stack.pop()
 		out
-	includePage: () -> @run @oPage
+	includePage: () -> @run @pageStack.shift 0 #oPage
 	includePart: (nm,dynoInfo) ->
 		dynoInfo.name= nm
 		@run (@loadStrategy.part nm), dynoInfo

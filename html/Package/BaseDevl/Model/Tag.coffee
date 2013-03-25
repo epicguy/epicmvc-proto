@@ -6,21 +6,17 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 		super state
 		@bd_template= @viewExe.template
 		@bd_page= @viewExe.page
-		#@Epic.log1 "T:#{@bd_template}, P:#{@bd_page}"
+	Opts: -> (@Epic.getViewTable 'Devl/Opts')[0]
 	Tag_page_part: (oPt) ->
-		#_log2 'page_part', oPt
-		#"<table><caption>PART:#{oPt.attrs.part}</caption><tr><td>#{super oPt}</td></tr></table>"
+		return super oPt if @Opts().file is false
 		"""<span class="dbg-part-box" title="#{oPt.attrs.part}.part.html">.</span>#{super oPt}"""
-		#"""<span class="dbg-part-box" title="PART:#{oPt.attrs.part}">#{super oPt}</span>"""
-		#_log2 oPt; 'Tag_page_part, '+( JSON.stringify oPt) + '<br />'
 	Tag_page: (oPt) ->
+		return super oPt if @Opts().file is false
 		"""
 <span class="dbg-part-box" title="#{@bd_template}.tmpl.html">T</span>
 <span class="dbg-part-box" title="#{@bd_page}.page.html">P</span>
 #{super oPt}
 		"""
-		#"<table><caption>#{'THE PAGE'}</caption><tr><td>#{super oPt}</td></tr></table>"
-		#_log2 oPt; 'Tag_page: '+( JSON.stringify oPt) + '<br />'
 	varGet3: (view_nm, tbl_nm, col_nm, format_spec) ->
 		try
 			val= super view_nm, tbl_nm, col_nm, format_spec
@@ -48,5 +44,7 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 		catch e
 			throw e if @Epic.isSecurityError e
 			'&lt;epic:foreach table="'+ oPt.attrs.table+ '"&gt; - '+ e.message + '<pre>\n'+ e.stack+ '</pre>'
+	Tag_explain: (oPt) ->
+		JSON.stringify @Epic.getViewTable oPt.attrs.table
 
 window.EpicMvc.Model.TagExe$BaseDevl= TagExe # Public API

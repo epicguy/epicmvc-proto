@@ -11,6 +11,10 @@
       this.cache_local_flag = true;
     }
 
+    LoadStrategy.prototype.clearCache = function() {
+      return this.cache = {};
+    };
+
     LoadStrategy.prototype.getTmplNm = function(nm) {
       return nm + '.tmpl.html';
     };

@@ -12,6 +12,7 @@ class bootstrap
 		@very_first= true
 		@was_popped= false
 		@was_modal= false
+		@unloadMsgs= {}
 		@baseUrl= window.document.location.pathname
 		@baseId= "epic-new-page"
 		@modalId= "epic-new-modal"
@@ -24,6 +25,13 @@ class bootstrap
 		#TODO DETECT MANUAL HASHCHANGE window.onhashchange = (a) -> console.log 'onhashChange', a; alert 'hashChange'
 		window.onpopstate = @onPopState
 		true
+	UnloadMessage: (ix,msg) ->
+		if msg
+		then @unloadMsgs[ix]= msg
+		else delete @unloadMsgs[ix]
+		new_msg= (rec for nm,rec of @unloadMsgs)
+		new_msg= if new_msg.length then  new_msg.join "\n" else null
+		window.onbeforeunload= -> new_msg
 	getFormData: -> $('form').serializeArray() # TODO Any form in *active* page (if other pages cahced in DOM)
 	form_action: (out_attrs, click_index, action, value) ->
         o= """

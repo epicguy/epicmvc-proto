@@ -20,11 +20,21 @@
       return this.bd_page = this.viewExe.page;
     };
 
+    TagExe.prototype.Opts = function() {
+      return (this.Epic.getViewTable('Devl/Opts'))[0];
+    };
+
     TagExe.prototype.Tag_page_part = function(oPt) {
+      if (this.Opts().file === false) {
+        return TagExe.__super__.Tag_page_part.call(this, oPt);
+      }
       return "<span class=\"dbg-part-box\" title=\"" + oPt.attrs.part + ".part.html\">.</span>" + (TagExe.__super__.Tag_page_part.call(this, oPt));
     };
 
     TagExe.prototype.Tag_page = function(oPt) {
+      if (this.Opts().file === false) {
+        return TagExe.__super__.Tag_page.call(this, oPt);
+      }
       return "<span class=\"dbg-part-box\" title=\"" + this.bd_template + ".tmpl.html\">T</span>\n<span class=\"dbg-part-box\" title=\"" + this.bd_page + ".page.html\">P</span>\n" + (TagExe.__super__.Tag_page.call(this, oPt));
     };
 
@@ -69,6 +79,10 @@
         }
         return '&lt;epic:foreach table="' + oPt.attrs.table + '"&gt; - ' + e.message + '<pre>\n' + e.stack + '</pre>';
       }
+    };
+
+    TagExe.prototype.Tag_explain = function(oPt) {
+      return JSON.stringify(this.Epic.getViewTable(oPt.attrs.table));
     };
 
     return TagExe;
