@@ -6,7 +6,7 @@
 # Put on-load event scripts here
 
 # Strategy(s) for rendering content
-_log2= -> # Turn off debug
+#_log2= -> # Turn off debug
 class bootstrap
 	constructor: (@Epic) ->
 		@very_first= true
@@ -122,9 +122,11 @@ class bootstrap
 		
 	render: (content, history, click_index, modal) ->
 		f= 'E:bootstrap.render2: '
-		_log2 f, history
+		_log2 f, history, modal, @was_modal
 		if typeof history is 'undefined' then throw new Error 'History is hosed!'
 		# Must be in the DOM, before handler returns, to allow 'defered' logic to work properly
+		if @was_modal and modal # to avoid 'snap'
+			return alert 'Attempting to create a modal, while one is active, may "snap" - check your JavaScript'
 		if @was_modal
 			window.$('#'+@modalId+ '>div').modal 'hide' # Get rid of that backdrop
 			$('#'+@modalId).html ''

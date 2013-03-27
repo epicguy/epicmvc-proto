@@ -2,10 +2,8 @@
 (function() {
   'use strict';
 
-  var bootstrap, _log2,
+  var bootstrap,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
-
-  _log2 = function() {};
 
   bootstrap = (function() {
 
@@ -153,9 +151,12 @@
       var f,
         _this = this;
       f = 'E:bootstrap.render2: ';
-      _log2(f, history);
+      _log2(f, history, modal, this.was_modal);
       if (typeof history === 'undefined') {
         throw new Error('History is hosed!');
+      }
+      if (this.was_modal && modal) {
+        return alert('Attempting to create a modal, while one is active, may "snap" - check your JavaScript');
       }
       if (this.was_modal) {
         window.$('#' + this.modalId + '>div').modal('hide');
