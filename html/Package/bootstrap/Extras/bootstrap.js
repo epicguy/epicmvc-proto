@@ -155,9 +155,6 @@
       if (typeof history === 'undefined') {
         throw new Error('History is hosed!');
       }
-      if (this.was_modal && modal) {
-        return alert('Attempting to create a modal, while one is active, may "snap" - check your JavaScript');
-      }
       if (this.was_modal) {
         window.$('#' + this.modalId + '>div').modal('hide');
         $('#' + this.modalId).html('');

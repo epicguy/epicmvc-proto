@@ -125,8 +125,9 @@ class bootstrap
 		_log2 f, history, modal, @was_modal
 		if typeof history is 'undefined' then throw new Error 'History is hosed!'
 		# Must be in the DOM, before handler returns, to allow 'defered' logic to work properly
-		if @was_modal and modal # to avoid 'snap'
-			return alert 'Attempting to create a modal, while one is active, may "snap" - check your JavaScript'
+		# TODO NEXT TWO LINES BREAK DIALOG WANTING TO REDISPLAY WITH ERROR; IT HELPED WHEN TWO BACKGROUND REQUESTS COME IN THOUGH
+		#if @was_modal and modal # to avoid 'snap'
+		#	return alert 'Attempting to create a modal, while one is active, may "snap" - check your JavaScript'
 		if @was_modal
 			window.$('#'+@modalId+ '>div').modal 'hide' # Get rid of that backdrop
 			$('#'+@modalId).html ''
