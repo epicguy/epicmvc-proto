@@ -18,6 +18,15 @@
       return issue;
     };
 
+    Issue.prototype.add2 = function(token1, token2, more) {
+      return this.issue_list.push({
+        type: 'token2',
+        token1: token1,
+        token2: token2,
+        more: more
+      });
+    };
+
     Issue.prototype.add = function(type, msgs) {
       var class_name;
       class_name = 'none';
@@ -43,9 +52,36 @@
       }
     };
 
+    Issue.prototype.call2 = function(token1, function_call_returning_issue_or_null) {
+      if (function_call_returning_issue_or_null) {
+        this.addObj2(token1, function_call_returning_issue_or_null);
+      }
+    };
+
     Issue.prototype.call = function(function_call_returning_issue_or_null) {
       if (function_call_returning_issue_or_null) {
         this.addObj(function_call_returning_issue_or_null);
+      }
+    };
+
+    Issue.prototype.addObj2 = function(token1, issue_obj) {
+      var issue, _i, _len, _ref;
+      if (typeof issue_obj !== 'object' || !('issue_list' in issue_obj)) {
+        return;
+      }
+      _ref = issue_obj.issue_list;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        issue = _ref[_i];
+        switch (issue.type) {
+          case 'text':
+            this.add2(token1, 'text', [issue.msgs]);
+            break;
+          case 'unknown':
+            this.add2(token1, 'unknown', [issue.msgs]);
+            break;
+          default:
+            this.add2(token1, issue.token, issue.values);
+        }
       }
     };
 
@@ -65,17 +101,59 @@
       return this.issue_list.length;
     };
 
-    Issue.prototype.asTable = function() {
-      var issue, _i, _len, _ref, _ref1, _results;
+    Issue.prototype.asTable = function(map) {
+      var final, issue, _i, _len, _ref, _ref1;
+      _log2('asTable: issue_list,map', this.issue_list, map);
+      final = [];
       _ref = this.issue_list;
-      _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         issue = _ref[_i];
-        _results.push({
-          issue: (_ref1 = issue.text) != null ? _ref1 : issue.token
-        });
+        switch (issue.type) {
+          case 'token2':
+            final.push({
+              issue: this.map(map, issue.token1, issue.token2, issue.more)
+            });
+            break;
+          default:
+            final.push({
+              issue: (_ref1 = issue.text) != null ? _ref1 : issue.token
+            });
+        }
       }
-      return _results;
+      return final;
+    };
+
+    Issue.prototype.map = function(map, t1, t2, more) {
+      var spec, _i, _len, _ref;
+      _log2('map:map,t1,t2,more', map, t1, t2, more);
+      _ref = map || [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        spec = _ref[_i];
+        _log2('map:spec', spec);
+        if ((t1.match(spec[0])) && (t2.match(spec[1]))) {
+          return this.doMap(spec[2], more);
+        }
+      }
+      return "" + t1 + "::" + t2 + "::" + (more.join(','));
+    };
+
+    Issue.prototype.doMap = function(pattern, vals) {
+      var new_str;
+      _log2('doMap', pattern, vals);
+      new_str = pattern.replace(/%([0-9])(?::([0-9]))?%/g, function(str, i1, i2, more) {
+        _log2({
+          str: str,
+          i1: i1,
+          i2: i2,
+          more: more
+        });
+        if (i2) {
+          return vals[i1 - 1] || vals[i2 - 1] || '';
+        } else {
+          return vals[i1 - 1] || '';
+        }
+      });
+      return new_str;
     };
 
     return Issue;

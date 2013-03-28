@@ -130,15 +130,23 @@
       field = this.fieldDef[fieldName];
       if ((!(value != null)) || value.length === 0) {
         if (field.req === true) {
-          return this.Make('FIELD_EMPTY', [fieldName, field.req_text]);
+          if (field.req_text) {
+            return this.Make('FIELD_EMPTY_TEXT', [fieldName, field.label, field.req_text]);
+          } else {
+            return this.Make('FIELD_EMPTY', [fieldName, field.label]);
+          }
         }
         return true;
       }
       if (field.max_len > 0 && value.length > field.max_len) {
-        return this.Make('FIELD_OVER_MAX', [fieldName, field.max_len]);
+        return this.Make('FIELD_OVER_MAX', [fieldName, field.label, field.max_len]);
       }
       if (!this.filt['CHECK_' + field.validate](fieldName, field.validate_expr, value)) {
-        return this.Make('FIELD_ISSUE', [fieldName, field.issue_text]);
+        if (field.issue_text) {
+          return this.Make('FIELD_ISSUE_TEXT', [fieldName, field.label, field.issue_text]);
+        } else {
+          return this.Make('FIELD_ISSUE', [fieldName, field.label]);
+        }
       }
       return true;
     };

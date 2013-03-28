@@ -50,8 +50,8 @@ class Pageflow extends window.EpicMvc.ModelJS
 		@messages.addObj issue_obj if issue_obj?.count() isnt 0
 	loadTable: (tbl_nm) ->
 		@Table[ tbl_nm]= switch tbl_nm
-			when 'Message' then @messages.asTable()
-			when 'Issue'   then @issues.asTable()
+			when 'Message' then @messages.asTable window.EpicMvc.issues$iPM # TODO GET AND MERGE ISSUES USING SAME METHOD AS APPCONF
+			when 'Issue'   then @issues.asTable   window.EpicMvc.issues$iPM
 			when 'V'   then [ @Epic.appConf().getVars @f, @t, @s ]
 			else super tbl_nm
 		return
