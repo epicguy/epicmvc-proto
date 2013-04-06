@@ -8,10 +8,11 @@
 
   ViewExe = (function() {
 
-    function ViewExe(Epic, loadStrategy) {
+    function ViewExe(Epic, loadStrategy, content_watch) {
       var frames, ix, nm;
       this.Epic = Epic;
       this.loadStrategy = loadStrategy;
+      this.content_watch = content_watch;
       this.dynamicParts = [];
       frames = this.Epic.oAppConf.getFrames();
       this.frames = (function() {
@@ -82,7 +83,7 @@
     };
 
     ViewExe.prototype.doDynamicPart = function(ix, instance) {
-      var f, old_dynamic_ix, part;
+      var f, old_dynamic_ix, part, watch, _i, _len, _ref;
       f = ':ViewExe.doDynamicPart:' + ix;
       this.Epic.log2(f, 'i,@i,p(i)', instance, this.instance, this.part(ix));
       if (instance !== this.instance) {
@@ -101,6 +102,11 @@
       this.TagExe.resetForNextRequest(part.state);
       $('#' + part.id).html(this.run(this.loadStrategy.part(part.name)));
       this.doDeferPart(part);
+      _ref = this.content_watch;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        watch = _ref[_i];
+        watch('#' + part.id);
+      }
       return this.activeDynamicPartIx = old_dynamic_ix;
     };
 

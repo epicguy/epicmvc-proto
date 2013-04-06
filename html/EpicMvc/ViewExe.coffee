@@ -2,7 +2,7 @@
 # Copyright 2007-2012 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 $= window.jQuery
 class ViewExe
-	constructor: (@Epic,@loadStrategy) ->
+	constructor: (@Epic,@loadStrategy,@content_watch) ->
 		@dynamicParts= []
 		frames= @Epic.oAppConf.getFrames()
 		@frames=( frames[ix] for ix in (nm for nm of frames).sort())
@@ -40,6 +40,7 @@ class ViewExe
 		@TagExe.resetForNextRequest part.state
 		$('#'+part.id).html @run @loadStrategy.part part.name
 		@doDeferPart part
+		(watch '#'+part.id) for watch in @content_watch
 		@activeDynamicPartIx= old_dynamic_ix
 	pushDefer: (code) ->
 		@part().defer.push code

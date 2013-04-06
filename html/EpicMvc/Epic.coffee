@@ -20,6 +20,7 @@ class Epic
 		@inClick= false
 		@wasModal= false
 		@modelState= {}
+		@content_watch= [] # Callers that are watching changes in content
 
 	#log1: window.Function.prototype.bind.call( window.console.log, window.console)
 	log1: () -> null
@@ -72,17 +73,17 @@ class Epic
 		[view_nm, action]= va.split '/'
 		oM= @getInstance view_nm
 		oM.action action, params
-	run: (appconfs,artifact_load_strategy_class,render_class) ->
+	run: (appconfs,artifact_load_strategy_class,render_class,content_watch) ->
 		return true if @guard_run # Called twice for some reason
 		@guard_run= true
 		loader=   new window.EpicMvc.Extras[ artifact_load_strategy_class] @
-		renderer= new window.EpicMvc.Extras[ render_class] @
-		@init appconfs, loader, renderer
-	init: (@appconfs, @loader, @renderer) ->
+		renderer= new window.EpicMvc.Extras[ render_class] @, content_watch
+		@init appconfs, loader, renderer, content_watch
+	init: (@appconfs, @loader, @renderer, @content_watch) ->
 		@oRequest=        new window.EpicMvc.Request @
 		@oFistGroupCache= new window.EpicMvc.FistGroupCache @, @loader
 		@oAppConf=        new window.EpicMvc.AppConf @, @loader # Uses @loader in constructor
-		@oView=           new window.EpicMvc.ViewExe @, @loader # Uses AppConf in constructor
+		@oView=           new window.EpicMvc.ViewExe @, @loader, @content_watch # Uses AppConf in constructor
 		f= @oAppConf.loginF() # Find initial pageflow state
 		(@getInstance 'Pageflow').goTo f
 		true

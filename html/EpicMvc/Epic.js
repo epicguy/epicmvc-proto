@@ -36,6 +36,7 @@
       this.inClick = false;
       this.wasModal = false;
       this.modelState = {};
+      this.content_watch = [];
     }
 
     Epic.prototype.log1 = function() {
@@ -131,26 +132,27 @@
       return oM.action(action, params);
     };
 
-    Epic.prototype.run = function(appconfs, artifact_load_strategy_class, render_class) {
+    Epic.prototype.run = function(appconfs, artifact_load_strategy_class, render_class, content_watch) {
       var loader, renderer;
       if (this.guard_run) {
         return true;
       }
       this.guard_run = true;
       loader = new window.EpicMvc.Extras[artifact_load_strategy_class](this);
-      renderer = new window.EpicMvc.Extras[render_class](this);
-      return this.init(appconfs, loader, renderer);
+      renderer = new window.EpicMvc.Extras[render_class](this, content_watch);
+      return this.init(appconfs, loader, renderer, content_watch);
     };
 
-    Epic.prototype.init = function(appconfs, loader, renderer) {
+    Epic.prototype.init = function(appconfs, loader, renderer, content_watch) {
       var f;
       this.appconfs = appconfs;
       this.loader = loader;
       this.renderer = renderer;
+      this.content_watch = content_watch;
       this.oRequest = new window.EpicMvc.Request(this);
       this.oFistGroupCache = new window.EpicMvc.FistGroupCache(this, this.loader);
       this.oAppConf = new window.EpicMvc.AppConf(this, this.loader);
-      this.oView = new window.EpicMvc.ViewExe(this, this.loader);
+      this.oView = new window.EpicMvc.ViewExe(this, this.loader, this.content_watch);
       f = this.oAppConf.loginF();
       (this.getInstance('Pageflow')).goTo(f);
       return true;

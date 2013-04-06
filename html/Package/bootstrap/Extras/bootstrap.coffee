@@ -6,9 +6,9 @@
 # Put on-load event scripts here
 
 # Strategy(s) for rendering content
-#_log2= -> # Turn off debug
+_log2= -> # Turn off debug
 class bootstrap
-	constructor: (@Epic) ->
+	constructor: (@Epic,@content_watch) ->
 		@very_first= true
 		@was_popped= false
 		@was_modal= false
@@ -125,19 +125,22 @@ class bootstrap
 		_log2 f, history, modal, @was_modal
 		if typeof history is 'undefined' then throw new Error 'History is hosed!'
 		# Must be in the DOM, before handler returns, to allow 'defered' logic to work properly
-		# TODO NEXT TWO LINES BREAK DIALOG WANTING TO REDISPLAY WITH ERROR; IT HELPED WHEN TWO BACKGROUND REQUESTS COME IN THOUGH
+		# TODO NEXT TWO LINES BREAK DIALOG WANTING TO REDISPLAY WITH ERROR; IT HELPED WHEN TWO BACKGROUND REQUESTS CAME
 		#if @was_modal and modal # to avoid 'snap'
 		#	return alert 'Attempting to create a modal, while one is active, may "snap" - check your JavaScript'
 		if @was_modal
 			window.$('#'+@modalId+ '>div').modal 'hide' # Get rid of that backdrop
 			$('#'+@modalId).html ''
 		if modal
-			$('#'+@modalId).html content
+			container= '#'+ @modalId
+			$(container).html content
 			window.$('#'+@modalId+ ' div.modal').modal() # Activate it (must include boostrap-modal.js)
 			.on 'hidden', =>
 				@Epic.makeClick false, 'close_modal', {}, true
 		else
-			$('#'+@baseId).html content
+			container= '#'+ @baseId
+			$(container).html content
+		(watch container) for watch in @content_watch
 		@handleRenderState(history, click_index)
 		@was_modal= modal
 		@was_popped= false

@@ -2,14 +2,17 @@
 (function() {
   'use strict';
 
-  var bootstrap,
+  var bootstrap, _log2,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+  _log2 = function() {};
 
   bootstrap = (function() {
 
-    function bootstrap(Epic) {
+    function bootstrap(Epic, content_watch) {
       var _this = this;
       this.Epic = Epic;
+      this.content_watch = content_watch;
       this.onPopState = __bind(this.onPopState, this);
 
       this.very_first = true;
@@ -148,7 +151,7 @@
     };
 
     bootstrap.prototype.render = function(content, history, click_index, modal) {
-      var f,
+      var container, f, watch, _i, _len, _ref,
         _this = this;
       f = 'E:bootstrap.render2: ';
       _log2(f, history, modal, this.was_modal);
@@ -160,12 +163,19 @@
         $('#' + this.modalId).html('');
       }
       if (modal) {
-        $('#' + this.modalId).html(content);
+        container = '#' + this.modalId;
+        $(container).html(content);
         window.$('#' + this.modalId + ' div.modal').modal().on('hidden', function() {
           return _this.Epic.makeClick(false, 'close_modal', {}, true);
         });
       } else {
-        $('#' + this.baseId).html(content);
+        container = '#' + this.baseId;
+        $(container).html(content);
+      }
+      _ref = this.content_watch;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        watch = _ref[_i];
+        watch(container);
       }
       this.handleRenderState(history, click_index);
       this.was_modal = modal;
