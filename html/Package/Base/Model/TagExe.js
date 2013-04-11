@@ -37,6 +37,10 @@
           return window.bytesToSize(Number(val));
         case 'uriencode':
           return encodeURIComponent(val);
+        case 'esc':
+          return window.EpicMvc.escape_html(val);
+        case 'lc':
+          return (String(val)).toLowerCase();
         case 'ucFirst':
           str = (String(str)).toLowerCase();
           return str.slice(0, 1).toUpperCase() + str.slice(1);
@@ -124,6 +128,63 @@
       var after, before, dynamicInfo, _ref;
       _ref = this.checkForDynamic(oPt), before = _ref[0], after = _ref[1], dynamicInfo = _ref[2];
       return before + (this.viewExe.includePage(dynamicInfo)) + after;
+    };
+
+    TagExe.prototype.getTable = function(nm) {
+      return this.fist_table[nm];
+    };
+
+    TagExe.prototype.Tag_form_part = function(oPt) {
+      var any_req, choices, fl, fl_nm, fm_nm, help, hpfl, ix, oFi, one_field_nm, orig, out, part, rows, s, show_req, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4;
+      part = this.viewExe.handleIt((_ref = oPt.attrs.part) != null ? _ref : 'fist_default');
+      fm_nm = this.viewExe.handleIt(oPt.attrs.form);
+      oFi = this.loadFistDef(fm_nm);
+      one_field_nm = oPt.attrs.field != null ? this.viewExe.handleIt(oPt.attrs.field) : false;
+      help = this.viewExe.handleIt((_ref1 = oPt.attrs.help) != null ? _ref1 : '');
+      show_req = this.viewExe.handleIt((_ref2 = oPt.attrs.show_req) != null ? _ref2 : 'yes');
+      any_req = false;
+      out = [];
+      hpfl = oFi.getHtmlPostedFieldsList(fm_nm);
+      for (_i = 0, _len = hpfl.length; _i < _len; _i++) {
+        fl_nm = hpfl[_i];
+        if (one_field_nm !== false && one_field_nm !== fl_nm) {
+          continue;
+        }
+        orig = oFi.getFieldAttributes(fl_nm);
+        fl = $.extend({}, orig);
+        if (fl.req === true) {
+          any_req = true;
+        }
+        fl.name = fl_nm;
+        fl.value = (_ref3 = oFi.getHtmlFieldValue(fl_nm)) != null ? _ref3 : '';
+        fl.id = 'U' + this.Epic.nextCounter();
+        fl.type = (fl.type.split(':'))[0];
+        if (fl.type === 'radio' || fl.type === 'pulldown') {
+          choices = oFi.getChoices(fl_nm);
+          rows = [];
+          for (ix = _j = 0, _ref4 = choices.options.length; 0 <= _ref4 ? _j < _ref4 : _j > _ref4; ix = 0 <= _ref4 ? ++_j : --_j) {
+            s = choices.values[ix] === fl.value ? 'yes' : '';
+            rows.push({
+              option: choices.options[ix],
+              value: choices.values[ix],
+              selected: s
+            });
+          }
+          fl.Choice = rows;
+        }
+        out.push(fl);
+      }
+      this.fist_table = {
+        Form: [
+          {
+            show_req: show_req,
+            any_req: any_req,
+            help: help
+          }
+        ],
+        Control: out
+      };
+      return this.viewExe.includePart(part, {});
     };
 
     TagExe.prototype.Tag_defer = function(oPt) {

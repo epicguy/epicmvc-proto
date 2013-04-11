@@ -25,17 +25,26 @@
     };
 
     TagExe.prototype.Tag_page_part = function(oPt) {
-      if (this.Opts().file === false) {
-        return TagExe.__super__.Tag_page_part.call(this, oPt);
+      try {
+        if (this.Opts().file === false) {
+          return TagExe.__super__.Tag_page_part.call(this, oPt);
+        }
+        return "<span class=\"dbg-part-box\" title=\"" + oPt.attrs.part + ".part.html\">.</span>" + (TagExe.__super__.Tag_page_part.call(this, oPt));
+      } catch (e) {
+        if (this.Epic.isSecurityError(e)) {
+          throw e;
+        }
+        _log2('##### Error in page-part', oPt.attrs.part, e, e.stack);
+        return "<pre>&lt;epic:page_part part=\"" + oPt.attrs.part + "&gt;<br>" + e + "<br>" + e.stack + "</pre>";
       }
-      return "<span class=\"dbg-part-box\" title=\"" + oPt.attrs.part + ".part.html\">.</span>" + (TagExe.__super__.Tag_page_part.call(this, oPt));
-    };
-
-    TagExe.prototype.Tag_page = function(oPt) {
-      if (this.Opts().file === false) {
-        return TagExe.__super__.Tag_page.call(this, oPt);
-      }
-      return "<span class=\"dbg-part-box\" title=\"" + this.bd_template + ".tmpl.html\">T</span>\n<span class=\"dbg-part-box\" title=\"" + this.bd_page + ".page.html\">P</span>\n" + (TagExe.__super__.Tag_page.call(this, oPt));
+      ({
+        Tag_page: function(oPt) {
+          if (this.Opts().file === false) {
+            return Tag_page.__super__.constructor.call(this, oPt);
+          }
+        }
+      });
+      return "\n<span class=\"dbg-part-box\" title=\"" + this.bd_template + ".tmpl.html\">T</span>\n<span class=\"dbg-part-box\" title=\"" + this.bd_page + ".page.html\">P</span>\n" + (TagExe.__super__.Tag_page_part.call(this, oPt));
     };
 
     TagExe.prototype.varGet3 = function(view_nm, tbl_nm, col_nm, format_spec) {
@@ -59,10 +68,11 @@
       try {
         val = TagExe.__super__.varGet2.call(this, tbl_nm, col_nm, format_spec, sub_nm);
       } catch (e) {
+        _log2('##### varGet2', "&" + tbl_nm + "/" + col_nm + ";", e, e.stack);
         if (this.Epic.isSecurityError(e)) {
           throw e;
         }
-        val = "&amp;" + view_nm + "/" + tbl_nm + "/" + col_nm + ";[" + e.message + "] <pre>" + e.stack + "</pre>";
+        val = "&amp;" + tbl_nm + "/" + col_nm + ";[" + e.message + "] <pre>" + e.stack + "</pre>";
       }
       if (val === void 0) {
         val = "&amp;" + tbl_nm + "/" + col_nm + ";";

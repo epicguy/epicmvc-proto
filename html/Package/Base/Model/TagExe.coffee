@@ -18,6 +18,8 @@ class TagExe
 			when 'count' then val?.length
 			when 'bytes' then window.bytesToSize Number val
 			when 'uriencode' then encodeURIComponent val
+			when 'esc' then window.EpicMvc.escape_html val
+			when 'lc' then (String val).toLowerCase()
 			when 'ucFirst'
 				str= (String str).toLowerCase()
 				str.slice( 0, 1).toUpperCase()+ str.slice 1
@@ -66,6 +68,38 @@ class TagExe
 	Tag_page: (oPt) ->
 		[before, after, dynamicInfo]= @checkForDynamic oPt
 		before+ (@viewExe.includePage dynamicInfo)+ after
+	getTable: (nm) -> @fist_table[nm]
+	Tag_form_part: (oPt) -> # part="" form="" (opt)field=""
+		part= @viewExe.handleIt oPt.attrs.part ? 'fist_default'
+		fm_nm= @viewExe.handleIt oPt.attrs.form
+		oFi= @loadFistDef fm_nm # Set state for viewExe.doAllParts/doTag calls
+		# Optional fields
+		one_field_nm= if oPt.attrs.field? then @viewExe.handleIt oPt.attrs.field else false
+		help= @viewExe.handleIt oPt.attrs.help ? ''
+		show_req= @viewExe.handleIt oPt.attrs.show_req ? 'yes'
+		any_req= false
+		out= []
+		hpfl= oFi.getHtmlPostedFieldsList fm_nm
+		for fl_nm in hpfl
+			continue if one_field_nm isnt false and one_field_nm isnt fl_nm
+			orig= oFi.getFieldAttributes fl_nm
+			fl= $.extend {}, orig
+			any_req= true if fl.req is true
+			fl.name= fl_nm
+			fl.value= (oFi.getHtmlFieldValue fl_nm) ? '' #TODO OR USE fl.default ?
+			fl.id= 'U'+ @Epic.nextCounter()
+			fl.type= (fl.type.split ':')[0]
+			#fl.one= if fl.type is 'radio' then oPt.attrs.value else false
+			if fl.type is 'radio' or fl.type is 'pulldown'
+				choices= oFi.getChoices fl_nm
+				rows= []
+				for ix in [0...choices.options.length]
+					s= if choices.values[ix] is fl.value then 'yes' else ''
+					rows.push option: choices.options[ix], value: choices.values[ix], selected: s
+				fl.Choice= rows
+			out.push fl
+		@fist_table= Form: [show_req: show_req, any_req: any_req, help: help], Control: out
+		@viewExe.includePart part, {} # TODO DYNAMICINFO?
 
 	Tag_defer: (oPt) -> #TODO OUTPUT CODE INTO SCRIPT TAG WITH FUNCTION WRAPPER TO CALL, FOR BETTER DEBUG
 		name= 'anonymous'

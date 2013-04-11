@@ -1,0 +1,32 @@
+<epic:foreach table="Tag/Control">
+	<label for="&Control/name;" class="ui-input-text">&Control/label;</label>
+
+<epic:if val="&Control/type;" eq="textarea">
+	<textarea &Control/attrs;>&Control/val#esc;</textarea>"
+</epic:if>
+
+<epic:if val="&Control/type#lc;" eq="text">
+	<input class="ui-input-text" type="&Control/type#lc;" name="&Control/name;" value="&Control/value;" size="&Control/width;">
+</epic:if>
+
+<epic:if val="&Control/type#lc;" eq="password">
+	<input class="ui-input-text" type="&Control/type#lc;" name="&Control/name;" value="&Control/value;" size="&Control/width;">
+</epic:if>
+
+<epic:if val="&Control/type;" eq="radio">
+<epic:foreach table="Control/Choice">
+	<label for="&Control/id;-&Choice/option;">
+	<input type="radio" name="&Control/name;" id="&Control/id;-&Choice/option;" value="&Choice/value#esc;"&Choice/selected#..selected;>
+	&Choice/option;</label>
+</epic:foreach>
+</epic:if>
+
+<epic:if val="&Control/type;" eq="pulldown">
+	<select name="&Control/name;"&Control/size#..size="%";>
+	<epic:foreach table="Control/Choice">
+		<option value="&Choice/value#esc;"&Choice/selected#..selected;>&Choice/option;</option>
+	</epic:foreach>
+	</select>
+</epic:if>
+
+</epic:foreach>
