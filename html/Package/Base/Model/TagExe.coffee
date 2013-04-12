@@ -13,8 +13,9 @@ class TagExe
 		@info_varGet3= {} # for &obj/table/var; type variables
 		if state
 			@info_foreach= $.extend true, {}, state
-	formatFromSpec: (spec, val) ->
+	formatFromSpec: (val, spec, custom_spec) ->
 		switch spec
+			when '' then window.EpicMvc.custom_filter? val, custom_spec
 			when 'count' then val?.length
 			when 'bytes' then window.bytesToSize Number val
 			when 'uriencode' then encodeURIComponent val
@@ -32,15 +33,15 @@ class TagExe
 						spec.substr(1).replace (new RegExp '['+ spec.substr(0,1)+ ']', 'g'), ' '
 					else ''
 				else val
-	varGet3: (view_nm, tbl_nm, key, format_spec) ->
+	varGet3: (view_nm, tbl_nm, key, format_spec, custom_spec) ->
 		@viewExe.haveTableRefrence view_nm, tbl_nm
 		@info_varGet3[view_nm]?= {}
 		row= (@info_varGet3[view_nm][tbl_nm]?= ((@Epic.getInstance view_nm).getTable tbl_nm)[0])
-		@formatFromSpec format_spec, row[key]
-	varGet2: (table_ref, col_nm, format_spec, sub_nm) ->
+		@formatFromSpec row[key], format_spec, custom_spec
+	varGet2: (table_ref, col_nm, format_spec, custom_spec, sub_nm) ->
 		ans= @info_foreach[table_ref].row[col_nm]
 		if sub_nm? then ans= ans[sub_nm]
-		@formatFromSpec format_spec, ans
+		@formatFromSpec ans, format_spec, custom_spec
 	loadFistDef: (flist_nm) -> @fist_objects[flist_nm]?= @Epic.getFistInstance flist_nm
 	#TODO PASSING NM INTO CONTROL FOR NOW getFistForField: (fl_nm) ->
 	#TODO PASSING NM INTO CONTROL FOR NOW 	for flist_nm, oFi of @fist_objects
@@ -89,6 +90,7 @@ class TagExe
 			fl.value= (oFi.getHtmlFieldValue fl_nm) ? '' #TODO OR USE fl.default ?
 			fl.id= 'U'+ @Epic.nextCounter()
 			fl.type= (fl.type.split ':')[0]
+			fl.width?= ''
 			#fl.one= if fl.type is 'radio' then oPt.attrs.value else false
 			if fl.type is 'radio' or fl.type is 'pulldown'
 				choices= oFi.getChoices fl_nm

@@ -47,14 +47,15 @@
       return "\n<span class=\"dbg-part-box\" title=\"" + this.bd_template + ".tmpl.html\">T</span>\n<span class=\"dbg-part-box\" title=\"" + this.bd_page + ".page.html\">P</span>\n" + (TagExe.__super__.Tag_page_part.call(this, oPt));
     };
 
-    TagExe.prototype.varGet3 = function(view_nm, tbl_nm, col_nm, format_spec) {
+    TagExe.prototype.varGet3 = function(view_nm, tbl_nm, col_nm, format_spec, custom_spec) {
       var val;
       try {
-        val = TagExe.__super__.varGet3.call(this, view_nm, tbl_nm, col_nm, format_spec);
+        val = TagExe.__super__.varGet3.call(this, view_nm, tbl_nm, col_nm, format_spec, custom_spec);
       } catch (e) {
         if (this.Epic.isSecurityError(e)) {
           throw e;
         }
+        _log2('##### Error in varGet3', "&amp;" + view_nm + "/" + tbl_nm + "/" + col_nm + ";", e, e.stack);
         val = "&amp;" + view_nm + "/" + tbl_nm + "/" + col_nm + ";[" + e.message + "] <pre>" + e.stack + "</pre>";
       }
       if (val === void 0) {
@@ -63,10 +64,10 @@
       return val;
     };
 
-    TagExe.prototype.varGet2 = function(tbl_nm, col_nm, format_spec, sub_nm) {
-      var val;
+    TagExe.prototype.varGet2 = function(tbl_nm, col_nm, format_spec, custom_spec, sub_nm) {
+      var spec, val;
       try {
-        val = TagExe.__super__.varGet2.call(this, tbl_nm, col_nm, format_spec, sub_nm);
+        val = TagExe.__super__.varGet2.call(this, tbl_nm, col_nm, format_spec, custom_spec, sub_nm);
       } catch (e) {
         _log2('##### varGet2', "&" + tbl_nm + "/" + col_nm + ";", e, e.stack);
         if (this.Epic.isSecurityError(e)) {
@@ -75,6 +76,8 @@
         val = "&amp;" + tbl_nm + "/" + col_nm + ";[" + e.message + "] <pre>" + e.stack + "</pre>";
       }
       if (val === void 0) {
+        spec = format_spec && format_spec.length > 0 ? '#' + format_spec : custom_spec && custom_spec.length > 0 ? '##' + custom_spec : '';
+        window.alert("Undefined: &" + tbl_nm + "/" + col_nm + spec + ";");
         val = "&amp;" + tbl_nm + "/" + col_nm + ";";
       }
       return val;

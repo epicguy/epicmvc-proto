@@ -28,9 +28,11 @@
       }
     };
 
-    TagExe.prototype.formatFromSpec = function(spec, val) {
-      var str;
+    TagExe.prototype.formatFromSpec = function(val, spec, custom_spec) {
+      var str, _base;
       switch (spec) {
+        case '':
+          return typeof (_base = window.EpicMvc).custom_filter === "function" ? _base.custom_filter(val, custom_spec) : void 0;
         case 'count':
           return val != null ? val.length : void 0;
         case 'bytes':
@@ -57,23 +59,23 @@
       }
     };
 
-    TagExe.prototype.varGet3 = function(view_nm, tbl_nm, key, format_spec) {
+    TagExe.prototype.varGet3 = function(view_nm, tbl_nm, key, format_spec, custom_spec) {
       var row, _base, _base1, _ref, _ref1;
       this.viewExe.haveTableRefrence(view_nm, tbl_nm);
       if ((_ref = (_base = this.info_varGet3)[view_nm]) == null) {
         _base[view_nm] = {};
       }
       row = ((_ref1 = (_base1 = this.info_varGet3[view_nm])[tbl_nm]) != null ? _ref1 : _base1[tbl_nm] = ((this.Epic.getInstance(view_nm)).getTable(tbl_nm))[0]);
-      return this.formatFromSpec(format_spec, row[key]);
+      return this.formatFromSpec(row[key], format_spec, custom_spec);
     };
 
-    TagExe.prototype.varGet2 = function(table_ref, col_nm, format_spec, sub_nm) {
+    TagExe.prototype.varGet2 = function(table_ref, col_nm, format_spec, custom_spec, sub_nm) {
       var ans;
       ans = this.info_foreach[table_ref].row[col_nm];
       if (sub_nm != null) {
         ans = ans[sub_nm];
       }
-      return this.formatFromSpec(format_spec, ans);
+      return this.formatFromSpec(ans, format_spec, custom_spec);
     };
 
     TagExe.prototype.loadFistDef = function(flist_nm) {
@@ -135,7 +137,7 @@
     };
 
     TagExe.prototype.Tag_form_part = function(oPt) {
-      var any_req, choices, fl, fl_nm, fm_nm, help, hpfl, ix, oFi, one_field_nm, orig, out, part, rows, s, show_req, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4;
+      var any_req, choices, fl, fl_nm, fm_nm, help, hpfl, ix, oFi, one_field_nm, orig, out, part, rows, s, show_req, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
       part = this.viewExe.handleIt((_ref = oPt.attrs.part) != null ? _ref : 'fist_default');
       fm_nm = this.viewExe.handleIt(oPt.attrs.form);
       oFi = this.loadFistDef(fm_nm);
@@ -159,10 +161,13 @@
         fl.value = (_ref3 = oFi.getHtmlFieldValue(fl_nm)) != null ? _ref3 : '';
         fl.id = 'U' + this.Epic.nextCounter();
         fl.type = (fl.type.split(':'))[0];
+        if ((_ref4 = fl.width) == null) {
+          fl.width = '';
+        }
         if (fl.type === 'radio' || fl.type === 'pulldown') {
           choices = oFi.getChoices(fl_nm);
           rows = [];
-          for (ix = _j = 0, _ref4 = choices.options.length; 0 <= _ref4 ? _j < _ref4 : _j > _ref4; ix = 0 <= _ref4 ? ++_j : --_j) {
+          for (ix = _j = 0, _ref5 = choices.options.length; 0 <= _ref5 ? _j < _ref5 : _j > _ref5; ix = 0 <= _ref5 ? ++_j : --_j) {
             s = choices.values[ix] === fl.value ? 'yes' : '';
             rows.push({
               option: choices.options[ix],

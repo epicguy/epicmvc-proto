@@ -10,10 +10,10 @@ FindVars= (text) ->
 	while i< parts.length- 1
 		args= parts[ i+ 1].split '/'
 		last= args.length- 1;
-		[ args[last], hash_part]= args[last].split '#'
+		[ args[last], hash_part, custom_hash_part]= args[last].split '#'
 		parts[ i+ 1]= switch args.length
-			when 2 then [ 'varGet2', [args[0], args[1], hash_part] ]
-			when 3 then [ 'varGet3', [args[0], args[1], args[2], hash_part] ]
+			when 2 then [ 'varGet2', [args[0], args[1], hash_part, custom_hash_part] ]
+			when 3 then [ 'varGet3', [args[0], args[1], args[2], hash_part, custom_hash_part] ]
 			else throw "VarGet reference did not have just 2 or 3 slashes (#{parts[i+ 1]})"
 		i+= 2
 	return parts

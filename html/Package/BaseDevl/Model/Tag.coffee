@@ -24,25 +24,27 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 <span class="dbg-part-box" title="#{@bd_page}.page.html">P</span>
 #{super oPt}
 		"""
-	varGet3: (view_nm, tbl_nm, col_nm, format_spec) ->
+	varGet3: (view_nm, tbl_nm, col_nm, format_spec, custom_spec) ->
 		try
-			val= super view_nm, tbl_nm, col_nm, format_spec
+			val= super view_nm, tbl_nm, col_nm, format_spec, custom_spec
 		catch e
 			throw e if @Epic.isSecurityError e
+			_log2 '##### Error in varGet3', "&amp;#{view_nm}/#{tbl_nm}/#{col_nm};", e, e.stack
 			val= "&amp;#{view_nm}/#{tbl_nm}/#{col_nm};[#{e.message}] <pre>#{e.stack}</pre>" # Give back a visual of what is in the HTML
 		if val is undefined
 			#window.alert "Unknown column-name (#{col_nm}) for view-name/table-name (#{view_nm}/#{tbl_nm})."
 			val= "&amp;#{view_nm}/#{tbl_nm}/#{col_nm};" # Give back a visual of what is in the HTML
 		val
-	varGet2: (tbl_nm, col_nm, format_spec, sub_nm) ->
+	varGet2: (tbl_nm, col_nm, format_spec, custom_spec, sub_nm) ->
 		try
-			val= super tbl_nm, col_nm, format_spec, sub_nm
+			val= super tbl_nm, col_nm, format_spec, custom_spec, sub_nm
 		catch e
 			_log2 '##### varGet2', "&#{tbl_nm}/#{col_nm};", e, e.stack
 			throw e if @Epic.isSecurityError e
 			val= "&amp;#{tbl_nm}/#{col_nm};[#{e.message}] <pre>#{e.stack}</pre>" # Give back a visual of what is in the HTML
 		if val is undefined
-			#window.alert "Unknown column-name (#{col_nm}) for table-name (#{tbl_nm})."
+			spec= if format_spec and format_spec.length> 0 then '#'+ format_spec else if custom_spec and custom_spec.length> 0 then '##'+ custom_spec else ''
+			window.alert "Undefined: &#{tbl_nm}/#{col_nm}#{spec};"
 			val= "&amp;#{tbl_nm}/#{col_nm};" # Give back a visual of what is in the HTML
 		val
 	Tag_foreach: (oPt) ->

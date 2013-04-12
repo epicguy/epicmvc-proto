@@ -5,7 +5,7 @@
   var FindVars, ParseFile;
 
   FindVars = function(text) {
-    var args, hash_part, i, last, parts, _ref;
+    var args, custom_hash_part, hash_part, i, last, parts, _ref;
     parts = text.split(/&([a-zA-Z0-9_]+\/[^;]{1,50});?/gm);
     i = 0;
     if (parts.length === 1) {
@@ -14,13 +14,13 @@
     while (i < parts.length - 1) {
       args = parts[i + 1].split('/');
       last = args.length - 1;
-      _ref = args[last].split('#'), args[last] = _ref[0], hash_part = _ref[1];
+      _ref = args[last].split('#'), args[last] = _ref[0], hash_part = _ref[1], custom_hash_part = _ref[2];
       parts[i + 1] = (function() {
         switch (args.length) {
           case 2:
-            return ['varGet2', [args[0], args[1], hash_part]];
+            return ['varGet2', [args[0], args[1], hash_part, custom_hash_part]];
           case 3:
-            return ['varGet3', [args[0], args[1], args[2], hash_part]];
+            return ['varGet3', [args[0], args[1], args[2], hash_part, custom_hash_part]];
           default:
             throw "VarGet reference did not have just 2 or 3 slashes (" + parts[i + 1] + ")";
         }
