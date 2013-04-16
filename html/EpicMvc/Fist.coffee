@@ -9,9 +9,11 @@ class Fist
 		@oM= @Epic.getInstance view_nm
 		@form_state= 'empty' # form-states: empty, posted, loaded, restored
 		@fistDef= oG.getFistDef grp_nm, @fist_nm
-		@fieldDef= oG.getFieldDefsForFist grp_nm, @fist_nm
+		#@fieldDef= oG.getFieldDefsForFist grp_nm, @fist_nm
 		@cache_field_choice= [] # choices by field-name
-		@fb= new window.EpicMvc.FistBack @Epic, @loadFieldDefs() # Fist back-end functions
+		#FB @fb= new window.EpicMvc.FistBack @Epic, @loadFieldDefs() # Fist back-end functions
+		@filt= window.EpicMvc.FistFilt # Static class of filters
+		@Fb_ClearValues()
 		# Upload fields
 		@upload_todo= []
 		@upload_fl= {}
@@ -27,6 +29,11 @@ class Fist
 			ct= @fieldDef[fl].type.split ':'
 			switch ct[1] # Assume ct[0] is pulldown else why call 'choices'?
 				when 'custom' then final_obj= @oM.fistGetFieldChoices @, fl
+				when 'array'
+					for rec in @fieldDef[fl].cdata
+						if typeof rec is 'object'
+						then final_obj.options.push String rec[0]; final_obj.values.push String rec[1]
+						else final_obj.options.push String rec; final_obj.values.push String rec
 				when 'json_like'
 					json= @fieldDef[fl].cdata.replace( /'/g, '"').replace /"""/g, "'"
 					json= $.parseJSON json
@@ -48,21 +55,22 @@ class Fist
 			fistDef= @Epic.getFistGroupCache().getFistDef @grp_nm, flist_nm
 		fistDef # List of fields that make up fist TODO WEED OUT NON-HTML FIELDS PER PSUEDO
 	getFieldAttributes: (fl_nm) -> @loadFieldDefs(); @fieldDef[fl_nm]
-	getHtmlFieldValue: (fl_nm) -> @loadData(); @fb.fb_HTML[fl_nm]
-	getDbFieldValue: (fl_nm) -> @loadData(); @fb.fb_DB[fl_nm]
-	getDbFieldValues: -> @loadData(); @fb.fb_DB
+	getHtmlFieldValue: (fl_nm) -> @loadData(); @fb_HTML[fl_nm]
+	getDbFieldValue: (fl_nm) -> @loadData(); @fb_DB[fl_nm]
+	getDbFieldValues: -> @loadData(); @fb_DB
+	getFieldIssues: -> @fb_issues
 	getChoices: (fl_nm) -> @loadFieldChoices fl_nm; @cache_field_choice[fl_nm]
 	# Posted values are comming to us, need to set values, and validate
-	fieldLevelValidate: (data) -> @form_state= 'posted'; @fb.FistValidate data
+	fieldLevelValidate: (data) -> @form_state= 'posted'; @Fb_FistValidate data
 	loadData: (data) -> #TODO SHOULD THIS BE IN Epic.fist_back?
 		# form-states: empty, posted, loaded, restored
 		if @form_state is 'empty'
 			@oM.fistLoadData @ # Delegate to our 'model'
 			@form_state= 'loaded' # Consider it loaded, no matter what
-	setFromDbValues: (data) -> @fb.SetHtmlValuesFromDb data; @form_state= 'loaded'; return
+	setFromDbValues: (data) -> @Fb_SetHtmlValuesFromDb data; @form_state= 'loaded'; return
 	eventNewRequest: -> @clearValues(); @upload_todo= []; @uploaded_fl= {}; return
 	clearValues: ->
-		if @form_state isnt 'empty' then @fb.ClearValues(); @form_state= 'empty'
+		if @form_state isnt 'empty' then @Fb_ClearValues(); @form_state= 'empty'
 		return
 	getUploadedMsg: (fl, val) -> @oM.fistGetUploadedMsg @, fl, val
 	haveUpload: (fl, from_id, to_id, btn_id, msg_id, now) ->
@@ -91,5 +99,152 @@ class Fist
 	eventInitializePage: ->
 		@haveUpload v.fl,v.from_id,v.to_id,v.btn_id,v.msg_id,true for v in @upload_todo
 		return
+
+	# Backend data processing functions (default behaviour)
+
+	# Support USER's objects doing validations from 'action' methods
+	# USERs should consider using 'field_level_validate' from main Epic.Fist class
+	# Example fieldDef:
+	#   ValidateFunc: load_nm="GroupField" db_nm:"validate" description:""
+	#   type:"pulldown:use_word_list" cdata:""
+	#   label:"Validate Func" width:"1" max_len:"" req:"1" default_value:""
+	#   req_text:"" issue_text:"" help_text:"Use any if you ..."
+	#   h2h:"trim_spaces"
+	#   validate:"choice" validate_expr: 1
+	#   h2d:"zero_is_blank" h2d_expr:"" d2h:"blank_is_zero" d2h_expr:""
+
+	Fb_SetHtmlValuesFromDb: (data) -> # Not from Html post, calls Db2Html
+		#@Epic.log2 'SetDbValues data:', data
+		@Fb_DbNames() # Load up the local list
+		##@Epic.log2 'SetDbValues DbNames:', @Fb_DbNames()
+		@fb_DB[k]= v for k,v of data # Clone
+		@Fb_Db2Html()
+		#@Epic.log2 'SetDbValues fb_HTML:', @fb_HTML
+	Fb_ClearValues: () ->
+		#@Epic.log2 'FistBack.ClearValues'
+		@fb_DB= {} # Hash
+		@fb_HTML= {} # Hash
+		@fb_issues= {} # Hash by HTML nm, if any
+	Fb_FistValidate: (data) -> # Data is from an html post (not a hash of db names)
+		# Logic to validate a posted form of data:
+		#  (a) perform Html to Html filters on raw posted data (will change user's view)
+		#  (b) Validate the HTML side values, using filters
+		#  (c) return any issue found (or, continue next steps)
+		#  (d) Move Html data to DB, using filters (possible psuedo prefix)
+
+		@Fb_Html2Html(data)
+		issues = new window.EpicMvc.Issue @Epic
+		issues.call @Fb_Check()
+		if issues.count() is 0
+			#@Fb_Db2Html(); #TODO IS THIS GOOD/NEEDED TO PUT BACK FROM DB?
+			@Fb_Html2Db()
+		issues
+
+	# Below are all 'internanl' functions
+
+	Fb_DbNames: () -> # list of fields at DB level (no psuedo fields)
+		if not @fb_DB_names?
+			@loadFieldDefs() # Lazy load
+			@dbNm2HtmlNm= {}
+			@dbNm2HtmlNm[rec.db_nm]= nm for nm,rec of @fieldDef
+			@fb_DB_names?=( db_nm for db_nm of @dbNm2HtmlNm)
+		@fb_DB_names
+
+	Fb_Make: (main_issue, field, token_data) ->
+		f= 'Fist.Fb_Make:'+ field
+		return false if token_data is true
+		@issue_inline?= @Epic.appConf().getShowIssues() is 'inline'
+		@Epic.log2 f, field, token_data, inline: @issue_inline
+		if @issue_inline
+			@fb_issues[field]= window.EpicMvc.Issue.Make @Epic, token_data[0], token_data[1]
+			main_issue.add @Epic, 'FORM_ERRORS', [@fistName] if main_issue.count() is 0
+		else
+			main_issue.add @Epic, token_data[0], token_data[1]
+		return true
+
+	Fb_Html2Html: (p) ->
+		f= 'Fist.Fb_Html2Db'
+		@loadFieldDefs() # Lazy load
+		for nm of @fieldDef # TODO HANDLE 'SUB' FISTS?
+			@fb_HTML[ nm]= @filt.H2H_generic nm, @fieldDef[ nm].h2h, p[ nm]
+		return
+
+	Fb_Check: () ->
+		f= 'Fist.Fb_Check'
+		@Epic.log2 f, @Fb_DbNames()
+		issue = new window.EpicMvc.Issue @Epic
+		for db_nm in @Fb_DbNames()
+			nm= @dbNm2HtmlNm[ db_nm]
+			field = @fieldDef[ nm]
+			# If psuedo, validate sub fields first, then main field's value if no errors
+			if field.type isnt 'psuedo'
+				@Fb_Make issue, nm, @Fb_Validate nm, @fb_HTML[ nm]
+			else
+				issue_count= 0
+				for p_nm in field.cdata
+					issue_cnt+= 1 if @Fb_Make issue, nm, @Fb_Validate p_nm, @fb_HTML[ nm+ '-'+ p_nm]
+				if issue_cnt is 0
+					BROKEN('_DB[] not populated yet; send array like h2d gets?'); issue.call @Fb_Validate nm, @fb_DB[ db_nm]
+		issue
+	Fb_Validate: (fieldName, value) ->
+		f= 'Fist.Fb_Validate:'+ fieldName
+		@Epic.log2 f, value
+		@loadFieldDefs() # Lazy load
+		field= @fieldDef[ fieldName]
+		if (not value?) or value.length is 0
+			@Epic.log2 f, 'req', field.req
+			if field.req is true # Value is empty, but required
+				return ['FIELD_EMPTY', [fieldName, field.req_text]] #Value empty, not 'ok'
+			return true # Value is empty, and this is 'ok'
+
+		if field.max_len> 0 and value.length> field.max_len
+			@Epic.log2 f, 'max_len,v.len', field.max_len, value.length
+			return ['FIELD_OVER_MAX', [fieldName, field.max_len]]
+
+		@Epic.log2 f, 'validate,expr', field.validate, field.validate_expr
+		if not @filt['CHECK_' + field.validate] fieldName, field.validate_expr, value, @
+			return ['FIELD_ISSUE', [fieldName, field.issue_text ]]
+		return true # Value passes filter check
+
+	Fb_Html2Db: () ->
+		f= 'Fist.Fb_Html2Db'
+		@loadFieldDefs() # Lazy load
+		for nm,field of @fieldDef
+			psuedo_prefix = ""
+			# Psuedo fields need data pulled from other fields
+			if field.type isnt 'psuedo' then value= @fb_HTML[ nm]
+			else
+				psuedo_prefix= '_psuedo'
+				# Multiple fields in one, make a list; filter will combine them
+				value=( @fb_HTML[nm + '-' + p_nm] for p_nm in field.cdata)
+			#@Epic.log2 f, 'H2D_', nm, field.db_nm, value
+			@fb_DB[ field.db_nm]= @filt['H2D_' + field.h2d + psuedo_prefix] nm, field.h2d_expr, value
+		#@Epic.log2 f, 'fb_DB', @fb_DB
+		return
+
+	Fb_Db2Html: () ->
+		for db_nm in @Fb_DbNames()
+			nm= @dbNm2HtmlNm[db_nm]
+			field= @fieldDef[ nm]
+			psuedo_fl= if field?.type is 'psuedo' then true else false
+			# Not all fields are populated, TagExe display the default value in that case
+			if not (db_nm of @fb_DB)
+				if not psuedo_fl then delete @fb_HTML[ nm]
+				else delete @fb_HTML[ subfield] for subfield in field.cdata
+				continue
+			# Pull from DB, then put in various places in Html (if psuedo)
+			value = @fb_DB[ db_nm]
+			psuedo_prefix = ""
+			# Psuedo fields need data pulled other fields
+			if not psuedo_fl then @fb_HTML[ nm]= @filt['D2H_'+ field.d2h] db_nm+'%'+nm, field.d2h_expr, value
+			else
+				# filter will know what to do, and then move a 'list' to the right place
+				switch field.cdata.length
+					when 0 then throw 'Requires cdata with psuedo: '+ db_nm+'%'+nm
+					when 1 then BROKEN()
+					else
+						# Multiple fields in one, make a list; filter will combine them
+						list= @filt['D2H_' + field.d2h + '_psuedo'] db_nm+'%'+nm, field.d2h_expr, value
+						@fb_HTML[ nm+ '-'+ p_nm]= list[ i] for p_nm, i in field.cdata
 
 window.EpicMvc.Fist= Fist # Pubilc API

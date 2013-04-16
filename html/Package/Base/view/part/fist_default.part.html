@@ -1,22 +1,36 @@
 <epic:foreach table="Tag/Control">
-	<label for="&Control/name;" class="ui-input-text">&Control/label;</label>
+<epic:if name="req" set="&Tag/Form/show_req;">
+	<epic:if name="req" set="&Control/req;"/>
+</epic:if>
+<div class="control-group&Control/issue#..error;">
+
+<epic:if val="&Control/type#lc;" ne="yesno">
+	<label for="&Control/name;" class="control-label"><epic:if_true name="req"><span class="form-req">*</span></epic:if_true>&Control/label;</label>
+</epic:if>
+<div class="controls">
 
 <epic:if val="&Control/type;" eq="textarea">
 	<textarea &Control/attrs;>&Control/val#esc;</textarea>"
 </epic:if>
 
 <epic:if val="&Control/type#lc;" eq="text">
-	<input class="ui-input-text" type="&Control/type#lc;" name="&Control/name;" value="&Control/value;" size="&Control/width;">
+	<input type="&Control/type#lc;" name="&Control/name;" value="&Control/value;" size="&Control/width;" &Tag/If/req#.required="";>
 </epic:if>
 
 <epic:if val="&Control/type#lc;" eq="password">
-	<input class="ui-input-text" type="&Control/type#lc;" name="&Control/name;" value="&Control/value;" size="&Control/width;">
+	<input type="&Control/type#lc;" name="&Control/name;" value="&Control/value;" size="&Control/width;" &Tag/If/req#.required="";>
+</epic:if>
+
+<epic:if val="&Control/type#lc;" eq="yesno">
+	<label for="&Control/id;" class="control-label">
+		<input type="checkbox" name="&Control/name;" id="&Control/id;" value="1"&Control/selected#..checked;>
+	<epic:if_true name="req"><span class="form-req">*</span></epic:if_true>&Control/label;</label>
 </epic:if>
 
 <epic:if val="&Control/type;" eq="radio">
 <epic:foreach table="Control/Choice">
-	<label for="&Control/id;-&Choice/option;">
-	<input type="radio" name="&Control/name;" id="&Control/id;-&Choice/option;" value="&Choice/value#esc;"&Choice/selected#..selected;>
+	<label for="&Control/id;-&Choice/option;" class="control-sublabel">
+	<input type="radio" name="&Control/name;" id="&Control/id;-&Choice/option;" value="&Choice/value#esc;"&Choice/selected#..checked;>
 	&Choice/option;</label>
 </epic:foreach>
 </epic:if>
@@ -29,4 +43,13 @@
 	</select>
 </epic:if>
 
+<epic:if set="&Control/issue;">
+<span class="help-block field-error">&Control/issue;</span>
+</epic:if>
+
+</div> <!-- .controls -->
+</div> <!-- .control-group -->
 </epic:foreach>
+<epic:if set="&Tag/Form/show_req;&Tag/Form/any_req;">
+<span class="form-req-note">* = Required field</span>
+</epic:if>

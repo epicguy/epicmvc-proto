@@ -7,6 +7,15 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 		@bd_template= @viewExe.template
 		@bd_page= @viewExe.page
 	Opts: -> (@Epic.getViewTable 'Devl/Opts')[0]
+	Tag_form_part: (oPt) ->
+		try
+			return super oPt if @Opts().file is false
+			return """<span class="dbg-part-box" title="#{oPt.attrs.part ? 'fist_default'}.part.html (#{oPt.attrs.form})">.</span>#{super oPt}"""
+		catch e
+			throw e if @Epic.isSecurityError e
+			_log2 '##### Error in form-part', oPt.attrs.part ? 'fist_default', e, e.stack
+			return """<pre>&lt;epic:form_part form="#{oPt.attrs.form}" part="#{oPt.attrs.part ? 'fist_default'}&gt;<br>#{e}<br>#{e.stack}</pre>"""
+
 	Tag_page_part: (oPt) ->
 		try
 			return super oPt if @Opts().file is false

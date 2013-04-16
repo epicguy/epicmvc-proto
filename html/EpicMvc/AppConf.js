@@ -184,6 +184,11 @@
       return template = (this.findAttr(f, t, s, 'template')) || this.config.OPTIONS.template["default"];
     };
 
+    AppConf.prototype.getShowIssues = function(f, t) {
+      var group;
+      return group = (this.findAttr(f, t, false, 'show_issues')) || this.config.OPTIONS.settings.show_issues;
+    };
+
     AppConf.prototype.getGroupNm = function(f, t) {
       var group;
       return group = (this.findAttr(f, t, false, 'group')) || this.config.OPTIONS.settings.group;

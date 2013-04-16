@@ -39,13 +39,51 @@ class FistFilt
 				when 'digits_only' then new_value.replace /[^0-9]/g, ''
 				when 'lower_case' then new_value.toLowerCase()
 				when 'upper_case' then new_value.toUpperCase()
-				when 'zero_is_blank' then (if not new_value then '' else new_value)
-				when 'blank_is_zero' then (if new_value.length then new_value else '0')
 				else throw "Unknown H2H filter #{one_spec} in field #{fieldName}"
 		new_value
 
 	#
-	# Filters to go from Html to DB (before validation, and to be validated)
+	# Filters to validate the data (uses the HTML side)
+	#
+
+	@CHECK_:          (fieldName, validateExpr, value, oF) -> true
+	@CHECK_null:      (fieldName, validateExpr, value, oF) -> true
+	@CHECK_undefined: (fieldName, validateExpr, value, oF) -> true
+	@CHECK_any:       (fieldName, validateExpr, value, oF) -> true
+
+	@CHECK_phone: (fieldName, validateExpr, value, oF) ->
+		switch validateExpr
+			when undefined then check_pat = '[0-9]{10}'
+			else BROKE()
+		re = new RegExp('^' + check_pat + '$')
+		if value.match re then true else false
+
+	@CHECK_zip: (fieldName, validateExpr, value, oF) ->
+		switch validateExpr
+			when '5or9' then return false if not value.match /^[0-9]{5}(|[0-9]{4})/
+			else BROKE()
+		true
+
+	@CHECK_choice: (fieldName, validateExpr, value, oF) ->
+		# Allow values that are in the pulldown choices (less first choice if validateExpr==1)
+		ix= oF.getChoices(fieldName).values.indexOf value
+		oF.Epic.log2 'CHECK_choice:ix/value/values', ix, value, oF.getChoices(fieldName).values
+		return ix>= validateExpr if validateExpr
+		return ix isnt -1
+
+	@CHECK_email: (fieldName, validateExpr, value, oF) ->
+		# 'fieldName' is given for debug messages
+		ndc = '[a-zA-Z_0-9]'; # Non-dot chars
+		cd = '[.a-zA-Z_0-9]'; # Chars + dot
+		re = new RegExp "^#{ndc}#{cd}*@(#{ndc}+.)+#{ndc}{2,3}$"
+		if value.match re then true else false
+
+	@CHECK_regexp: (fieldName, validateExpr, value, oF) ->
+		re = new RegExp "^#{validateExpr}$"
+		if value.match re then true else false
+
+	#
+	# Filters to go from Html to DB
 	#
 
 	@H2D_: (fieldName, filtExpr, value) ->
@@ -71,43 +109,8 @@ class FistFilt
 	@H2D_phone: (fieldName, filtExpr, value) ->
 		value.replace /[^0-9]/g, ''
 
-	#
-	# Filters to validate the data (uses the DB side)
-	#
-
-	@CHECK_:          (fieldName, validateExpr, value) -> true
-	@CHECK_null:      (fieldName, validateExpr, value) -> true
-	@CHECK_undefined: (fieldName, validateExpr, value) -> true
-	@CHECK_any:       (fieldName, validateExpr, value) -> true
-
-	@CHECK_phone: (fieldName, validateExpr, value) ->
-		switch validateExpr
-			when undefined then check_pat = '[0-9]{10}'
-			else BROKE()
-		re = new RegExp('^' + check_pat + '$')
-		if value.match re then true else false
-
-	@CHECK_zip: (fieldName, validateExpr, value) ->
-		switch validateExpr
-			when '5or9' then return false if not value.match /^[0-9]{5}(|[0-9]{4})/
-			else BROKE()
-		true
-
-	@CHECK_choice: (fieldName, validateExpr, value) ->
-		# Allow values that are in the pulldown choices (less first choice if validateExpr==1)
-		$.inArray value, @getChoices(fieldName).values, validateExpr #TODO TEST
-
-	@CHECK_email: (fieldName, validateExpr, value) ->
-		# 'fieldName' is given for debug messages
-		ndc = '[a-zA-Z_0-9]'; # Non-dot chars
-		cd = '[.a-zA-Z_0-9]'; # Chars + dot
-		re = new RegExp "^#{ndc}#{cd}*@(#{ndc}+.)+#{ndc}{2,3}$"
-		if value.match re then true else false
-
-	@CHECK_regexp: (fieldName, validateExpr, value) ->
-		re = new RegExp "^#{validateExpr}$"
-		if value.match re then true else false
-
+	@H2D_zero_is_blank: (fieldName, filtExpr, value) ->
+		if value is 0 or value is '0' then '' else value
 	#
 	# Filters to get from DB values to the Html for user to view/edit (fieldName is for debug msgs)
 	#
@@ -128,5 +131,8 @@ class FistFilt
 		# Control want's (m, d, y)
 		[Y, m, d]= value.split '-'
 		[((m ? '').replace /^0/, ''), ((d ? '').replace /^0/, ''), Y]
+
+	@D2H_blank_is_zero: (fieldName, filtExpr, value) ->
+		if value.length then value else '0'
 
 window.EpicMvc.FistFilt= FistFilt # Pubilc API

@@ -26,24 +26,90 @@
               return new_value.toLowerCase();
             case 'upper_case':
               return new_value.toUpperCase();
-            case 'zero_is_blank':
-              if (!new_value) {
-                return '';
-              } else {
-                return new_value;
-              }
-            case 'blank_is_zero':
-              if (new_value.length) {
-                return new_value;
-              } else {
-                return '0';
-              }
             default:
               throw "Unknown H2H filter " + one_spec + " in field " + fieldName;
           }
         })();
       }
       return new_value;
+    };
+
+    FistFilt.CHECK_ = function(fieldName, validateExpr, value, oF) {
+      return true;
+    };
+
+    FistFilt.CHECK_null = function(fieldName, validateExpr, value, oF) {
+      return true;
+    };
+
+    FistFilt.CHECK_undefined = function(fieldName, validateExpr, value, oF) {
+      return true;
+    };
+
+    FistFilt.CHECK_any = function(fieldName, validateExpr, value, oF) {
+      return true;
+    };
+
+    FistFilt.CHECK_phone = function(fieldName, validateExpr, value, oF) {
+      var check_pat, re;
+      switch (validateExpr) {
+        case void 0:
+          check_pat = '[0-9]{10}';
+          break;
+        default:
+          BROKE();
+      }
+      re = new RegExp('^' + check_pat + '$');
+      if (value.match(re)) {
+        return true;
+      } else {
+        return false;
+      }
+    };
+
+    FistFilt.CHECK_zip = function(fieldName, validateExpr, value, oF) {
+      switch (validateExpr) {
+        case '5or9':
+          if (!value.match(/^[0-9]{5}(|[0-9]{4})/)) {
+            return false;
+          }
+          break;
+        default:
+          BROKE();
+      }
+      return true;
+    };
+
+    FistFilt.CHECK_choice = function(fieldName, validateExpr, value, oF) {
+      var ix;
+      ix = oF.getChoices(fieldName).values.indexOf(value);
+      oF.Epic.log2('CHECK_choice:ix/value/values', ix, value, oF.getChoices(fieldName).values);
+      if (validateExpr) {
+        return ix >= validateExpr;
+      }
+      return ix !== -1;
+    };
+
+    FistFilt.CHECK_email = function(fieldName, validateExpr, value, oF) {
+      var cd, ndc, re;
+      ndc = '[a-zA-Z_0-9]';
+      cd = '[.a-zA-Z_0-9]';
+      re = new RegExp("^" + ndc + cd + "*@(" + ndc + "+.)+" + ndc + "{2,3}$");
+      if (value.match(re)) {
+        return true;
+      } else {
+        return false;
+      }
+    };
+
+    FistFilt.CHECK_regexp = function(fieldName, validateExpr, value, oF) {
+      var re;
+      re = new RegExp("^" + validateExpr + "$");
+      if (value.match(re)) {
+        return true;
+      } else {
+        return false;
+      }
     };
 
     FistFilt.H2D_ = function(fieldName, filtExpr, value) {
@@ -78,75 +144,11 @@
       return value.replace(/[^0-9]/g, '');
     };
 
-    FistFilt.CHECK_ = function(fieldName, validateExpr, value) {
-      return true;
-    };
-
-    FistFilt.CHECK_null = function(fieldName, validateExpr, value) {
-      return true;
-    };
-
-    FistFilt.CHECK_undefined = function(fieldName, validateExpr, value) {
-      return true;
-    };
-
-    FistFilt.CHECK_any = function(fieldName, validateExpr, value) {
-      return true;
-    };
-
-    FistFilt.CHECK_phone = function(fieldName, validateExpr, value) {
-      var check_pat, re;
-      switch (validateExpr) {
-        case void 0:
-          check_pat = '[0-9]{10}';
-          break;
-        default:
-          BROKE();
-      }
-      re = new RegExp('^' + check_pat + '$');
-      if (value.match(re)) {
-        return true;
+    FistFilt.H2D_zero_is_blank = function(fieldName, filtExpr, value) {
+      if (value === 0 || value === '0') {
+        return '';
       } else {
-        return false;
-      }
-    };
-
-    FistFilt.CHECK_zip = function(fieldName, validateExpr, value) {
-      switch (validateExpr) {
-        case '5or9':
-          if (!value.match(/^[0-9]{5}(|[0-9]{4})/)) {
-            return false;
-          }
-          break;
-        default:
-          BROKE();
-      }
-      return true;
-    };
-
-    FistFilt.CHECK_choice = function(fieldName, validateExpr, value) {
-      return $.inArray(value, this.getChoices(fieldName).values, validateExpr);
-    };
-
-    FistFilt.CHECK_email = function(fieldName, validateExpr, value) {
-      var cd, ndc, re;
-      ndc = '[a-zA-Z_0-9]';
-      cd = '[.a-zA-Z_0-9]';
-      re = new RegExp("^" + ndc + cd + "*@(" + ndc + "+.)+" + ndc + "{2,3}$");
-      if (value.match(re)) {
-        return true;
-      } else {
-        return false;
-      }
-    };
-
-    FistFilt.CHECK_regexp = function(fieldName, validateExpr, value) {
-      var re;
-      re = new RegExp("^" + validateExpr + "$");
-      if (value.match(re)) {
-        return true;
-      } else {
-        return false;
+        return value;
       }
     };
 
@@ -174,6 +176,14 @@
       var Y, d, m, _ref;
       _ref = value.split('-'), Y = _ref[0], m = _ref[1], d = _ref[2];
       return [(m != null ? m : '').replace(/^0/, ''), (d != null ? d : '').replace(/^0/, ''), Y];
+    };
+
+    FistFilt.D2H_blank_is_zero = function(fieldName, filtExpr, value) {
+      if (value.length) {
+        return value;
+      } else {
+        return '0';
+      }
     };
 
     return FistFilt;

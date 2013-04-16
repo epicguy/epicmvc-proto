@@ -133,20 +133,32 @@
     };
 
     TagExe.prototype.getTable = function(nm) {
-      return this.fist_table[nm];
+      var f;
+      f = ':TagExe.getTable:' + nm;
+      this.Epic.log2(f, this.fist_table, this.info_if_nms);
+      switch (nm) {
+        case 'Control':
+        case 'Form':
+          return this.fist_table[nm];
+        case 'If':
+          return [this.info_if_nms];
+        default:
+          return [];
+      }
     };
 
     TagExe.prototype.Tag_form_part = function(oPt) {
-      var any_req, choices, fl, fl_nm, fm_nm, help, hpfl, ix, oFi, one_field_nm, orig, out, part, rows, s, show_req, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+      var any_req, choices, fl, fl_nm, fm_nm, help, hpfl, issues, ix, oFi, one_field_nm, orig, out, part, rows, s, show_req, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
       part = this.viewExe.handleIt((_ref = oPt.attrs.part) != null ? _ref : 'fist_default');
       fm_nm = this.viewExe.handleIt(oPt.attrs.form);
       oFi = this.loadFistDef(fm_nm);
       one_field_nm = oPt.attrs.field != null ? this.viewExe.handleIt(oPt.attrs.field) : false;
       help = this.viewExe.handleIt((_ref1 = oPt.attrs.help) != null ? _ref1 : '');
-      show_req = this.viewExe.handleIt((_ref2 = oPt.attrs.show_req) != null ? _ref2 : 'yes');
+      show_req = 'show_req' in oPt.attrs ? this.viewExe.handleIt(oPt.attrs.show_req) : 'yes';
       any_req = false;
       out = [];
       hpfl = oFi.getHtmlPostedFieldsList(fm_nm);
+      issues = oFi.getFieldIssues();
       for (_i = 0, _len = hpfl.length; _i < _len; _i++) {
         fl_nm = hpfl[_i];
         if (one_field_nm !== false && one_field_nm !== fl_nm) {
@@ -154,11 +166,17 @@
         }
         orig = oFi.getFieldAttributes(fl_nm);
         fl = $.extend({}, orig);
+        fl.req = fl.req === true ? 'yes' : '';
         if (fl.req === true) {
           any_req = true;
         }
         fl.name = fl_nm;
-        fl.value = (_ref3 = oFi.getHtmlFieldValue(fl_nm)) != null ? _ref3 : '';
+        if ((_ref2 = fl["default"]) == null) {
+          fl["default"] = '';
+        }
+        fl["default"] = String(fl["default"]);
+        fl.value = (_ref3 = oFi.getHtmlFieldValue(fl_nm)) != null ? _ref3 : fl["default"];
+        fl.selected = fl.type === 'yesno' && fl.value === '1' ? 'yes' : '';
         fl.id = 'U' + this.Epic.nextCounter();
         fl.type = (fl.type.split(':'))[0];
         if ((_ref4 = fl.width) == null) {
@@ -177,6 +195,7 @@
           }
           fl.Choice = rows;
         }
+        fl.issue = issues[fl_nm] ? issues[fl_nm].asTable()[0].issue : '';
         out.push(fl);
       }
       this.fist_table = {
@@ -189,7 +208,7 @@
         ],
         Control: out
       };
-      return this.viewExe.includePart(part, {});
+      return this.viewExe.includePart(part, false);
     };
 
     TagExe.prototype.Tag_defer = function(oPt) {
@@ -227,20 +246,19 @@
     };
 
     TagExe.prototype.ifTrueFalse = function(oPt, is_if_true) {
-      var found_true, nm, out;
+      var f, found_true, nm, out;
+      f = ':TagExe.ifTrueFalse';
       nm = this.viewExe.handleIt(oPt.attrs.name);
-      found_true = this.info_if_nms[nm] === true;
-      if (!is_if_true) {
-        found_true = !found_true;
-      }
+      this.Epic.log2(f, oPt.attrs.name, nm, this.info_if_nms[nm]);
+      found_true = this.info_if_nms[nm] === is_if_true;
       return out = found_true ? this.viewExe.doAllParts(oPt.parts) : '';
     };
 
     TagExe.prototype.ifAnyAll = function(oPt, is_if_any) {
-      var f, flip, fond_nm, found_nm, found_true, left, nm, op, out, right, use_op, val, _ref;
+      var f, flip, found_nm, found_true, left, nm, op, out, right, use_op, val, _ref;
       f = ':TagExe.ifAnyAll';
       out = '';
-      fond_nm = false;
+      found_nm = false;
       _ref = oPt.attrs;
       for (nm in _ref) {
         val = _ref[nm];
@@ -352,7 +370,8 @@
           break;
         }
       }
-      if (found_nm) {
+      if (found_nm !== false) {
+        this.Epic.log2(f, found_nm, found_true, oPt.attrs);
         this.info_if_nms[found_nm] = found_true;
       }
       if (found_true) {

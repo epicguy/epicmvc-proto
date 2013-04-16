@@ -77,6 +77,8 @@ class AppConf
 	findTemplate: (f,t,s) ->
 		if typeof t is 'undefined' then s= f[2]; t=f[1]; f= f[0]
 		template= ( @findAttr f, t, s, 'template' ) || @config.OPTIONS.template.default
+	getShowIssues: (f,t) ->
+		group= ( @findAttr f, t, false, 'show_issues' ) || @config.OPTIONS.settings.show_issues
 	getGroupNm: (f,t) ->
 		group= ( @findAttr f, t, false, 'group' ) || @config.OPTIONS.settings.group
 	getVars: (f,t,s) ->

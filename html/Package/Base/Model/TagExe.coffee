@@ -69,7 +69,13 @@ class TagExe
 	Tag_page: (oPt) ->
 		[before, after, dynamicInfo]= @checkForDynamic oPt
 		before+ (@viewExe.includePage dynamicInfo)+ after
-	getTable: (nm) -> @fist_table[nm]
+	getTable: (nm) ->
+		f= ':TagExe.getTable:'+ nm
+		@Epic.log2 f, @fist_table, @info_if_nms
+		switch nm
+			when 'Control', 'Form' then @fist_table[nm]
+			when 'If' then [@info_if_nms]
+			else []
 	Tag_form_part: (oPt) -> # part="" form="" (opt)field=""
 		part= @viewExe.handleIt oPt.attrs.part ? 'fist_default'
 		fm_nm= @viewExe.handleIt oPt.attrs.form
@@ -77,17 +83,21 @@ class TagExe
 		# Optional fields
 		one_field_nm= if oPt.attrs.field? then @viewExe.handleIt oPt.attrs.field else false
 		help= @viewExe.handleIt oPt.attrs.help ? ''
-		show_req= @viewExe.handleIt oPt.attrs.show_req ? 'yes'
+		show_req= if 'show_req' of oPt.attrs then @viewExe.handleIt oPt.attrs.show_req else 'yes'
 		any_req= false
 		out= []
 		hpfl= oFi.getHtmlPostedFieldsList fm_nm
+		issues= oFi.getFieldIssues()
 		for fl_nm in hpfl
 			continue if one_field_nm isnt false and one_field_nm isnt fl_nm
 			orig= oFi.getFieldAttributes fl_nm
 			fl= $.extend {}, orig
+			fl.req= if fl.req is true then 'yes' else ''
 			any_req= true if fl.req is true
 			fl.name= fl_nm
-			fl.value= (oFi.getHtmlFieldValue fl_nm) ? '' #TODO OR USE fl.default ?
+			fl.default?= ''; fl.default= String fl.default
+			fl.value= (oFi.getHtmlFieldValue fl_nm) ? fl.default
+			fl.selected= if fl.type is 'yesno' and fl.value is '1' then 'yes' else '' # '1' is the yesno checkbox value for now
 			fl.id= 'U'+ @Epic.nextCounter()
 			fl.type= (fl.type.split ':')[0]
 			fl.width?= ''
@@ -99,9 +109,10 @@ class TagExe
 					s= if choices.values[ix] is fl.value then 'yes' else ''
 					rows.push option: choices.options[ix], value: choices.values[ix], selected: s
 				fl.Choice= rows
+			fl.issue= if issues[fl_nm] then issues[fl_nm].asTable()[0].issue else ''
 			out.push fl
 		@fist_table= Form: [show_req: show_req, any_req: any_req, help: help], Control: out
-		@viewExe.includePart part, {} # TODO DYNAMICINFO?
+		@viewExe.includePart part, false # TODO DYNAMICINFO?
 
 	Tag_defer: (oPt) -> #TODO OUTPUT CODE INTO SCRIPT TAG WITH FUNCTION WRAPPER TO CALL, FOR BETTER DEBUG
 		name= 'anonymous'
@@ -118,15 +129,16 @@ class TagExe
 	Tag_if_false: (oPt) -> @ifTrueFalse oPt, false
 
 	ifTrueFalse: (oPt, is_if_true) ->
+		f= ':TagExe.ifTrueFalse'
 		nm= @viewExe.handleIt oPt.attrs.name
-		found_true= @info_if_nms[nm] is true
-		found_true= not found_true if not is_if_true
+		@Epic.log2 f, oPt.attrs.name, nm, @info_if_nms[nm]
+		found_true= @info_if_nms[nm] is is_if_true
 		out= if found_true then @viewExe.doAllParts oPt.parts else ''
 	ifAnyAll: (oPt, is_if_any) ->
 		f= ':TagExe.ifAnyAll'
 		#@Epic.log2 f, oPt.attrs
 		out= ''
-		fond_nm= false
+		found_nm= false
 		for nm, val of oPt.attrs
 			val= @viewExe.handleIt val
 			flip= false
@@ -177,7 +189,9 @@ class TagExe
 			found_true= not found_true if flip
 			break if is_if_any and found_true
 			break if not is_if_any and not found_true
-		@info_if_nms[found_nm]= found_true if found_nm
+		if found_nm isnt false
+			@Epic.log2 f, found_nm, found_true, oPt.attrs
+			@info_if_nms[found_nm]= found_true
 		out= @viewExe.doAllParts oPt.parts if found_true
 		out
 	Tag_comment: (oPt) -> "\n<!--\n#{@viewExe.doAllParts oPt.parts}\n-->\n"

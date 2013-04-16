@@ -17,9 +17,9 @@
       this.oM = this.Epic.getInstance(view_nm);
       this.form_state = 'empty';
       this.fistDef = oG.getFistDef(grp_nm, this.fist_nm);
-      this.fieldDef = oG.getFieldDefsForFist(grp_nm, this.fist_nm);
       this.cache_field_choice = [];
-      this.fb = new window.EpicMvc.FistBack(this.Epic, this.loadFieldDefs());
+      this.filt = window.EpicMvc.FistFilt;
+      this.Fb_ClearValues();
       this.upload_todo = [];
       this.upload_fl = {};
     }
@@ -42,7 +42,7 @@
     };
 
     Fist.prototype.loadFieldChoices = function(fl) {
-      var ct, final_obj, json, k, split, v, wist, wist_grp, wist_nm;
+      var ct, final_obj, json, k, rec, split, v, wist, wist_grp, wist_nm, _i, _len, _ref;
       final_obj = {
         options: [],
         values: []
@@ -53,6 +53,19 @@
         switch (ct[1]) {
           case 'custom':
             final_obj = this.oM.fistGetFieldChoices(this, fl);
+            break;
+          case 'array':
+            _ref = this.fieldDef[fl].cdata;
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              rec = _ref[_i];
+              if (typeof rec === 'object') {
+                final_obj.options.push(String(rec[0]));
+                final_obj.values.push(String(rec[1]));
+              } else {
+                final_obj.options.push(String(rec));
+                final_obj.values.push(String(rec));
+              }
+            }
             break;
           case 'json_like':
             json = this.fieldDef[fl].cdata.replace(/'/g, '"').replace(/"""/g, "'");
@@ -101,17 +114,21 @@
 
     Fist.prototype.getHtmlFieldValue = function(fl_nm) {
       this.loadData();
-      return this.fb.fb_HTML[fl_nm];
+      return this.fb_HTML[fl_nm];
     };
 
     Fist.prototype.getDbFieldValue = function(fl_nm) {
       this.loadData();
-      return this.fb.fb_DB[fl_nm];
+      return this.fb_DB[fl_nm];
     };
 
     Fist.prototype.getDbFieldValues = function() {
       this.loadData();
-      return this.fb.fb_DB;
+      return this.fb_DB;
+    };
+
+    Fist.prototype.getFieldIssues = function() {
+      return this.fb_issues;
     };
 
     Fist.prototype.getChoices = function(fl_nm) {
@@ -121,7 +138,7 @@
 
     Fist.prototype.fieldLevelValidate = function(data) {
       this.form_state = 'posted';
-      return this.fb.FistValidate(data);
+      return this.Fb_FistValidate(data);
     };
 
     Fist.prototype.loadData = function(data) {
@@ -132,7 +149,7 @@
     };
 
     Fist.prototype.setFromDbValues = function(data) {
-      this.fb.SetHtmlValuesFromDb(data);
+      this.Fb_SetHtmlValuesFromDb(data);
       this.form_state = 'loaded';
     };
 
@@ -144,7 +161,7 @@
 
     Fist.prototype.clearValues = function() {
       if (this.form_state !== 'empty') {
-        this.fb.ClearValues();
+        this.Fb_ClearValues();
         this.form_state = 'empty';
       }
     };
@@ -198,6 +215,221 @@
         v = _ref[_i];
         this.haveUpload(v.fl, v.from_id, v.to_id, v.btn_id, v.msg_id, true);
       }
+    };
+
+    Fist.prototype.Fb_SetHtmlValuesFromDb = function(data) {
+      var k, v;
+      this.Fb_DbNames();
+      for (k in data) {
+        v = data[k];
+        this.fb_DB[k] = v;
+      }
+      return this.Fb_Db2Html();
+    };
+
+    Fist.prototype.Fb_ClearValues = function() {
+      this.fb_DB = {};
+      this.fb_HTML = {};
+      return this.fb_issues = {};
+    };
+
+    Fist.prototype.Fb_FistValidate = function(data) {
+      var issues;
+      this.Fb_Html2Html(data);
+      issues = new window.EpicMvc.Issue(this.Epic);
+      issues.call(this.Fb_Check());
+      if (issues.count() === 0) {
+        this.Fb_Html2Db();
+      }
+      return issues;
+    };
+
+    Fist.prototype.Fb_DbNames = function() {
+      var db_nm, nm, rec, _ref, _ref1;
+      if (!(this.fb_DB_names != null)) {
+        this.loadFieldDefs();
+        this.dbNm2HtmlNm = {};
+        _ref = this.fieldDef;
+        for (nm in _ref) {
+          rec = _ref[nm];
+          this.dbNm2HtmlNm[rec.db_nm] = nm;
+        }
+        if ((_ref1 = this.fb_DB_names) == null) {
+          this.fb_DB_names = (function() {
+            var _results;
+            _results = [];
+            for (db_nm in this.dbNm2HtmlNm) {
+              _results.push(db_nm);
+            }
+            return _results;
+          }).call(this);
+        }
+      }
+      return this.fb_DB_names;
+    };
+
+    Fist.prototype.Fb_Make = function(main_issue, field, token_data) {
+      var f, _ref;
+      f = 'Fist.Fb_Make:' + field;
+      if (token_data === true) {
+        return false;
+      }
+      if ((_ref = this.issue_inline) == null) {
+        this.issue_inline = this.Epic.appConf().getShowIssues() === 'inline';
+      }
+      this.Epic.log2(f, field, token_data, {
+        inline: this.issue_inline
+      });
+      if (this.issue_inline) {
+        this.fb_issues[field] = window.EpicMvc.Issue.Make(this.Epic, token_data[0], token_data[1]);
+        if (main_issue.count() === 0) {
+          main_issue.add(this.Epic, 'FORM_ERRORS', [this.fistName]);
+        }
+      } else {
+        main_issue.add(this.Epic, token_data[0], token_data[1]);
+      }
+      return true;
+    };
+
+    Fist.prototype.Fb_Html2Html = function(p) {
+      var f, nm;
+      f = 'Fist.Fb_Html2Db';
+      this.loadFieldDefs();
+      for (nm in this.fieldDef) {
+        this.fb_HTML[nm] = this.filt.H2H_generic(nm, this.fieldDef[nm].h2h, p[nm]);
+      }
+    };
+
+    Fist.prototype.Fb_Check = function() {
+      var db_nm, f, field, issue, issue_count, nm, p_nm, _i, _j, _len, _len1, _ref, _ref1;
+      f = 'Fist.Fb_Check';
+      this.Epic.log2(f, this.Fb_DbNames());
+      issue = new window.EpicMvc.Issue(this.Epic);
+      _ref = this.Fb_DbNames();
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        db_nm = _ref[_i];
+        nm = this.dbNm2HtmlNm[db_nm];
+        field = this.fieldDef[nm];
+        if (field.type !== 'psuedo') {
+          this.Fb_Make(issue, nm, this.Fb_Validate(nm, this.fb_HTML[nm]));
+        } else {
+          issue_count = 0;
+          _ref1 = field.cdata;
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            p_nm = _ref1[_j];
+            if (this.Fb_Make(issue, nm, this.Fb_Validate(p_nm, this.fb_HTML[nm + '-' + p_nm]))) {
+              issue_cnt += 1;
+            }
+          }
+          if (issue_cnt === 0) {
+            BROKEN('_DB[] not populated yet; send array like h2d gets?');
+            issue.call(this.Fb_Validate(nm, this.fb_DB[db_nm]));
+          }
+        }
+      }
+      return issue;
+    };
+
+    Fist.prototype.Fb_Validate = function(fieldName, value) {
+      var f, field;
+      f = 'Fist.Fb_Validate:' + fieldName;
+      this.Epic.log2(f, value);
+      this.loadFieldDefs();
+      field = this.fieldDef[fieldName];
+      if ((!(value != null)) || value.length === 0) {
+        this.Epic.log2(f, 'req', field.req);
+        if (field.req === true) {
+          return ['FIELD_EMPTY', [fieldName, field.req_text]];
+        }
+        return true;
+      }
+      if (field.max_len > 0 && value.length > field.max_len) {
+        this.Epic.log2(f, 'max_len,v.len', field.max_len, value.length);
+        return ['FIELD_OVER_MAX', [fieldName, field.max_len]];
+      }
+      this.Epic.log2(f, 'validate,expr', field.validate, field.validate_expr);
+      if (!this.filt['CHECK_' + field.validate](fieldName, field.validate_expr, value, this)) {
+        return ['FIELD_ISSUE', [fieldName, field.issue_text]];
+      }
+      return true;
+    };
+
+    Fist.prototype.Fb_Html2Db = function() {
+      var f, field, nm, p_nm, psuedo_prefix, value, _ref;
+      f = 'Fist.Fb_Html2Db';
+      this.loadFieldDefs();
+      _ref = this.fieldDef;
+      for (nm in _ref) {
+        field = _ref[nm];
+        psuedo_prefix = "";
+        if (field.type !== 'psuedo') {
+          value = this.fb_HTML[nm];
+        } else {
+          psuedo_prefix = '_psuedo';
+          value = (function() {
+            var _i, _len, _ref1, _results;
+            _ref1 = field.cdata;
+            _results = [];
+            for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+              p_nm = _ref1[_i];
+              _results.push(this.fb_HTML[nm + '-' + p_nm]);
+            }
+            return _results;
+          }).call(this);
+        }
+        this.fb_DB[field.db_nm] = this.filt['H2D_' + field.h2d + psuedo_prefix](nm, field.h2d_expr, value);
+      }
+    };
+
+    Fist.prototype.Fb_Db2Html = function() {
+      var db_nm, field, i, list, nm, p_nm, psuedo_fl, psuedo_prefix, subfield, value, _i, _j, _len, _len1, _ref, _ref1, _results;
+      _ref = this.Fb_DbNames();
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        db_nm = _ref[_i];
+        nm = this.dbNm2HtmlNm[db_nm];
+        field = this.fieldDef[nm];
+        psuedo_fl = (field != null ? field.type : void 0) === 'psuedo' ? true : false;
+        if (!(db_nm in this.fb_DB)) {
+          if (!psuedo_fl) {
+            delete this.fb_HTML[nm];
+          } else {
+            _ref1 = field.cdata;
+            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+              subfield = _ref1[_j];
+              delete this.fb_HTML[subfield];
+            }
+          }
+          continue;
+        }
+        value = this.fb_DB[db_nm];
+        psuedo_prefix = "";
+        if (!psuedo_fl) {
+          _results.push(this.fb_HTML[nm] = this.filt['D2H_' + field.d2h](db_nm + '%' + nm, field.d2h_expr, value));
+        } else {
+          switch (field.cdata.length) {
+            case 0:
+              throw 'Requires cdata with psuedo: ' + db_nm + '%' + nm;
+              break;
+            case 1:
+              _results.push(BROKEN());
+              break;
+            default:
+              list = this.filt['D2H_' + field.d2h + '_psuedo'](db_nm + '%' + nm, field.d2h_expr, value);
+              _results.push((function() {
+                var _k, _len2, _ref2, _results1;
+                _ref2 = field.cdata;
+                _results1 = [];
+                for (i = _k = 0, _len2 = _ref2.length; _k < _len2; i = ++_k) {
+                  p_nm = _ref2[i];
+                  _results1.push(this.fb_HTML[nm + '-' + p_nm] = list[i]);
+                }
+                return _results1;
+              }).call(this));
+          }
+        }
+      }
+      return _results;
     };
 
     return Fist;

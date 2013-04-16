@@ -24,6 +24,22 @@
       return (this.Epic.getViewTable('Devl/Opts'))[0];
     };
 
+    TagExe.prototype.Tag_form_part = function(oPt) {
+      var _ref, _ref1, _ref2;
+      try {
+        if (this.Opts().file === false) {
+          return TagExe.__super__.Tag_form_part.call(this, oPt);
+        }
+        return "<span class=\"dbg-part-box\" title=\"" + ((_ref = oPt.attrs.part) != null ? _ref : 'fist_default') + ".part.html (" + oPt.attrs.form + ")\">.</span>" + (TagExe.__super__.Tag_form_part.call(this, oPt));
+      } catch (e) {
+        if (this.Epic.isSecurityError(e)) {
+          throw e;
+        }
+        _log2('##### Error in form-part', (_ref1 = oPt.attrs.part) != null ? _ref1 : 'fist_default', e, e.stack);
+        return "<pre>&lt;epic:form_part form=\"" + oPt.attrs.form + "\" part=\"" + ((_ref2 = oPt.attrs.part) != null ? _ref2 : 'fist_default') + "&gt;<br>" + e + "<br>" + e.stack + "</pre>";
+      }
+    };
+
     TagExe.prototype.Tag_page_part = function(oPt) {
       try {
         if (this.Opts().file === false) {
