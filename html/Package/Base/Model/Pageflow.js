@@ -127,9 +127,9 @@
       this.Table[tbl_nm] = (function() {
         switch (tbl_nm) {
           case 'Message':
-            return this.messages.asTable();
+            return this.messages.asTable(window.EpicMvc.issues$iPM);
           case 'Issue':
-            return this.issues.asTable();
+            return this.issues.asTable(window.EpicMvc.issues$iPM);
           case 'V':
             return [this.Epic.appConf().getVars(this.f, this.t, this.s)];
           default:

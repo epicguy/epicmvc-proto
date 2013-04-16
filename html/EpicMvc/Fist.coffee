@@ -194,16 +194,21 @@ class Fist
 		if (not value?) or value.length is 0
 			@Epic.log2 f, 'req', field.req
 			if field.req is true # Value is empty, but required
-				return ['FIELD_EMPTY', [fieldName, field.req_text]] #Value empty, not 'ok'
+				return if field.req_text #Value empty, not 'ok'
+				then @Make 'FIELD_EMPTY_TEXT', [fieldName, field.label, field.req_text] #Value empty, not 'ok'
+				else @Make 'FIELD_EMPTY', [fieldName, field.label] #Value empty, not 'ok'
 			return true # Value is empty, and this is 'ok'
 
 		if field.max_len> 0 and value.length> field.max_len
 			@Epic.log2 f, 'max_len,v.len', field.max_len, value.length
-			return ['FIELD_OVER_MAX', [fieldName, field.max_len]]
+			return ['FIELD_OVER_MAX', [fieldName, field.label, field.max_len]]
 
 		@Epic.log2 f, 'validate,expr', field.validate, field.validate_expr
 		if not @filt['CHECK_' + field.validate] fieldName, field.validate_expr, value, @
-			return ['FIELD_ISSUE', [fieldName, field.issue_text ]]
+			#return ['FIELD_ISSUE', [fieldName, field.issue_text ]]
+			return if field.issue_text
+			then @Make 'FIELD_ISSUE_TEXT', [fieldName, field.label, field.issue_text]
+			else @Make 'FIELD_ISSUE', [fieldName, field.label]
 		return true # Value passes filter check
 
 	Fb_Html2Db: () ->

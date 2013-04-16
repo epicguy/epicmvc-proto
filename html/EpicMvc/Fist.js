@@ -339,17 +339,25 @@
       if ((!(value != null)) || value.length === 0) {
         this.Epic.log2(f, 'req', field.req);
         if (field.req === true) {
-          return ['FIELD_EMPTY', [fieldName, field.req_text]];
+          if (field.req_text) {
+            return this.Make('FIELD_EMPTY_TEXT', [fieldName, field.label, field.req_text]);
+          } else {
+            return this.Make('FIELD_EMPTY', [fieldName, field.label]);
+          }
         }
         return true;
       }
       if (field.max_len > 0 && value.length > field.max_len) {
         this.Epic.log2(f, 'max_len,v.len', field.max_len, value.length);
-        return ['FIELD_OVER_MAX', [fieldName, field.max_len]];
+        return ['FIELD_OVER_MAX', [fieldName, field.label, field.max_len]];
       }
       this.Epic.log2(f, 'validate,expr', field.validate, field.validate_expr);
       if (!this.filt['CHECK_' + field.validate](fieldName, field.validate_expr, value, this)) {
-        return ['FIELD_ISSUE', [fieldName, field.issue_text]];
+        if (field.issue_text) {
+          return this.Make('FIELD_ISSUE_TEXT', [fieldName, field.label, field.issue_text]);
+        } else {
+          return this.Make('FIELD_ISSUE', [fieldName, field.label]);
+        }
       }
       return true;
     };
