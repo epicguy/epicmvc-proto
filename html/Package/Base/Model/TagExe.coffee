@@ -286,7 +286,8 @@ class TagExe
 					check_row+= break_fixed
 			check_for_breaks= 0
 		break_rows_list
-	Tag_dyno_form: (oPt) ->
+	Tag_dyno_form: (oPt) -> @Tag_form_part oPt
+	Tag_dyno_form_OLD: (oPt) ->
 		oPt.attrs.help?= ''
 		oPt.attrs.show_required?= 1
 		fm_nm= @viewExe.handleIt oPt.attrs.form

@@ -526,6 +526,10 @@
     };
 
     TagExe.prototype.Tag_dyno_form = function(oPt) {
+      return this.Tag_form_part(oPt);
+    };
+
+    TagExe.prototype.Tag_dyno_form_OLD = function(oPt) {
       var ctr, fl, fl_nm, fm_nm, help_html, hpfl, in_ct, oFi, otr, out, req, sh_req, _base, _base1, _i, _len, _ref, _ref1, _ref2;
       if ((_ref = (_base = oPt.attrs).help) == null) {
         _base.help = '';
