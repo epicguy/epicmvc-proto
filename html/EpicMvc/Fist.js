@@ -340,9 +340,9 @@
         this.Epic.log2(f, 'req', field.req);
         if (field.req === true) {
           if (field.req_text) {
-            return this.Make('FIELD_EMPTY_TEXT', [fieldName, field.label, field.req_text]);
+            return ['FIELD_EMPTY_TEXT', [fieldName, field.label, field.req_text]];
           } else {
-            return this.Make('FIELD_EMPTY', [fieldName, field.label]);
+            return ['FIELD_EMPTY', [fieldName, field.label]];
           }
         }
         return true;
@@ -354,9 +354,9 @@
       this.Epic.log2(f, 'validate,expr', field.validate, field.validate_expr);
       if (!this.filt['CHECK_' + field.validate](fieldName, field.validate_expr, value, this)) {
         if (field.issue_text) {
-          return this.Make('FIELD_ISSUE_TEXT', [fieldName, field.label, field.issue_text]);
+          return ['FIELD_ISSUE_TEXT', [fieldName, field.label, field.issue_text]];
         } else {
-          return this.Make('FIELD_ISSUE', [fieldName, field.label]);
+          return ['FIELD_ISSUE', [fieldName, field.label]];
         }
       }
       return true;
