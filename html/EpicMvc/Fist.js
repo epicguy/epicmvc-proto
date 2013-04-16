@@ -14,7 +14,7 @@
       oG = this.Epic.getFistGroupCache();
       flist_nm = oG.getCanonicalFist(grp_nm, flist_nm);
       this.fist_nm = flist_nm;
-      this.oM = this.Epic.getInstance(view_nm);
+      this.oM = this.Epic.getInstance(this.view_nm);
       this.form_state = 'empty';
       this.fistDef = oG.getFistDef(grp_nm, this.fist_nm);
       this.cache_field_choice = [];
@@ -281,12 +281,12 @@
         inline: this.issue_inline
       });
       if (this.issue_inline) {
-        this.fb_issues[field] = window.EpicMvc.Issue.Make(this.Epic, token_data[0], token_data[1]);
+        this.fb_issues[field] = window.EpicMvc.Issue.Make(this.Epic, this.view_nm, token_data[0], token_data[1]);
         if (main_issue.count() === 0) {
-          main_issue.add(this.Epic, 'FORM_ERRORS', [this.fistName]);
+          main_issue.add('FORM_ERRORS', [this.fistName]);
         }
       } else {
-        main_issue.add(this.Epic, token_data[0], token_data[1]);
+        main_issue.add(token_data[0], token_data[1]);
       }
       return true;
     };

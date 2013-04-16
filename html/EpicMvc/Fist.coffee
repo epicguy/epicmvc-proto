@@ -6,7 +6,7 @@ class Fist
 		oG= @Epic.getFistGroupCache()
 		flist_nm= oG.getCanonicalFist grp_nm, flist_nm
 		@fist_nm= flist_nm # Cannonical field-list list for this flist
-		@oM= @Epic.getInstance view_nm
+		@oM= @Epic.getInstance @view_nm
 		@form_state= 'empty' # form-states: empty, posted, loaded, restored
 		@fistDef= oG.getFistDef grp_nm, @fist_nm
 		#@fieldDef= oG.getFieldDefsForFist grp_nm, @fist_nm
@@ -156,10 +156,10 @@ class Fist
 		@issue_inline?= @Epic.appConf().getShowIssues() is 'inline'
 		@Epic.log2 f, field, token_data, inline: @issue_inline
 		if @issue_inline
-			@fb_issues[field]= window.EpicMvc.Issue.Make @Epic, token_data[0], token_data[1]
-			main_issue.add @Epic, 'FORM_ERRORS', [@fistName] if main_issue.count() is 0
+			@fb_issues[field]= window.EpicMvc.Issue.Make @Epic, @view_nm, token_data[0], token_data[1]
+			main_issue.add 'FORM_ERRORS', [@fistName] if main_issue.count() is 0
 		else
-			main_issue.add @Epic, token_data[0], token_data[1]
+			main_issue.add token_data[0], token_data[1]
 		return true
 
 	Fb_Html2Html: (p) ->

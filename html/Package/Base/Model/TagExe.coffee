@@ -88,6 +88,7 @@ class TagExe
 		out= []
 		hpfl= oFi.getHtmlPostedFieldsList fm_nm
 		issues= oFi.getFieldIssues()
+		map= window.EpicMvc['issues$'+ @Epic.appConf().getGroupNm()]
 		for fl_nm in hpfl
 			continue if one_field_nm isnt false and one_field_nm isnt fl_nm
 			orig= oFi.getFieldAttributes fl_nm
@@ -109,7 +110,7 @@ class TagExe
 					s= if choices.values[ix] is fl.value then 'yes' else ''
 					rows.push option: choices.options[ix], value: choices.values[ix], selected: s
 				fl.Choice= rows
-			fl.issue= if issues[fl_nm] then issues[fl_nm].asTable()[0].issue else ''
+			fl.issue= if issues[fl_nm] then issues[fl_nm].asTable( map)[0].issue else ''
 			out.push fl
 		@fist_table= Form: [show_req: show_req, any_req: any_req, help: help], Control: out
 		@viewExe.includePart part, false # TODO DYNAMICINFO?

@@ -14,8 +14,8 @@
     ClickAction.prototype.click = function(action_token, path) {
       var click_node, f, issue, limit, message, r, rIssues, rMessages, rNode, rResults;
       f = ":ClickAction.click(" + action_token + ")";
-      issue = new window.EpicMvc.Issue(this.Epic);
-      message = new window.EpicMvc.Issue(this.Epic);
+      issue = new window.EpicMvc.Issue(this.Epic, 'ClickAction');
+      message = new window.EpicMvc.Issue(this.Epic, 'ClickAction');
       if (!(action_token != null)) {
         if (!(action_token = this.Epic.request().haveAction())) {
           return [issue, message];

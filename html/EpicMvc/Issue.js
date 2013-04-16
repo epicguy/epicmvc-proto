@@ -6,56 +6,52 @@
 
   Issue = (function() {
 
-    function Issue(Epic) {
+    function Issue(Epic, t_view, t_action) {
       this.Epic = Epic;
+      this.t_view = t_view;
+      this.t_action = t_action;
       this.issue_list = [];
     }
 
-    Issue.Make = function(epic, type, value_list) {
+    Issue.Make = function(epic, view, type, value_list) {
       var issue;
-      issue = new window.EpicMvc.Issue(epic);
+      issue = new window.EpicMvc.Issue(epic, view);
       issue.add(type, value_list);
       return issue;
     };
 
-    Issue.prototype.add2 = function(token1, token2, more) {
-      return this.issue_list.push({
-        type: 'token2',
-        token1: token1,
-        token2: token2,
-        more: more
-      });
-    };
-
     Issue.prototype.add = function(type, msgs) {
-      var class_name;
-      class_name = 'none';
+      var f;
+      f = ':Issue.add:' + this.t_view + ':' + this.t_action;
+      _log2(f, 'params:type/msgs', type, msgs);
       switch (type) {
         case 'TEXT':
-          return this.issue_list.push({
-            type: 'text',
-            text: msgs
+          this.issue_list.push({
+            token: 'text',
+            more: [msgs],
+            t_view: this.t_view,
+            t_action: this.t_action
           });
+          break;
         default:
-          if (/^[A-Z_]+$/.test(type)) {
-            return this.issue_list.push({
-              type: 'token',
+          if (/^[A-Z0-9_]+$/.test(type)) {
+            this.issue_list.push({
               token: type,
-              values: msgs
+              more: msgs,
+              t_view: this.t_view,
+              t_action: this.t_action
             });
           } else {
-            return this.issue_list.push({
-              type: 'unknown',
-              text: msgs
+            alert(f + ' - Unknown "type" for Issue.add ' + type);
+            this.issue_list.push({
+              token: 'unknown',
+              more: [type],
+              t_view: this.t_view,
+              t_action: this.t_action
             });
           }
       }
-    };
-
-    Issue.prototype.call2 = function(token1, function_call_returning_issue_or_null) {
-      if (function_call_returning_issue_or_null) {
-        this.addObj2(token1, function_call_returning_issue_or_null);
-      }
+      return _log2(f, this.issue_list[this.issue_list.length - 1]);
     };
 
     Issue.prototype.call = function(function_call_returning_issue_or_null) {
@@ -64,36 +60,28 @@
       }
     };
 
-    Issue.prototype.addObj2 = function(token1, issue_obj) {
-      var issue, _i, _len, _ref;
-      if (typeof issue_obj !== 'object' || !('issue_list' in issue_obj)) {
-        return;
-      }
-      _ref = issue_obj.issue_list;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        issue = _ref[_i];
-        switch (issue.type) {
-          case 'text':
-            this.add2(token1, 'text', [issue.msgs]);
-            break;
-          case 'unknown':
-            this.add2(token1, 'unknown', [issue.msgs]);
-            break;
-          default:
-            this.add2(token1, issue.token, issue.values);
-        }
-      }
-    };
-
     Issue.prototype.addObj = function(issue_obj) {
-      var issue, _i, _len, _ref;
+      var f, issue, new_issue, _fn, _i, _len, _ref, _ref1, _ref2;
+      f = ':Issue.addObj:' + this.t_view + '#' + this.t_action;
       if (typeof issue_obj !== 'object' || !('issue_list' in issue_obj)) {
         return;
       }
+      _log2(f, 'issue_list', issue_obj.issue_list);
       _ref = issue_obj.issue_list;
+      _fn = function(new_issue) {
+        return _log2(f, 'new_issue', new_issue);
+      };
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         issue = _ref[_i];
-        this.issue_list.push(issue);
+        new_issue = $.extend(true, {}, issue);
+        if ((_ref1 = new_issue.t_view) == null) {
+          new_issue.t_view = this.t_view;
+        }
+        if ((_ref2 = new_issue.t_action) == null) {
+          new_issue.t_action = this.t_action;
+        }
+        this.issue_list.push(new_issue);
+        _fn(new_issue);
       }
     };
 
@@ -102,39 +90,58 @@
     };
 
     Issue.prototype.asTable = function(map) {
-      var final, issue, _i, _len, _ref, _ref1;
+      var final, issue, _i, _len, _ref;
       _log2('asTable: issue_list,map', this.issue_list, map);
       final = [];
       _ref = this.issue_list;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         issue = _ref[_i];
-        switch (issue.type) {
-          case 'token2':
-            final.push({
-              issue: this.map(map, issue.token1, issue.token2, issue.more)
-            });
-            break;
-          default:
-            final.push({
-              issue: (_ref1 = issue.text) != null ? _ref1 : issue.token
-            });
-        }
+        final.push({
+          issue: this.map(map, issue.t_view, issue.t_action, issue.token, issue.more)
+        });
       }
       return final;
     };
 
-    Issue.prototype.map = function(map, t1, t2, more) {
-      var spec, _i, _len, _ref;
-      _log2('map:map,t1,t2,more', map, t1, t2, more);
-      _ref = map || [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        spec = _ref[_i];
-        _log2('map:spec', spec);
-        if ((t1.match(spec[0])) && (t2.match(spec[1]))) {
-          return this.doMap(spec[2], more);
+    Issue.prototype.map = function(map, t_view, t_action, token, more) {
+      var map_list, spec, sub_map, _i, _j, _len, _len1, _ref;
+      if (typeof map !== 'object') {
+        return "" + t_view + "#" + t_action + "#" + token + "#" + (more.join(','));
+      }
+      map_list = [];
+      if (t_view in map) {
+        if (t_action in map[t_view]) {
+          map_list.push(map[t_view][t_action]);
+          _log2('m', t_view, t_action);
+        }
+        if ('default' in map[t_view]) {
+          map_list.push(map[t_view]["default"]);
+          _log2('m', t_view, 'default');
         }
       }
-      return "" + t1 + "::" + t2 + "::" + (more.join(','));
+      if ('default' in map) {
+        if (t_action in map["default"]) {
+          map_list.push(map["default"][t_action]);
+          _log2('m', 'default', t_action);
+        }
+        if ('default' in map["default"]) {
+          map_list.push(map["default"]["default"]);
+          _log2('m', 'default', 'default');
+        }
+      }
+      _log2('map:tv,ta,token,more,map_list.length', t_view, t_action, token, more, map_list.length);
+      for (_i = 0, _len = map_list.length; _i < _len; _i++) {
+        sub_map = map_list[_i];
+        _ref = sub_map || [];
+        for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+          spec = _ref[_j];
+          _log2('map:spec', spec);
+          if (token.match(spec[0])) {
+            return this.doMap(spec[1], more);
+          }
+        }
+      }
+      return "" + t_view + "#" + t_action + "#" + token + "#" + (more.join(','));
     };
 
     Issue.prototype.doMap = function(pattern, vals) {

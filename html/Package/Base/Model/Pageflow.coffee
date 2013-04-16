@@ -7,8 +7,8 @@ class Pageflow extends window.EpicMvc.ModelJS
 		super epic, view_nm, ss
 		@eventNewRequest()
 	eventNewRequest: ->
-		@issues= new window.EpicMvc.Issue @Epic
-		@messages= new window.EpicMvc.Issue @Epic
+		@issues= new window.EpicMvc.Issue @Epic, @view_nm
+		@messages= new window.EpicMvc.Issue @Epic, @view_nm
 		@Table= {}
 	goTo: (f,t,s) ->
 		oC= @Epic.appConf()
@@ -24,8 +24,8 @@ class Pageflow extends window.EpicMvc.ModelJS
 	getStepPath: -> [@f, @t, @s]
 	action: (a,p) ->
 		r= {}
-		i= new window.EpicMvc.Issue @Epic
-		m= new window.EpicMvc.Issue @Epic
+		i= new window.EpicMvc.Issue @Epic, @view_nm, a
+		m= new window.EpicMvc.Issue @Epic, @view_nm, a
 		switch a
 			when 'flow'      then @goTo p.flow
 			when 'track'     then @goTo @f, p.track
@@ -49,9 +49,10 @@ class Pageflow extends window.EpicMvc.ModelJS
 	setMessages: (issue_obj) ->
 		@messages.addObj issue_obj if issue_obj?.count() isnt 0
 	loadTable: (tbl_nm) ->
+		map= window.EpicMvc['issues$'+ @Epic.appConf().getGroupNm()]
 		@Table[ tbl_nm]= switch tbl_nm
-			when 'Message' then @messages.asTable window.EpicMvc.issues$iPM # TODO GET AND MERGE ISSUES USING SAME METHOD AS APPCONF
-			when 'Issue'   then @issues.asTable   window.EpicMvc.issues$iPM
+			when 'Message' then @messages.asTable map
+			when 'Issue'   then @issues.asTable   map
 			when 'V'   then [ @Epic.appConf().getVars @f, @t, @s ]
 			else super tbl_nm
 		return

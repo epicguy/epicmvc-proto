@@ -148,7 +148,7 @@
     };
 
     TagExe.prototype.Tag_form_part = function(oPt) {
-      var any_req, choices, fl, fl_nm, fm_nm, help, hpfl, issues, ix, oFi, one_field_nm, orig, out, part, rows, s, show_req, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+      var any_req, choices, fl, fl_nm, fm_nm, help, hpfl, issues, ix, map, oFi, one_field_nm, orig, out, part, rows, s, show_req, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
       part = this.viewExe.handleIt((_ref = oPt.attrs.part) != null ? _ref : 'fist_default');
       fm_nm = this.viewExe.handleIt(oPt.attrs.form);
       oFi = this.loadFistDef(fm_nm);
@@ -159,6 +159,7 @@
       out = [];
       hpfl = oFi.getHtmlPostedFieldsList(fm_nm);
       issues = oFi.getFieldIssues();
+      map = window.EpicMvc['issues$' + this.Epic.appConf().getGroupNm()];
       for (_i = 0, _len = hpfl.length; _i < _len; _i++) {
         fl_nm = hpfl[_i];
         if (one_field_nm !== false && one_field_nm !== fl_nm) {
@@ -195,7 +196,7 @@
           }
           fl.Choice = rows;
         }
-        fl.issue = issues[fl_nm] ? issues[fl_nm].asTable()[0].issue : '';
+        fl.issue = issues[fl_nm] ? issues[fl_nm].asTable(map)[0].issue : '';
         out.push(fl);
       }
       this.fist_table = {

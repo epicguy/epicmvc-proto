@@ -23,8 +23,8 @@
     }
 
     Pageflow.prototype.eventNewRequest = function() {
-      this.issues = new window.EpicMvc.Issue(this.Epic);
-      this.messages = new window.EpicMvc.Issue(this.Epic);
+      this.issues = new window.EpicMvc.Issue(this.Epic, this.view_nm);
+      this.messages = new window.EpicMvc.Issue(this.Epic, this.view_nm);
       return this.Table = {};
     };
 
@@ -61,8 +61,8 @@
     Pageflow.prototype.action = function(a, p) {
       var i, ix, m, q, r, v, _i, _len, _ref, _ref1;
       r = {};
-      i = new window.EpicMvc.Issue(this.Epic);
-      m = new window.EpicMvc.Issue(this.Epic);
+      i = new window.EpicMvc.Issue(this.Epic, this.view_nm, a);
+      m = new window.EpicMvc.Issue(this.Epic, this.view_nm, a);
       switch (a) {
         case 'flow':
           this.goTo(p.flow);
@@ -124,12 +124,14 @@
     };
 
     Pageflow.prototype.loadTable = function(tbl_nm) {
+      var map;
+      map = window.EpicMvc['issues$' + this.Epic.appConf().getGroupNm()];
       this.Table[tbl_nm] = (function() {
         switch (tbl_nm) {
           case 'Message':
-            return this.messages.asTable(window.EpicMvc.issues$iPM);
+            return this.messages.asTable(map);
           case 'Issue':
-            return this.issues.asTable(window.EpicMvc.issues$iPM);
+            return this.issues.asTable(map);
           case 'V':
             return [this.Epic.appConf().getVars(this.f, this.t, this.s)];
           default:

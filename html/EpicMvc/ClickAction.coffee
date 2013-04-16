@@ -5,8 +5,8 @@ class ClickAction
 	constructor: (@Epic) ->
 	click: (action_token, path) ->
 		f= ":ClickAction.click(#{action_token})"
-		issue= new window.EpicMvc.Issue @Epic
-		message= new window.EpicMvc.Issue @Epic
+		issue= new window.EpicMvc.Issue @Epic, 'ClickAction'
+		message= new window.EpicMvc.Issue @Epic, 'ClickAction'
 		if not action_token?
 			if not action_token= @Epic.request().haveAction()
 				return [issue, message] # No action
