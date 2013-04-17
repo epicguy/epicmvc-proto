@@ -16,7 +16,6 @@ $EpicMvc/ConfExe.coffee \
 $EpicMvc/ViewExe.coffee \
 $EpicMvc/FistGroupCache.coffee \
 $EpicMvc/Fist.coffee \
-$EpicMvc/FistBack.coffee \
 $EpicMvc/FistFilt.coffee \
 | grep -v "'use strict'" > EpicMvc-tmp0.coffee
 coffee -c EpicMvc-tmp0.coffee

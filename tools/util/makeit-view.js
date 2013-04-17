@@ -73,8 +73,12 @@
         };
 
         MockLoadStrategy.prototype.readdir = function(type) {
-          var f, files, p, _i, _len, _ref, _results;
-          files = fs.readdirSync(this.path + (type === 'template' ? '.' : type));
+          var f, files, p, path_part, _i, _len, _ref, _results;
+          path_part = (type === 'template' ? '.' : type);
+          if (!fs.existsSync(this.path + path_part)) {
+            return [];
+          }
+          files = fs.readdirSync(this.path + path_part);
           _ref = (function() {
             var _j, _len, _results1;
             _results1 = [];

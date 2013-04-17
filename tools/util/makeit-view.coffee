@@ -49,7 +49,9 @@ doIt= (epic_path,dev_dir,pkg_nm) ->
 					full_nm= @getPartNm nm
 					window.EpicMvc.ParseFile full_nm, @getFile full_nm
 				readdir: (type) ->
-					files= fs.readdirSync @path+ (if type is 'template' then '.' else type)
+					path_part= (if type is 'template' then '.' else type)
+					return [] if not fs.existsSync @path+ path_part
+					files= fs.readdirSync @path+ path_part
 					f[0] for f in (p.split '.' for p in files) when f?[1] is (if type is 'template' then 'tmpl' else type)
 
 			out= 'window.EpicMvc.view$'+ pkg_nm+ '={\n'
