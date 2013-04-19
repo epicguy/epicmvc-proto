@@ -16,7 +16,7 @@ class Issue
 		switch type
 			when 'TEXT' then @issue_list.push token:'text', more:msgs, t_view: @t_view, t_action: @t_action
 			else
-				if /^[A-Z0-9_]+$/.test type # Issue tokens paramed with array more (msgs)
+				if /^[a-zA-Z0-9_]+$/.test type # Issue tokens paramed with array more (msgs)
 					@issue_list.push token:type, more:msgs, t_view: @t_view, t_action: @t_action
 				else
 					alert f+ ' - Unknown "type" for Issue.add '+ type

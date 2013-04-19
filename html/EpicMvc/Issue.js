@@ -40,7 +40,7 @@
             t_action: this.t_action
           });
         default:
-          if (/^[A-Z0-9_]+$/.test(type)) {
+          if (/^[a-zA-Z0-9_]+$/.test(type)) {
             return this.issue_list.push({
               token: type,
               more: msgs,

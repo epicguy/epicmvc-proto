@@ -23,6 +23,7 @@
       this.info_foreach = {};
       this.info_if_nms = {};
       this.info_varGet3 = {};
+      this.info_parts = [];
       if (state) {
         return this.info_foreach = $.extend(true, {}, state);
       }
@@ -60,12 +61,12 @@
     };
 
     TagExe.prototype.varGet3 = function(view_nm, tbl_nm, key, format_spec, custom_spec) {
-      var row, _base, _base1, _ref, _ref1;
+      var row, _base, _ref;
       this.viewExe.haveTableRefrence(view_nm, tbl_nm);
       if ((_ref = (_base = this.info_varGet3)[view_nm]) == null) {
-        _base[view_nm] = {};
+        _base[view_nm] = this.Epic.getInstance(view_nm);
       }
-      row = ((_ref1 = (_base1 = this.info_varGet3[view_nm])[tbl_nm]) != null ? _ref1 : _base1[tbl_nm] = ((this.Epic.getInstance(view_nm)).getTable(tbl_nm))[0]);
+      row = (this.info_varGet3[view_nm].getTable(tbl_nm))[0];
       return this.formatFromSpec(row[key], format_spec, custom_spec);
     };
 
@@ -119,11 +120,31 @@
       ];
     };
 
+    TagExe.prototype.loadPartAttrs = function(oPt) {
+      var a, attr, f, p, result, val, _ref, _ref1;
+      f = ':tag.loadPartAttrs';
+      result = {};
+      _ref = oPt.attrs;
+      for (attr in _ref) {
+        val = _ref[attr];
+        _ref1 = attr.split(':'), p = _ref1[0], a = _ref1[1];
+        if (p !== 'p') {
+          continue;
+        }
+        result[a] = this.viewExe.handleIt(val);
+        this.Epic.log2(f, a, result[a]);
+      }
+      return result;
+    };
+
     TagExe.prototype.Tag_page_part = function(oPt) {
-      var after, before, dynamicInfo, f, _ref;
+      var after, before, dynamicInfo, f, out, _ref;
       f = ':tag.page-part:' + oPt.attrs.part;
+      this.info_parts.push(this.loadPartAttrs(oPt));
       _ref = this.checkForDynamic(oPt), before = _ref[0], after = _ref[1], dynamicInfo = _ref[2];
-      return before + (this.viewExe.includePart(this.viewExe.handleIt(oPt.attrs.part), dynamicInfo)) + after;
+      out = before + (this.viewExe.includePart(this.viewExe.handleIt(oPt.attrs.part), dynamicInfo)) + after;
+      this.info_parts.pop();
+      return out;
     };
 
     TagExe.prototype.Tag_page = function(oPt) {
@@ -141,6 +162,8 @@
           return this.fist_table[nm];
         case 'If':
           return [this.info_if_nms];
+        case 'Part':
+          return this.info_parts.slice(-1);
         default:
           return [];
       }

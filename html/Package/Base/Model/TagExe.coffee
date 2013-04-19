@@ -11,6 +11,7 @@ class TagExe
 		@info_foreach= {} # [table-name|subtable-name]['table'&'row'&'size'&'count']=value
 		@info_if_nms= {} # [if-name]=boolean (from <if_xxx name="if-name" ..>
 		@info_varGet3= {} # for &obj/table/var; type variables
+		@info_parts= [] # Push p:attrs with each part, then pop; getTable uses last pushed
 		if state
 			@info_foreach= $.extend true, {}, state
 	formatFromSpec: (val, spec, custom_spec) ->
@@ -35,8 +36,8 @@ class TagExe
 				else val
 	varGet3: (view_nm, tbl_nm, key, format_spec, custom_spec) ->
 		@viewExe.haveTableRefrence view_nm, tbl_nm
-		@info_varGet3[view_nm]?= {}
-		row= (@info_varGet3[view_nm][tbl_nm]?= ((@Epic.getInstance view_nm).getTable tbl_nm)[0])
+		@info_varGet3[view_nm]?= @Epic.getInstance view_nm
+		row= (@info_varGet3[view_nm].getTable tbl_nm)[0]
 		@formatFromSpec row[key], format_spec, custom_spec
 	varGet2: (table_ref, col_nm, format_spec, custom_spec, sub_nm) ->
 		ans= @info_foreach[table_ref].row[col_nm]
@@ -61,20 +62,33 @@ class TagExe
 				else plain_attrs.push "#{attr}=\"#{@viewExe.handleIt val}\""
 		state= $.extend true, {}, @info_foreach # TODO SNAPSHOT MORE STUFF?
 		return ["<#{tag} id=\"#{id}\" #{plain_attrs.join ' '}>", "</#{tag}>", id: id, delay: delay* 1000, state: state]
+	loadPartAttrs: (oPt) ->
+		f= ':tag.loadPartAttrs'
+		result= {}
+		for attr,val of oPt.attrs
+			[p,a]= attr.split ':'
+			continue if p isnt 'p'
+			result[a]= @viewExe.handleIt val
+			@Epic.log2 f, a, result[a]
+		result
 	Tag_page_part: (oPt) ->
 		f= ':tag.page-part:'+ oPt.attrs.part
+		@info_parts.push @loadPartAttrs oPt
 		[before, after, dynamicInfo]= @checkForDynamic oPt
 		#@Epic.log2 f, dynamicInfo
-		before+ (@viewExe.includePart (@viewExe.handleIt oPt.attrs.part), dynamicInfo)+ after
+		out= before+ (@viewExe.includePart (@viewExe.handleIt oPt.attrs.part), dynamicInfo)+ after
+		@info_parts.pop()
+		out
 	Tag_page: (oPt) ->
 		[before, after, dynamicInfo]= @checkForDynamic oPt
 		before+ (@viewExe.includePage dynamicInfo)+ after
 	getTable: (nm) ->
 		f= ':TagExe.getTable:'+ nm
-		#@Epic.log2 f, @fist_table, @info_if_nms
+		#@Epic.log2 f, @info_parts if nm is 'Part'
 		switch nm
 			when 'Control', 'Form' then @fist_table[nm]
 			when 'If' then [@info_if_nms]
+			when 'Part' then @info_parts.slice -1
 			else []
 	Tag_form_part: (oPt) -> # part="" form="" (opt)field=""
 		part= @viewExe.handleIt oPt.attrs.part ? 'fist_default'
