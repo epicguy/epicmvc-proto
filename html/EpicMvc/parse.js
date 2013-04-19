@@ -32,7 +32,7 @@
 
   ParseFile = function(file_stats, file_contents) {
     var a, attr, attr_split, clean, empty, finish, i, oi, parts, t, tag_wait, _i, _ref;
-    clean = file_contents.replace(/<!--.*?-->/, '');
+    clean = file_contents.replace(/-->/gm, '\x02').replace(/<!--[^\x02]*\x02/gm, '');
     parts = clean.split(/<(\/?)epic:([a-z_0-9]+)([^>]*)>/);
     i = 0;
     tag_wait = [];

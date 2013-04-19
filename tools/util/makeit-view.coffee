@@ -14,7 +14,8 @@ doIt= (epic_path,dev_dir,pkg_nm) ->
 			epic_path+ '/util.js'
 		],
 		(err, window)->
-			#console.log err
+			#console.log 'err', err
+			#console.log 'window.document.errors', window.document.errors
 			class MockLoadStrategy
 				constructor: (@Xdev_dir,@Xpkg_nm) ->
 					#@path= testenv.baseDir.substr( 'file://'.length)+ '/Package/'+ @pkg_nm+'/view/'

@@ -23,16 +23,21 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 		catch e
 			throw e if @Epic.isSecurityError e
 			_log2 '##### Error in page-part', oPt.attrs.part, e, e.stack
-			return """<pre>&lt;epic:page_part part="#{oPt.attrs.part}&gt;<br>#{e}<br>#{e.stack}</pre>"""
+			return """<pre>&lt;epic:page_part part="#{oPt.attrs.part}"&gt;<br>#{e}<br>#{e.stack}</pre>"""
 
-		Tag_page: (oPt) ->
+	Tag_page: (oPt) ->
+		try
 			return super oPt if @Opts().file is false
-		"""
-			
+			return """
 <span class="dbg-part-box" title="#{@bd_template}.tmpl.html">T</span>
 <span class="dbg-part-box" title="#{@bd_page}.page.html">P</span>
 #{super oPt}
-		"""
+			"""
+		catch e
+			throw e if @Epic.isSecurityError e
+			_log2 '##### Error in page', @bd_page, e, e.stack
+			return """<pre>&lt;epic:page page:#{@bd_page}&gt;<br>#{e}<br>#{e.stack}</pre>"""
+
 	varGet3: (view_nm, tbl_nm, col_nm, format_spec, custom_spec) ->
 		try
 			val= super view_nm, tbl_nm, col_nm, format_spec, custom_spec

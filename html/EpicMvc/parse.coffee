@@ -9,7 +9,7 @@ FindVars= (text) ->
 	return text if parts.length== 1
 	while i< parts.length- 1
 		args= parts[ i+ 1].split '/'
-		last= args.length- 1;
+		last= args.length- 1
 		[ args[last], hash_part, custom_hash_part]= args[last].split '#'
 		parts[ i+ 1]= switch args.length
 			when 2 then [ 'varGet2', [args[0], args[1], hash_part, custom_hash_part] ]
@@ -19,7 +19,7 @@ FindVars= (text) ->
 	return parts
 
 ParseFile= (file_stats, file_contents) ->
-	clean= file_contents.replace /<!--.*?-->/, ''
+	clean= file_contents.replace( /-->/gm, '\x02').replace /<!--[^\x02]*\x02/gm, ''
 	parts= clean.split /<(\/?)epic:([a-z_0-9]+)([^>]*)>/
 	i= 0
 	tag_wait= [] # Holds back list of indexes while doing a nested tag

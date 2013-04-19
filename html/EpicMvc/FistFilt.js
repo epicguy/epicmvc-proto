@@ -91,10 +91,11 @@
     };
 
     FistFilt.CHECK_email = function(fieldName, validateExpr, value, oF) {
-      var cd, ndc, re;
-      ndc = '[a-zA-Z_0-9]';
-      cd = '[.a-zA-Z_0-9]';
-      re = new RegExp("^" + ndc + cd + "*@(" + ndc + "+.)+" + ndc + "{2,3}$");
+      var few, most, re, some;
+      most = '[A-Z0-9._%-]';
+      some = '[A-Z0-9.-]';
+      few = '[A-Z]';
+      re = new RegExp("^" + most + "+@" + some + "+[.]" + few + "{2,4}$", 'i');
       if (value.match(re)) {
         return true;
       } else {
@@ -110,6 +111,15 @@
       } else {
         return false;
       }
+    };
+
+    FistFilt.CHECK_confirm = function(fieldName, validateExpr, value, oF) {
+      var other_value;
+      other_value = oF.getHtmlFieldValue(validateExpr);
+      if (other_value !== value) {
+        return false;
+      }
+      return true;
     };
 
     FistFilt.H2D_ = function(fieldName, filtExpr, value) {

@@ -71,7 +71,7 @@ class TagExe
 		before+ (@viewExe.includePage dynamicInfo)+ after
 	getTable: (nm) ->
 		f= ':TagExe.getTable:'+ nm
-		@Epic.log2 f, @fist_table, @info_if_nms
+		#@Epic.log2 f, @fist_table, @info_if_nms
 		switch nm
 			when 'Control', 'Form' then @fist_table[nm]
 			when 'If' then [@info_if_nms]
@@ -132,7 +132,7 @@ class TagExe
 	ifTrueFalse: (oPt, is_if_true) ->
 		f= ':TagExe.ifTrueFalse'
 		nm= @viewExe.handleIt oPt.attrs.name
-		@Epic.log2 f, oPt.attrs.name, nm, @info_if_nms[nm]
+		#@Epic.log2 f, oPt.attrs.name, nm, @info_if_nms[nm]
 		found_true= @info_if_nms[nm] is is_if_true
 		out= if found_true then @viewExe.doAllParts oPt.parts else ''
 	ifAnyAll: (oPt, is_if_any) ->
@@ -191,7 +191,7 @@ class TagExe
 			break if is_if_any and found_true
 			break if not is_if_any and not found_true
 		if found_nm isnt false
-			@Epic.log2 f, found_nm, found_true, oPt.attrs
+			#@Epic.log2 f, found_nm, found_true, oPt.attrs
 			@info_if_nms[found_nm]= found_true
 		out= @viewExe.doAllParts oPt.parts if found_true
 		out

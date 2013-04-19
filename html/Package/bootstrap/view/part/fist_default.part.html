@@ -1,4 +1,9 @@
 <epic:foreach table="Tag/Control">
+<epic:if val="&Control/type#lc;" eq="hidden">
+	<input type="&Control/type#lc;" name="&Control/name;" value="&Control/value;">
+</epic:if>
+<epic:if val="&Control/type#lc;" ne="hidden">
+
 <epic:if name="req" set="&Tag/Form/show_req;">
 	<epic:if name="req" set="&Control/req;"/>
 </epic:if>
@@ -49,6 +54,7 @@
 
 </div> <!-- .controls -->
 </div> <!-- .control-group -->
+</epic:if> <!-- not hidden -->
 </epic:foreach>
 <epic:if set="&Tag/Form/show_req;&Tag/Form/any_req;">
 <span class="form-req-note">* = Required field</span>

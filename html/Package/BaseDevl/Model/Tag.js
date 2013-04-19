@@ -51,16 +51,23 @@
           throw e;
         }
         _log2('##### Error in page-part', oPt.attrs.part, e, e.stack);
-        return "<pre>&lt;epic:page_part part=\"" + oPt.attrs.part + "&gt;<br>" + e + "<br>" + e.stack + "</pre>";
+        return "<pre>&lt;epic:page_part part=\"" + oPt.attrs.part + "\"&gt;<br>" + e + "<br>" + e.stack + "</pre>";
       }
-      ({
-        Tag_page: function(oPt) {
-          if (this.Opts().file === false) {
-            return Tag_page.__super__.constructor.call(this, oPt);
-          }
+    };
+
+    TagExe.prototype.Tag_page = function(oPt) {
+      try {
+        if (this.Opts().file === false) {
+          return TagExe.__super__.Tag_page.call(this, oPt);
         }
-      });
-      return "\n<span class=\"dbg-part-box\" title=\"" + this.bd_template + ".tmpl.html\">T</span>\n<span class=\"dbg-part-box\" title=\"" + this.bd_page + ".page.html\">P</span>\n" + (TagExe.__super__.Tag_page_part.call(this, oPt));
+        return "<span class=\"dbg-part-box\" title=\"" + this.bd_template + ".tmpl.html\">T</span>\n<span class=\"dbg-part-box\" title=\"" + this.bd_page + ".page.html\">P</span>\n" + (TagExe.__super__.Tag_page.call(this, oPt));
+      } catch (e) {
+        if (this.Epic.isSecurityError(e)) {
+          throw e;
+        }
+        _log2('##### Error in page', this.bd_page, e, e.stack);
+        return "<pre>&lt;epic:page page:" + this.bd_page + "&gt;<br>" + e + "<br>" + e.stack + "</pre>";
+      }
     };
 
     TagExe.prototype.varGet3 = function(view_nm, tbl_nm, col_nm, format_spec, custom_spec) {

@@ -58,7 +58,7 @@ class ViewExe
 		@dynamicMap[nm].push @activeDynamicPartIx # Need to detect parents in same list means don't need child
 	addDynamicPart: (info) ->
 		f= ':ViewExe.addDynamicPart'
-		@Epic.log2 f, info, @activeDynamicPartIx, @part()
+		#@Epic.log2 f, info, @activeDynamicPartIx, @part()
 		alert 'Nested dynamic parts not really supported just now.' if @activeDynamicPartIx isnt 0
 		# Tag calls us with the details; need to start tracking this part specifically
 		@dynamicParts.push
@@ -67,7 +67,7 @@ class ViewExe
 		@activeDynamicPartIx= @dynamicParts.length- 1
 	invalidateTables: (view_nm, tbl_nms) ->
 		f= ':ViewExe.invalidateTables'
-		@Epic.log2 f, view_nm, tbl_nms, (if @Epic.inClick then 'IN'), @dynamicParts, @dynamicMap
+		#@Epic.log2 f, view_nm, tbl_nms, (if @Epic.inClick then 'IN'), @dynamicParts, @dynamicMap
 		sched= []
 		return 'no dynamic parts' if @dynamicParts.length is 1 # We have no dynamic parts
 		return 'in click' if @Epic.inClick

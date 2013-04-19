@@ -3,4 +3,12 @@
 .qq-upload-message.qq-upload-spinner {
     display:inline-block; background: url("loading.gif"); width:15px; height:15px; vertical-align:text-bottom;
 }
+button.as-link {
+	background: none;
+	border: none; 
+	padding: 0;
+}
+button.as-link:hover {
+	text-decoration: underline;
+}
 

@@ -303,7 +303,6 @@
     Fist.prototype.Fb_Check = function() {
       var db_nm, f, field, issue, issue_count, nm, p_nm, _i, _j, _len, _len1, _ref, _ref1;
       f = 'Fist.Fb_Check';
-      this.Epic.log2(f, this.Fb_DbNames());
       issue = new window.EpicMvc.Issue(this.Epic);
       _ref = this.Fb_DbNames();
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -333,11 +332,9 @@
     Fist.prototype.Fb_Validate = function(fieldName, value) {
       var f, field;
       f = 'Fist.Fb_Validate:' + fieldName;
-      this.Epic.log2(f, value);
       this.loadFieldDefs();
       field = this.fieldDef[fieldName];
       if ((!(value != null)) || value.length === 0) {
-        this.Epic.log2(f, 'req', field.req);
         if (field.req === true) {
           if (field.req_text) {
             return ['FIELD_EMPTY_TEXT', [fieldName, field.label, field.req_text]];
@@ -348,10 +345,8 @@
         return true;
       }
       if (field.max_len > 0 && value.length > field.max_len) {
-        this.Epic.log2(f, 'max_len,v.len', field.max_len, value.length);
         return ['FIELD_OVER_MAX', [fieldName, field.label, field.max_len]];
       }
-      this.Epic.log2(f, 'validate,expr', field.validate, field.validate_expr);
       if (!this.filt['CHECK_' + field.validate](fieldName, field.validate_expr, value, this)) {
         if (field.issue_text) {
           return ['FIELD_ISSUE_TEXT', [fieldName, field.label, field.issue_text]];

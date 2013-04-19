@@ -149,7 +149,6 @@
     ViewExe.prototype.addDynamicPart = function(info) {
       var f;
       f = ':ViewExe.addDynamicPart';
-      this.Epic.log2(f, info, this.activeDynamicPartIx, this.part());
       if (this.activeDynamicPartIx !== 0) {
         alert('Nested dynamic parts not really supported just now.');
       }
@@ -170,7 +169,6 @@
       var delay, f, inst, instance, ix, ix_list, nm, now, part, sched, sofar, tbl_nm, _i, _j, _len, _len1, _ref,
         _this = this;
       f = ':ViewExe.invalidateTables';
-      this.Epic.log2(f, view_nm, tbl_nms, (this.Epic.inClick ? 'IN' : void 0), this.dynamicParts, this.dynamicMap);
       sched = [];
       if (this.dynamicParts.length === 1) {
         return 'no dynamic parts';

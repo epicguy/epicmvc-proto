@@ -15,10 +15,10 @@
 	#	Cleans up user input, for a database value (Collects psuedo fields)
 	#		- takes value (or list if psuedo), returns cleaned up value
 	#
-	# CHECK_XXX			{fieldName validateExpr value}
+	# CHECK_XXX			(fieldName, validateExpr, value, oFist)
 	#
 	#	Checks the DB value for validity
-	#		- Takes a value, reuturns 1=good, 0=bad
+	#		- Takes a value, reuturns true=good, false=bad
 	#
 	# D2H_XXX[_psuedo]		{fieldName value}
 	#
@@ -73,14 +73,21 @@ class FistFilt
 
 	@CHECK_email: (fieldName, validateExpr, value, oF) ->
 		# 'fieldName' is given for debug messages
-		ndc = '[a-zA-Z_0-9]'; # Non-dot chars
-		cd = '[.a-zA-Z_0-9]'; # Chars + dot
-		re = new RegExp "^#{ndc}#{cd}*@(#{ndc}+.)+#{ndc}{2,3}$"
+		# [A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4}
+		most= '[A-Z0-9._%-]'
+		some= '[A-Z0-9.-]'
+		few = '[A-Z]'
+		re = new RegExp "^#{most}+@#{some}+[.]#{few}{2,4}$", 'i'
 		if value.match re then true else false
 
 	@CHECK_regexp: (fieldName, validateExpr, value, oF) ->
 		re = new RegExp "^#{validateExpr}$"
 		if value.match re then true else false
+
+	@CHECK_confirm: (fieldName, validateExpr, value, oF) ->
+		other_value= oF.getHtmlFieldValue validateExpr
+		return false if other_value isnt value
+		true
 
 	#
 	# Filters to go from Html to DB

@@ -171,7 +171,7 @@ class Fist
 
 	Fb_Check: () ->
 		f= 'Fist.Fb_Check'
-		@Epic.log2 f, @Fb_DbNames()
+		#@Epic.log2 f, @Fb_DbNames()
 		issue = new window.EpicMvc.Issue @Epic
 		for db_nm in @Fb_DbNames()
 			nm= @dbNm2HtmlNm[ db_nm]
@@ -188,11 +188,11 @@ class Fist
 		issue
 	Fb_Validate: (fieldName, value) ->
 		f= 'Fist.Fb_Validate:'+ fieldName
-		@Epic.log2 f, value
+		#@Epic.log2 f, value
 		@loadFieldDefs() # Lazy load
 		field= @fieldDef[ fieldName]
 		if (not value?) or value.length is 0
-			@Epic.log2 f, 'req', field.req
+			#@Epic.log2 f, 'req', field.req
 			if field.req is true # Value is empty, but required
 				return if field.req_text #Value empty, not 'ok'
 				then ['FIELD_EMPTY_TEXT', [fieldName, field.label, field.req_text]] #Value empty, not 'ok'
@@ -200,10 +200,10 @@ class Fist
 			return true # Value is empty, and this is 'ok'
 
 		if field.max_len> 0 and value.length> field.max_len
-			@Epic.log2 f, 'max_len,v.len', field.max_len, value.length
+			#@Epic.log2 f, 'max_len,v.len', field.max_len, value.length
 			return ['FIELD_OVER_MAX', [fieldName, field.label, field.max_len]]
 
-		@Epic.log2 f, 'validate,expr', field.validate, field.validate_expr
+		#@Epic.log2 f, 'validate,expr', field.validate, field.validate_expr
 		if not @filt['CHECK_' + field.validate] fieldName, field.validate_expr, value, @
 			#return ['FIELD_ISSUE', [fieldName, field.issue_text ]]
 			return if field.issue_text

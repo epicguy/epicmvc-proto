@@ -135,7 +135,6 @@
     TagExe.prototype.getTable = function(nm) {
       var f;
       f = ':TagExe.getTable:' + nm;
-      this.Epic.log2(f, this.fist_table, this.info_if_nms);
       switch (nm) {
         case 'Control':
         case 'Form':
@@ -250,7 +249,6 @@
       var f, found_true, nm, out;
       f = ':TagExe.ifTrueFalse';
       nm = this.viewExe.handleIt(oPt.attrs.name);
-      this.Epic.log2(f, oPt.attrs.name, nm, this.info_if_nms[nm]);
       found_true = this.info_if_nms[nm] === is_if_true;
       return out = found_true ? this.viewExe.doAllParts(oPt.parts) : '';
     };
@@ -372,7 +370,6 @@
         }
       }
       if (found_nm !== false) {
-        this.Epic.log2(f, found_nm, found_true, oPt.attrs);
         this.info_if_nms[found_nm] = found_true;
       }
       if (found_true) {

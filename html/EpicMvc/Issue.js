@@ -23,19 +23,25 @@
     Issue.prototype.add = function(type, msgs) {
       var f;
       f = ':Issue.add:' + this.t_view + ':' + this.t_action;
-      _log2(f, 'params:type/msgs', type, msgs);
+      this.Epic.log2(f, 'params:type/msgs', type, msgs);
+      switch (typeof msgs) {
+        case 'undefined':
+          msgs = [];
+          break;
+        case 'string':
+          msgs([msgs]);
+      }
       switch (type) {
         case 'TEXT':
-          this.issue_list.push({
+          return this.issue_list.push({
             token: 'text',
-            more: [msgs],
+            more: msgs,
             t_view: this.t_view,
             t_action: this.t_action
           });
-          break;
         default:
           if (/^[A-Z0-9_]+$/.test(type)) {
-            this.issue_list.push({
+            return this.issue_list.push({
               token: type,
               more: msgs,
               t_view: this.t_view,
@@ -43,7 +49,7 @@
             });
           } else {
             alert(f + ' - Unknown "type" for Issue.add ' + type);
-            this.issue_list.push({
+            return this.issue_list.push({
               token: 'unknown',
               more: [type],
               t_view: this.t_view,
@@ -51,7 +57,6 @@
             });
           }
       }
-      return _log2(f, this.issue_list[this.issue_list.length - 1]);
     };
 
     Issue.prototype.call = function(function_call_returning_issue_or_null) {
@@ -61,16 +66,12 @@
     };
 
     Issue.prototype.addObj = function(issue_obj) {
-      var f, issue, new_issue, _fn, _i, _len, _ref, _ref1, _ref2;
+      var f, issue, new_issue, _i, _len, _ref, _ref1, _ref2;
       f = ':Issue.addObj:' + this.t_view + '#' + this.t_action;
       if (typeof issue_obj !== 'object' || !('issue_list' in issue_obj)) {
         return;
       }
-      _log2(f, 'issue_list', issue_obj.issue_list);
       _ref = issue_obj.issue_list;
-      _fn = function(new_issue) {
-        return _log2(f, 'new_issue', new_issue);
-      };
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         issue = _ref[_i];
         new_issue = $.extend(true, {}, issue);
@@ -81,7 +82,6 @@
           new_issue.t_action = this.t_action;
         }
         this.issue_list.push(new_issue);
-        _fn(new_issue);
       }
     };
 
@@ -91,12 +91,12 @@
 
     Issue.prototype.asTable = function(map) {
       var final, issue, _i, _len, _ref;
-      _log2('asTable: issue_list,map', this.issue_list, map);
       final = [];
       _ref = this.issue_list;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         issue = _ref[_i];
         final.push({
+          title: "" + issue.t_view + "#" + issue.t_action + "#" + issue.token + "#" + (issue.more.join(',')),
           issue: this.map(map, issue.t_view, issue.t_action, issue.token, issue.more)
         });
       }
@@ -112,30 +112,24 @@
       if (t_view in map) {
         if (t_action in map[t_view]) {
           map_list.push(map[t_view][t_action]);
-          _log2('m', t_view, t_action);
         }
         if ('default' in map[t_view]) {
           map_list.push(map[t_view]["default"]);
-          _log2('m', t_view, 'default');
         }
       }
       if ('default' in map) {
         if (t_action in map["default"]) {
           map_list.push(map["default"][t_action]);
-          _log2('m', 'default', t_action);
         }
         if ('default' in map["default"]) {
           map_list.push(map["default"]["default"]);
-          _log2('m', 'default', 'default');
         }
       }
-      _log2('map:tv,ta,token,more,map_list.length', t_view, t_action, token, more, map_list.length);
       for (_i = 0, _len = map_list.length; _i < _len; _i++) {
         sub_map = map_list[_i];
         _ref = sub_map || [];
         for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
           spec = _ref[_j];
-          _log2('map:spec', spec);
           if (token.match(spec[0])) {
             return this.doMap(spec[1], more);
           }
@@ -146,14 +140,7 @@
 
     Issue.prototype.doMap = function(pattern, vals) {
       var new_str;
-      _log2('doMap', pattern, vals);
       new_str = pattern.replace(/%([0-9])(?::([0-9]))?%/g, function(str, i1, i2, more) {
-        _log2({
-          str: str,
-          i1: i1,
-          i2: i2,
-          more: more
-        });
         if (i2) {
           return vals[i1 - 1] || vals[i2 - 1] || '';
         } else {
