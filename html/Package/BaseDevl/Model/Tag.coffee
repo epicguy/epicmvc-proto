@@ -9,6 +9,16 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 	Opts: -> (@Epic.getViewTable 'Devl/Opts')[0]
 	Tag_form_part: (oPt) ->
 		try
+			throw Error 'Missing form=""' if not oPt.attrs.form
+			g= @Epic.getGroupNm()
+			c= @Epic.getFistGroupCache().getCanonicalFist g, oPt.attrs.form
+			v= @Epic.oAppConf.getFistView g, c
+			throw Error "app.conf requires MODELS: ... forms=\"...,#{c}\"" if not v
+			throw Error "Your model (#{v}) must have a method fistLoadData" if not ('fistLoadData' of @Epic.getInstance v)
+		catch e
+			_log2 '##### Error in form-part', oPt.attrs.part ? 'fist_default', e, e.stack
+			return """<pre>&lt;epic:form_part form="#{oPt.attrs.form}" part="#{oPt.attrs.part ? 'fist_default'}&gt;<br>#{e}</pre>"""
+		try
 			return super oPt if @Opts().file is false
 			return """<span class="dbg-part-box" title="#{oPt.attrs.part ? 'fist_default'}.part.html (#{oPt.attrs.form})">.</span>#{super oPt}"""
 		catch e

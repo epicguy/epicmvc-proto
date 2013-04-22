@@ -15,7 +15,7 @@
     FistGroupCache.prototype.getFistGroup = function(grp_nm) {
       var _base, _ref;
       if (!((_ref = (_base = this.cacheByGrp)[grp_nm]) != null ? _ref : _base[grp_nm] = this.loadStrategy.fist(grp_nm))) {
-        throw 'Fist grp missing:=' + grp_nm;
+        throw 'Could not locate window.EpicMvc.fist$' + grp_nm;
       }
       return this.cacheByGrp[grp_nm];
     };
@@ -24,7 +24,7 @@
       var g;
       g = this.getFistGroup(grp_nm);
       if (!g.FISTS[flist_nm]) {
-        throw "Fist nm (" + flist_nm + ") missing in group(" + grp_nm + ")";
+        throw "Could not locate window.EpicMvc.fist$" + grp_nm + "." + flist_nm;
       }
       return g.FISTS[flist_nm];
     };

@@ -132,7 +132,6 @@
           continue;
         }
         result[a] = this.viewExe.handleIt(val);
-        this.Epic.log2(f, a, result[a]);
       }
       return result;
     };

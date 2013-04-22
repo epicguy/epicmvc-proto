@@ -25,18 +25,35 @@
     };
 
     TagExe.prototype.Tag_form_part = function(oPt) {
-      var _ref, _ref1, _ref2;
+      var c, g, v, _ref, _ref1, _ref2, _ref3, _ref4;
+      try {
+        if (!oPt.attrs.form) {
+          throw Error('Missing form=""');
+        }
+        g = this.Epic.getGroupNm();
+        c = this.Epic.getFistGroupCache().getCanonicalFist(g, oPt.attrs.form);
+        v = this.Epic.oAppConf.getFistView(g, c);
+        if (!v) {
+          throw Error("app.conf requires MODELS: ... forms=\"...," + c + "\"");
+        }
+        if (!('fistLoadData' in this.Epic.getInstance(v))) {
+          throw Error("Your model (" + v + ") must have a method fistLoadData");
+        }
+      } catch (e) {
+        _log2('##### Error in form-part', (_ref = oPt.attrs.part) != null ? _ref : 'fist_default', e, e.stack);
+        return "<pre>&lt;epic:form_part form=\"" + oPt.attrs.form + "\" part=\"" + ((_ref1 = oPt.attrs.part) != null ? _ref1 : 'fist_default') + "&gt;<br>" + e + "</pre>";
+      }
       try {
         if (this.Opts().file === false) {
           return TagExe.__super__.Tag_form_part.call(this, oPt);
         }
-        return "<span class=\"dbg-part-box\" title=\"" + ((_ref = oPt.attrs.part) != null ? _ref : 'fist_default') + ".part.html (" + oPt.attrs.form + ")\">.</span>" + (TagExe.__super__.Tag_form_part.call(this, oPt));
+        return "<span class=\"dbg-part-box\" title=\"" + ((_ref2 = oPt.attrs.part) != null ? _ref2 : 'fist_default') + ".part.html (" + oPt.attrs.form + ")\">.</span>" + (TagExe.__super__.Tag_form_part.call(this, oPt));
       } catch (e) {
         if (this.Epic.isSecurityError(e)) {
           throw e;
         }
-        _log2('##### Error in form-part', (_ref1 = oPt.attrs.part) != null ? _ref1 : 'fist_default', e, e.stack);
-        return "<pre>&lt;epic:form_part form=\"" + oPt.attrs.form + "\" part=\"" + ((_ref2 = oPt.attrs.part) != null ? _ref2 : 'fist_default') + "&gt;<br>" + e + "<br>" + e.stack + "</pre>";
+        _log2('##### Error in form-part', (_ref3 = oPt.attrs.part) != null ? _ref3 : 'fist_default', e, e.stack);
+        return "<pre>&lt;epic:form_part form=\"" + oPt.attrs.form + "\" part=\"" + ((_ref4 = oPt.attrs.part) != null ? _ref4 : 'fist_default') + "&gt;<br>" + e + "<br>" + e.stack + "</pre>";
       }
     };
 

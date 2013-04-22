@@ -24,12 +24,12 @@
       if (tbl_nm in this.Table) {
         return;
       }
-      window.alert("Unknown table-name (" + tbl_nm + ") for model-name (" + this.view_nm + ").");
+      window.alert("Model " + this.view_nm + ".loadTable needs (" + tbl_nm + ")");
       return this.Table[tbl_nm] = [{}];
     };
 
     ModelJS.prototype.fistLoadData = function(oFist) {
-      window.alert("Unknown fist (" + (oFist.getFistNm()) + ") for model-name (" + this.view_nm + ").");
+      window.alert("Model (" + this.view_nm + ").fistLoadData() needs (" + (oFist.getFistNm()) + ")");
     };
 
     return ModelJS;

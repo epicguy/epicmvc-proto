@@ -69,7 +69,7 @@ class TagExe
 			[p,a]= attr.split ':'
 			continue if p isnt 'p'
 			result[a]= @viewExe.handleIt val
-			@Epic.log2 f, a, result[a]
+			#@Epic.log2 f, a, result[a]
 		result
 	Tag_page_part: (oPt) ->
 		f= ':tag.page-part:'+ oPt.attrs.part

@@ -15,7 +15,7 @@
 <div class="controls">
 
 <epic:if val="&Control/type;" eq="textarea">
-	<textarea &Control/attrs;>&Control/val#esc;</textarea>"
+	<textarea name="&Control/name;" &Control/attrs; &Tag/If/req#.required="";>&Control/value#esc;</textarea>
 </epic:if>
 
 <epic:if val="&Control/type#lc;" eq="text">

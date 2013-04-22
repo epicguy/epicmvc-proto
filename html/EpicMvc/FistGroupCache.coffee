@@ -6,12 +6,12 @@ class FistGroupCache
 		@cacheByGrp= [] # Cache starts empty
 	getFistGroup: (grp_nm) ->
 		if not @cacheByGrp[grp_nm]?= @loadStrategy.fist grp_nm
-			throw 'Fist grp missing:='+ grp_nm
+			throw 'Could not locate window.EpicMvc.fist$'+ grp_nm
 		@cacheByGrp[grp_nm]
 	getFistDef: (grp_nm, flist_nm) -> # NOT cannonical
 		g= @getFistGroup grp_nm
 		if not g.FISTS[flist_nm]
-			throw "Fist nm (#{flist_nm}) missing in group(#{grp_nm})"
+			throw "Could not locate window.EpicMvc.fist$#{grp_nm}.#{flist_nm}"
 		g.FISTS[flist_nm]
 	getFieldDefsForGroup: (grp_nm) -> @getFistGroup( grp_nm).FIELDS # Maintenance
 	getFistDefsForGroup: (grp_nm) -> @getFistGroup( grp_nm).FISTS # Maintenance

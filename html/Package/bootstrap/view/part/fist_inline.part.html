@@ -4,7 +4,7 @@
 </epic:if>
 
 <epic:if val="&Control/type;" eq="textarea">
-	<textarea &Control/attrs; placeholder="&Control/label;" &Tag/If/req#.required="".title="Required";>&Control/val#esc;</textarea>"
+	<textarea name="&Control/name;" &Control/attrs; placeholder="&Control/label;" &Tag/If/req#.required="".title="Required";>&Control/value#esc;</textarea>
 </epic:if>
 
 <epic:if val="&Control/type#lc;" eq="text">
