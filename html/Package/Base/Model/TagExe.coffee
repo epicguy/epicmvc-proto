@@ -185,7 +185,15 @@ class TagExe
 					break
 				when 'table_has_no_values', 'table_is_empty', 'table_is_not_empty', 'table_has_values'
 					flip= true if nm is 'table_has_no_values' or nm is 'table_is_empty'
-					found_true= @Epic.getViewTable(val).length isnt 0
+					[lh, rh]= val.split '/' # Left/right halfs
+					# If left exists, it's nested as table/sub-table else assume model/table
+					if lh of @info_foreach
+						tbl= @info_foreach[lh].row[rh]
+					else
+						@viewExe.haveTableRefrence lh, rh
+						oMd= @Epic.getInstance lh
+						tbl= oMd.getTable rh
+					found_true= tbl.length isnt 0
 					break
 				when 'if_true', 'if_false'
 					flip= true if nm is 'if_true'

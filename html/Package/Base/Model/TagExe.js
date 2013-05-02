@@ -276,7 +276,7 @@
     };
 
     TagExe.prototype.ifAnyAll = function(oPt, is_if_any) {
-      var f, flip, found_nm, found_true, left, nm, op, out, right, use_op, val, _ref;
+      var f, flip, found_nm, found_true, left, lh, nm, oMd, op, out, rh, right, tbl, use_op, val, _ref, _ref1;
       f = ':TagExe.ifAnyAll';
       out = '';
       found_nm = false;
@@ -357,7 +357,15 @@
             if (nm === 'table_has_no_values' || nm === 'table_is_empty') {
               flip = true;
             }
-            found_true = this.Epic.getViewTable(val).length !== 0;
+            _ref1 = val.split('/'), lh = _ref1[0], rh = _ref1[1];
+            if (lh in this.info_foreach) {
+              tbl = this.info_foreach[lh].row[rh];
+            } else {
+              this.viewExe.haveTableRefrence(lh, rh);
+              oMd = this.Epic.getInstance(lh);
+              tbl = oMd.getTable(rh);
+            }
+            found_true = tbl.length !== 0;
             break;
           case 'if_true':
           case 'if_false':
