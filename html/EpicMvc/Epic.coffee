@@ -118,6 +118,10 @@ class Epic
 		o.eventInitializePage?() for k,o of @oFist if avoid_form_reset isnt true # Load widgets (i.e. fileuploader)
 		@wasModal= modal
 		true # No security issues
+	logout: ->
+		for k,o of @oModel when o.eventLogout?() # True to reset model and state
+			delete @modelState[k]
+			delete @oModel[k]
 	refresh: (forTables) =>
 		if @inClick is true
 			setTimeout (=> @refresh forTables), 500
