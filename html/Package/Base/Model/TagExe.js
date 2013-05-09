@@ -30,7 +30,7 @@
     };
 
     TagExe.prototype.formatFromSpec = function(val, spec, custom_spec) {
-      var str, _base;
+      var left, right, str, _base, _ref;
       switch (spec) {
         case '':
           return typeof (_base = window.EpicMvc).custom_filter === "function" ? _base.custom_filter(val, custom_spec) : void 0;
@@ -48,7 +48,10 @@
           str = (String(str)).toLowerCase();
           return str.slice(0, 1).toUpperCase() + str.slice(1);
         default:
-          if (spec != null ? spec.length : void 0) {
+          if ((spec != null ? spec.length : void 0) > 4 && spec[0] === '?') {
+            _ref = spec.substr(2).split('?'), left = _ref[0], right = _ref[1];
+            return ((val === true || (typeof val === 'number' && val)) || (val != null ? val.length : void 0) ? left : right).replace(new RegExp('[' + spec[1] + ']', 'g'), ' ');
+          } else if (spec != null ? spec.length : void 0) {
             if ((val === true || (typeof val === 'number' && val)) || (val != null ? val.length : void 0)) {
               return spec.substr(1).replace(new RegExp('[' + spec.substr(0, 1) + ']', 'g'), ' ');
             } else {

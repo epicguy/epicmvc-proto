@@ -26,7 +26,11 @@ class TagExe
 				str= (String str).toLowerCase()
 				str.slice( 0, 1).toUpperCase()+ str.slice 1
 			else
-				if spec?.length
+				if spec?.length> 4 and spec[0] is '?' # Ex. &Model/Tbl/val#?.true?false;
+					[left,right]= spec.substr(2).split '?'
+					(if (val is true or (typeof val== 'number' && val)) or val?.length then left else right)
+						.replace (new RegExp '['+ spec[1]+ ']', 'g'), ' '
+				else if spec?.length
 					# Default spec
 					# if val is set, xlate spec to a string w/replaced spaces using first char
 					# Ex. &Model/Table/flag#.Replace.with.this.string; (Don't use / or ; or # in the string though)
