@@ -173,10 +173,11 @@ class TagExe
 					switch use_op
 						when 'eq' then found_true= left== right
 						when 'ne' then found_true= left!= right
-						when 'gt' then found_true= left>  right
-						when 'ge' then found_true= left>= right
-						when 'lt' then found_true= left<  right
-						when 'le' then found_true= left<= right
+						# These comparisons are always numeric
+						when 'gt' then found_true= (Number left)>  (Number right)
+						when 'ge' then found_true= (Number left)>= (Number right)
+						when 'lt' then found_true= (Number left)<  (Number right)
+						when 'le' then found_true= (Number left)<= (Number right)
 					op= null
 					break
 				when 'not_empty', 'empty'

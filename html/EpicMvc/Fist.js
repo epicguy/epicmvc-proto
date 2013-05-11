@@ -47,7 +47,7 @@
         options: [],
         values: []
       };
-      if (!(this.cache_field_choice[fl] != null)) {
+      if (true) {
         this.loadFieldDefs();
         ct = this.fieldDef[fl].type.split(':');
         switch (ct[1]) {

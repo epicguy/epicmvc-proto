@@ -326,16 +326,16 @@
                 found_true = left !== right;
                 break;
               case 'gt':
-                found_true = left > right;
+                found_true = (Number(left)) > (Number(right));
                 break;
               case 'ge':
-                found_true = left >= right;
+                found_true = (Number(left)) >= (Number(right));
                 break;
               case 'lt':
-                found_true = left < right;
+                found_true = (Number(left)) < (Number(right));
                 break;
               case 'le':
-                found_true = left <= right;
+                found_true = (Number(left)) <= (Number(right));
             }
             op = null;
             break;

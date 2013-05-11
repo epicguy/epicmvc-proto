@@ -24,7 +24,7 @@ class Fist
 	getFieldsDefs: -> @loadFieldDefs() # For models that xlate db_nm in load_table
 	loadFieldChoices: (fl) -> # for pulldown choices
 		final_obj= options:[], values:[]
-		if not @cache_field_choice[fl]?
+		if true # Avoid cache for now, so model an refresh via REST or whatever: not @cache_field_choice[fl]?
 			@loadFieldDefs() # Lazy load
 			ct= @fieldDef[fl].type.split ':'
 			switch ct[1] # Assume ct[0] is pulldown else why call 'choices'?
