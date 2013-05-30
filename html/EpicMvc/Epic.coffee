@@ -112,12 +112,18 @@ class Epic
 		try
 			stuff= @oView.run()
 		catch e
+			@log2 ':render error', e
 			if @isSecurityError e then return e
-			else inClick= false; throw e
+			else @inClick= false; throw e
 		@renderStrategy stuff, history, @inClick, modal
 		o.eventInitializePage?() for k,o of @oFist if avoid_form_reset isnt true # Load widgets (i.e. fileuploader)
 		@wasModal= modal
 		true # No security issues
+	login: ->
+		f= ':login'
+		@log2 f, @oModel
+		for k,o of @oModel when o.eventLogin?() # True to (TODO)
+			continue
 	logout: ->
 		for k,o of @oModel when o.eventLogout?() # True to reset model and state
 			delete @modelState[k]
@@ -145,21 +151,25 @@ class Epic
 		o.eventNewRequest?() for k,o of @oFist # Removing state where appropriate
 		o.eventNewRequest?() for k,o of @oModel
 		@oRequest.start click_index if click_index
+		oPf= @getInstance 'Pageflow'
+		before_sp= oPf.getStepPath()
 		oC= new window.EpicMvc.ClickAction @
 		click_result= oC.click()
-		oPf= @getInstance 'Pageflow'
+		after_sp= oPf.getStepPath()
 		oPf.setIssues click_result[0]
 		oPf.setMessages click_result[1]
 		@modelState= {}
 		@modelState[k]= ss for k,o of @oModel when o.saveState? and ss= o.saveState()
-		@renderSecure() unless no_render is true
+		@renderSecure() if no_render isnt true or (before_sp.join ':') isnt (after_sp.join ':')
 		@inClick= false
 	renderSecure: (avoid_form_reset) ->
+		f= ':renderSecure'
 		oC= new window.EpicMvc.ClickAction @
 		oPf= @getInstance 'Pageflow'
 		render_result= false
 		render_attempts= 3
 		while render_result!= true and --render_attempts> 0
+			@log2 f, (if render_result is true then 'T' else if render_result is false then 'F' else render_result), render_attempts
 			sp= oPf.getStepPath()
 			if render_result!= false # Process secuirty exception (as click action)
 				oC.click render_result.message, sp

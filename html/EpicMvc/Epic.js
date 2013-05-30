@@ -177,7 +177,7 @@
     };
 
     Epic.prototype.render = function(template, sp, avoid_form_reset) {
-      var history, inClick, k, modal, o, page, stuff, _ref;
+      var history, k, modal, o, page, stuff, _ref;
       page = this.oAppConf.getPage(sp);
       modal = this.oAppConf.findAttr(sp[0], sp[1], sp[2], 'modal');
       if (modal) {
@@ -202,10 +202,11 @@
       try {
         stuff = this.oView.run();
       } catch (e) {
+        this.log2(':render error', e);
         if (this.isSecurityError(e)) {
           return e;
         } else {
-          inClick = false;
+          this.inClick = false;
           throw e;
         }
       }
@@ -221,6 +222,21 @@
       }
       this.wasModal = modal;
       return true;
+    };
+
+    Epic.prototype.login = function() {
+      var f, k, o, _ref, _results;
+      f = ':login';
+      this.log2(f, this.oModel);
+      _ref = this.oModel;
+      _results = [];
+      for (k in _ref) {
+        o = _ref[k];
+        if (typeof o.eventLogin === "function" ? o.eventLogin() : void 0) {
+          continue;
+        }
+      }
+      return _results;
     };
 
     Epic.prototype.logout = function() {
@@ -263,7 +279,7 @@
     };
 
     Epic.prototype.click = function(click_index, no_render) {
-      var click_result, f, k, o, oC, oPf, ss, _ref, _ref1, _ref2, _ref3;
+      var after_sp, before_sp, click_result, f, k, o, oC, oPf, ss, _ref, _ref1, _ref2, _ref3;
       f = ':click';
       this.log2(f, click_index);
       if (this.inClick !== false) {
@@ -292,9 +308,11 @@
       if (click_index) {
         this.oRequest.start(click_index);
       }
+      oPf = this.getInstance('Pageflow');
+      before_sp = oPf.getStepPath();
       oC = new window.EpicMvc.ClickAction(this);
       click_result = oC.click();
-      oPf = this.getInstance('Pageflow');
+      after_sp = oPf.getStepPath();
       oPf.setIssues(click_result[0]);
       oPf.setMessages(click_result[1]);
       this.modelState = {};
@@ -305,19 +323,21 @@
           this.modelState[k] = ss;
         }
       }
-      if (no_render !== true) {
+      if (no_render !== true || (before_sp.join(':')) !== (after_sp.join(':'))) {
         this.renderSecure();
       }
       return this.inClick = false;
     };
 
     Epic.prototype.renderSecure = function(avoid_form_reset) {
-      var oC, oPf, render_attempts, render_result, sp, template;
+      var f, oC, oPf, render_attempts, render_result, sp, template;
+      f = ':renderSecure';
       oC = new window.EpicMvc.ClickAction(this);
       oPf = this.getInstance('Pageflow');
       render_result = false;
       render_attempts = 3;
       while (render_result !== true && --render_attempts > 0) {
+        this.log2(f, (render_result === true ? 'T' : render_result === false ? 'F' : render_result), render_attempts);
         sp = oPf.getStepPath();
         if (render_result !== false) {
           oC.click(render_result.message, sp);

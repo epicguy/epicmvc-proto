@@ -17,7 +17,10 @@
     TagExe.prototype.resetForNextRequest = function(state) {
       TagExe.__super__.resetForNextRequest.call(this, state);
       this.bd_template = this.viewExe.template;
-      return this.bd_page = this.viewExe.page;
+      this.bd_page = this.viewExe.page;
+      return this.errors_cache = {
+        get3: {}
+      };
     };
 
     TagExe.prototype.Opts = function() {
@@ -105,7 +108,7 @@
     };
 
     TagExe.prototype.varGet2 = function(tbl_nm, col_nm, format_spec, custom_spec, sub_nm) {
-      var spec, val;
+      var key, spec, val;
       try {
         val = TagExe.__super__.varGet2.call(this, tbl_nm, col_nm, format_spec, custom_spec, sub_nm);
       } catch (e) {
@@ -117,7 +120,11 @@
       }
       if (val === void 0) {
         spec = format_spec && format_spec.length > 0 ? '#' + format_spec : custom_spec && custom_spec.length > 0 ? '##' + custom_spec : '';
-        window.alert("Undefined: &" + tbl_nm + "/" + col_nm + spec + ";");
+        key = "Undefined: &" + tbl_nm + "/" + col_nm + spec + ";";
+        if (!(key in this.errors_cache.get3)) {
+          window.alert("Undefined: &" + tbl_nm + "/" + col_nm + spec + ";");
+          this.errors_cache.get3[key] = true;
+        }
         val = "&amp;" + tbl_nm + "/" + col_nm + ";";
       }
       return val;

@@ -2,7 +2,8 @@
 (function() {
   'use strict';
 
-  var ModelJS;
+  var ModelJS,
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   ModelJS = (function() {
 
@@ -54,15 +55,20 @@
       return $.extend(true, {}, st);
     };
 
-    ModelJS.prototype.invalidateTables = function(tbl_nms) {
+    ModelJS.prototype.invalidateTables = function(tbl_nms, not_tbl_names) {
       var f, nm, _i, _len;
       f = ':ModelJs.invalidateTables';
+      if (not_tbl_names == null) {
+        not_tbl_names = [];
+      }
       if (tbl_nms === true) {
         tbl_nms = (function() {
           var _results;
           _results = [];
           for (nm in this.Table) {
-            _results.push(nm);
+            if (!(__indexOf.call(not_tbl_names, nm) >= 0)) {
+              _results.push(nm);
+            }
           }
           return _results;
         }).call(this);

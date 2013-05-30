@@ -27,7 +27,7 @@ class ViewExe
 	part: (ix) -> @dynamicParts[ix or @activeDynamicPartIx]
 	doDynamicPart: (ix, instance) ->
 		f= ':ViewExe.doDynamicPart:'+ix
-		@Epic.log2 f, 'i,@i,p(i)', instance, @instance, @part ix
+		#@Epic.log2 f, 'i,@i,p(i)', instance, @instance, @part ix
 		return if instance isnt @instance
 		part= @part ix
 		return if part.pending is false # Must have gotten here already

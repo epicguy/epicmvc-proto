@@ -85,7 +85,6 @@
     ViewExe.prototype.doDynamicPart = function(ix, instance) {
       var f, old_dynamic_ix, part, watch, _i, _len, _ref;
       f = ':ViewExe.doDynamicPart:' + ix;
-      this.Epic.log2(f, 'i,@i,p(i)', instance, this.instance, this.part(ix));
       if (instance !== this.instance) {
         return;
       }
