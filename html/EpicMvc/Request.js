@@ -13,16 +13,26 @@
     }
 
     Request.prototype.start = function(link_index) {
-      var form_data, sp, v, _i, _len;
+      var f, form_data, ix, name, sp, v, _base, _i, _len, _ref, _ref1;
+      f = ':Request.start:' + link_index;
       this.link = this.click_link[link_index];
       if (this.link._b != null) {
         form_data = this.Epic.getFormData();
         for (_i = 0, _len = form_data.length; _i < _len; _i++) {
           v = form_data[_i];
-          this.link[v.name] = v.value;
+          _ref = v.name.split('__'), name = _ref[0], ix = _ref[1];
+          if (ix) {
+            if ((_ref1 = (_base = this.link)[name]) == null) {
+              _base[name] = {};
+            }
+            this.link[name][ix] = v.value;
+          } else {
+            this.link[v.name] = v.value;
+          }
         }
         this.link._a = this.link._b;
       }
+      this.Epic.log2(f, '@link', this.link);
       if ((sp = this.link.temp_page_flow) != null) {
         return this.Epic.getInstance('Pageflow').goTo(sp[0], sp[1], sp[2]);
       }

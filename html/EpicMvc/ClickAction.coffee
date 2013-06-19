@@ -29,7 +29,7 @@ class ClickAction
 		[issue, message]
 	doAction: (node, prev_action_result) ->
 		f= ":ClickAction.doAction(#{node.getTarget()})"
-		@Epic.log2 f, 'getPAttrs', ("#{k}=#{v}" for k,v of node.getPAttrs()).join ', '
+		@Epic.log2 f, 'getPAttrs/node/prev_action_result', ("#{k}=#{v}" for k,v of node.getPAttrs()).join ', ', node, prev_action_result
 		r_vals= @Epic.request().getValues()
 		a_params_list= @pullValueUsingAttr node, r_vals, prev_action_result
 		class_method= node.getTarget() # Call= or Macro= 's value

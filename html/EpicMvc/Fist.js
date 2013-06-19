@@ -22,6 +22,7 @@
       this.Fb_ClearValues();
       this.upload_todo = [];
       this.upload_fl = {};
+      this.eventLastPath = this.Epic.getPageflowPath();
     }
 
     Fist.prototype.getGroupNm = function() {
@@ -136,9 +137,9 @@
       return this.cache_field_choice[fl_nm];
     };
 
-    Fist.prototype.fieldLevelValidate = function(data) {
+    Fist.prototype.fieldLevelValidate = function(data, flist_nm) {
       this.form_state = 'posted';
-      return this.Fb_FistValidate(data);
+      return this.Fb_FistValidate(data, flist_nm != null ? flist_nm : this.fist_nm);
     };
 
     Fist.prototype.loadData = function(data) {
@@ -154,9 +155,14 @@
     };
 
     Fist.prototype.eventNewRequest = function() {
-      this.clearValues();
-      this.upload_todo = [];
-      this.uploaded_fl = {};
+      var path;
+      path = this.Epic.getPageflowPath();
+      if (this.eventLastPath !== path) {
+        this.clearValues();
+        this.upload_todo = [];
+        this.uploaded_fl = {};
+      }
+      this.eventLastPath = path;
     };
 
     Fist.prototype.clearValues = function() {
@@ -233,13 +239,13 @@
       return this.fb_issues = {};
     };
 
-    Fist.prototype.Fb_FistValidate = function(data) {
+    Fist.prototype.Fb_FistValidate = function(data, flist_nm) {
       var issues;
-      this.Fb_Html2Html(data);
+      this.Fb_Html2Html(data, flist_nm);
       issues = new window.EpicMvc.Issue(this.Epic);
       issues.call(this.Fb_Check());
       if (issues.count() === 0) {
-        this.Fb_Html2Db();
+        this.Fb_Html2Db(flist_nm);
       }
       return issues;
     };
@@ -291,11 +297,13 @@
       return true;
     };
 
-    Fist.prototype.Fb_Html2Html = function(p) {
-      var f, nm;
-      f = 'Fist.Fb_Html2Db';
+    Fist.prototype.Fb_Html2Html = function(p, flist_nm) {
+      var f, nm, _i, _len, _ref;
+      f = 'Fist.Fb_Html2Html';
       this.loadFieldDefs();
-      for (nm in this.fieldDef) {
+      _ref = this.getHtmlPostedFieldsList(flist_nm);
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        nm = _ref[_i];
         this.fb_HTML[nm] = this.filt.H2H_generic(nm, this.fieldDef[nm].h2h, p[nm]);
       }
     };
@@ -357,24 +365,25 @@
       return true;
     };
 
-    Fist.prototype.Fb_Html2Db = function() {
-      var f, field, nm, p_nm, psuedo_prefix, value, _ref;
+    Fist.prototype.Fb_Html2Db = function(flist_nm) {
+      var f, field, nm, p_nm, psuedo_prefix, value, _i, _len, _ref;
       f = 'Fist.Fb_Html2Db';
       this.loadFieldDefs();
-      _ref = this.fieldDef;
-      for (nm in _ref) {
-        field = _ref[nm];
+      _ref = this.getHtmlPostedFieldsList(flist_nm);
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        nm = _ref[_i];
+        field = this.fieldDef[nm];
         psuedo_prefix = "";
         if (field.type !== 'psuedo') {
           value = this.fb_HTML[nm];
         } else {
           psuedo_prefix = '_psuedo';
           value = (function() {
-            var _i, _len, _ref1, _results;
+            var _j, _len1, _ref1, _results;
             _ref1 = field.cdata;
             _results = [];
-            for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-              p_nm = _ref1[_i];
+            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+              p_nm = _ref1[_j];
               _results.push(this.fb_HTML[nm + '-' + p_nm]);
             }
             return _results;

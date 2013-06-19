@@ -51,6 +51,10 @@
       return ++this.counter;
     };
 
+    Epic.prototype.getPageflowPath = function() {
+      return this.getInstance('Pageflow').getStepPath().join('/');
+    };
+
     Epic.prototype.getInstanceNm = function(view_nm) {
       var inst_nm;
       return inst_nm = this.oAppConf.getObj(view_nm, 'inst');
@@ -119,7 +123,7 @@
       inst_nm = "" + g + "_" + fist_nm;
       if (!(inst_nm in this.oFist)) {
         view_nm = this.oAppConf.getFistView(g, fist_nm);
-        this.oFist[inst_nm] = new window.EpicMvc.Fist(this, g, fist_nm, view_nm);
+        this.oFist[inst_nm] = new window.EpicMvc.Fist(this, g, fist_nm, view_nm, flist_nm);
       }
       return this.oFist[inst_nm];
     };

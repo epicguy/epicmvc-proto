@@ -17,6 +17,7 @@ class Fist
 		# Upload fields
 		@upload_todo= []
 		@upload_fl= {}
+		@eventLastPath= @Epic.getPageflowPath()
 	getGroupNm: -> @grp_nm
 	getFistNm: -> @fist_nm
 	loadFieldDefs: ->
@@ -61,14 +62,19 @@ class Fist
 	getFieldIssues: -> @fb_issues
 	getChoices: (fl_nm) -> @loadFieldChoices fl_nm; @cache_field_choice[fl_nm]
 	# Posted values are comming to us, need to set values, and validate
-	fieldLevelValidate: (data) -> @form_state= 'posted'; @Fb_FistValidate data
+	fieldLevelValidate: (data,flist_nm) -> @form_state= 'posted'; @Fb_FistValidate data, flist_nm ? @fist_nm
 	loadData: (data) -> #TODO SHOULD THIS BE IN Epic.fist_back?
 		# form-states: empty, posted, loaded, restored
 		if @form_state is 'empty'
 			@oM.fistLoadData @ # Delegate to our 'model'
 			@form_state= 'loaded' # Consider it loaded, no matter what
 	setFromDbValues: (data) -> @Fb_SetHtmlValuesFromDb data; @form_state= 'loaded'; return
-	eventNewRequest: -> @clearValues(); @upload_todo= []; @uploaded_fl= {}; return
+	eventNewRequest: ->
+		path= @Epic.getPageflowPath()
+		if @eventLastPath isnt path
+ 			@clearValues(); @upload_todo= []; @uploaded_fl= {}
+			@eventLastPath= path
+ 		return
 	clearValues: ->
 		if @form_state isnt 'empty' then @Fb_ClearValues(); @form_state= 'empty'
 		return
@@ -125,19 +131,19 @@ class Fist
 		@fb_DB= {} # Hash
 		@fb_HTML= {} # Hash
 		@fb_issues= {} # Hash by HTML nm, if any
-	Fb_FistValidate: (data) -> # Data is from an html post (not a hash of db names)
+	Fb_FistValidate: (data,flist_nm) -> # Data is from an html post (not a hash of db names)
 		# Logic to validate a posted form of data:
 		#  (a) perform Html to Html filters on raw posted data (will change user's view)
 		#  (b) Validate the HTML side values, using filters
 		#  (c) return any issue found (or, continue next steps)
 		#  (d) Move Html data to DB, using filters (possible psuedo prefix)
 
-		@Fb_Html2Html(data)
+		@Fb_Html2Html data, flist_nm
 		issues = new window.EpicMvc.Issue @Epic
 		issues.call @Fb_Check()
 		if issues.count() is 0
 			#@Fb_Db2Html(); #TODO IS THIS GOOD/NEEDED TO PUT BACK FROM DB?
-			@Fb_Html2Db()
+			@Fb_Html2Db flist_nm
 		issues
 
 	# Below are all 'internanl' functions
@@ -162,10 +168,10 @@ class Fist
 			main_issue.add token_data[0], token_data[1]
 		return true
 
-	Fb_Html2Html: (p) ->
-		f= 'Fist.Fb_Html2Db'
+	Fb_Html2Html: (p,flist_nm) ->
+		f= 'Fist.Fb_Html2Html'
 		@loadFieldDefs() # Lazy load
-		for nm of @fieldDef # TODO HANDLE 'SUB' FISTS?
+		for nm in @getHtmlPostedFieldsList flist_nm
 			@fb_HTML[ nm]= @filt.H2H_generic nm, @fieldDef[ nm].h2h, p[ nm]
 		return
 
@@ -211,10 +217,11 @@ class Fist
 			else ['FIELD_ISSUE', [fieldName, field.label]]
 		return true # Value passes filter check
 
-	Fb_Html2Db: () ->
+	Fb_Html2Db: (flist_nm) ->
 		f= 'Fist.Fb_Html2Db'
 		@loadFieldDefs() # Lazy load
-		for nm,field of @fieldDef
+		for nm in @getHtmlPostedFieldsList flist_nm
+			field= @fieldDef[nm]
 			psuedo_prefix = ""
 			# Psuedo fields need data pulled from other fields
 			if field.type isnt 'psuedo' then value= @fb_HTML[ nm]

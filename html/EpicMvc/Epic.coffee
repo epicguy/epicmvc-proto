@@ -27,6 +27,8 @@ class Epic
 	#log2: window.Function.prototype.bind.call( window.console.log, window.console)
 	log2: () -> null
 	nextCounter: -> ++@counter
+	getPageflowPath: () ->
+		@getInstance( 'Pageflow').getStepPath().join '/'
 	getInstanceNm: (view_nm) ->
 		inst_nm= @oAppConf.getObj view_nm, 'inst'
 	getInstance: (view_nm) ->
@@ -66,7 +68,7 @@ class Epic
 		inst_nm= "#{g}_#{fist_nm}"
 		if not (inst_nm of @oFist)
 			view_nm= @oAppConf.getFistView g, fist_nm
-			@oFist[inst_nm]= new window.EpicMvc.Fist @, g, fist_nm, view_nm
+			@oFist[inst_nm]= new window.EpicMvc.Fist @, g, fist_nm, view_nm, flist_nm
 		@oFist[inst_nm]
 	Execute: (va,params) ->
 		@log2 ':Execute', va, params
