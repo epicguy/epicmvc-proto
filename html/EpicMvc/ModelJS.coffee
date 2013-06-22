@@ -11,6 +11,7 @@ class ModelJS
 	loadTableIf: (tbl_nm) ->
 		@loadTable tbl_nm if not (tbl_nm of @Table)
 	restoreState: (copy_of_state) ->
+		delete @[key] for key of @_ModelJS.ss if @_ModelJS.ss?
 		$.extend true, @, @_ModelJS.ss if @_ModelJS.ss?
 		$.extend true, @, copy_of_state if copy_of_state
 		@Table= {}

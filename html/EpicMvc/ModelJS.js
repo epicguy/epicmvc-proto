@@ -28,6 +28,12 @@
     };
 
     ModelJS.prototype.restoreState = function(copy_of_state) {
+      var key;
+      if (this._ModelJS.ss != null) {
+        for (key in this._ModelJS.ss) {
+          delete this[key];
+        }
+      }
       if (this._ModelJS.ss != null) {
         $.extend(true, this, this._ModelJS.ss);
       }
