@@ -37,6 +37,7 @@
       this.wasModal = false;
       this.modelState = {};
       this.content_watch = [];
+      this.click_path_changed = {};
     }
 
     Epic.prototype.log1 = function() {
@@ -299,14 +300,14 @@
       for (k in _ref1) {
         o = _ref1[k];
         if (typeof o.eventNewRequest === "function") {
-          o.eventNewRequest();
+          o.eventNewRequest(this.click_path_changed);
         }
       }
       _ref2 = this.oModel;
       for (k in _ref2) {
         o = _ref2[k];
         if (typeof o.eventNewRequest === "function") {
-          o.eventNewRequest();
+          o.eventNewRequest(this.click_path_changed);
         }
       }
       if (click_index) {
@@ -319,6 +320,9 @@
       after_sp = oPf.getStepPath();
       oPf.setIssues(click_result[0]);
       oPf.setMessages(click_result[1]);
+      this.click_path_changed.flow = before_sp[0] !== after_sp[0];
+      this.click_path_changed.track = this.click_path_changed.flow || before_sp[1] !== after_sp[1];
+      this.click_path_changed.step = this.click_path_changed.track || before_sp[2] !== after_sp[2];
       this.modelState = {};
       _ref3 = this.oModel;
       for (k in _ref3) {
@@ -327,7 +331,7 @@
           this.modelState[k] = ss;
         }
       }
-      if (no_render !== true || (before_sp.join(':')) !== (after_sp.join(':'))) {
+      if (no_render !== true || this.click_path_changed.step) {
         this.renderSecure();
       }
       return this.inClick = false;

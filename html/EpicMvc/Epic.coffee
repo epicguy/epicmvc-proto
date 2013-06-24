@@ -21,6 +21,7 @@ class Epic
 		@wasModal= false
 		@modelState= {}
 		@content_watch= [] # Callers that are watching changes in content
+		@click_path_changed= {} # .flow, .track, .step (true/false-or-undefined) (for eventNewRequest)
 
 	#log1: window.Function.prototype.bind.call( window.console.log, window.console)
 	log1: () -> null
@@ -150,8 +151,8 @@ class Epic
 		window.event?.returnValue = false #IE
 		#TODO ALSO DO PREVENT DEFAULT, AND REMOVE THOSE RETURN FALSE'S
 		#TODO CONSIDER NOT DOING NEW-REQUEST IF NO_RENDER?
-		o.eventNewRequest?() for k,o of @oFist # Removing state where appropriate
-		o.eventNewRequest?() for k,o of @oModel
+		o.eventNewRequest?( @click_path_changed) for k,o of @oFist # Removing state where appropriate
+		o.eventNewRequest?( @click_path_changed) for k,o of @oModel
 		@oRequest.start click_index if click_index
 		oPf= @getInstance 'Pageflow'
 		before_sp= oPf.getStepPath()
@@ -160,9 +161,12 @@ class Epic
 		after_sp= oPf.getStepPath()
 		oPf.setIssues click_result[0]
 		oPf.setMessages click_result[1]
+		@click_path_changed.flow=  (before_sp[0]) isnt (after_sp[0])
+		@click_path_changed.track= @click_path_changed.flow  or (before_sp[1]) isnt (after_sp[1])
+		@click_path_changed.step=  @click_path_changed.track or (before_sp[2]) isnt (after_sp[2])
 		@modelState= {}
 		@modelState[k]= ss for k,o of @oModel when o.saveState? and ss= o.saveState()
-		@renderSecure() if no_render isnt true or (before_sp.join ':') isnt (after_sp.join ':')
+		@renderSecure() if no_render isnt true or @click_path_changed.step
 		@inClick= false
 	renderSecure: (avoid_form_reset) ->
 		f= ':renderSecure'
