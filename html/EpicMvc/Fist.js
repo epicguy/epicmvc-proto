@@ -60,8 +60,8 @@
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               rec = _ref[_i];
               if (typeof rec === 'object') {
-                final_obj.options.push(String(rec[0]));
-                final_obj.values.push(String(rec[1]));
+                final_obj.options.push(String(rec[1]));
+                final_obj.values.push(String(rec[0]));
               } else {
                 final_obj.options.push(String(rec));
                 final_obj.values.push(String(rec));
