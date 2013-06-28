@@ -125,7 +125,7 @@ class TagExe
 				choices= oFi.getChoices fl_nm
 				rows= []
 				for ix in [0...choices.options.length]
-					s= if choices.values[ix] is fl.value then 'yes' else ''
+					s= if choices.values[ix] is (String fl.value) then 'yes' else ''
 					rows.push option: choices.options[ix], value: choices.values[ix], selected: s
 				fl.Choice= rows
 			fl.issue= if issues[fl_nm] then issues[fl_nm].asTable( map)[0].issue else ''

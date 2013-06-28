@@ -211,7 +211,7 @@
           choices = oFi.getChoices(fl_nm);
           rows = [];
           for (ix = _j = 0, _ref5 = choices.options.length; 0 <= _ref5 ? _j < _ref5 : _j > _ref5; ix = 0 <= _ref5 ? ++_j : --_j) {
-            s = choices.values[ix] === fl.value ? 'yes' : '';
+            s = choices.values[ix] === (String(fl.value)) ? 'yes' : '';
             rows.push({
               option: choices.options[ix],
               value: choices.values[ix],
