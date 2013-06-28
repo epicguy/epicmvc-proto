@@ -32,6 +32,10 @@
       window.alert("Model (" + this.view_nm + ").fistLoadData() needs (" + (oFist.getFistNm()) + ")");
     };
 
+    ModelJS.prototype.fistGetFieldChoices = function(oFist, field) {
+      window.alert("Model (" + this.view_nm + ").fistGetFieldChoices() needs (" + (oFist.getFistNm()) + ":" + field + ")");
+    };
+
     return ModelJS;
 
   })(CoreModelJS);

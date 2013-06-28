@@ -13,5 +13,8 @@ class ModelJS extends CoreModelJS
 	fistLoadData: (oFist) ->
 		window.alert "Model (#{@view_nm}).fistLoadData() needs (#{oFist.getFistNm()})"
 		return
+	fistGetFieldChoices: (oFist,field) ->
+		window.alert "Model (#{@view_nm}).fistGetFieldChoices() needs (#{oFist.getFistNm()}:#{field})"
+		return
 
 window.EpicMvc.ModelJS= ModelJS # Public API (replace with ours)
