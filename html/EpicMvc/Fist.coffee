@@ -33,7 +33,7 @@ class Fist
 				when 'array'
 					for rec in @fieldDef[fl].cdata
 						if typeof rec is 'object'
-						then final_obj.options.push String rec[0]; final_obj.values.push String rec[1]
+						then final_obj.options.push String rec[1]; final_obj.values.push String rec[0]
 						else final_obj.options.push String rec; final_obj.values.push String rec
 				when 'json_like'
 					json= @fieldDef[fl].cdata.replace( /'/g, '"').replace /"""/g, "'"
