@@ -131,6 +131,7 @@ class Epic
 		for k,o of @oModel when o.eventLogout?() # True to reset model and state
 			delete @modelState[k]
 			delete @oModel[k]
+		@oFist= {}
 	refresh: (forTables) =>
 		if @inClick is true
 			setTimeout (=> @refresh forTables), 500

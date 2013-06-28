@@ -245,18 +245,17 @@
     };
 
     Epic.prototype.logout = function() {
-      var k, o, _ref, _results;
+      var k, o, _ref;
       _ref = this.oModel;
-      _results = [];
       for (k in _ref) {
         o = _ref[k];
         if (!(typeof o.eventLogout === "function" ? o.eventLogout() : void 0)) {
           continue;
         }
         delete this.modelState[k];
-        _results.push(delete this.oModel[k]);
+        delete this.oModel[k];
       }
-      return _results;
+      return this.oFist = {};
     };
 
     Epic.prototype.refresh = function(forTables) {
