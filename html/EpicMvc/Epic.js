@@ -244,8 +244,18 @@
       return _results;
     };
 
-    Epic.prototype.logout = function() {
-      var k, o, _ref;
+    Epic.prototype.logout = function(click_event, click_data) {
+      var k, o, _ref,
+        _this = this;
+      if (this.inClick !== false) {
+        setTimeout((function() {
+          return _this.logout(click_event, click_data);
+        }), 100);
+        return;
+      }
+      if (click_event) {
+        this.makeClick(false, click_event, click_data, true);
+      }
       _ref = this.oModel;
       for (k in _ref) {
         o = _ref[k];

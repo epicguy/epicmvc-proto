@@ -127,7 +127,11 @@ class Epic
 		@log2 f, @oModel
 		for k,o of @oModel when o.eventLogin?() # True to (TODO)
 			continue
-	logout: ->
+	logout: (click_event, click_data)->
+		if @inClick isnt false
+			setTimeout (=> @logout click_event, click_data), 100
+			return
+		@makeClick false, click_event, click_data, true if click_event
 		for k,o of @oModel when o.eventLogout?() # True to reset model and state
 			delete @modelState[k]
 			delete @oModel[k]
