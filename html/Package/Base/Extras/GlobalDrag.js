@@ -5,7 +5,7 @@
 
   $ = window.jQuery;
 
-  _log3 = window.Function.prototype.bind.call(window.console.log, window.console);
+  _log3 = function() {};
 
   GlobalDrag = (function() {
 

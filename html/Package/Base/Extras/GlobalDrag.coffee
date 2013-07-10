@@ -20,7 +20,7 @@ $= window.jQuery
 #_log= ->
 #_log2= ->
 #_log3= ->
-_log3= window.Function.prototype.bind.call window.console.log, window.console
+_log3= -> #window.Function.prototype.bind.call window.console.log, window.console
 
 class GlobalDrag
 	constructor: (@pre_flight) ->
