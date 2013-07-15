@@ -140,7 +140,7 @@ class Fist
 
 		@Fb_Html2Html data, flist_nm
 		issues = new window.EpicMvc.Issue @Epic
-		issues.call @Fb_Check()
+		issues.call @Fb_Check flist_nm
 		if issues.count() is 0
 			#@Fb_Db2Html(); #TODO IS THIS GOOD/NEEDED TO PUT BACK FROM DB?
 			@Fb_Html2Db flist_nm
@@ -148,7 +148,9 @@ class Fist
 
 	# Below are all 'internanl' functions
 
-	Fb_DbNames: () -> # list of fields at DB level (no psuedo fields)
+	Fb_DbNames: (flist_nm) -> # list of fields at DB level (no psuedo fields)
+		if flist_nm? and flist_nm isnt @fist_nm # A sub-fist request
+			return (@fieldDef[nm].db_nm for nm in @getHtmlPostedFieldsList flist_nm)
 		if not @fb_DB_names?
 			@loadFieldDefs() # Lazy load
 			@dbNm2HtmlNm= {}
@@ -175,11 +177,11 @@ class Fist
 			@fb_HTML[ nm]= @filt.H2H_generic nm, @fieldDef[ nm].h2h, p[ nm]
 		return
 
-	Fb_Check: () ->
-		f= 'Fist.Fb_Check'
-		#@Epic.log2 f, @Fb_DbNames()
+	Fb_Check: (flist_nm) ->
+		f= 'Fist.Fb_Check:'+flist_nm
+		#@Epic.log2 f, @Fb_DbNames flist_nm
 		issue = new window.EpicMvc.Issue @Epic
-		for db_nm in @Fb_DbNames()
+		for db_nm in @Fb_DbNames flist_nm
 			nm= @dbNm2HtmlNm[ db_nm]
 			field = @fieldDef[ nm]
 			# If psuedo, validate sub fields first, then main field's value if no errors

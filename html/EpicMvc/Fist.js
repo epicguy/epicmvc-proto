@@ -243,15 +243,27 @@
       var issues;
       this.Fb_Html2Html(data, flist_nm);
       issues = new window.EpicMvc.Issue(this.Epic);
-      issues.call(this.Fb_Check());
+      issues.call(this.Fb_Check(flist_nm));
       if (issues.count() === 0) {
         this.Fb_Html2Db(flist_nm);
       }
       return issues;
     };
 
-    Fist.prototype.Fb_DbNames = function() {
+    Fist.prototype.Fb_DbNames = function(flist_nm) {
       var db_nm, nm, rec, _ref, _ref1;
+      if ((flist_nm != null) && flist_nm !== this.fist_nm) {
+        return (function() {
+          var _i, _len, _ref, _results;
+          _ref = this.getHtmlPostedFieldsList(flist_nm);
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            nm = _ref[_i];
+            _results.push(this.fieldDef[nm].db_nm);
+          }
+          return _results;
+        }).call(this);
+      }
       if (!(this.fb_DB_names != null)) {
         this.loadFieldDefs();
         this.dbNm2HtmlNm = {};
@@ -308,11 +320,11 @@
       }
     };
 
-    Fist.prototype.Fb_Check = function() {
+    Fist.prototype.Fb_Check = function(flist_nm) {
       var db_nm, f, field, issue, issue_count, nm, p_nm, _i, _j, _len, _len1, _ref, _ref1;
-      f = 'Fist.Fb_Check';
+      f = 'Fist.Fb_Check:' + flist_nm;
       issue = new window.EpicMvc.Issue(this.Epic);
-      _ref = this.Fb_DbNames();
+      _ref = this.Fb_DbNames(flist_nm);
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         db_nm = _ref[_i];
         nm = this.dbNm2HtmlNm[db_nm];
