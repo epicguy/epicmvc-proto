@@ -38,6 +38,9 @@
       this.modelState = {};
       this.content_watch = [];
       this.click_path_changed = {};
+      this.options = {
+        click_warning_text: 'WARNING: Still processing previous click event (check for javascript errors.)'
+      };
     }
 
     Epic.prototype.log1 = function() {
@@ -137,12 +140,13 @@
       return oM.action(action, params);
     };
 
-    Epic.prototype.run = function(appconfs, artifact_load_strategy_class, render_class, content_watch) {
+    Epic.prototype.run = function(appconfs, artifact_load_strategy_class, render_class, content_watch, options) {
       var loader, renderer;
       if (this.guard_run) {
         return true;
       }
       this.guard_run = true;
+      $.extend(this.options, options);
       loader = new window.EpicMvc.Extras[artifact_load_strategy_class](this);
       renderer = new window.EpicMvc.Extras[render_class](this, content_watch);
       return this.init(appconfs, loader, renderer, content_watch);
@@ -296,8 +300,8 @@
       var after_sp, before_sp, click_result, f, k, o, oC, oPf, ss, _ref, _ref1, _ref2, _ref3;
       f = ':click';
       this.log2(f, click_index);
-      if (this.inClick !== false) {
-        alert('WARNING: You are already in click');
+      if (this.inClick !== false && this.options.click_warning_text !== false) {
+        alert(this.options.click_warning_text);
       }
       if (!no_render) {
         this.inClick = click_index;

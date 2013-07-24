@@ -22,6 +22,8 @@ class Epic
 		@modelState= {}
 		@content_watch= [] # Callers that are watching changes in content
 		@click_path_changed= {} # .flow, .track, .step (true/false-or-undefined) (for eventNewRequest)
+		@options=
+			click_warning_text: 'WARNING: Still processing previous click event (check for javascript errors.)'
 
 	#log1: window.Function.prototype.bind.call( window.console.log, window.console)
 	log1: () -> null
@@ -76,9 +78,10 @@ class Epic
 		[view_nm, action]= va.split '/'
 		oM= @getInstance view_nm
 		oM.action action, params
-	run: (appconfs,artifact_load_strategy_class,render_class,content_watch) ->
+	run: (appconfs,artifact_load_strategy_class,render_class,content_watch, options) ->
 		return true if @guard_run # Called twice for some reason
 		@guard_run= true
+		$.extend @options, options
 		loader=   new window.EpicMvc.Extras[ artifact_load_strategy_class] @
 		renderer= new window.EpicMvc.Extras[ render_class] @, content_watch
 		@init appconfs, loader, renderer, content_watch
@@ -151,7 +154,7 @@ class Epic
 	click: (click_index,no_render) ->
 		f= ':click'
 		@log2 f, click_index
-		if @inClick isnt false then alert 'WARNING: You are already in click'
+		if @inClick isnt false and @options.click_warning_text isnt false then alert @options.click_warning_text
 		@inClick= click_index if not no_render
 		window.event?.returnValue = false #IE
 		#TODO ALSO DO PREVENT DEFAULT, AND REMOVE THOSE RETURN FALSE'S
