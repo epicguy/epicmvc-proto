@@ -224,11 +224,13 @@
     };
 
     Fist.prototype.Fb_SetHtmlValuesFromDb = function(data) {
-      var k, v;
-      this.Fb_DbNames();
-      for (k in data) {
-        v = data[k];
-        this.fb_DB[k] = v;
+      var dbnms, k, _i, _len;
+      dbnms = this.Fb_DbNames();
+      for (_i = 0, _len = dbnms.length; _i < _len; _i++) {
+        k = dbnms[_i];
+        if (k in data) {
+          this.fb_DB[k] = data[k];
+        }
       }
       return this.Fb_Db2Html();
     };

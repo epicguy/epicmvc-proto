@@ -121,9 +121,10 @@ class Fist
 
 	Fb_SetHtmlValuesFromDb: (data) -> # Not from Html post, calls Db2Html
 		#@Epic.log2 'SetDbValues data:', data
-		@Fb_DbNames() # Load up the local list
+		dbnms= @Fb_DbNames() # Load up the local list
 		##@Epic.log2 'SetDbValues DbNames:', @Fb_DbNames()
-		@fb_DB[k]= v for k,v of data # Clone
+		#@fb_DB[k]= v for k,v of data # Clone
+		@fb_DB[k]= data[k] for k in dbnms when k of data # Clone
 		@Fb_Db2Html()
 		#@Epic.log2 'SetDbValues fb_HTML:', @fb_HTML
 	Fb_ClearValues: () ->
