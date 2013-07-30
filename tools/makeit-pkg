@@ -1,45 +1,50 @@
 #!/bin/sh
 
-# TODO More logic to check user error
-# $3 must be a dir under $1/Package and $2/Package
-
-DevHtml=$1
-MinHtml=$2
-Pkg=$3
-
-Stage0=tmp0
-#Stage1=$MinHtml/Package/$Pkg/tmp # Use this one to leave non-uglified source for debugging the compression step
-Stage1=tmp1
-StageM=$MinHtml/Package/$Pkg/min
-
-if [ ! -d $MinHtml/Package ] ; then mkdir $MinHtml/Package ; fi
-
-if [ -d $MinHtml/Package/$Pkg ] ; then rm -r $MinHtml/Package/$Pkg ; fi
-cp -r $DevHtml/Package/$Pkg $MinHtml/Package/.
-rm -rf $MinHtml/Package/$Pkg/{Extras,Model,view,*.coffee}
+DevHtmlPkg=$1
+MinOut=$2
 
 COFFEE=''
+for FILE in `find $DevHtmlPkg/*.coffee -maxdepth 0 -name \*.coffee`  ; do COFFEE="$COFFEE $FILE" ; done
+JSS=''
+if [ -d $DevHtmlPkg/js ]
+then
+  for FILE in `find $DevHtmlPkg/js -name \*.js` ; do JSS="$JSS $FILE" ; done
+fi
 for DIR in Model Extras
 do
-  if [ -d $DevHtml/Package/$Pkg/$DIR ]
+  if [ -d $DevHtmlPkg/$DIR ]
   then
-    for FILE in `find $DevHtml/Package/$Pkg/$DIR -name \*.coffee` ; do COFFEE="$COFFEE $FILE" ; done
+    for FILE in `find $DevHtmlPkg/$DIR -name \*.coffee` ; do COFFEE="$COFFEE $FILE" ; done
   fi
 done
 
-if [ -z "$COFFEE" ]
+if [ -z "$COFFEE$JSS" ]
 then
-  echo 'No coffee source found'
-  exit
+  echo 'No coffee or js source found'
+  exit 1
 fi
 
-cat $COFFEE | grep -v "'use strict'" > $Stage0.coffee
-coffee -c $Stage0.coffee
-if [ -f $DevHtml/Package/$Pkg/copyright.js ]
-then
-  cat $DevHtml/Package/$Pkg/copyright.js $Stage0.js > $Stage1.js
-else
-  cp $Stage0.js $Stage1.js
-fi
-uglifyjs $Stage1.js > $StageM.js
-rm $Stage0.{js,coffee}
+echo -n '...JavaScript: '
+for ONE_FILE in $JSS
+do
+  A_FILE=`echo $ONE_FILE | cut -d/ -f4-`
+  echo -n "$A_FILE "
+  E_FILE=`echo $ONE_FILE | cut -d/ -f3-`
+  echo -ne "/*$E_FILE*/" >> $MinOut
+  cat $ONE_FILE | uglifyjs >> $MinOut # Don't skip copyright notice, at the top, as a comment (i.e. not -nc)
+  echo >> $MinOut
+done
+echo done.
+
+echo -n '...CoffeeScript: '
+for ONE_FILE in $COFFEE
+do
+  A_FILE=`echo $ONE_FILE | cut -d/ -f4- | cut -d. -f1`
+  echo -n "$A_FILE "
+  E_FILE=`echo $ONE_FILE | cut -d/ -f3-`
+  echo -ne "/*$E_FILE*/" >> $MinOut
+  cat $ONE_FILE | coffee --compile --stdio | uglifyjs -nc >> $MinOut
+  echo >> $MinOut
+done
+echo done.
+
