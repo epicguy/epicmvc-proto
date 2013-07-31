@@ -4,17 +4,17 @@ DevHtmlPkg=$1
 MinOut=$2
 
 COFFEE=''
-for FILE in `find $DevHtmlPkg/*.coffee -maxdepth 0 -name \*.coffee`  ; do COFFEE="$COFFEE $FILE" ; done
+for FILE in `find -H $DevHtmlPkg -maxdepth 1 -name \*.coffee`  ; do COFFEE="$COFFEE $FILE" ; done
 JSS=''
 if [ -d $DevHtmlPkg/js ]
 then
-  for FILE in `find $DevHtmlPkg/js -name \*.js` ; do JSS="$JSS $FILE" ; done
+  for FILE in `find -H $DevHtmlPkg/js -name \*.js` ; do JSS="$JSS $FILE" ; done
 fi
 for DIR in Model Extras
 do
   if [ -d $DevHtmlPkg/$DIR ]
   then
-    for FILE in `find $DevHtmlPkg/$DIR -name \*.coffee` ; do COFFEE="$COFFEE $FILE" ; done
+    for FILE in `find -H $DevHtmlPkg/$DIR -name \*.coffee` ; do COFFEE="$COFFEE $FILE" ; done
   fi
 done
 
@@ -24,7 +24,12 @@ then
   exit 1
 fi
 
-echo -n '...JavaScript: '
+if [ -f $DevHtmlPkg/copyright.js ]
+then
+  cat $DevHtmlPkg/copyright.js >> $MinOut
+fi
+
+echo -n ':JavaScript: '
 for ONE_FILE in $JSS
 do
   A_FILE=`echo $ONE_FILE | cut -d/ -f4-`
@@ -36,7 +41,7 @@ do
 done
 echo done.
 
-echo -n '...CoffeeScript: '
+echo -n ':CoffeeScript: '
 for ONE_FILE in $COFFEE
 do
   A_FILE=`echo $ONE_FILE | cut -d/ -f4- | cut -d. -f1`

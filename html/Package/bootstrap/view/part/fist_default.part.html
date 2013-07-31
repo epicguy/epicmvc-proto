@@ -28,7 +28,7 @@
 
 <epic:if val="&Control/type#lc;" eq="yesno">
 	<label for="&Control/id;" class="control-label">
-		<input type="checkbox" name="&Control/name;" id="&Control/id;" value="1"&Control/selected#..checked;>
+		<input type="checkbox" name="&Control/name;" id="&Control/id;" value="&Control/yes_val;"&Control/selected#..checked;>
 	<epic:if_true name="req"><span class="form-req">*</span></epic:if_true>&Control/label;</label>
 </epic:if>
 

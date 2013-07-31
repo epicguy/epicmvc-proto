@@ -172,7 +172,7 @@
     };
 
     TagExe.prototype.Tag_form_part = function(oPt) {
-      var any_req, choices, fl, fl_nm, fm_nm, help, hpfl, issues, ix, map, oFi, one_field_nm, orig, out, part, rows, s, show_req, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+      var any_req, choices, fl, fl_nm, fm_nm, help, hpfl, issues, ix, map, oFi, one_field_nm, orig, out, part, rows, s, show_req, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
       part = this.viewExe.handleIt((_ref = oPt.attrs.part) != null ? _ref : 'fist_default');
       fm_nm = this.viewExe.handleIt(oPt.attrs.form);
       oFi = this.loadFistDef(fm_nm);
@@ -191,26 +191,27 @@
         }
         orig = oFi.getFieldAttributes(fl_nm);
         fl = $.extend({}, orig);
+        fl.yes_val = fl.type === 'yesno' ? String((_ref2 = fl.cdata) != null ? _ref2 : '1') : 'not_used';
         fl.req = fl.req === true ? 'yes' : '';
         if (fl.req === true) {
           any_req = true;
         }
         fl.name = fl_nm;
-        if ((_ref2 = fl["default"]) == null) {
+        if ((_ref3 = fl["default"]) == null) {
           fl["default"] = '';
         }
         fl["default"] = String(fl["default"]);
-        fl.value = (_ref3 = oFi.getHtmlFieldValue(fl_nm)) != null ? _ref3 : fl["default"];
-        fl.selected = fl.type === 'yesno' && fl.value === '1' ? 'yes' : '';
+        fl.value = (_ref4 = oFi.getHtmlFieldValue(fl_nm)) != null ? _ref4 : fl["default"];
+        fl.selected = fl.type === 'yesno' && fl.value === fl.yes_val ? 'yes' : '';
         fl.id = 'U' + this.Epic.nextCounter();
         fl.type = (fl.type.split(':'))[0];
-        if ((_ref4 = fl.width) == null) {
+        if ((_ref5 = fl.width) == null) {
           fl.width = '';
         }
         if (fl.type === 'radio' || fl.type === 'pulldown') {
           choices = oFi.getChoices(fl_nm);
           rows = [];
-          for (ix = _j = 0, _ref5 = choices.options.length; 0 <= _ref5 ? _j < _ref5 : _j > _ref5; ix = 0 <= _ref5 ? ++_j : --_j) {
+          for (ix = _j = 0, _ref6 = choices.options.length; 0 <= _ref6 ? _j < _ref6 : _j > _ref6; ix = 0 <= _ref6 ? ++_j : --_j) {
             s = choices.values[ix] === (String(fl.value)) ? 'yes' : '';
             rows.push({
               option: choices.options[ix],

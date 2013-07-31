@@ -111,12 +111,13 @@ class TagExe
 			continue if one_field_nm isnt false and one_field_nm isnt fl_nm
 			orig= oFi.getFieldAttributes fl_nm
 			fl= $.extend {}, orig
+			fl.yes_val = if fl.type is 'yesno' then String (fl.cdata ? '1') else 'not_used'
 			fl.req= if fl.req is true then 'yes' else ''
 			any_req= true if fl.req is true
 			fl.name= fl_nm
 			fl.default?= ''; fl.default= String fl.default
 			fl.value= (oFi.getHtmlFieldValue fl_nm) ? fl.default
-			fl.selected= if fl.type is 'yesno' and fl.value is '1' then 'yes' else '' # '1' is the yesno checkbox value for now
+			fl.selected= if fl.type is 'yesno' and fl.value is fl.yes_val then 'yes' else ''
 			fl.id= 'U'+ @Epic.nextCounter()
 			fl.type= (fl.type.split ':')[0]
 			fl.width?= ''
