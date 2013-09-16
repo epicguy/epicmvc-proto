@@ -19,6 +19,11 @@ class Pageflow extends window.EpicMvc.ModelJS
 		else if not s? or not oC.getS( f, t, s)?
 			s= oC.startS f, t
 		@f= f; @t= t; @s= s
+	go: (path) ->
+		q= path.split '/'
+		for v,ix in [@f, @t, @s]
+			if not (q[ix]?.length) then q[ix]= v else break # Stop at first set value, rest will default
+		@goTo q[0], q[1], q[2]
 	getF: -> @f
 	getTrackPath: -> [@f, @t]
 	getStepPath: -> [@f, @t, @s]
@@ -32,11 +37,7 @@ class Pageflow extends window.EpicMvc.ModelJS
 			when 'step'      then @goTo @f, @t, p.step
 			when 'refresh'   then null # Do nothing
 			when 'save_path' then @sp.push [@f, @t, @s]
-			when 'path'
-				q= p.path.split '/'
-				for v,ix in [@f, @t, @s]
-					if not (q[ix]?.length) then q[ix]= v else break # Stop at first set value, rest will default
-				@goTo q[0], q[1], q[2]
+			when 'path'      then @go p.path
 			when 'restore_path'
 				if @sp.length then q= @sp.pop(); @goTo q[0], q[1], q[2]
 			when 'add_message' then m.add p.type, p.msgs

@@ -46,6 +46,21 @@
       return this.s = s;
     };
 
+    Pageflow.prototype.go = function(path) {
+      var ix, q, v, _i, _len, _ref, _ref1;
+      q = path.split('/');
+      _ref = [this.f, this.t, this.s];
+      for (ix = _i = 0, _len = _ref.length; _i < _len; ix = ++_i) {
+        v = _ref[ix];
+        if (!((_ref1 = q[ix]) != null ? _ref1.length : void 0)) {
+          q[ix] = v;
+        } else {
+          break;
+        }
+      }
+      return this.goTo(q[0], q[1], q[2]);
+    };
+
     Pageflow.prototype.getF = function() {
       return this.f;
     };
@@ -59,7 +74,7 @@
     };
 
     Pageflow.prototype.action = function(a, p) {
-      var i, ix, m, q, r, v, _i, _len, _ref, _ref1;
+      var i, m, q, r;
       r = {};
       i = new window.EpicMvc.Issue(this.Epic, this.view_nm, a);
       m = new window.EpicMvc.Issue(this.Epic, this.view_nm, a);
@@ -80,17 +95,7 @@
           this.sp.push([this.f, this.t, this.s]);
           break;
         case 'path':
-          q = p.path.split('/');
-          _ref = [this.f, this.t, this.s];
-          for (ix = _i = 0, _len = _ref.length; _i < _len; ix = ++_i) {
-            v = _ref[ix];
-            if (!((_ref1 = q[ix]) != null ? _ref1.length : void 0)) {
-              q[ix] = v;
-            } else {
-              break;
-            }
-          }
-          this.goTo(q[0], q[1], q[2]);
+          this.go(p.path);
           break;
         case 'restore_path':
           if (this.sp.length) {

@@ -17,8 +17,7 @@ class ConfExe
 				else if count is 0 then found_node= result_node; break
 
 		debug_results= ("#{k}=#{v}" for k,v of results).join ', '
-		if found_node is false
-			EpicMvc.Epic.log2 ':matchResult ', found_node, debug_results if debug_results.length
+		if found_node is false then EpicMvc.Epic.log2 ':matchResult ', found_node, debug_results if debug_results.length
 		else EpicMvc.Epic.log2 ':matchResult ', found_node.node, 'p:', found_node.getPAttrs?(), "{#{debug_results}}"
 		found_node
 	match: (results) ->

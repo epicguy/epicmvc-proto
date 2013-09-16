@@ -227,7 +227,9 @@
     };
 
     ViewExe.prototype.includePart = function(nm, dynoInfo) {
-      dynoInfo.name = nm;
+      if (dynoInfo !== false) {
+        dynoInfo.name = nm;
+      }
       return this.run(this.loadStrategy.part(nm), dynoInfo);
     };
 

@@ -90,8 +90,8 @@ class Epic
 		@oFistGroupCache= new window.EpicMvc.FistGroupCache @, @loader
 		@oAppConf=        new window.EpicMvc.AppConf @, @loader # Uses @loader in constructor
 		@oView=           new window.EpicMvc.ViewExe @, @loader, @content_watch # Uses AppConf in constructor
-		f= @oAppConf.loginF() # Find initial pageflow state
-		(@getInstance 'Pageflow').goTo f
+		flow= @oAppConf.loginF() # Find initial pageflow state
+		(@getInstance 'Pageflow').goTo flow
 		true
 	isSecurityError: (e) ->
 		special= 'Security'

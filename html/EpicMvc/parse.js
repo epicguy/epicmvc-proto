@@ -41,11 +41,11 @@
       parts[i] = FindVars(parts[i]);
       if (parts[i + 1] === '/') {
         if (!tag_wait.length) {
-          throw "Close tag found when none expected close=" + parts[i + 2];
+          throw "[" + file_stats + "] Close tag found when none expected close=" + parts[i + 2];
         }
         oi = tag_wait.pop();
         if (parts[i + 2] !== parts[oi + 2]) {
-          throw "Mismatched tags open=" + parts[oi + 2] + ", close=" + parts[i + 2];
+          throw "[" + file_stats + "] Mismatched tags open=" + parts[oi + 2] + ", close=" + parts[i + 2];
         }
         finish[0] = i + 4;
         parts[oi + 1] = finish;
@@ -75,7 +75,7 @@
       i += 4;
     }
     if (tag_wait.length) {
-      throw "Missing closing epic tags" + (((function() {
+      throw "[" + file_stats + "] Missing closing epic tags" + (((function() {
         var _j, _len, _results;
         _results = [];
         for (_j = 0, _len = tag_wait.length; _j < _len; _j++) {

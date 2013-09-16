@@ -153,7 +153,7 @@
     };
 
     Epic.prototype.init = function(appconfs, loader, renderer, content_watch) {
-      var f;
+      var flow;
       this.appconfs = appconfs;
       this.loader = loader;
       this.renderer = renderer;
@@ -162,8 +162,8 @@
       this.oFistGroupCache = new window.EpicMvc.FistGroupCache(this, this.loader);
       this.oAppConf = new window.EpicMvc.AppConf(this, this.loader);
       this.oView = new window.EpicMvc.ViewExe(this, this.loader, this.content_watch);
-      f = this.oAppConf.loginF();
-      (this.getInstance('Pageflow')).goTo(f);
+      flow = this.oAppConf.loginF();
+      (this.getInstance('Pageflow')).goTo(flow);
       return true;
     };
 

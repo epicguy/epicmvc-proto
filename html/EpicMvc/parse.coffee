@@ -28,10 +28,10 @@ ParseFile= (file_stats, file_contents) ->
 		parts[ i]= FindVars parts[ i]
 		if parts[ i+ 1]== '/' # Close tag
 			if not tag_wait.length
-				throw "Close tag found when none expected close=#{parts[i+2]}"
+				throw "[#{file_stats}] Close tag found when none expected close=#{parts[i+2]}"
 			oi= tag_wait.pop()
 			if parts[ i+ 2] isnt parts[ oi+ 2]
-				throw "Mismatched tags open=#{parts[oi+2]}, close=#{parts[i+2]}"
+				throw "[#{file_stats}] Mismatched tags open=#{parts[oi+2]}, close=#{parts[i+2]}"
 			finish[ 0]= i+ 4; parts[ oi+ 1]= finish
 			finish= tag_wait.pop()
 			parts[ i+ 1]= parts[ i+ 2]= ''
@@ -56,7 +56,7 @@ ParseFile= (file_stats, file_contents) ->
 		i+= 4
 
 	if tag_wait.length
-		throw "Missing closing epic tags#{(parts[t+2] for t in tag_wait).join ', '}"
+		throw "[#{file_stats}] Missing closing epic tags#{(parts[t+2] for t in tag_wait).join ', '}"
 	parts[ i]= FindVars parts[ i]
 	parts.push finish # Top level list of parts to render
 	return parts

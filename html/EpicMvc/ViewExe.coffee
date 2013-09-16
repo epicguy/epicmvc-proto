@@ -101,7 +101,7 @@ class ViewExe
 		out
 	includePage: () -> @run @pageStack.shift 0 #oPage
 	includePart: (nm,dynoInfo) ->
-		dynoInfo.name= nm
+		dynoInfo.name= nm if dynoInfo isnt false
 		@run (@loadStrategy.part nm), dynoInfo
 	doAllParts: (parts_inx) ->
 		parts_inx= Number parts_inx
