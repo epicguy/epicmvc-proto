@@ -2,9 +2,7 @@
 (function() {
   'use strict';
 
-  var $, ViewExe;
-
-  $ = window.jQuery;
+  var ViewExe;
 
   ViewExe = (function() {
 
