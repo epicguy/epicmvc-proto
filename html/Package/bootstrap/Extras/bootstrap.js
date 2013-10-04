@@ -184,7 +184,7 @@
     };
 
     bootstrap.prototype.handleRenderState = function(history, click_index) {
-      var displayHash, f, model_state, new_hash;
+      var displayHash, f, model_state, new_hash, _base, _base1;
       f = 'E:bootstrap.handleRenderState:' + history + ':' + click_index;
       _log2(f, {
         vf: this.very_first,
@@ -203,9 +203,13 @@
       }
       model_state = this.Epic.getModelState();
       if (this.very_first || history === 'replace') {
-        window.history.replaceState(model_state, displayHash, '#' + displayHash);
+        if (typeof (_base = window.history).replaceState === "function") {
+          _base.replaceState(model_state, displayHash, '#' + displayHash);
+        }
       } else if (!this.was_popped && history === true) {
-        window.history.pushState(model_state, displayHash, '#' + displayHash);
+        if (typeof (_base1 = window.history).pushState === "function") {
+          _base1.pushState(model_state, displayHash, '#' + displayHash);
+        }
         window.document.title = displayHash;
       }
     };
