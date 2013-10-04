@@ -2,11 +2,9 @@
 (function() {
   'use strict';
 
-  var $, TagExe,
+  var TagExe,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __hasProp = {}.hasOwnProperty;
-
-  $ = window.jQuery;
 
   TagExe = (function() {
 
@@ -150,13 +148,11 @@
     };
 
     TagExe.prototype.Tag_page = function(oPt) {
-      var after, before, dynamicInfo, _ref;
-      _ref = this.checkForDynamic(oPt), before = _ref[0], after = _ref[1], dynamicInfo = _ref[2];
-      return before + (this.viewExe.includePage(dynamicInfo)) + after;
+      return this.viewExe.includePage();
     };
 
     TagExe.prototype.getTable = function(nm) {
-      var f;
+      var f, field, row, _i, _len, _ref;
       f = ':TagExe.getTable:' + nm;
       switch (nm) {
         case 'Control':
@@ -166,13 +162,21 @@
           return [this.info_if_nms];
         case 'Part':
           return this.info_parts.slice(-1);
+        case 'Field':
+          row = {};
+          _ref = this.fist_table.Control;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            field = _ref[_i];
+            row[field.name] = [field];
+          }
+          return [row];
         default:
           return [];
       }
     };
 
     TagExe.prototype.Tag_form_part = function(oPt) {
-      var any_req, choices, fl, fl_nm, fm_nm, help, hpfl, issues, ix, map, oFi, one_field_nm, orig, out, part, rows, s, show_req, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
+      var any_req, choices, fl, fl_nm, fm_nm, help, hpfl, is_first, issues, ix, map, oFi, one_field_nm, orig, out, part, rows, s, show_req, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
       part = this.viewExe.handleIt((_ref = oPt.attrs.part) != null ? _ref : 'fist_default');
       fm_nm = this.viewExe.handleIt(oPt.attrs.form);
       oFi = this.loadFistDef(fm_nm);
@@ -180,6 +184,7 @@
       help = this.viewExe.handleIt((_ref1 = oPt.attrs.help) != null ? _ref1 : '');
       show_req = 'show_req' in oPt.attrs ? this.viewExe.handleIt(oPt.attrs.show_req) : 'yes';
       any_req = false;
+      is_first = true;
       out = [];
       hpfl = oFi.getHtmlPostedFieldsList(fm_nm);
       issues = oFi.getFieldIssues();
@@ -191,6 +196,8 @@
         }
         orig = oFi.getFieldAttributes(fl_nm);
         fl = $.extend({}, orig);
+        fl.is_first = is_first === true ? 'yes' : '';
+        is_first = false;
         fl.yes_val = fl.type === 'yesno' ? String((_ref2 = fl.cdata) != null ? _ref2 : '1') : 'not_used';
         fl.req = fl.req === true ? 'yes' : '';
         if (fl.req === true) {
@@ -558,46 +565,6 @@
 
     TagExe.prototype.Tag_dyno_form = function(oPt) {
       return this.Tag_form_part(oPt);
-    };
-
-    TagExe.prototype.Tag_dyno_form_OLD = function(oPt) {
-      var ctr, fl, fl_nm, fm_nm, help_html, hpfl, in_ct, oFi, otr, out, req, sh_req, _base, _base1, _i, _len, _ref, _ref1, _ref2;
-      if ((_ref = (_base = oPt.attrs).help) == null) {
-        _base.help = '';
-      }
-      if ((_ref1 = (_base1 = oPt.attrs).show_required) == null) {
-        _base1.show_required = 1;
-      }
-      fm_nm = this.viewExe.handleIt(oPt.attrs.form);
-      oFi = this.loadFistDef(fm_nm);
-      sh_req = false;
-      out = [];
-      hpfl = oFi.getHtmlPostedFieldsList(fm_nm);
-      for (_i = 0, _len = hpfl.length; _i < _len; _i++) {
-        fl_nm = hpfl[_i];
-        fl = oFi.getFieldAttributes(fl_nm);
-        req = '';
-        if (oPt.attrs.show_required === '1' && fl.required === '1') {
-          req = '<font color="red" size="-2">*</font>';
-          sh_req = true;
-        }
-        help_html = '';
-        if (oPt.attrs.help === 'inline' && fl.help_text.length) {
-          help_html = "<br><font size=\"-2\">{" + fl.help_text + "}</font>";
-        }
-        in_ct = this.viewExe.run([
-          '', [4], 'control', {
-            form: fm_nm,
-            field: fl_nm
-          }, '', [1]
-        ]);
-        out.push("<label for=\"" + fl_nm + "\" class=\"ui-input-text\">\n" + req + (fl.label || fl_nm) + "</label>\n" + in_ct + help_html);
-      }
-      if (sh_req) {
-        out.push('<div><font color="red" size="-1">* required</font></div>');
-      }
-      _ref2 = ['', '\n'], otr = _ref2[0], ctr = _ref2[1];
-      return otr + out.join(ctr + otr) + ctr;
     };
 
     TagExe.prototype.Tag_form = function(oPt) {

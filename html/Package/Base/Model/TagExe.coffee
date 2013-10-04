@@ -1,6 +1,5 @@
 'use strict'
 # Copyright 2007-2012 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
-$=window.jQuery
 class TagExe
 	constructor: (@Epic,@view_nm) ->
 		@viewExe= @Epic.getView()
@@ -47,11 +46,8 @@ class TagExe
 		ans= @info_foreach[table_ref].row[col_nm]
 		if sub_nm? then ans= ans[sub_nm]
 		@formatFromSpec ans, format_spec, custom_spec
-	loadFistDef: (flist_nm) -> @fist_objects[flist_nm]?= @Epic.getFistInstance flist_nm
-	#TODO PASSING NM INTO CONTROL FOR NOW getFistForField: (fl_nm) ->
-	#TODO PASSING NM INTO CONTROL FOR NOW 	for flist_nm, oFi of @fist_objects
-	#TODO PASSING NM INTO CONTROL FOR NOW 		return oFi # TODO First entry for now
 
+	loadFistDef: (flist_nm) -> @fist_objects[flist_nm]?= @Epic.getFistInstance flist_nm
 	checkForDynamic: (oPt) -> # dynamic="div" delay="2"
 		tag= if 'dynamic' of oPt.attrs then @viewExe.handleIt oPt.attrs.dynamic else ''
 		return ['', '', false] if tag.length is 0
@@ -83,9 +79,7 @@ class TagExe
 		out= before+ (@viewExe.includePart (@viewExe.handleIt oPt.attrs.part), dynamicInfo)+ after
 		@info_parts.pop()
 		out
-	Tag_page: (oPt) ->
-		[before, after, dynamicInfo]= @checkForDynamic oPt
-		before+ (@viewExe.includePage dynamicInfo)+ after
+	Tag_page: (oPt) -> @viewExe.includePage()
 	getTable: (nm) ->
 		f= ':TagExe.getTable:'+ nm
 		#@Epic.log2 f, @info_parts if nm is 'Part'
@@ -93,6 +87,11 @@ class TagExe
 			when 'Control', 'Form' then @fist_table[nm]
 			when 'If' then [@info_if_nms]
 			when 'Part' then @info_parts.slice -1
+			when 'Field'
+				row= {}
+				for field in @fist_table.Control
+					row[field.name]= [field]
+				[row]
 			else []
 	Tag_form_part: (oPt) -> # part="" form="" (opt)field=""
 		part= @viewExe.handleIt oPt.attrs.part ? 'fist_default'
@@ -103,6 +102,7 @@ class TagExe
 		help= @viewExe.handleIt oPt.attrs.help ? ''
 		show_req= if 'show_req' of oPt.attrs then @viewExe.handleIt oPt.attrs.show_req else 'yes'
 		any_req= false
+		is_first= true
 		out= []
 		hpfl= oFi.getHtmlPostedFieldsList fm_nm
 		issues= oFi.getFieldIssues()
@@ -111,6 +111,8 @@ class TagExe
 			continue if one_field_nm isnt false and one_field_nm isnt fl_nm
 			orig= oFi.getFieldAttributes fl_nm
 			fl= $.extend {}, orig
+			fl.is_first= if is_first is true then 'yes' else ''
+			is_first= false
 			fl.yes_val = if fl.type is 'yesno' then String (fl.cdata ? '1') else 'not_used'
 			fl.req= if fl.req is true then 'yes' else ''
 			any_req= true if fl.req is true
@@ -141,7 +143,7 @@ class TagExe
 		@viewExe.pushDefer name:name, code:code
 		'' # This tag has no visible output
 
-	# <e_if ... family of tags
+	# <epic:if ... family of tags
 	Tag_if_any:   (oPt) -> @ifAnyAll    oPt, true
 	Tag_if_all:   (oPt) -> @ifAnyAll    oPt, false
 	Tag_if:       (oPt) -> @ifAnyAll    oPt, true
@@ -315,33 +317,6 @@ class TagExe
 			check_for_breaks= 0
 		break_rows_list
 	Tag_dyno_form: (oPt) -> @Tag_form_part oPt
-	Tag_dyno_form_OLD: (oPt) ->
-		oPt.attrs.help?= ''
-		oPt.attrs.show_required?= 1
-		fm_nm= @viewExe.handleIt oPt.attrs.form
-		oFi= @loadFistDef fm_nm # Set state for viewExe.doAllParts/doTag calls
-		sh_req= false
-		out= []
-		hpfl= oFi.getHtmlPostedFieldsList fm_nm
-		for fl_nm in hpfl
-			fl= oFi.getFieldAttributes fl_nm
-			req= ''
-			if oPt.attrs.show_required is '1' and fl.required is '1'
-				req= '<font color="red" size="-2">*</font>'
-				sh_req= true
-			help_html= ''
-			if oPt.attrs.help is 'inline' and fl.help_text.length
-				help_html= """<br><font size="-2">{#{fl.help_text}}</font>"""
-			in_ct= @viewExe.run ['', [4], 'control', form: fm_nm, field: fl_nm, '', [1]]
-			#out.push( '<td>'+req+fl.label+'</td><td>'+in_ct+help_html+'</td>');
-			out.push """
-				<label for="#{fl_nm}" class="ui-input-text">
-				#{req}#{fl.label||fl_nm}</label>
-				#{in_ct}#{help_html}
-				"""
-		if sh_req then out.push '<div><font color="red" size="-1">* required</font></div>'
-		[otr, ctr]= ['', '\n']
-		otr+ out.join( ctr+ otr) + ctr
 	Tag_form: (oPt) ->
 		saw_method= false
 		out_attrs= []
@@ -372,7 +347,6 @@ class TagExe
 		o+= '</form>'
 	Tag_control: (oPt) ->
 		fl_nm= oPt.attrs.field
-		#TODO PASSING IN FORM NM INSTEAD OF THIS HERE TRICKY LOGIC: oFi= @getFistForField fl_nm
 		fm_nm= @viewExe.handleIt oPt.attrs.form
 		oFi= @loadFistDef fm_nm # Set state for viewExe.doAllParts/doTag calls
 		fl_def= oFi.getFieldAttributes fl_nm
