@@ -161,9 +161,9 @@ class bootstrap
 		model_state= @Epic.getModelState()
 		#_log2 f, ms: model_state, ha: displayHash, cvw: [click_index, @very_first, @was_popped]
 		if @very_first or history is 'replace'
-			window.history.replaceState model_state, displayHash, '#'+displayHash
+			window.history.replaceState? model_state, displayHash, '#'+displayHash
 		else if not @was_popped and history is true # click-action, create history item
-			window.history.pushState model_state, displayHash, '#'+displayHash
+			window.history.pushState? model_state, displayHash, '#'+displayHash
 			window.document.title= displayHash
 		return
 
