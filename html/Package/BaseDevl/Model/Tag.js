@@ -50,7 +50,7 @@
         if (this.Opts().file === false) {
           return TagExe.__super__.Tag_form_part.call(this, oPt);
         }
-        return "<span class=\"dbg-part-box\" title=\"" + ((_ref2 = oPt.attrs.part) != null ? _ref2 : 'fist_default') + ".part.html (" + oPt.attrs.form + ")\">.</span>" + (TagExe.__super__.Tag_form_part.call(this, oPt));
+        return "<div class=\"dbg-part-box\" title=\"" + ((_ref2 = oPt.attrs.part) != null ? _ref2 : 'fist_default') + ".part.html (" + oPt.attrs.form + ")\">.</div>" + (TagExe.__super__.Tag_form_part.call(this, oPt));
       } catch (e) {
         if (this.Epic.isSecurityError(e)) {
           throw e;
@@ -65,7 +65,7 @@
         if (this.Opts().file === false) {
           return TagExe.__super__.Tag_page_part.call(this, oPt);
         }
-        return "<span class=\"dbg-part-box\" title=\"" + oPt.attrs.part + ".part.html\">.</span>" + (TagExe.__super__.Tag_page_part.call(this, oPt));
+        return "<div class=\"dbg-part-box\" title=\"" + oPt.attrs.part + ".part.html\">.</div>" + (TagExe.__super__.Tag_page_part.call(this, oPt));
       } catch (e) {
         if (this.Epic.isSecurityError(e)) {
           throw e;
@@ -80,7 +80,7 @@
         if (this.Opts().file === false) {
           return TagExe.__super__.Tag_page.call(this, oPt);
         }
-        return "<span class=\"dbg-part-box\" title=\"" + this.bd_template + ".tmpl.html\">T</span>\n<span class=\"dbg-part-box\" title=\"" + this.bd_page + ".page.html\">P</span>\n" + (TagExe.__super__.Tag_page.call(this, oPt));
+        return "<div class=\"dbg-part-box\" title=\"" + this.bd_template + ".tmpl.html\">T</div>\n<div class=\"dbg-part-box\" title=\"" + this.bd_page + ".page.html\">P</div>\n" + (TagExe.__super__.Tag_page.call(this, oPt));
       } catch (e) {
         if (this.Epic.isSecurityError(e)) {
           throw e;

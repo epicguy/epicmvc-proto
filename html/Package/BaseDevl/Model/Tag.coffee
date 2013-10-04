@@ -21,7 +21,7 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 			return """<pre>&lt;epic:form_part form="#{oPt.attrs.form}" part="#{oPt.attrs.part ? 'fist_default'}&gt;<br>#{e}</pre>"""
 		try
 			return super oPt if @Opts().file is false
-			return """<span class="dbg-part-box" title="#{oPt.attrs.part ? 'fist_default'}.part.html (#{oPt.attrs.form})">.</span>#{super oPt}"""
+			return """<div class="dbg-part-box" title="#{oPt.attrs.part ? 'fist_default'}.part.html (#{oPt.attrs.form})">.</div>#{super oPt}"""
 		catch e
 			throw e if @Epic.isSecurityError e
 			_log2 '##### Error in form-part', oPt.attrs.part ? 'fist_default', e, e.stack
@@ -30,7 +30,7 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 	Tag_page_part: (oPt) ->
 		try
 			return super oPt if @Opts().file is false
-			return """<span class="dbg-part-box" title="#{oPt.attrs.part}.part.html">.</span>#{super oPt}"""
+			return """<div class="dbg-part-box" title="#{oPt.attrs.part}.part.html">.</div>#{super oPt}"""
 		catch e
 			throw e if @Epic.isSecurityError e
 			_log2 '##### Error in page-part', oPt.attrs.part, e, e.stack
@@ -40,8 +40,8 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 		try
 			return super oPt if @Opts().file is false
 			return """
-<span class="dbg-part-box" title="#{@bd_template}.tmpl.html">T</span>
-<span class="dbg-part-box" title="#{@bd_page}.page.html">P</span>
+<div class="dbg-part-box" title="#{@bd_template}.tmpl.html">T</div>
+<div class="dbg-part-box" title="#{@bd_page}.page.html">P</div>
 #{super oPt}
 			"""
 		catch e
