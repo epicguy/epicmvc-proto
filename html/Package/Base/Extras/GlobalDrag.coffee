@@ -1,5 +1,4 @@
 # Use:
-# TODO GIVE A NEW EXAMPLE USING THE NEW WAY
 # (In your HTML file, inside $())
 #
 #	pre_flight_check= (action,vals) ->
@@ -14,16 +13,19 @@
 # class="data-drag" data-drag-data='{"from":&File/id;}' data-drag-type="file"
 #
 # Items that can be drop-targets.
-# class="data-drop" data-drop-data='{"to":&File/id;}' data-drop-file="copy_file" data-drop-folder="copy_folder"
-
-$= window.jQuery
-#_log= ->
-#_log2= ->
-#_log3= ->
-_log3= -> #window.Function.prototype.bind.call window.console.log, window.console
+#   class="data-drop"
+#   data-drop-data='{"to":&File/id;,"callback_class":"ProgressSample"}' # Must be valid JSON
+#   data-drop-file="copy_file" # These are your click-event names to put into app.coffee
+#   data-drop-folder="copy_folder" # These are your click-event names to put into app.coffee
+#   data-drop-Files="os_upload_drop" # Special '-Files' is outside-of-browser source (unknown what it is until it's dropped)
+# (Optional, to make container clickable to also cause a click event on mouse-click:)
+#   onclick="window.EpicMvc.Epic.makeClick(false,'go_add_new_item',{id:'&Directory/PRIVATE/active_folder;'},true)"
+#
 
 class GlobalDrag
 	constructor: (@pre_flight) ->
+		#@log3= window.Function.prototype.bind.call window.console.log, window.console
+		@log3= ->
 		@count_enter= 0
 		@count_leave= 0
 		@count_target= 0
@@ -36,7 +38,7 @@ class GlobalDrag
 			.dragover( @handleDragOver)
 
 	get_type: (t) ->
-		_log3 'get_type', t
+		@log3 'get_type', t
 		t= t[0] if typeof t is 'object'
 		return false if t is null or t is 'Text' or -1 isnt t.indexOf '/' # Ignore 'text' drags
 		t # Can be 'Files' (with upper case 'F') or custom type (all lower case)
@@ -68,7 +70,7 @@ class GlobalDrag
 		return false if $e is false
 		@src_start $e
 		e.dataTransfer.setData ($e.attr 'data-drag-type'), $e.attr 'data-drag-data' # Valid only for external targets
-		_log3 'start:type/data/$e', ($e.attr 'data-drag-type'), ($e.attr 'data-drag-data'), $e
+		@log3 'start:type/data/$e', ($e.attr 'data-drag-type'), ($e.attr 'data-drag-data'), $e
 		$e.addClass 'active-source' # light up self
 
 	source_dragend: (e) =>
@@ -114,11 +116,11 @@ class GlobalDrag
 
 	src_start: ($e) -> # Enter/Leave events don't have access to setData info, so internal drags put it here
 		@drag_type= @get_type $e.attr 'data-drag-type'
-		_log3 'src_start drag_type/$e', @drag_type, $e
+		@log3 'src_start drag_type/$e', @drag_type, $e
 		return if @drag_type is false # External only target?
 		@src_elem= $e
 		@src_data= @data $e, 'drag'
-		_log3 'src_start src_data', @src_data
+		@log3 'src_start src_data', @src_data
 		return
 
 	src_end: ->
@@ -139,7 +141,7 @@ class GlobalDrag
 			src_data= @src_data
 			Data= @data
 			Pre_flight= @pre_flight
-			_log3 'light0,type/src/src_data', type, src, src_data
+			@log3 'light0,type/src/src_data', type, src, src_data
 			$('[data-drop-'+type+']').not('.active-source')
 				.filter(->
 					return true if src_data is false
