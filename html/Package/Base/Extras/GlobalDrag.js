@@ -46,7 +46,10 @@
 
     GlobalDrag.prototype.get_type = function(t) {
       this.log3('get_type', t);
-      if (typeof t === 'object') {
+      if (t === null || t === void 0) {
+        return 'BROKEN';
+      }
+      if (t && typeof t === 'object') {
         t = t[0];
       }
       if (t === null || t === 'Text' || -1 !== t.indexOf('/')) {
