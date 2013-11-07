@@ -39,13 +39,15 @@ class GlobalDrag
 
 	get_type: (t) ->
 		@log3 'get_type', t
-		t= t[0] if typeof t is 'object'
+		# 't' on OS file drag: IE(undefined), Safari5(null), FF:()
+		return 'BROKEN' if t is null or t is undefined # TODO Attempt to detect browsers we don't work well with, and cause 'none'
+		t= t[0] if t and typeof t is 'object'
 		return false if t is null or t is 'Text' or -1 isnt t.indexOf '/' # Ignore 'text' drags
 		t # Can be 'Files' (with upper case 'F') or custom type (all lower case)
 
-	# Glboal listeners
+	# Global listeners
 	handleDragOver: (evt) =>
-		return true if @drag_type is false
+		return true if @drag_type is false # Pass event to the default behaviour (i.e. for text DnD)
 		evt.preventDefault()
 		evt.dataTransfer.dropEffect= 'none'
 		return false

@@ -312,13 +312,17 @@
     };
 
     Fist.prototype.Fb_Html2Html = function(p, flist_nm) {
-      var f, nm, _i, _len, _ref;
+      var f, nm, value, _i, _len, _ref;
       f = 'Fist.Fb_Html2Html';
       this.loadFieldDefs();
       _ref = this.getHtmlPostedFieldsList(flist_nm);
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         nm = _ref[_i];
-        this.fb_HTML[nm] = this.filt.H2H_generic(nm, this.fieldDef[nm].h2h, p[nm]);
+        value = p[nm];
+        if ('H2H_prefilter' in this.filt) {
+          value = this.filt.H2H_prefilter(nm, this.fieldDef[nm].h2h, value);
+        }
+        this.fb_HTML[nm] = this.filt.H2H_generic(nm, this.fieldDef[nm].h2h, value);
       }
     };
 

@@ -175,7 +175,9 @@ class Fist
 		f= 'Fist.Fb_Html2Html'
 		@loadFieldDefs() # Lazy load
 		for nm in @getHtmlPostedFieldsList flist_nm
-			@fb_HTML[ nm]= @filt.H2H_generic nm, @fieldDef[ nm].h2h, p[ nm]
+			value= p[ nm]
+			value= @filt.H2H_prefilter nm, @fieldDef[ nm].h2h, value if 'H2H_prefilter' of @filt # Custom, optional
+			@fb_HTML[ nm]= @filt.H2H_generic nm, @fieldDef[ nm].h2h, value
 		return
 
 	Fb_Check: (flist_nm) ->
