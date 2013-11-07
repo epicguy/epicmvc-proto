@@ -176,12 +176,13 @@
     };
 
     TagExe.prototype.Tag_form_part = function(oPt) {
-      var any_req, choices, fl, fl_nm, fm_nm, help, hpfl, is_first, issues, ix, map, oFi, one_field_nm, orig, out, part, rows, s, show_req, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
+      var any_req, choices, fl, fl_nm, fm_nm, help, hpfl, is_first, issues, ix, map, oFi, one_field_nm, orig, out, part, row, rows, s, show_req, value_fl_nm, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
       part = this.viewExe.handleIt((_ref = oPt.attrs.part) != null ? _ref : 'fist_default');
+      row = this.viewExe.handleIt((_ref1 = oPt.attrs.row) != null ? _ref1 : false);
       fm_nm = this.viewExe.handleIt(oPt.attrs.form);
       oFi = this.loadFistDef(fm_nm);
       one_field_nm = oPt.attrs.field != null ? this.viewExe.handleIt(oPt.attrs.field) : false;
-      help = this.viewExe.handleIt((_ref1 = oPt.attrs.help) != null ? _ref1 : '');
+      help = this.viewExe.handleIt((_ref2 = oPt.attrs.help) != null ? _ref2 : '');
       show_req = 'show_req' in oPt.attrs ? this.viewExe.handleIt(oPt.attrs.show_req) : 'yes';
       any_req = false;
       is_first = true;
@@ -198,27 +199,28 @@
         fl = $.extend({}, orig);
         fl.is_first = is_first === true ? 'yes' : '';
         is_first = false;
-        fl.yes_val = fl.type === 'yesno' ? String((_ref2 = fl.cdata) != null ? _ref2 : '1') : 'not_used';
+        fl.yes_val = fl.type === 'yesno' ? String((_ref3 = fl.cdata) != null ? _ref3 : '1') : 'not_used';
         fl.req = fl.req === true ? 'yes' : '';
         if (fl.req === true) {
           any_req = true;
         }
         fl.name = fl_nm;
-        if ((_ref3 = fl["default"]) == null) {
+        if ((_ref4 = fl["default"]) == null) {
           fl["default"] = '';
         }
         fl["default"] = String(fl["default"]);
-        fl.value = (_ref4 = oFi.getHtmlFieldValue(fl_nm)) != null ? _ref4 : fl["default"];
+        value_fl_nm = row ? fl_nm + '__' + row : fl_nm;
+        fl.value = (_ref5 = oFi.getHtmlFieldValue(value_fl_nm)) != null ? _ref5 : fl["default"];
         fl.selected = fl.type === 'yesno' && fl.value === fl.yes_val ? 'yes' : '';
         fl.id = 'U' + this.Epic.nextCounter();
         fl.type = (fl.type.split(':'))[0];
-        if ((_ref5 = fl.width) == null) {
+        if ((_ref6 = fl.width) == null) {
           fl.width = '';
         }
         if (fl.type === 'radio' || fl.type === 'pulldown') {
           choices = oFi.getChoices(fl_nm);
           rows = [];
-          for (ix = _j = 0, _ref6 = choices.options.length; 0 <= _ref6 ? _j < _ref6 : _j > _ref6; ix = 0 <= _ref6 ? ++_j : --_j) {
+          for (ix = _j = 0, _ref7 = choices.options.length; 0 <= _ref7 ? _j < _ref7 : _j > _ref7; ix = 0 <= _ref7 ? ++_j : --_j) {
             s = choices.values[ix] === (String(fl.value)) ? 'yes' : '';
             rows.push({
               option: choices.options[ix],

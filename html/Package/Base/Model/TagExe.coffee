@@ -95,6 +95,7 @@ class TagExe
 			else []
 	Tag_form_part: (oPt) -> # part="" form="" (opt)field=""
 		part= @viewExe.handleIt oPt.attrs.part ? 'fist_default'
+		row= @viewExe.handleIt oPt.attrs.row ? false
 		fm_nm= @viewExe.handleIt oPt.attrs.form
 		oFi= @loadFistDef fm_nm # Set state for viewExe.doAllParts/doTag calls
 		# Optional fields
@@ -118,7 +119,8 @@ class TagExe
 			any_req= true if fl.req is true
 			fl.name= fl_nm
 			fl.default?= ''; fl.default= String fl.default
-			fl.value= (oFi.getHtmlFieldValue fl_nm) ? fl.default
+			value_fl_nm= if row then fl_nm + '__' + row else fl_nm
+			fl.value= (oFi.getHtmlFieldValue value_fl_nm) ? fl.default
 			fl.selected= if fl.type is 'yesno' and fl.value is fl.yes_val then 'yes' else ''
 			fl.id= 'U'+ @Epic.nextCounter()
 			fl.type= (fl.type.split ':')[0]
