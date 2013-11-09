@@ -230,7 +230,7 @@
           }
           fl.Choice = rows;
         }
-        fl.issue = issues[fl_nm] ? issues[fl_nm].asTable(map)[0].issue : '';
+        fl.issue = issues[value_fl_nm] ? issues[value_fl_nm].asTable(map)[0].issue : '';
         out.push(fl);
       }
       this.fist_table = {

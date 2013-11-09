@@ -133,7 +133,7 @@ class TagExe
 					s= if choices.values[ix] is (String fl.value) then 'yes' else ''
 					rows.push option: choices.options[ix], value: choices.values[ix], selected: s
 				fl.Choice= rows
-			fl.issue= if issues[fl_nm] then issues[fl_nm].asTable( map)[0].issue else ''
+			fl.issue= if issues[value_fl_nm] then issues[value_fl_nm].asTable( map)[0].issue else ''
 			out.push fl
 		@fist_table= Form: [show_req: show_req, any_req: any_req, help: help], Control: out
 		@viewExe.includePart part, false # TODO DYNAMICINFO?
