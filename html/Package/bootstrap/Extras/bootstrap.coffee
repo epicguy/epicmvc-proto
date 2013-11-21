@@ -108,8 +108,8 @@ class bootstrap
 
 	onPopState: (event) =>
 		f= 'E:bootstrap.onPopState: '
-		_log2 f, was_popped: @was_popped, very_first: @very_first, special: event is true
-		if event is true # Special processing - making sure this logic happens in FF as initial load
+		_log2 f, was_popped: @was_popped, very_first: @very_first, special: event is true, state: if event is true then 'XX' else event.state
+		if event is true or not event.state # Special processing - making sure this logic happens in FF as initial load
 			return if @was_popped or not @very_first # We did handle it already
 		@was_popped= true
 		if @very_first

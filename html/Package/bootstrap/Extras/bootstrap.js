@@ -128,9 +128,10 @@
       _log2(f, {
         was_popped: this.was_popped,
         very_first: this.very_first,
-        special: event === true
+        special: event === true,
+        state: event === true ? 'XX' : event.state
       });
-      if (event === true) {
+      if (event === true || !event.state) {
         if (this.was_popped || !this.very_first) {
           return;
         }
