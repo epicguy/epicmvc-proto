@@ -62,12 +62,13 @@ class Issue
 			for spec in (sub_map or [])
 				#@Epic.log2 'map:spec', spec
 				if token.match spec[0]
-					return @doMap spec[1], more
+					return @doMap token, spec[1], more, token
 		"#{t_view}##{t_action}##{token}##{more.join ','}"
-	doMap: (pattern,vals) ->
-		#@Epic.log2 'doMap', pattern, vals
+	doMap: (token, pattern,vals) ->
+		#@Epic.log2 'doMap', token, pattern, vals
 		new_str= pattern.replace /%([0-9])(?::([0-9]))?%/g, (str,i1,i2,more) ->
 			#@Epic.log2 str:str, i1:i1, i2:i2, more:more
+			return token if i1 is '0'
 			return if i2 then (vals[i1-1] or vals[i2-1] or '') else (vals[i1-1] or '')
 		new_str
 

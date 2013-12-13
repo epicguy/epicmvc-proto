@@ -131,16 +131,19 @@
         for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
           spec = _ref[_j];
           if (token.match(spec[0])) {
-            return this.doMap(spec[1], more);
+            return this.doMap(token, spec[1], more, token);
           }
         }
       }
       return "" + t_view + "#" + t_action + "#" + token + "#" + (more.join(','));
     };
 
-    Issue.prototype.doMap = function(pattern, vals) {
+    Issue.prototype.doMap = function(token, pattern, vals) {
       var new_str;
       new_str = pattern.replace(/%([0-9])(?::([0-9]))?%/g, function(str, i1, i2, more) {
+        if (i1 === '0') {
+          return token;
+        }
         if (i2) {
           return vals[i1 - 1] || vals[i2 - 1] || '';
         } else {
