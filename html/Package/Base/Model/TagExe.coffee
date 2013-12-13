@@ -376,21 +376,20 @@ class TagExe
 						out_attrs.push """
 							#{attr}="#{window.EpicMvc.escape_html @viewExe.handleIt val}"
 							"""
-		out_attrs.push 'title='+ action # TODO MOVE TO BASE_DEVEL
 		link._b= action # _b instead of _a because we are a 'button'
 		click_index= @Epic.request().addLink link
 		o= @Epic.renderer.form_action out_attrs, click_index, action, value
 	Tag_link_action: (oPt) ->
 		link= {}
+		plain_attr= {}
 		action= @viewExe.handleIt oPt.attrs.action
 		link._a= action
 		# Add any 'p:*' (inline parameters in HTML) to the HREF
-		plain_attr= title: action # TODO MOVE TO BASE_DEVL, THIS TITLE SETTING
 		for own attr, val of oPt.attrs
 			if (attr.substr 0, 2) is 'p:'
 				link[attr.substr 2]= @viewExe.handleIt val
 			else switch attr
-				when 'href', 'title', 'onclick', 'action'
+				when 'href', 'onclick', 'action'
 				else plain_attr[attr]= @viewExe.handleIt val
 		text= ''
 		text+= @viewExe.doAllParts oPt.parts

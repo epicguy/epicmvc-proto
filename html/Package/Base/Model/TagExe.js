@@ -660,7 +660,6 @@
             }
         }
       }
-      out_attrs.push('title=' + action);
       link._b = action;
       click_index = this.Epic.request().addLink(link);
       return o = this.Epic.renderer.form_action(out_attrs, click_index, action, value);
@@ -669,11 +668,9 @@
     TagExe.prototype.Tag_link_action = function(oPt) {
       var action, attr, attr_text, click_index, id, k, link, o, plain_attr, text, v, val, _ref;
       link = {};
+      plain_attr = {};
       action = this.viewExe.handleIt(oPt.attrs.action);
       link._a = action;
-      plain_attr = {
-        title: action
-      };
       _ref = oPt.attrs;
       for (attr in _ref) {
         if (!__hasProp.call(_ref, attr)) continue;
@@ -683,7 +680,6 @@
         } else {
           switch (attr) {
             case 'href':
-            case 'title':
             case 'onclick':
             case 'action':
               break;

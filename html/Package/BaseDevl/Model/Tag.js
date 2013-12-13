@@ -141,6 +141,24 @@
       }
     };
 
+    TagExe.prototype.Tag_form_action = function(oPt) {
+      var action;
+      if (!('title' in oPt.attrs)) {
+        action = this.viewExe.handleIt(oPt.attrs.action || 'MISSING ACTION ATTRIBUTE');
+        oPt.attrs.title = action;
+      }
+      return TagExe.__super__.Tag_form_action.call(this, oPt);
+    };
+
+    TagExe.prototype.Tag_link_action = function(oPt) {
+      var action;
+      if (!('title' in oPt.attrs)) {
+        action = this.viewExe.handleIt(oPt.attrs.action || 'MISSING ACTION ATTRIBUTE');
+        oPt.attrs.title = action;
+      }
+      return TagExe.__super__.Tag_link_action.call(this, oPt);
+    };
+
     TagExe.prototype.Tag_explain = function(oPt) {
       return JSON.stringify(this.Epic.getViewTable(oPt.attrs.table));
     };

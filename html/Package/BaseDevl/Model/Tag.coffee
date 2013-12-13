@@ -82,6 +82,18 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 		catch e
 			throw e if @Epic.isSecurityError e
 			'&lt;epic:foreach table="'+ oPt.attrs.table+ '"&gt; - '+ e.message + '<pre>\n'+ e.stack+ '</pre>'
+	Tag_form_action: (oPt) ->
+		# TODO Nice error when no 'action' given or action not in lookahead-click
+		if not ('title' of oPt.attrs)
+			action= @viewExe.handleIt (oPt.attrs.action or 'MISSING ACTION ATTRIBUTE')
+			oPt.attrs.title= action # TODO CONSIDER CLONING oPt RATHER THAN STEPPING ON THIS STRUCTURE
+		super oPt
+	Tag_link_action: (oPt) ->
+		# TODO Nice error when no 'action' given or action not in lookahead-click
+		if not ('title' of oPt.attrs)
+			action= @viewExe.handleIt (oPt.attrs.action or 'MISSING ACTION ATTRIBUTE')
+			oPt.attrs.title= action # TODO CONSIDER CLONING oPt RATHER THAN STEPPING ON THIS STRUCTURE
+		super oPt
 	Tag_explain: (oPt) ->
 		JSON.stringify @Epic.getViewTable oPt.attrs.table
 

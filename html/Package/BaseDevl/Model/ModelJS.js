@@ -18,6 +18,7 @@
 
     ModelJS.prototype.action = function(act, parms) {
       window.alert("Unknown action (" + act + ") for model-name (" + this.view_nm + ").");
+      return [{}, {}, {}];
     };
 
     ModelJS.prototype.loadTable = function(tbl_nm) {
