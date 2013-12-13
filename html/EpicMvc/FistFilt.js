@@ -92,7 +92,7 @@
 
     FistFilt.CHECK_email = function(fieldName, validateExpr, value, oF) {
       var few, most, re, some;
-      most = '[A-Z0-9._%-]';
+      most = '[A-Z0-9._+%-]';
       some = '[A-Z0-9.-]';
       few = '[A-Z]';
       re = new RegExp("^" + most + "+@" + some + "+[.]" + few + "{2,4}$", 'i');
