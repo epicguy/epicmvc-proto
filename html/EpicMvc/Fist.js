@@ -137,9 +137,9 @@
       return this.cache_field_choice[fl_nm];
     };
 
-    Fist.prototype.fieldLevelValidate = function(data, flist_nm) {
+    Fist.prototype.fieldLevelValidate = function(data, flist_nm, clear_issues) {
       this.form_state = 'posted';
-      return this.Fb_FistValidate(data, flist_nm != null ? flist_nm : this.fist_nm);
+      return this.Fb_FistValidate(data, flist_nm != null ? flist_nm : this.fist_nm, clear_issues != null ? clear_issues : true);
     };
 
     Fist.prototype.loadData = function(data) {
@@ -241,8 +241,11 @@
       return this.fb_issues = {};
     };
 
-    Fist.prototype.Fb_FistValidate = function(data, flist_nm) {
+    Fist.prototype.Fb_FistValidate = function(data, flist_nm, clear_issues) {
       var issues;
+      if (clear_issues === true) {
+        this.fb_issues = {};
+      }
       this.Fb_Html2Html(data, flist_nm);
       issues = new window.EpicMvc.Issue(this.Epic);
       issues.call(this.Fb_Check(flist_nm));

@@ -12,7 +12,7 @@ class Issue
 		@Epic.log2 f, 'params:type/msgs', type, msgs
 		switch typeof msgs
 			when 'undefined' then msgs= []
-			when 'string' then msgs [ msgs ]
+			when 'string' then msgs= [ msgs ]
 		switch type
 			when 'TEXT' then @issue_list.push token:'text', more:msgs, t_view: @t_view, t_action: @t_action
 			else

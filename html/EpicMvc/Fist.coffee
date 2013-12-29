@@ -62,7 +62,9 @@ class Fist
 	getFieldIssues: -> @fb_issues
 	getChoices: (fl_nm) -> @loadFieldChoices fl_nm; @cache_field_choice[fl_nm]
 	# Posted values are comming to us, need to set values, and validate
-	fieldLevelValidate: (data,flist_nm) -> @form_state= 'posted'; @Fb_FistValidate data, flist_nm ? @fist_nm
+	fieldLevelValidate: (data,flist_nm,clear_issues) ->
+		@form_state= 'posted'
+		@Fb_FistValidate data, flist_nm ? @fist_nm, clear_issues ? true
 	loadData: (data) -> #TODO SHOULD THIS BE IN Epic.fist_back?
 		# form-states: empty, posted, loaded, restored
 		if @form_state is 'empty'
@@ -132,13 +134,14 @@ class Fist
 		@fb_DB= {} # Hash
 		@fb_HTML= {} # Hash
 		@fb_issues= {} # Hash by HTML nm, if any
-	Fb_FistValidate: (data,flist_nm) -> # Data is from an html post (not a hash of db names)
+	Fb_FistValidate: (data,flist_nm,clear_issues) -> # Data is from an html post (not a hash of db names)
 		# Logic to validate a posted form of data:
 		#  (a) perform Html to Html filters on raw posted data (will change user's view)
 		#  (b) Validate the HTML side values, using filters
 		#  (c) return any issue found (or, continue next steps)
 		#  (d) Move Html data to DB, using filters (possible psuedo prefix)
 
+		@fb_issues= {} if clear_issues is true
 		@Fb_Html2Html data, flist_nm
 		issues = new window.EpicMvc.Issue @Epic
 		issues.call @Fb_Check flist_nm

@@ -29,7 +29,7 @@
           msgs = [];
           break;
         case 'string':
-          msgs([msgs]);
+          msgs = [msgs];
       }
       switch (type) {
         case 'TEXT':
