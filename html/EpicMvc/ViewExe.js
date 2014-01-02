@@ -215,8 +215,16 @@
       if (dynoInfo) {
         this.addDynamicPart(dynoInfo);
       }
-      out = this.doAllParts(0);
-      _ref = this.stack.pop(), this.current = _ref[0], this.activeDynamicPartIx = _ref[1];
+      try {
+        out = this.doAllParts(0);
+      } catch (e) {
+        if (this.stack.length > 0) {
+          throw e;
+        }
+        out = e.message + "<pre>\n" + e.stack + "</pre>";
+      } finally {
+        _ref = this.stack.pop(), this.current = _ref[0], this.activeDynamicPartIx = _ref[1];
+      }
       return out;
     };
 

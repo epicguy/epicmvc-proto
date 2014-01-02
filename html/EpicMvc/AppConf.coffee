@@ -10,12 +10,10 @@ class AppConf
 		@config.FORMS= false
 	# MODELS map functions
 	getObj: (view_name,attribute) ->
-
 		if view_name not of @config.MODELS
-			alert ":AppConf.getObj: (app.js) MODELS: #{view_name}: [(#{view_name}) not in MODELS:, check spelling/case]"
+			throw new Error "No (#{view_name}) in 'MODELS:' in app.js"
 		if attribute not of @config.MODELS[view_name]
-			a= @confiig.XXX[ view_name+'#'+attribute+'#'+(nm for nm of @config.MODELS[view_name])]
-
+			throw new Error "No (#{atrribute}) in 'MODELS:#{view_name}' in app.js"
 		@config.MODELS[view_name][attribute]
 	loadFormsIf: ->
 		if @config.FORMS is false # First time, build index

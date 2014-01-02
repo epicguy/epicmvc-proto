@@ -95,8 +95,13 @@ class ViewExe
 		@stack.push [@current, @activeDynamicPartIx]
 		@current= current
 		@addDynamicPart dynoInfo if dynoInfo
-		out= @doAllParts 0
-		[@current, @activeDynamicPartIx]= @stack.pop()
+		try
+			out= @doAllParts 0
+		catch e
+			throw e if @stack.length > 0
+			out= e.message+ "<pre>\n"+ e.stack+ "</pre>"
+		finally
+			[@current, @activeDynamicPartIx]= @stack.pop()
 		out
 	includePage: () -> @run @pageStack.shift 0 #oPage
 	includePart: (nm,dynoInfo) ->
