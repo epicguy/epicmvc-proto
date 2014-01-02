@@ -61,7 +61,8 @@ class TagExe
 				when 'id' then id= @viewExe.handleIt val
 				else plain_attrs.push "#{attr}=\"#{@viewExe.handleIt val}\""
 		state= $.extend true, {}, @info_foreach # TODO SNAPSHOT MORE STUFF?
-		return ["<#{tag} id=\"#{id}\" #{plain_attrs.join ' '}>", "</#{tag}>", id: id, delay: delay* 1000, state: state]
+		return [ "<#{tag} id=\"#{id}\" #{plain_attrs.join ' '}>", "</#{tag}>",
+			id: id, delay: delay* 1000, state: state]
 	loadPartAttrs: (oPt) ->
 		f= ':tag.loadPartAttrs'
 		result= {}
@@ -243,7 +244,7 @@ class TagExe
 		rh_alias= rh # User may alias the tbl name, for e.g. reusable include-parts
 		rh_alias= @viewExe.handleIt oPt.attrs.alias if 'alias' of oPt.attrs
 		@info_foreach[rh_alias]= {}
-		break_rows_list= @calcBreak tbl.length, oPt
+		#TODO break_rows_list= [] #TODO @calcBreak tbl.length, oPt
 		out= ''
 		limit= tbl.length
 		limit= Number( @viewExe.handleIt oPt.attrs.limit)- 1 if 'limit' of oPt.attrs
@@ -251,7 +252,7 @@ class TagExe
 			break if count> limit
 			@info_foreach[rh_alias].row= $.extend true, {}, row,
 				_FIRST: count is 0, _LAST: count is tbl.length- 1,
-				_SIZE:tbl.length, _COUNT:count, _BREAK: count+ 1 in break_rows_list
+				_SIZE:tbl.length, _COUNT:count #TODO, _BREAK: count+ 1 in break_rows_list
 			out+= @viewExe.doAllParts oPt.parts
 		delete @info_foreach[rh_alias]
 		out

@@ -3,7 +3,6 @@
   'use strict';
 
   var TagExe,
-    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __hasProp = {}.hasOwnProperty;
 
   TagExe = (function() {
@@ -426,7 +425,7 @@
     };
 
     TagExe.prototype.Tag_foreach = function(oPt) {
-      var at_table, break_rows_list, count, lh, limit, oMd, out, rh, rh_alias, row, tbl, _i, _len, _ref, _ref1;
+      var at_table, count, lh, limit, oMd, out, rh, rh_alias, row, tbl, _i, _len, _ref;
       at_table = this.viewExe.handleIt(oPt.attrs.table);
       _ref = at_table.split('/'), lh = _ref[0], rh = _ref[1];
       if (lh in this.info_foreach) {
@@ -444,7 +443,6 @@
         rh_alias = this.viewExe.handleIt(oPt.attrs.alias);
       }
       this.info_foreach[rh_alias] = {};
-      break_rows_list = this.calcBreak(tbl.length, oPt);
       out = '';
       limit = tbl.length;
       if ('limit' in oPt.attrs) {
@@ -459,8 +457,7 @@
           _FIRST: count === 0,
           _LAST: count === tbl.length - 1,
           _SIZE: tbl.length,
-          _COUNT: count,
-          _BREAK: (_ref1 = count + 1, __indexOf.call(break_rows_list, _ref1) >= 0)
+          _COUNT: count
         });
         out += this.viewExe.doAllParts(oPt.parts);
       }
