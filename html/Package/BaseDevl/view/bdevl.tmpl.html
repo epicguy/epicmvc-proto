@@ -1,9 +1,51 @@
-<div class="dbg-toolbar">
-<epic:link_action action="dbg_refresh" p:what="file">[R]</epic:link_action>
-<epic:link_action action="dbg_toggle" p:what="file">
-[<epic:if     set="&Devl/Opts/file;">F</epic:if><epic:if not_set="&Devl/Opts/file;">f</epic:if>]
-</epic:link_action>
+<script type="text/javascript">
+	(function($) {
+		$(document).ready(function() {
+			var $dur = "medium"; // Duration of Animation
+
+			$(".dbg-toolbar").css({
+				"right" : 0,
+				"top" : -52
+			})
+			$(".dbg-toolbar").hover(function() {
+				$(this).stop().animate({
+					top : -7
+				}, $dur);
+			}, function() {
+				$(this).stop().animate({
+					top : -52
+				}, $dur);
+			});
+			$(".dbg-toolbar").show();
+		});
+	})(jQuery);
+</script>
+<epic:debug>
+<div class="dbg-toolbar" style="position: fixed; z-index: 9999; background-color: #484848; font-size: 10px; padding: 10px 10px 0 10px; top: -52px; right: 0;">
+	<div class="btn-toolbar">
+		<div class="btn-group">
+			<epic:link_action action="dbg_refresh" p:what="file" class="btn btn-mini">
+				<i class="icon-refresh"></i>
+			</epic:link_action>
+			<epic:link_action action="dbg_toggle" p:what="file" class="btn btn-mini">
+					<i class="icon-h-sign icon-large &Devl/Opts/file#.red;"></i>
+			</epic:link_action>
+			<epic:link_action action="dbg_toggle" p:what="tag" class="btn btn-mini">
+					<i class="icon-chevron-left icon-large &Devl/Opts/tag#.red;"></i>
+			</epic:link_action>
+			<epic:link_action action="dbg_toggle" p:what="tag2" class="btn btn-mini">
+					<i class="icon-chevron-right icon-large &Devl/Opts/tag2#.red;"></i>
+			</epic:link_action>
+			<epic:link_action action="dbg_toggle" p:what="form" class="btn btn-mini">
+					<i class="icon-edit icon-large &Devl/Opts/form#.red;"></i>
+			</epic:link_action>
+		</div>
+	</div>
+	<div style="text-align: center; color: #FFF; letter-spacing: 5px; font-size: 10px; height: 18px; padding-left: 4px; margin-top: -3px;">EPIC</div>
 </div>
+</epic:debug>
+<epic:page />
+
 <!-- <epic:explain table="Devl/Opts"/> -->
 
 <!--
@@ -23,4 +65,3 @@
 <table width="100%"><tr><td align="right"><font style="font-family:Arial" color="lightblue" size="-6"><b>Copyright (c) 2002 Data Transport Solutions, Inc.</td></tr></table>
 </td></tr></table>
 -->
-<epic:page/>

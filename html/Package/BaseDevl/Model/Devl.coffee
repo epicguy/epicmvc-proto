@@ -2,7 +2,7 @@
 class Devl extends window.EpicMvc.ModelJS
 	constructor: (Epic,view_nm) ->
 		super Epic, view_nm
-		@opts= file: false, tag: false, form: false
+		@opts= file: false, tag: false, tag2: false, form: false
 	action: (act,p) ->
 		r= {}
 		i= new window.EpicMvc.Issue @Epic
