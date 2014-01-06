@@ -14,7 +14,8 @@
         file: false,
         tag: false,
         tag2: false,
-        form: false
+        form: false,
+        stack: false
       };
     }
 

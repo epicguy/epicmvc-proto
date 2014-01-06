@@ -17,16 +17,14 @@
     }
 
     ModelJS.prototype.action = function(act, parms) {
-      throw new Error("Unknown action (" + act + ") for model-name (" + this.view_nm + ").");
-      return [{}, {}, {}];
+      throw new Error("Model (" + this.view_nm + ").action() needs (" + act + ")");
     };
 
     ModelJS.prototype.loadTable = function(tbl_nm) {
       if (tbl_nm in this.Table) {
         return;
       }
-      throw new Error("Model " + this.view_nm + ".loadTable needs (" + tbl_nm + ")");
-      return this.Table[tbl_nm] = [{}];
+      throw new Error("Model (" + this.view_nm + ").loadTable() needs (" + tbl_nm + ")");
     };
 
     ModelJS.prototype.fistLoadData = function(oFist) {

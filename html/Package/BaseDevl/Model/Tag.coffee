@@ -10,19 +10,18 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 		@in_defer= false
 	Opts: -> (@Epic.getViewTable 'Devl/Opts')[0]
 	_Error: (type,key,e) ->
-			@errors_cache[type]?= {}
-			if (not (key of @errors_cache[type]))
-				@errors_cache[type][key]= e
-				@errors_cache._COUNT++
-				if @errors_cache._COUNT< 5
-					msg= (("#{key}\n\n#{e.message}"
-						.replace /&lt;/g, '<')
-						.replace /&gt;/g, '>')
-						.replace /&amp;/g, '&'
-					prefix= if type is 'varGet2' or type is 'varGet3'
-						'Variable reference'
-					else 'Tag'
-					window.alert "#{prefix} error (#{type}):\n\n#{msg}"
+		@errors_cache[type]?= {}
+		if (not (key of @errors_cache[type]))
+			@errors_cache[type][key]= e
+			@errors_cache._COUNT++
+			if @errors_cache._COUNT< 5
+				_log2 '### _Error type/key/e', type, key, e
+				msg= (("#{key}\n\n#{e.message}"
+					.replace /&lt;/g, '<')
+					.replace /&gt;/g, '>')
+					.replace /&amp;/g, '&'
+				prefix= if type is 'varGet2' or type is 'varGet3' then 'Variable reference' else 'Tag'
+				window.alert "#{prefix} error (#{type}):\n\n#{msg}"
 	Tag_defer: (oPt) ->
 		@in_defer= true; out= super oPt; @in_defer= false; out
 	Tag_debug: (oPt) ->
@@ -95,7 +94,9 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 	varGet3: (view_nm, tbl_nm, col_nm, format_spec, custom_spec, give_error) ->
 		try
 			val= super view_nm, tbl_nm, col_nm, format_spec, custom_spec
-			if val is undefined then throw new Error 'undefined'
+			t_format_spec= if format_spec or custom_spec then '#'+ format_spec else ''
+			t_custom_spec= if custom_spec then '#'+ custom_spec else ''
+			if val is undefined then throw new Error "Column/spec does not exist (#{view_nm}/#{tbl_nm}/#{col_nm}#{t_format_spec}#{t_custom_spec})."
 		catch e
 			throw e if @Epic.isSecurityError e or give_error
 			t_format_spec= if format_spec or custom_spec then '#'+ format_spec else ''
@@ -113,7 +114,11 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 			_log2 '##### varGet2', "&#{tbl_nm}/#{col_nm};", e, e.stack
 			val= "&amp;#{tbl_nm}/#{col_nm};[#{e.message}] <pre>#{e.stack}</pre>" # Give back a visual of what is in the HTML
 		if val is undefined
-			@_Error 'varGet2',( @_TagText oPt, true), e
+			t_format_spec= if format_spec or custom_spec then '#'+ format_spec else ''
+			t_custom_spec= if custom_spec then '#'+ custom_spec else ''
+			key= '&amp;'+ tbl_nm+ '/'+ col_nm+ t_format_spec+ t_custom_spec+ ';' # TODO sub_nm?
+			_log2 '##### Error in varGet2 key=', key, 'undefined'
+			@_Error 'varGet2', key, message: 'is undefined', stack: "\n"
 			val= "&amp;#{tbl_nm}/#{col_nm};" # Give back a visual of what is in the HTML
 		val
 	Tag_if: (oPt) ->
@@ -231,6 +236,7 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 		after?= ''
 		"""<div class="dbg-#{type}-box">#{@_TagText oPt}#{inside}</div>#{after}"""
 	_Err:( type, oPt, e) ->
+		_log2 '### _Err type/oPt/e', type, oPt, e: e, m: e.message, s: e.stack
 		stack= if @Opts().stack then "<pre>\n#{e.stack}</pre>" else ''
 		title= (e.stack.split '\n')[1]
 		"""

@@ -37,6 +37,7 @@
         this.errors_cache[type][key] = e;
         this.errors_cache._COUNT++;
         if (this.errors_cache._COUNT < 5) {
+          _log2('### _Error type/key/e', type, key, e);
           msg = ((("" + key + "\n\n" + e.message).replace(/&lt;/g, '<')).replace(/&gt;/g, '>')).replace(/&amp;/g, '&');
           prefix = type === 'varGet2' || type === 'varGet3' ? 'Variable reference' : 'Tag';
           return window.alert("" + prefix + " error (" + type + "):\n\n" + msg);
@@ -163,8 +164,10 @@
       var key, t_custom_spec, t_format_spec, val;
       try {
         val = TagExe.__super__.varGet3.call(this, view_nm, tbl_nm, col_nm, format_spec, custom_spec);
+        t_format_spec = format_spec || custom_spec ? '#' + format_spec : '';
+        t_custom_spec = custom_spec ? '#' + custom_spec : '';
         if (val === void 0) {
-          throw new Error('undefined');
+          throw new Error("Column/spec does not exist (" + view_nm + "/" + tbl_nm + "/" + col_nm + t_format_spec + t_custom_spec + ").");
         }
       } catch (e) {
         if (this.Epic.isSecurityError(e || give_error)) {
@@ -181,7 +184,7 @@
     };
 
     TagExe.prototype.varGet2 = function(tbl_nm, col_nm, format_spec, custom_spec, sub_nm, give_error) {
-      var val;
+      var key, t_custom_spec, t_format_spec, val;
       try {
         val = TagExe.__super__.varGet2.call(this, tbl_nm, col_nm, format_spec, custom_spec, sub_nm);
       } catch (e) {
@@ -192,7 +195,14 @@
         val = "&amp;" + tbl_nm + "/" + col_nm + ";[" + e.message + "] <pre>" + e.stack + "</pre>";
       }
       if (val === void 0) {
-        this._Error('varGet2', this._TagText(oPt, true), e);
+        t_format_spec = format_spec || custom_spec ? '#' + format_spec : '';
+        t_custom_spec = custom_spec ? '#' + custom_spec : '';
+        key = '&amp;' + tbl_nm + '/' + col_nm + t_format_spec + t_custom_spec + ';';
+        _log2('##### Error in varGet2 key=', key, 'undefined');
+        this._Error('varGet2', key, {
+          message: 'is undefined',
+          stack: "\n"
+        });
         val = "&amp;" + tbl_nm + "/" + col_nm + ";";
       }
       return val;
@@ -368,6 +378,11 @@
 
     TagExe.prototype._Err = function(type, oPt, e) {
       var stack, title;
+      _log2('### _Err type/oPt/e', type, oPt, {
+        e: e,
+        m: e.message,
+        s: e.stack
+      });
       stack = this.Opts().stack ? "<pre>\n" + e.stack + "</pre>" : '';
       title = (e.stack.split('\n'))[1];
       return "<div class=\"dbg-" + type + "-error-box\">\n" + (this._TagText(oPt, true)) + "<span title=\"" + title + "\">- " + e.message + "</span>\n</div>" + stack;
