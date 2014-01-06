@@ -29,7 +29,7 @@ class ClickAction
 		[issue, message]
 	doAction: (node, prev_action_result) ->
 		f= ":ClickAction.doAction(#{node.getTarget()})"
-		@Epic.log2 f, 'getPAttrs/node/prev_action_result', ("#{k}=#{v}" for k,v of node.getPAttrs()).join ', ', node, prev_action_result
+		@Epic.log2 f, 'getPAttrs/node/prev_action_result',(( "#{k}=#{v}" for k,v of node.getPAttrs()).join ', '), node, prev_action_result
 		r_vals= @Epic.request().getValues()
 		a_params_list= @pullValueUsingAttr node, r_vals, prev_action_result
 		class_method= node.getTarget() # Call= or Macro= 's value
@@ -42,8 +42,11 @@ class ClickAction
 			if macro_node.hasResult() then look_for_macro_result_tags= true # Else use caller node's RESULT?
 			for own k,v of alias_params
 				a_params_list[k]= v
-		r= @Epic.Execute class_method, a_params_list
+		r= if class_method then @Epic.Execute class_method, a_params_list else [ {}, {}, {}]
 		#@Epic.log2 f, '@Epic.Execute-result', r
+		# Process any go: as shortcut to { call: 'Pageflow/path' p:{path:'//x'} }
+		if path= node.hasAttr 'go'
+			dummy= @Epic.Execute 'Pageflow/path', path: path
 		[rResults, rIssues, rMessages]= r
 		found_result_tag=
 			(if look_for_macro_result_tags then macro_node else node).matchResult rResults

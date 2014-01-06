@@ -48,7 +48,7 @@
     };
 
     ClickAction.prototype.doAction = function(node, prev_action_result) {
-      var a_params_list, alias_params, class_method, f, found_result_tag, k, look_for_macro_result_tags, macro_node, r, rIssues, rMessages, rResults, r_vals, v;
+      var a_params_list, alias_params, class_method, dummy, f, found_result_tag, k, look_for_macro_result_tags, macro_node, path, r, rIssues, rMessages, rResults, r_vals, v;
       f = ":ClickAction.doAction(" + (node.getTarget()) + ")";
       this.Epic.log2(f, 'getPAttrs/node/prev_action_result', ((function() {
         var _ref, _results;
@@ -59,7 +59,7 @@
           _results.push("" + k + "=" + v);
         }
         return _results;
-      })()).join(', ', node, prev_action_result));
+      })()).join(', '), node, prev_action_result);
       r_vals = this.Epic.request().getValues();
       a_params_list = this.pullValueUsingAttr(node, r_vals, prev_action_result);
       class_method = node.getTarget();
@@ -77,7 +77,12 @@
           a_params_list[k] = v;
         }
       }
-      r = this.Epic.Execute(class_method, a_params_list);
+      r = class_method ? this.Epic.Execute(class_method, a_params_list) : [{}, {}, {}];
+      if (path = node.hasAttr('go')) {
+        dummy = this.Epic.Execute('Pageflow/path', {
+          path: path
+        });
+      }
       rResults = r[0], rIssues = r[1], rMessages = r[2];
       found_result_tag = (look_for_macro_result_tags ? macro_node : node).matchResult(rResults);
       return [found_result_tag, rResults, rIssues, rMessages];

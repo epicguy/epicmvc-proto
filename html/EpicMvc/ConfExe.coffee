@@ -26,7 +26,7 @@ class ConfExe
 			if not (k of results) or v isnt results[k] then return false
 		true
 	getTarget: -> @node.call || @node.macro
-	hasMacro: -> if @node.call? then false else true
+	hasMacro: -> if @node.macro? then true else false
 	hasResult: -> if @node.RESULTS? then true else false
 	getPAttrs: -> @node.p || null
 	getRAttrs: -> @node.r || null
