@@ -38,11 +38,12 @@ class GlobalDrag
 			.dragover( @handleDragOver)
 
 	get_type: (t) ->
-		@log3 'get_type', t
-		# 't' on OS file drag: IE(undefined), Safari5(null), FF:()
+		@log3 'get_type',( typeof t), t
+		# 't' on OS file drag:
+		# IE(undefined), Safari5(null), FF(), Chrome(['text/uri-list','Files'])
 		return 'BROKEN' if t is null or t is undefined # TODO Attempt to detect browsers we don't work well with, and cause 'none'
-		t= t[0] if t and typeof t is 'object'
-		return false if t is null or t is 'Text' or -1 isnt t.indexOf '/' # Ignore 'text' drags
+		t= 'Files' if t and typeof t is 'object' and 'Files' in t
+		return false if typeof t isnt 'string' or t is 'Text' or -1 isnt t.indexOf '/' # Ignore 'text' drags
 		t # Can be 'Files' (with upper case 'F') or custom type (all lower case)
 
 	# Global listeners
