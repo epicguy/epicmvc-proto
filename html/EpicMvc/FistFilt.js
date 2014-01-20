@@ -70,7 +70,7 @@
     FistFilt.CHECK_zip = function(fieldName, validateExpr, value, oF) {
       switch (validateExpr) {
         case '5or9':
-          if (!value.match(/^[0-9]{5}(|[0-9]{4})/)) {
+          if (!value.match(/^[0-9]{5}(|[0-9]{4})$/)) {
             return false;
           }
           break;

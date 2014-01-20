@@ -5,16 +5,16 @@ class ViewExe
 		@dynamicParts= []
 		frames= @Epic.oAppConf.getFrames()
 		@frames=( frames[ix] for ix in (nm for nm of frames).sort())
-		@Epic.log1 'ViewExec', @frames
+		@Epic.log1 ':ViewExec', @frames
 	init: (@template, @page) ->
-		@Epic.log2 ':view T:'+ @template, 'P:'+ page, (v for v in (@Epic.getInstance 'Pageflow').getStepPath()).join '/'
+		@Epic.log2 ':ViewExe.init T:'+ @template, 'P:'+ page, (v for v in (@Epic.getInstance 'Pageflow').getStepPath()).join '/'
 		@instance= @Epic.nextCounter() # Use to ignore delayed requests after a new init occured
 		@oTemplate= @loadStrategy.template @template
 		@oPage= @loadStrategy.page @page
 		@pageStack= []
 		(@pageStack.push @loadStrategy.template nm) for nm in @frames
 		@pageStack.push @oTemplate, @oPage
-		#@Epic.log1 'ViewExec.init', @pageStack
+		#@Epic.log1 ':ViewExec.init', @pageStack
 		@stack= []
 		@TagExe= @Epic.getInstance 'Tag'
 		@TagExe.resetForNextRequest()
@@ -22,7 +22,6 @@ class ViewExe
 		@dynamicParts= [defer:[],parent:0] # Parts refrences w/Tag-state allowing a re-draw of this part in the DOM
 		@dynamicMap= {} # Hash by Model:tbl_nm - list of dynamicParts indexes
 		@activeDynamicPartIx= 0 # Zero always exists, it's the template
-	checkRefresh: (tables) -> alert 'Epic: ViewExec.checkRefresh was disabled.'; false
 	part: (ix) -> @dynamicParts[ix or @activeDynamicPartIx]
 	doDynamicPart: (ix, instance) ->
 		f= ':ViewExe.doDynamicPart:'+ix

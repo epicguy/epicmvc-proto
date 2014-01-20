@@ -187,9 +187,10 @@
     };
 
     AppConf.prototype.getVars = function(f, t, s) {
-      var k, v, vars;
+      var f2, k, v, vars;
+      f2 = ':AppConf.getVars';
       vars = $.extend({}, this.config.FLOWS[f].v, this.config.FLOWS[f].TRACKS[t].v, this.config.FLOWS[f].TRACKS[t].STEPS[s].v);
-      this.Epic.log2(((function() {
+      this.Epic.log2(f2, ((function() {
         var _results;
         _results = [];
         for (k in vars) {

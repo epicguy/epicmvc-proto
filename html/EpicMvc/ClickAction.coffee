@@ -52,6 +52,8 @@ class ClickAction
 			(if look_for_macro_result_tags then macro_node else node).matchResult rResults
 		[found_result_tag, rResults, rIssues, rMessages]
 	pullValueUsingAttr: (node, r_vals, prev_action_result) ->
+		f= ':ClickAction.pullValueUsingAttr'
+		@Epic.log2 f, node:node,r_vals:r_vals,prev_action_result:prev_action_result
 		a_params_list= $.extend {}, node.getPAttrs() # Clone
 		if form_name= node.hasAttr 'use_form'
 			oF= @Epic.getFistInstance form_name

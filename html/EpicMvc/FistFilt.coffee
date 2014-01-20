@@ -60,7 +60,7 @@ class FistFilt
 
 	@CHECK_zip: (fieldName, validateExpr, value, oF) ->
 		switch validateExpr
-			when '5or9' then return false if not value.match /^[0-9]{5}(|[0-9]{4})/
+			when '5or9' then return false if not value.match /^[0-9]{5}(|[0-9]{4})$/
 			else BROKE()
 		true
 

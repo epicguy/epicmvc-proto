@@ -80,12 +80,13 @@ class AppConf
 	getGroupNm: (f,t) ->
 		group= ( @findAttr f, t, false, 'group' ) || @config.OPTIONS.settings.group
 	getVars: (f,t,s) ->
+		f2= ':AppConf.getVars'
 		vars= $.extend {}, @config.FLOWS[f].v, @config.FLOWS[f].TRACKS[t].v, @config.FLOWS[f].TRACKS[t].STEPS[s].v
-		@Epic.log2 ( "#{k}:#{v}" for own k,v of vars).join ', '
+		@Epic.log2 f2, ( "#{k}:#{v}" for own k,v of vars).join ', '
 		vars
 
 	# returns: Object indexed by frame name (caller may alpha-sort for render order)
-	#Example: OPTIONS: frame: 499_BaseDevl: 'bdev' (view/bdev.frame.html)
+	#Example: OPTIONS: frame: QQQ_BaseDevl: 'bdev' (view/bdev.frame.html)
 	getFrames: -> @config.OPTIONS.frame
 
 window.EpicMvc.AppConf= AppConf # Public API

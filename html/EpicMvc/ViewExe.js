@@ -30,14 +30,14 @@
         }
         return _results;
       })();
-      this.Epic.log1('ViewExec', this.frames);
+      this.Epic.log1(':ViewExec', this.frames);
     }
 
     ViewExe.prototype.init = function(template, page) {
       var nm, v, _i, _len, _ref;
       this.template = template;
       this.page = page;
-      this.Epic.log2(':view T:' + this.template, 'P:' + page, ((function() {
+      this.Epic.log2(':ViewExe.init T:' + this.template, 'P:' + page, ((function() {
         var _i, _len, _ref, _results;
         _ref = (this.Epic.getInstance('Pageflow')).getStepPath();
         _results = [];
@@ -69,11 +69,6 @@
       ];
       this.dynamicMap = {};
       return this.activeDynamicPartIx = 0;
-    };
-
-    ViewExe.prototype.checkRefresh = function(tables) {
-      alert('Epic: ViewExec.checkRefresh was disabled.');
-      return false;
     };
 
     ViewExe.prototype.part = function(ix) {

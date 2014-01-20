@@ -89,7 +89,13 @@
     };
 
     ClickAction.prototype.pullValueUsingAttr = function(node, r_vals, prev_action_result) {
-      var a_params_list, attr, fields_list, form_name, oF;
+      var a_params_list, attr, f, fields_list, form_name, oF;
+      f = ':ClickAction.pullValueUsingAttr';
+      this.Epic.log2(f, {
+        node: node,
+        r_vals: r_vals,
+        prev_action_result: prev_action_result
+      });
       a_params_list = $.extend({}, node.getPAttrs());
       if (form_name = node.hasAttr('use_form')) {
         oF = this.Epic.getFistInstance(form_name);
