@@ -6,7 +6,7 @@
 
   FindVars = function(text) {
     var args, custom_hash_part, hash_part, i, last, parts, _ref;
-    parts = text.split(/&([a-zA-Z0-9_]+\/[^;]{1,50});?/gm);
+    parts = text.split(/&([a-zA-Z0-9_]+\/[^;]{1,60});?/gm);
     i = 0;
     if (parts.length === 1) {
       return text;

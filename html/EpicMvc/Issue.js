@@ -96,6 +96,7 @@
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         issue = _ref[_i];
         final.push({
+          token: issue.token,
           title: "" + issue.t_view + "#" + issue.t_action + "#" + issue.token + "#" + (issue.more.join(',')),
           issue: this.map(map, issue.t_view, issue.t_action, issue.token, issue.more)
         });

@@ -41,6 +41,7 @@ class Issue
 		final= []
 		for issue in @issue_list
 			final.push
+				token: issue.token
 				title: "#{issue.t_view}##{issue.t_action}##{issue.token}##{issue.more.join ','}"
 				issue: @map map, issue.t_view, issue.t_action, issue.token, issue.more
 		final

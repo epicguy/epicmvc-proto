@@ -4,7 +4,7 @@
 
 # Parse out varGet2/3's as array with func name set
 FindVars= (text) ->
-	parts= text.split /&([a-zA-Z0-9_]+\/[^;]{1,50});?/gm
+	parts= text.split /&([a-zA-Z0-9_]+\/[^;]{1,60});?/gm
 	i= 0
 	return text if parts.length== 1
 	while i< parts.length- 1
