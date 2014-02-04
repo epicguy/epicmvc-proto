@@ -124,8 +124,9 @@
 
     Pageflow.prototype.setMessages = function(issue_obj) {
       if ((issue_obj != null ? issue_obj.count() : void 0) !== 0) {
-        return this.messages.addObj(issue_obj);
+        this.messages.addObj(issue_obj);
       }
+      return this.invalidateTables(['Message']);
     };
 
     Pageflow.prototype.loadTable = function(tbl_nm) {

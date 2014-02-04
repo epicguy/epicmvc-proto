@@ -35,7 +35,7 @@ class FistFilt
 		for k, one_spec of spec_ary
 			new_value= switch one_spec
 				when '' then new_value # Empty spec is do nothing?
-				when 'trim_spaces' then new_value.trim()
+				when 'trim_spaces' then $.trim new_value
 				when 'digits_only' then new_value.replace /[^0-9]/g, ''
 				when 'lower_case' then new_value.toLowerCase()
 				when 'upper_case' then new_value.toUpperCase()

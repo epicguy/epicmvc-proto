@@ -644,10 +644,10 @@
         val = _ref2[attr];
         switch (attr) {
           case 'action':
-            action = (this.viewExe.handleIt(val)).trim();
+            action = $.trim(this.viewExe.handleIt(val));
             break;
           case 'value':
-            value = (this.viewExe.handleIt(val)).trim();
+            value = $.trim(this.viewExe.handleIt(val));
             break;
           default:
             if (attr.match(/^p_/)) {

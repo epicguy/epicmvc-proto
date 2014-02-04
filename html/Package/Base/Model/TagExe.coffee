@@ -368,8 +368,8 @@ class TagExe
 		value= ''
 		for own attr, val of oPt.attrs
 			switch attr
-				when 'action' then action=( @viewExe.handleIt val).trim()
-				when 'value' then value=( @viewExe.handleIt val).trim()
+				when 'action' then action= $.trim @viewExe.handleIt val
+				when 'value' then value= $.trim @viewExe.handleIt val
 				else
 					if attr.match /^p_/
 						link[attr.substr 2]= @viewExe.handleIt val

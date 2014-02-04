@@ -58,14 +58,20 @@ doIt= (epic_path,dev_dir,pkg_nm) ->
 			out= 'window.EpicMvc.view$'+ pkg_nm+ '={\n'
 			load= new MockLoadStrategy dev_dir, pkg_nm
 			out+= 'tmpl: {\n'
+			end= ''
 			for f in load.readdir 'template'
-				out+= "\"#{f}\": #{JSON.stringify load.template f},\n"
+				out+= end+ "\"#{f}\": #{JSON.stringify load.template f}"
+				end= ",\n"
 			out+= '}, page: {\n'
+			end= ''
 			for f in load.readdir 'page'
-				out+= "\"#{f}\": #{JSON.stringify load.page f},\n"
+				out+= end+ "\"#{f}\": #{JSON.stringify load.page f}"
+				end= ",\n"
 			out+= '}, part: {\n'
+			end= ''
 			for f in load.readdir 'part'
-				out+= "\"#{f}\": #{JSON.stringify load.part f},\n"
+				out+= end+ "\"#{f}\": #{JSON.stringify load.part f}"
+				end= ",\n"
 			out+= '}};\n'
 			console.log ''+ out
 

@@ -19,7 +19,7 @@
             case '':
               return new_value;
             case 'trim_spaces':
-              return new_value.trim();
+              return $.trim(new_value);
             case 'digits_only':
               return new_value.replace(/[^0-9]/g, '');
             case 'lower_case':

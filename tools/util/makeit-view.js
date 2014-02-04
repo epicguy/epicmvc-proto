@@ -13,7 +13,7 @@
       html: "<html><body><div id='fill_me'></div></body></html>",
       scripts: ['..' + '/testlib/MockEpicSetup.js', '..' + '/testlib/json2.js', epic_path + '/parse.js', epic_path + '/util.js']
     }, function(err, window) {
-      var MockLoadStrategy, f, load, out, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
+      var MockLoadStrategy, end, f, load, out, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
       MockLoadStrategy = (function() {
 
         function MockLoadStrategy(Xdev_dir, Xpkg_nm) {
@@ -104,22 +104,28 @@
       out = 'window.EpicMvc.view$' + pkg_nm + '={\n';
       load = new MockLoadStrategy(dev_dir, pkg_nm);
       out += 'tmpl: {\n';
+      end = '';
       _ref = load.readdir('template');
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         f = _ref[_i];
-        out += "\"" + f + "\": " + (JSON.stringify(load.template(f))) + ",\n";
+        out += end + ("\"" + f + "\": " + (JSON.stringify(load.template(f))));
+        end = ",\n";
       }
       out += '}, page: {\n';
+      end = '';
       _ref1 = load.readdir('page');
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
         f = _ref1[_j];
-        out += "\"" + f + "\": " + (JSON.stringify(load.page(f))) + ",\n";
+        out += end + ("\"" + f + "\": " + (JSON.stringify(load.page(f))));
+        end = ",\n";
       }
       out += '}, part: {\n';
+      end = '';
       _ref2 = load.readdir('part');
       for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
         f = _ref2[_k];
-        out += "\"" + f + "\": " + (JSON.stringify(load.part(f))) + ",\n";
+        out += end + ("\"" + f + "\": " + (JSON.stringify(load.part(f))));
+        end = ",\n";
       }
       out += '}};\n';
       return console.log('' + out);

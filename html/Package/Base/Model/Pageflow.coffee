@@ -49,6 +49,7 @@ class Pageflow extends window.EpicMvc.ModelJS
 		@invalidateTables ['Issue']
 	setMessages: (issue_obj) ->
 		@messages.addObj issue_obj if issue_obj?.count() isnt 0
+		@invalidateTables ['Message']
 	loadTable: (tbl_nm) ->
 		map= window.EpicMvc['issues$'+ @Epic.appConf().getGroupNm()]
 		@Table[ tbl_nm]= switch tbl_nm
