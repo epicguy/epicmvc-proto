@@ -1,6 +1,6 @@
 # Some utility functions (as class, not instance functions)
 #
-window.EpicMvc.escape_html= (str) ->
+escape_html= (str) ->
 	String(str)
 		.replace(/&/g,'&amp;') # '&' must be first
 		.replace(/</g,'&lt;')
@@ -8,3 +8,5 @@ window.EpicMvc.escape_html= (str) ->
 		.replace(/"/g,'&quot;')
 
 
+if window? then window.EpicMvc.escape_html= escape_html
+else module.exports= (w)-> w.EpicMvc.escape_html= escape_html

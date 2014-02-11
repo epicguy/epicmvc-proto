@@ -62,4 +62,6 @@ ParseFile= (file_stats, file_contents) ->
 	return parts
 
 # Public API
-window.EpicMvc.ParseFile= ParseFile
+if window? then window.EpicMvc.ParseFile= ParseFile
+else module.exports= (w)-> w.EpicMvc.ParseFile= ParseFile
+

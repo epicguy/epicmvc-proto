@@ -1,7 +1,0 @@
-{
-	"name": "makeit-view",
-	"version": "0.0.1",
-	"dependencies": {
-		"jsdom": "0.3.4"
-	}
-}

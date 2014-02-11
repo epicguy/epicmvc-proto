@@ -90,6 +90,12 @@
     return parts;
   };
 
-  window.EpicMvc.ParseFile = ParseFile;
+  if (typeof window !== "undefined" && window !== null) {
+    window.EpicMvc.ParseFile = ParseFile;
+  } else {
+    module.exports = function(w) {
+      return w.EpicMvc.ParseFile = ParseFile;
+    };
+  }
 
 }).call(this);
