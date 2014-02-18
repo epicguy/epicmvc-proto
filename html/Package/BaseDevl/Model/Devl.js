@@ -15,12 +15,27 @@
         tag: false,
         tag2: false,
         form: false,
-        stack: false
+        model: true,
+        stack: true
       };
+      this.open_model = '';
+      this.open_table = '';
+      this.table_row_cnt = 0;
+      this.table_by_col = false;
+      this.table_col = false;
     }
 
+    Devl.prototype.eventNewRequest = function() {
+      var _this = this;
+      this.invalidateTables(true);
+      return setTimeout((function() {
+        return _this.invalidateTables(true);
+      }), 2000);
+    };
+
     Devl.prototype.action = function(act, p) {
-      var i, m, r;
+      var f, i, incr, m, r;
+      f = 'dM:Devl(' + act + ')';
       r = {};
       i = new window.EpicMvc.Issue(this.Epic);
       m = new window.EpicMvc.Issue(this.Epic);
@@ -31,6 +46,42 @@
         case 'clear_cache':
           this.Epic.loader.clearCache();
           break;
+        case 'open_model':
+          if (this.open_model !== p.name) {
+            this.open_model = p.name;
+          } else {
+            this.open_model = '';
+          }
+          delete this.Table.Model;
+          break;
+        case 'open_table':
+          if (this.open_table !== p.name) {
+            this.table_row_cnt = 0;
+            this.table_by_col = false;
+            this.table_col = false;
+            this.open_table = p.name;
+          } else {
+            this.open_table = '';
+          }
+          delete this.Table.Model;
+          break;
+        case 'table_row_set':
+          this.table_by_col = false;
+          if (p.row != null) {
+            this.table_row_cnt = p.row;
+          }
+          break;
+        case 'table_col_set':
+          this.table_col = p.col;
+          this.table_by_col = true;
+          break;
+        case 'table_left':
+        case 'table_right':
+          incr = act === 'table_left' ? -1 : 1;
+          _log2(f, act, incr, this.table_row_cnt);
+          this.table_row_cnt += incr;
+          delete this.Table.Model;
+          break;
         default:
           return Devl.__super__.action.call(this, act, p);
       }
@@ -38,9 +89,119 @@
     };
 
     Devl.prototype.loadTable = function(tbl_nm) {
+      var col, cols, f, inst, len, nm, rcol, rec, row, rrow, rval, table, tnm, trow, _ref;
+      f = 'dM:Devl.loadTable(' + tbl_nm + ')';
       switch (tbl_nm) {
         case 'Opts':
           return this.Table[tbl_nm] = [this.opts];
+        case 'Model':
+          table = [];
+          for (inst in this.Epic.oModel) {
+            nm = this.Epic.oModel[inst].view_nm;
+            row = $.extend({
+              is_open: '',
+              Table: []
+            }, {
+              inst: inst,
+              name: nm
+            });
+            if (nm === this.open_model) {
+              row.is_open = 'yes';
+            }
+            _ref = this.Epic.oModel[inst].Table;
+            for (tnm in _ref) {
+              rec = _ref[tnm];
+              len = rec.length;
+              if (len) {
+                cols = (function() {
+                  var _results;
+                  _results = [];
+                  for (rcol in rec[0]) {
+                    _results.push(rcol);
+                  }
+                  return _results;
+                })();
+              } else {
+                cols = [];
+              }
+              trow = {
+                is_open: '',
+                name: tnm,
+                rows: len,
+                Cols: [],
+                row_cnt: 0,
+                col: '',
+                curr_col: this.table_col,
+                by_col: this.table_by_col
+              };
+              if (tnm === this.open_table) {
+                trow.is_open = 'yes';
+                if (this.table_row_cnt < 0) {
+                  this.table_row_cnt = len - 1;
+                }
+                if (this.table_row_cnt > len - 1) {
+                  this.table_row_cnt = 0;
+                }
+                trow.row_cnt = this.table_row_cnt;
+              }
+              trow.cols = len ? ((function() {
+                var _results;
+                _results = [];
+                for (col in rec[0]) {
+                  _results.push(col);
+                }
+                return _results;
+              })()).join(', ') : 'no rows';
+              if (len) {
+                if (!this.table_by_col) {
+                  trow.Cols = (function() {
+                    var _ref1, _results;
+                    _ref1 = rec[this.table_row_cnt];
+                    _results = [];
+                    for (rcol in _ref1) {
+                      rval = _ref1[rcol];
+                      _results.push({
+                        type: (rval === null ? 'Null' : typeof rval),
+                        col_ix: cols.indexOf(col),
+                        col: rcol,
+                        len: rval != null ? rval.length : void 0,
+                        val: rval
+                      });
+                    }
+                    return _results;
+                  }).call(this);
+                } else {
+                  trow.Rows = (function() {
+                    var _ref1, _results;
+                    _results = [];
+                    for (rrow in rec) {
+                      _results.push({
+                        row: rrow,
+                        len: (_ref1 = rec[rrow][this.table_col]) != null ? _ref1.length : void 0,
+                        type: (rec[rrow][this.table_col] === null ? 'Null' : typeof rec[rrow][this.table_col]),
+                        val: rec[rrow][this.table_col]
+                      });
+                    }
+                    return _results;
+                  }).call(this);
+                }
+              }
+              row.Table.push(trow);
+            }
+            row.tables = row.Table.length;
+            table.push(row);
+            table.sort(function(a, b) {
+              if (a.inst === b.inst) {
+                return 0;
+              } else if (a.inst > b.inst) {
+                return 1;
+              } else {
+                return -1;
+              }
+            });
+          }
+          _log2(f, 'final', table);
+          return this.Table[tbl_nm] = table;
         default:
           return Devl.__super__.loadTable.call(this, tbl_nm);
       }
