@@ -39,6 +39,8 @@
           return encodeURIComponent(val);
         case 'esc':
           return window.EpicMvc.escape_html(val);
+        case '1':
+          return (String(val))[0];
         case 'lc':
           return (String(val)).toLowerCase();
         case 'ucFirst':

@@ -20,6 +20,7 @@ class TagExe
 			when 'bytes' then window.bytesToSize Number val
 			when 'uriencode' then encodeURIComponent val
 			when 'esc' then window.EpicMvc.escape_html val
+			when '1' then (String val)[0]
 			when 'lc' then (String val).toLowerCase()
 			when 'ucFirst'
 				str= (String str).toLowerCase()
