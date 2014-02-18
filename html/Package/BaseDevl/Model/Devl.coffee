@@ -2,7 +2,7 @@
 class Devl extends window.EpicMvc.ModelJS
 	constructor: (Epic,view_nm) ->
 		super Epic, view_nm
-		@opts= file: false, tag: false, tag2: false, form: false, model: true, stack: true
+		@opts= file: false, tag: false, tag2: false, form: false, model: false, stack: true
 		@open_model= ''
 		@open_table= ''
 		@table_row_cnt= 0

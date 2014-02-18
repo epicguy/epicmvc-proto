@@ -15,7 +15,7 @@
         tag: false,
         tag2: false,
         form: false,
-        model: true,
+        model: false,
         stack: true
       };
       this.open_model = '';
