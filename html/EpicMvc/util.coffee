@@ -6,6 +6,7 @@ escape_html= (str) ->
 		.replace(/</g,'&lt;')
 		.replace(/>/g,'&gt;')
 		.replace(/"/g,'&quot;')
+		.replace(/'/g,'&apos;')
 
 
 if window? then window.EpicMvc.escape_html= escape_html

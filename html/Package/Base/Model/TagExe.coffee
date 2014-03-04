@@ -20,7 +20,7 @@ class TagExe
 			when 'bytes' then window.bytesToSize Number val
 			when 'uriencode' then encodeURIComponent val
 			when 'esc' then window.EpicMvc.escape_html val
-			when 'quo' then (val.replace /\\/g, '\\\\').replace /'/g, '\\\'' # Allows an item to be put into single quotes
+			when 'quo' then ((val.replace /\\/g, '\\\\').replace /'/g, '\\\'').replace /"/g, '\\"'  # Allows an item to be put into single quotes
 			when '1' then (String val)[0]
 			when 'lc' then (String val).toLowerCase()
 			when 'ucFirst'

@@ -40,7 +40,7 @@
         case 'esc':
           return window.EpicMvc.escape_html(val);
         case 'quo':
-          return (val.replace(/\\/g, '\\\\')).replace(/'/g, '\\\'');
+          return ((val.replace(/\\/g, '\\\\')).replace(/'/g, '\\\'')).replace(/"/g, '\\"');
         case '1':
           return (String(val))[0];
         case 'lc':
