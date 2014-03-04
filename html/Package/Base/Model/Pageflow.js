@@ -43,7 +43,8 @@
       }
       this.f = f;
       this.t = t;
-      return this.s = s;
+      this.s = s;
+      return this.invalidateTables(['V']);
     };
 
     Pageflow.prototype.go = function(path) {

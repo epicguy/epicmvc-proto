@@ -19,6 +19,7 @@ class Pageflow extends window.EpicMvc.ModelJS
 		else if not s? or not oC.getS( f, t, s)?
 			s= oC.startS f, t
 		@f= f; @t= t; @s= s
+		@invalidateTables ['V'] # This table is specific to the 'path'
 	go: (path) ->
 		q= path.split '/'
 		for v,ix in [@f, @t, @s]
