@@ -31,6 +31,7 @@
         return _results;
       })();
       this.Epic.log1(':ViewExec', this.frames);
+      this.dynamicMap = {};
     }
 
     ViewExe.prototype.init = function(template, page) {

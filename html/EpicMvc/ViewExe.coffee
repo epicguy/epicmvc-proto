@@ -6,6 +6,8 @@ class ViewExe
 		frames= @Epic.oAppConf.getFrames()
 		@frames=( frames[ix] for ix in (nm for nm of frames).sort())
 		@Epic.log1 ':ViewExec', @frames
+		# Init things that may be needed in calls made to this class before my 'init' is called
+		@dynamicMap= {} # Hash by Model:tbl_nm - list of dynamicParts indexes
 	init: (@template, @page) ->
 		@Epic.log2 ':ViewExe.init T:'+ @template, 'P:'+ page, (v for v in (@Epic.getInstance 'Pageflow').getStepPath()).join '/'
 		@instance= @Epic.nextCounter() # Use to ignore delayed requests after a new init occured
