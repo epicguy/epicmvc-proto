@@ -28,6 +28,7 @@ ul.dbg-model.nav ul li a { padding-left: 15px; }
 							</epic:if>
 							<epic:if not_set="&Table/by_col;"> <!-- List of cols -->
 								Column
+								<epic:if set="&Table/is_sub;"><epic:link_action action="dbg_close_subtable" style="padding:0;">^</epic:link_action></epic:if>
 							</epic:if>
 							</th><th>T</th><th center>
 								<epic:if val="&Table/rows;" eq="1">
@@ -60,11 +61,13 @@ ul.dbg-model.nav ul li a { padding-left: 15px; }
 							<epic:if set="&Cols/val;"><td style="color:green;">&Cols/type#1;</td></epic:if>
 							<epic:if not_set="&Cols/val;"><td style="color:red;">&Cols/type#1;</td></epic:if>
 							<td title="&Cols/type;">
-									<epic:if val="&Cols/type;" eq="object">Table [
-										<epic:if set="&Cols/len;">&Cols/len; row<epic:if val="&Cols/len;" ne="1">s</epic:if>
+									<epic:if val="&Cols/type;" eq="object">
+										<epic:if not_set="&Cols/len;"> Table [ empty ]</epic:if>
+										<epic:if set="&Cols/len;">
+											<epic:link_action action="dbg_open_subtable" p:name="&Cols/col;" style="padding:0;">Table</epic:link_action>
+											[&Cols/len; row<epic:if val="&Cols/len;" ne="1">s</epic:if>]
 										</epic:if>
-										<epic:if not_set="&Cols/len;">empty</epic:if>
-									]</epic:if>
+									</epic:if>
 								<epic:if val="&Cols/type;" ne="object">
 									&Cols/val;
 								</epic:if>

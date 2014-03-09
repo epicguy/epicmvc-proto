@@ -20,6 +20,7 @@
       };
       this.open_model = '';
       this.open_table = '';
+      this.open_table_stack = [];
       this.table_row_cnt = 0;
       this.table_by_col = false;
       this.table_col = false;
@@ -34,7 +35,7 @@
     };
 
     Devl.prototype.action = function(act, p) {
-      var f, i, incr, m, r;
+      var dummy, f, i, incr, m, r, _ref;
       f = 'dM:Devl(' + act + ')';
       r = {};
       i = new window.EpicMvc.Issue(this.Epic);
@@ -49,9 +50,25 @@
         case 'open_model':
           if (this.open_model !== p.name) {
             this.open_model = p.name;
+            this.open_table = '';
+            this.open_table_stack = [];
           } else {
             this.open_model = '';
           }
+          delete this.Table.Model;
+          break;
+        case 'close_subtable':
+          if (!this.open_table_stack.length) {
+            return;
+          }
+          _ref = this.open_table_stack.pop(), dummy = _ref[0], this.table_row_cnt = _ref[1], this.table_by_col = _ref[2], this.table_col = _ref[3];
+          delete this.Table.Model;
+          break;
+        case 'open_subtable':
+          this.open_table_stack.push([p.name, this.table_row_cnt, this.table_by_col, this.table_col]);
+          this.table_row_cnt = 0;
+          this.table_by_col = false;
+          this.table_col = false;
           delete this.Table.Model;
           break;
         case 'open_table':
@@ -60,6 +77,7 @@
             this.table_by_col = false;
             this.table_col = false;
             this.open_table = p.name;
+            this.open_table_stack = [];
           } else {
             this.open_table = '';
           }
@@ -89,7 +107,7 @@
     };
 
     Devl.prototype.loadTable = function(tbl_nm) {
-      var col, cols, f, inst, len, nm, rcol, rec, row, rrow, rval, table, tnm, trow, _ref;
+      var cols, f, inst, is_sub, len, nm, open, rcol, rec, rec_s, row, row_inx, rrow, rval, sub_tnm, table, tnm, tnm_s, tref, trow, _i, _len, _ref, _ref1;
       f = 'dM:Devl.loadTable(' + tbl_nm + ')';
       switch (tbl_nm) {
         case 'Opts':
@@ -111,22 +129,31 @@
             _ref = this.Epic.oModel[inst].Table;
             for (tnm in _ref) {
               rec = _ref[tnm];
-              len = rec.length;
-              if (len) {
-                cols = (function() {
-                  var _results;
-                  _results = [];
-                  for (rcol in rec[0]) {
-                    _results.push(rcol);
+              tnm_s = tnm;
+              rec_s = rec;
+              open = false;
+              is_sub = false;
+              if (row.is_open === 'yes' && tnm === this.open_table) {
+                open = true;
+                if (this.open_table_stack.length) {
+                  _ref1 = this.open_table_stack;
+                  for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+                    tref = _ref1[_i];
+                    sub_tnm = tref[0], row_inx = tref[1];
+                    if (!(row_inx in rec_s) || !(sub_tnm in rec_s[row_inx])) {
+                      break;
+                    }
+                    is_sub = true;
+                    rec_s = rec_s[row_inx][sub_tnm];
+                    tnm_s += ',' + sub_tnm;
                   }
-                  return _results;
-                })();
-              } else {
-                cols = [];
+                }
               }
+              len = rec_s.length;
               trow = {
-                is_open: '',
-                name: tnm,
+                is_open: open,
+                is_sub: is_sub,
+                name: tnm_s,
                 rows: len,
                 Cols: [],
                 row_cnt: 0,
@@ -134,8 +161,7 @@
                 curr_col: this.table_col,
                 by_col: this.table_by_col
               };
-              if (tnm === this.open_table) {
-                trow.is_open = 'yes';
+              if (open) {
                 if (this.table_row_cnt < 0) {
                   this.table_row_cnt = len - 1;
                 }
@@ -144,42 +170,47 @@
                 }
                 trow.row_cnt = this.table_row_cnt;
               }
-              trow.cols = len ? ((function() {
-                var _results;
-                _results = [];
-                for (col in rec[0]) {
-                  _results.push(col);
-                }
-                return _results;
-              })()).join(', ') : 'no rows';
               if (len) {
+                cols = (function() {
+                  var _results;
+                  _results = [];
+                  for (rcol in rec_s[0]) {
+                    _results.push(rcol);
+                  }
+                  return _results;
+                })();
+              } else {
+                cols = [];
+              }
+              trow.cols = len ? cols.join(', ') : 'no rows';
+              if (len && open) {
                 if (!this.table_by_col) {
                   trow.Cols = (function() {
-                    var _ref1, _results;
-                    _ref1 = rec[this.table_row_cnt];
+                    var _ref2, _results;
+                    _ref2 = rec_s[this.table_row_cnt];
                     _results = [];
-                    for (rcol in _ref1) {
-                      rval = _ref1[rcol];
+                    for (rcol in _ref2) {
+                      rval = _ref2[rcol];
                       _results.push({
                         type: (rval === null ? 'Null' : typeof rval),
-                        col_ix: cols.indexOf(col),
+                        col_ix: cols.indexOf(rcol),
                         col: rcol,
                         len: rval != null ? rval.length : void 0,
-                        val: rval
+                        val: rval != null ? rval : '???'
                       });
                     }
                     return _results;
                   }).call(this);
                 } else {
                   trow.Rows = (function() {
-                    var _ref1, _results;
+                    var _ref2, _ref3, _results;
                     _results = [];
-                    for (rrow in rec) {
+                    for (rrow in rec_s) {
                       _results.push({
                         row: rrow,
-                        len: (_ref1 = rec[rrow][this.table_col]) != null ? _ref1.length : void 0,
-                        type: (rec[rrow][this.table_col] === null ? 'Null' : typeof rec[rrow][this.table_col]),
-                        val: rec[rrow][this.table_col]
+                        len: (_ref2 = rec_s[rrow][this.table_col]) != null ? _ref2.length : void 0,
+                        type: (rec_s[rrow][this.table_col] === null ? 'Null' : typeof rec_s[rrow][this.table_col]),
+                        val: (_ref3 = rec_s[rrow][this.table_col]) != null ? _ref3 : '???'
                       });
                     }
                     return _results;

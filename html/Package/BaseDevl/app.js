@@ -33,6 +33,13 @@
         call: 'Devl/open_table',
         use_fields: 'name'
       },
+      dbg_open_subtable: {
+        call: 'Devl/open_subtable',
+        use_fields: 'name'
+      },
+      dbg_close_subtable: {
+        call: 'Devl/close_subtable'
+      },
       dbg_table_left: {
         call: 'Devl/table_left'
       },
