@@ -194,7 +194,7 @@ class TagExe
 					break
 				when 'in_list', 'not_in_list'
 					flip= true if nm is 'not_in_list'
-					found_true=(( val.split ',').indexOf left) isnt -1
+					found_true= left in ( val.split ',')
 					break
 				when 'table_has_no_values', 'table_is_empty', 'table_is_not_empty', 'table_has_values'
 					flip= true if nm is 'table_has_no_values' or nm is 'table_is_empty'
@@ -233,6 +233,7 @@ class TagExe
 	Tag_comment: (oPt) -> "\n<!--\n#{@viewExe.doAllParts oPt.parts}\n-->\n"
 
 	Tag_foreach: (oPt) ->
+		f= ':TagExe.Tag_foreach'
 		at_table= @viewExe.handleIt oPt.attrs.table
 		[lh, rh]= at_table.split '/' # Left/right halfs
 		# If left exists, it's nested as table/sub-table else assume model/table
@@ -246,15 +247,16 @@ class TagExe
 		rh_alias= rh # User may alias the tbl name, for e.g. reusable include-parts
 		rh_alias= @viewExe.handleIt oPt.attrs.alias if 'alias' of oPt.attrs
 		@info_foreach[rh_alias]= {}
-		#TODO break_rows_list= [] #TODO @calcBreak tbl.length, oPt
+		break_rows_list= @calcBreak tbl.length, oPt
+		@Epic.log2 f, 'break_rows_list', break_rows_list
 		out= ''
 		limit= tbl.length
 		limit= Number( @viewExe.handleIt oPt.attrs.limit)- 1 if 'limit' of oPt.attrs
 		for row, count in tbl
 			break if count> limit
 			@info_foreach[rh_alias].row= $.extend true, {}, row,
-				_FIRST: count is 0, _LAST: count is tbl.length- 1,
-				_SIZE:tbl.length, _COUNT:count #TODO, _BREAK: count+ 1 in break_rows_list
+				_FIRST: (if count is 0 then 'F' else ''), _LAST: (if count is tbl.length- 1 then 'L' else ''),
+				_SIZE:tbl.length, _COUNT:count, _BREAK: (if count+ 1 in break_rows_list then 'B' else '')
 			out+= @viewExe.doAllParts oPt.parts
 		delete @info_foreach[rh_alias]
 		out
@@ -262,7 +264,7 @@ class TagExe
 		p= oPt.attrs # shortcut
 		break_rows_list= []
 		for nm in [ 'break_min', 'break_fixed', 'break_at', 'break_even']
-			p[nm]= if p[nm]? then @viewExe.handleIt p[nm] else 0
+			p[nm]= if p[nm]? then (Number @viewExe.handleIt p[nm]) else 0
 		check_for_breaks= if p.break_min and sZ< p.break_min then 0 else 1
 		if check_for_breaks and p.break_fixed
 			check_row= p.break_fixed

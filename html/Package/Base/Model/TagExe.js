@@ -3,6 +3,7 @@
   'use strict';
 
   var TagExe,
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __hasProp = {}.hasOwnProperty;
 
   TagExe = (function() {
@@ -364,7 +365,7 @@
             if (nm === 'not_in_list') {
               flip = true;
             }
-            found_true = ((val.split(',')).indexOf(left)) !== -1;
+            found_true = __indexOf.call(val.split(','), left) >= 0;
             break;
           case 'table_has_no_values':
           case 'table_is_empty':
@@ -429,7 +430,8 @@
     };
 
     TagExe.prototype.Tag_foreach = function(oPt) {
-      var at_table, count, lh, limit, oMd, out, rh, rh_alias, row, tbl, _i, _len, _ref;
+      var at_table, break_rows_list, count, f, lh, limit, oMd, out, rh, rh_alias, row, tbl, _i, _len, _ref, _ref1;
+      f = ':TagExe.Tag_foreach';
       at_table = this.viewExe.handleIt(oPt.attrs.table);
       _ref = at_table.split('/'), lh = _ref[0], rh = _ref[1];
       if (lh in this.info_foreach) {
@@ -447,6 +449,8 @@
         rh_alias = this.viewExe.handleIt(oPt.attrs.alias);
       }
       this.info_foreach[rh_alias] = {};
+      break_rows_list = this.calcBreak(tbl.length, oPt);
+      this.Epic.log2(f, 'break_rows_list', break_rows_list);
       out = '';
       limit = tbl.length;
       if ('limit' in oPt.attrs) {
@@ -458,10 +462,11 @@
           break;
         }
         this.info_foreach[rh_alias].row = $.extend(true, {}, row, {
-          _FIRST: count === 0,
-          _LAST: count === tbl.length - 1,
+          _FIRST: (count === 0 ? 'F' : ''),
+          _LAST: (count === tbl.length - 1 ? 'L' : ''),
           _SIZE: tbl.length,
-          _COUNT: count
+          _COUNT: count,
+          _BREAK: ((_ref1 = count + 1, __indexOf.call(break_rows_list, _ref1) >= 0) ? 'B' : '')
         });
         out += this.viewExe.doAllParts(oPt.parts);
       }
@@ -476,7 +481,7 @@
       _ref = ['break_min', 'break_fixed', 'break_at', 'break_even'];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         nm = _ref[_i];
-        p[nm] = p[nm] != null ? this.viewExe.handleIt(p[nm]) : 0;
+        p[nm] = p[nm] != null ? Number(this.viewExe.handleIt(p[nm])) : 0;
       }
       check_for_breaks = p.break_min && sZ < p.break_min ? 0 : 1;
       if (check_for_breaks && p.break_fixed) {
