@@ -7,7 +7,8 @@ ECHO() {
 }
 
 EpicDir=../../html
-OneEpic=../EpicMvc-One-0.0.0-%MD5_EPICMVC%.js
+# OneEpic=../EpicMvc-One-0.0.0-%MD5_EPICMVC%.js
+OneEpic=../EpicMvc-One-0.0.0-latest.js
 EnvPkg=bootstrap
 
 cat copyright.js > $OneEpic
