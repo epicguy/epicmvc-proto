@@ -450,7 +450,6 @@
       }
       this.info_foreach[rh_alias] = {};
       break_rows_list = this.calcBreak(tbl.length, oPt);
-      this.Epic.log2(f, 'break_rows_list', break_rows_list);
       out = '';
       limit = tbl.length;
       if ('limit' in oPt.attrs) {

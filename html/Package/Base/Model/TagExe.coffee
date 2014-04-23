@@ -248,7 +248,7 @@ class TagExe
 		rh_alias= @viewExe.handleIt oPt.attrs.alias if 'alias' of oPt.attrs
 		@info_foreach[rh_alias]= {}
 		break_rows_list= @calcBreak tbl.length, oPt
-		@Epic.log2 f, 'break_rows_list', break_rows_list
+		#@Epic.log2 f, 'break_rows_list', break_rows_list
 		out= ''
 		limit= tbl.length
 		limit= Number( @viewExe.handleIt oPt.attrs.limit)- 1 if 'limit' of oPt.attrs
