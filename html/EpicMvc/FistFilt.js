@@ -2,7 +2,8 @@
 (function() {
   'use strict';
 
-  var FistFilt;
+  var FistFilt,
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   FistFilt = (function() {
 
@@ -81,13 +82,16 @@
     };
 
     FistFilt.CHECK_choice = function(fieldName, validateExpr, value, oF) {
-      var ix;
-      ix = oF.getChoices(fieldName).values.indexOf(value);
-      oF.Epic.log2('CHECK_choice:ix/value/values', ix, value, oF.getChoices(fieldName).values);
-      if (validateExpr) {
-        return ix >= validateExpr;
+      oF.Epic.log2('CHECK_choice:value/values', value, oF.getChoices(fieldName).values);
+      if (__indexOf.call(oF.getChoices(fieldName).values, value) < 0) {
+        return false;
       }
-      return ix !== -1;
+      if (validateExpr) {
+        if (oF.getChoices(fieldName).values[0] === value) {
+          return false;
+        }
+      }
+      return true;
     };
 
     FistFilt.CHECK_email = function(fieldName, validateExpr, value, oF) {

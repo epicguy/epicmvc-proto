@@ -52,10 +52,10 @@
         default:
           if ((spec != null ? spec.length : void 0) > 4 && spec[0] === '?') {
             _ref = spec.substr(2).split('?'), left = _ref[0], right = _ref[1];
-            return ((val === true || (typeof val === 'number' && val)) || (val != null ? val.length : void 0) ? left : right).replace(new RegExp('[' + spec[1] + ']', 'g'), ' ');
+            return ((val === true || (typeof val === 'number' && val)) || (val != null ? val.length : void 0) ? left : right).replace(new RegExp('[' + spec[1] + ']', 'g'), ' '.replace(new RegExp('[%]', 'g'), val));
           } else if (spec != null ? spec.length : void 0) {
             if ((val === true || (typeof val === 'number' && val)) || (val != null ? val.length : void 0)) {
-              return spec.substr(1).replace(new RegExp('[' + spec.substr(0, 1) + ']', 'g'), ' ');
+              return spec.substr(1).replace(new RegExp('[' + spec.substr(0, 1) + ']', 'g'), ' '.replace(new RegExp('[%]', 'g'), val));
             } else {
               return '';
             }

@@ -11,14 +11,16 @@ class LoadStrategy
 		return @cache[full_nm] if @cache[full_nm]?
 		@reverse_packages?=( @Epic.appconfs[i] for i in [@Epic.appconfs.length- 1..0])
 		for pkg in @reverse_packages
-			if p= @preLoaded pkg, type, nm then return p # Compiled and everything
-			results= @getFile pkg, full_nm
+			if p= @preLoaded pkg, type, nm
+				results= p # Compiled and everything
+			else
+				results= @getFile pkg, full_nm
+				results= window.EpicMvc.ParseFile full_nm, results if results isnt false
+			@cache[full_nm]= results if @cache_local_flag and results isnt false
 			break if results isnt false
 		if results is false
 			console.log 'NO FILE FOUND! '+ nm
-		else
-			@cache[nm]= String results if @cache_local_flag
-		window.EpicMvc.ParseFile full_nm, results
+		results
 	getFile: (pkg,nm) ->
 		results= false
 		path= "Package/#{pkg}/view/"

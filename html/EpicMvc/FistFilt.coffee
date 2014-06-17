@@ -66,10 +66,11 @@ class FistFilt
 
 	@CHECK_choice: (fieldName, validateExpr, value, oF) ->
 		# Allow values that are in the pulldown choices (less first choice if validateExpr==1)
-		ix= oF.getChoices(fieldName).values.indexOf value
-		oF.Epic.log2 'CHECK_choice:ix/value/values', ix, value, oF.getChoices(fieldName).values
-		return ix>= validateExpr if validateExpr
-		return ix isnt -1
+		oF.Epic.log2 'CHECK_choice:value/values', value, oF.getChoices(fieldName).values
+		return false if value not in oF.getChoices(fieldName).values
+		if validateExpr
+			return false if oF.getChoices(fieldName).values[0] is value
+		return true
 
 	@CHECK_email: (fieldName, validateExpr, value, oF) ->
 		# 'fieldName' is given for debug messages
