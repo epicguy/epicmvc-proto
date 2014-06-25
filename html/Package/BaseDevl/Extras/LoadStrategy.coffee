@@ -24,6 +24,7 @@ class LoadStrategy
 	getFile: (pkg,nm) ->
 		results= false
 		path= "Package/#{pkg}/view/"
+		path= "EpicPkg/#{pkg}/view/" if pkg in ['Base', 'BaseDevl', 'bootstrap']
 		window.$.ajax
 			url: path+ nm
 			async:false

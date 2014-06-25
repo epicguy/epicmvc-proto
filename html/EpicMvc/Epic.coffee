@@ -99,7 +99,10 @@ class Epic
 		false
 	getFormData: -> @renderer.getFormData()
 	renderStrategy: (content,history,click_index,modal) ->
-		@renderer.render content, history, click_index, modal
+		if content isnt false
+			@renderer.render content, history, click_index, modal
+		else
+			@renderer.handleRenderState history, click_index
 		null
 	render: (template,sp,avoid_form_reset) ->
 		page= @oAppConf.getPage sp
@@ -178,7 +181,10 @@ class Epic
 		@click_path_changed.step=  @click_path_changed.track or (before_sp[2]) isnt (after_sp[2])
 		@modelState= {}
 		@modelState[k]= ss for k,o of @oModel when o.saveState? and ss= o.saveState()
-		@renderSecure() if no_render isnt true or @click_path_changed.step
+		if no_render isnt true or @click_path_changed.step
+			@renderSecure()
+		else
+			@renderStrategy false, 'replace', click_index
 		@inClick= false
 	renderSecure: (avoid_form_reset) ->
 		f= ':renderSecure'

@@ -160,7 +160,8 @@
         throw new Error('History is hosed!');
       }
       if (this.was_modal) {
-        window.$('#' + this.modalId + '>div').modal('hide');
+        window.$('#' + this.modalId + '>div.modal').modal('hide');
+        window.$('.modal-backdrop').remove();
         $('#' + this.modalId).html('');
       }
       if (modal) {

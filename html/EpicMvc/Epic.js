@@ -179,7 +179,11 @@
     };
 
     Epic.prototype.renderStrategy = function(content, history, click_index, modal) {
-      this.renderer.render(content, history, click_index, modal);
+      if (content !== false) {
+        this.renderer.render(content, history, click_index, modal);
+      } else {
+        this.renderer.handleRenderState(history, click_index);
+      }
       return null;
     };
 
@@ -346,6 +350,8 @@
       }
       if (no_render !== true || this.click_path_changed.step) {
         this.renderSecure();
+      } else {
+        this.renderStrategy(false, 'replace', click_index);
       }
       return this.inClick = false;
     };

@@ -129,7 +129,8 @@ class bootstrap
 		#if @was_modal and modal # to avoid 'snap'
 		#	return alert 'Attempting to create a modal, while one is active, may "snap" - check your JavaScript'
 		if @was_modal
-			window.$('#'+@modalId+ '>div').modal 'hide' # Get rid of that backdrop
+			window.$('#'+@modalId+ '>div.modal').modal 'hide' # Get rid of that backdrop
+			window.$('.modal-backdrop').remove()
 			$('#'+@modalId).html ''
 		if modal
 			container= '#'+ @modalId
