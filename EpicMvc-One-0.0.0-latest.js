@@ -42,9 +42,7 @@
       };
     }
 
-    Epic.prototype.log1 = function() {
-      return null;
-    };
+    Epic.prototype.log1 = window.Function.prototype.bind.call(window.console.log, window.console);
 
     Epic.prototype.log2 = window.Function.prototype.bind.call(window.console.log, window.console);
 
@@ -178,7 +176,11 @@
     };
 
     Epic.prototype.renderStrategy = function(content, history, click_index, modal) {
-      this.renderer.render(content, history, click_index, modal);
+      if (content !== false) {
+        this.renderer.render(content, history, click_index, modal);
+      } else {
+        this.renderer.handleRenderState(history, click_index);
+      }
       return null;
     };
 
@@ -345,6 +347,8 @@
       }
       if (no_render !== true || this.click_path_changed.step) {
         this.renderSecure();
+      } else {
+        this.renderStrategy(false, 'replace', click_index);
       }
       return this.inClick = false;
     };
@@ -1305,6 +1309,7 @@
     ViewExe.prototype.doDynamicPart = function(ix, instance) {
       var f, old_dynamic_ix, part, watch, _i, _len, _ref;
       f = ':ViewExe.doDynamicPart:' + ix;
+      this.Epic.log2(f, 'i,@i,p(i)', instance, this.instance, this.part(ix));
       if (instance !== this.instance) {
         return;
       }
@@ -1368,6 +1373,7 @@
     ViewExe.prototype.addDynamicPart = function(info) {
       var f;
       f = ':ViewExe.addDynamicPart';
+      this.Epic.log2(f, info, this.activeDynamicPartIx, this.part());
       if (this.activeDynamicPartIx !== 0) {
         alert('Nested dynamic parts not really supported just now.');
       }
@@ -1388,6 +1394,7 @@
       var delay, f, inst, instance, ix, ix_list, nm, now, part, sched, sofar, tbl_nm, _i, _j, _len, _len1, _ref,
         _this = this;
       f = ':ViewExe.invalidateTables';
+      this.Epic.log2(f, view_nm, tbl_nms, (this.Epic.inClick ? 'IN' : void 0), this.dynamicParts, this.dynamicMap);
       sched = [];
       if (this.dynamicParts.length === 1) {
         return 'no dynamic parts';
@@ -2499,14 +2506,50 @@
     }
 
     TagExe.prototype.resetForNextRequest = function(state) {
+      var dyn_list, dyn_list_orig, dyn_m, dyn_t, f, info_parts, nm, oM, prev_row, rec, rh, rh_alias, row, row_num, t_set, tbl, _i, _len, _ref;
+      f = 'Base::TagExe.resetForNextRequest:state?' + (state ? 'T' : 'F');
       this.forms_included = {};
       this.fist_objects = {};
       this.info_foreach = {};
       this.info_if_nms = {};
       this.info_varGet3 = {};
       this.info_parts = [];
+      this.Epic.log2(f, 'state', state);
       if (state) {
-        return this.info_foreach = $.extend(true, {}, state);
+        _ref = state.info_foreach.dyn;
+        for (nm in _ref) {
+          rec = _ref[nm];
+          this.Epic.log2(f, 'info_foreach nm=', nm, rec);
+          dyn_m = rec[0], dyn_t = rec[1], dyn_list_orig = rec[2];
+          dyn_list = [];
+          oM = this.Epic.getInstance(dyn_m);
+          for (_i = 0, _len = dyn_list_orig.length; _i < _len; _i++) {
+            t_set = dyn_list_orig[_i];
+            this.Epic.log2(f, nm, 't_set', t_set);
+            rh = t_set[0], rh_alias = t_set[1];
+            dyn_list.push(t_set);
+            if (!(rh_alias in this.info_foreach)) {
+              this.Epic.log2(f, nm, 'rh_alias', rh_alias);
+              if (dyn_list.length === 1) {
+                tbl = oM.getTable(rh);
+              } else {
+                tbl = prev_row[rh];
+              }
+              row_num = state.info_foreach.row_num[rh_alias];
+              row = $.extend(true, {}, tbl[row_num]);
+              this.info_foreach[rh_alias] = {
+                dyn: [dyn_m, dyn_t, dyn_list],
+                row: row
+              };
+              prev_row = row;
+            } else {
+              prev_row = this.info_foreach[rh_alias].row;
+            }
+          }
+        }
+        info_parts = $.extend(true, {}, state.info_parts);
+        this.info_parts = info_parts.stuff;
+        return this.Epic.log2(f, 'info_parts', this.info_parts);
       }
     };
 
@@ -2535,10 +2578,10 @@
         default:
           if ((spec != null ? spec.length : void 0) > 4 && spec[0] === '?') {
             _ref = spec.substr(2).split('?'), left = _ref[0], right = _ref[1];
-            return ((val === true || (typeof val === 'number' && val)) || (val != null ? val.length : void 0) ? left : right).replace(new RegExp('[' + spec[1] + ']', 'g'), ' ');
+            return ((val === true || (typeof val === 'number' && val)) || (val != null ? val.length : void 0) ? left : right).replace(new RegExp('[' + spec[1] + ']', 'g'), ' ').replace(new RegExp('[%]', 'g'), val);
           } else if (spec != null ? spec.length : void 0) {
             if ((val === true || (typeof val === 'number' && val)) || (val != null ? val.length : void 0)) {
-              return spec.substr(1).replace(new RegExp('[' + spec.substr(0, 1) + ']', 'g'), ' ');
+              return spec.substr(1).replace(new RegExp('[' + spec.substr(0, 1) + ']', 'g'), ' ').replace(new RegExp('[%]', 'g'), val);
             } else {
               return '';
             }
@@ -2573,7 +2616,7 @@
     };
 
     TagExe.prototype.checkForDynamic = function(oPt) {
-      var attr, delay, id, plain_attrs, state, tag, val, _ref;
+      var attr, delay, dyn, id, nm, plain_attrs, rec, row_num, state, tag, val, _ref, _ref1;
       tag = 'dynamic' in oPt.attrs ? this.viewExe.handleIt(oPt.attrs.dynamic) : '';
       if (tag.length === 0) {
         return ['', '', false];
@@ -2598,7 +2641,23 @@
             plain_attrs.push("" + attr + "=\"" + (this.viewExe.handleIt(val)) + "\"");
         }
       }
-      state = $.extend(true, {}, this.info_foreach);
+      dyn = {};
+      row_num = {};
+      _ref1 = this.info_foreach;
+      for (nm in _ref1) {
+        rec = _ref1[nm];
+        dyn[nm] = rec.dyn;
+        row_num[nm] = rec.row._COUNT;
+      }
+      state = $.extend(true, {}, {
+        info_foreach: {
+          dyn: dyn,
+          row_num: row_num
+        },
+        info_parts: {
+          stuff: this.info_parts
+        }
+      });
       return [
         "<" + tag + " id=\"" + id + "\" " + (plain_attrs.join(' ')) + ">", "</" + tag + ">", {
           id: id,
@@ -2776,7 +2835,7 @@
     };
 
     TagExe.prototype.ifAnyAll = function(oPt, is_if_any) {
-      var f, flip, found_nm, found_true, left, lh, nm, oMd, op, out, rh, right, tbl, use_op, val, _ref, _ref1;
+      var f, flip, found_nm, found_true, left, lh, nm, op, out, rh, right, tbl, use_op, val, _ref, _ref1;
       f = ':TagExe.ifAnyAll';
       out = '';
       found_nm = false;
@@ -2858,13 +2917,7 @@
               flip = true;
             }
             _ref1 = val.split('/'), lh = _ref1[0], rh = _ref1[1];
-            if (lh in this.info_foreach) {
-              tbl = this.info_foreach[lh].row[rh];
-            } else {
-              this.viewExe.haveTableRefrence(lh, rh);
-              oMd = this.Epic.getInstance(lh);
-              tbl = oMd.getTable(rh);
-            }
+            tbl = this._accessModelTable(val, false)[0];
             found_true = tbl.length !== 0;
             break;
           case 'if_true':
@@ -2908,30 +2961,44 @@
       return out;
     };
 
+    TagExe.prototype._accessModelTable = function(spec, alias, spec_was_handled) {
+      var at_table, dyn_list, dyn_m, dyn_t, lh, oM, rh, rh_alias, tbl, _ref, _ref1, _ref2;
+      at_table = spec_was_handled ? spec : this.viewExe.handleIt(spec);
+      _ref = at_table.split('/'), lh = _ref[0], rh = _ref[1];
+      if (lh in this.info_foreach) {
+        tbl = this.info_foreach[lh].row[rh];
+        _ref1 = this.info_foreach[lh].dyn, dyn_m = _ref1[0], dyn_t = _ref1[1], dyn_list = _ref1[2];
+      } else {
+        oM = this.Epic.getInstance(lh);
+        tbl = oM.getTable(rh);
+        _ref2 = [lh, rh, []], dyn_m = _ref2[0], dyn_t = _ref2[1], dyn_list = _ref2[2];
+      }
+      this.viewExe.haveTableRefrence(dyn_m, dyn_t);
+      if (tbl.length === 0) {
+        return [tbl, rh, lh, rh, oM];
+      }
+      rh_alias = rh;
+      if (alias) {
+        rh_alias = this.viewExe.handleIt(alias);
+      }
+      dyn_list.push([rh, rh_alias]);
+      this.info_foreach[rh_alias] = {
+        dyn: [dyn_m, dyn_t, dyn_list]
+      };
+      return [tbl, rh_alias, lh, rh, oM];
+    };
+
     TagExe.prototype.Tag_comment = function(oPt) {
       return "\n<!--\n" + (this.viewExe.doAllParts(oPt.parts)) + "\n-->\n";
     };
 
     TagExe.prototype.Tag_foreach = function(oPt) {
-      var at_table, break_rows_list, count, f, lh, limit, oMd, out, rh, rh_alias, row, tbl, _i, _len, _ref, _ref1;
+      var break_rows_list, count, f, limit, out, rh_alias, row, tbl, _i, _len, _ref, _ref1;
       f = ':TagExe.Tag_foreach';
-      at_table = this.viewExe.handleIt(oPt.attrs.table);
-      _ref = at_table.split('/'), lh = _ref[0], rh = _ref[1];
-      if (lh in this.info_foreach) {
-        tbl = this.info_foreach[lh].row[rh];
-      } else {
-        this.viewExe.haveTableRefrence(lh, rh);
-        oMd = this.Epic.getInstance(lh);
-        tbl = oMd.getTable(rh);
-      }
+      _ref = this._accessModelTable(oPt.attrs.table, oPt.attrs.alias), tbl = _ref[0], rh_alias = _ref[1];
       if (tbl.length === 0) {
         return '';
       }
-      rh_alias = rh;
-      if ('alias' in oPt.attrs) {
-        rh_alias = this.viewExe.handleIt(oPt.attrs.alias);
-      }
-      this.info_foreach[rh_alias] = {};
       break_rows_list = this.calcBreak(tbl.length, oPt);
       out = '';
       limit = tbl.length;
@@ -3354,6 +3421,52 @@
 
 }).call(this);
 
+/*Package/Base/Extras/Push.coffee*/// Generated by CoffeeScript 1.4.0
+(function() {
+  var Push,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+  Push = (function() {
+
+    function Push(io, host, port, push_url) {
+      this._onUpdate = __bind(this._onUpdate, this);
+
+      var f;
+      f = 'Push:';
+      this.handlers = {};
+      this.socket = io.connect('http://' + host + ':' + port + '/' + push_url);
+      this.socket.on('connected', this._onConnected);
+      this.socket.on('update', this._onUpdate);
+    }
+
+    Push.prototype.sync = function(push_handle, syncFunc) {
+      var f;
+      f = 'Push:sync:';
+      _log2(f, push_handle);
+      this.handlers[push_handle] = syncFunc;
+      return this.socket.emit('listen', push_handle);
+    };
+
+    Push.prototype._onConnected = function() {
+      var f;
+      f = 'Push:_onConnected:';
+      return _log2(f, 'connected to server');
+    };
+
+    Push.prototype._onUpdate = function(data) {
+      var f;
+      f = 'Push:_onUpdate:';
+      return this.handlers[data.push_handle](data.sync);
+    };
+
+    return Push;
+
+  })();
+
+  window.EpicMvc.Extras.Push = Push;
+
+}).call(this);
+
 /*Package/Base/Extras/LoadStrategy.coffee*/// Generated by CoffeeScript 1.4.0
 (function() {
   var LoadStrategy;
@@ -3708,10 +3821,8 @@ tmpl: {
 (function() {
   'use strict';
 
-  var bootstrap, _log2,
+  var bootstrap,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
-
-  _log2 = function() {};
 
   bootstrap = (function() {
 
@@ -3866,7 +3977,8 @@ tmpl: {
         throw new Error('History is hosed!');
       }
       if (this.was_modal) {
-        window.$('#' + this.modalId + '>div').modal('hide');
+        window.$('#' + this.modalId + '>div.modal').modal('hide');
+        window.$('.modal-backdrop').remove();
         $('#' + this.modalId).html('');
       }
       if (modal) {
@@ -4729,27 +4841,33 @@ tmpl: {
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
         pkg = _ref1[_i];
         if (p = this.preLoaded(pkg, type, nm)) {
-          return p;
+          results = p;
+        } else {
+          results = this.getFile(pkg, full_nm);
+          if (results !== false) {
+            results = window.EpicMvc.ParseFile(full_nm, results);
+          }
         }
-        results = this.getFile(pkg, full_nm);
+        if (this.cache_local_flag && results !== false) {
+          this.cache[full_nm] = results;
+        }
         if (results !== false) {
           break;
         }
       }
       if (results === false) {
         console.log('NO FILE FOUND! ' + nm);
-      } else {
-        if (this.cache_local_flag) {
-          this.cache[nm] = String(results);
-        }
       }
-      return window.EpicMvc.ParseFile(full_nm, results);
+      return results;
     };
 
     LoadStrategy.prototype.getFile = function(pkg, nm) {
       var path, results;
       results = false;
       path = "Package/" + pkg + "/view/";
+      if (pkg === 'Base' || pkg === 'BaseDevl' || pkg === 'bootstrap') {
+        path = "EpicPkg/" + pkg + "/view/";
+      }
       window.$.ajax({
         url: path + nm,
         async: false,

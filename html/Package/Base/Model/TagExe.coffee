@@ -57,16 +57,16 @@ class TagExe
 				if spec?.length> 4 and spec[0] is '?' # Ex. &Model/Tbl/val#?.true?false;
 					[left,right]= spec.substr(2).split '?'
 					(if (val is true or (typeof val== 'number' && val)) or val?.length then left else right)
-						.replace (new RegExp '['+ spec[1]+ ']', 'g'), ' '
-						.replace (new RegExp '[%]', 'g'), val
+						.replace( (new RegExp '['+ spec[1]+ ']', 'g'), ' ')
+						.replace( (new RegExp '[%]', 'g'), val)
 				else if spec?.length
 					# Default spec
 					# if val is set, xlate spec to a string w/replaced spaces using first char
 					# Ex. &Model/Table/flag#.Replace.with.this.string; (Don't use / or ; or # in the string though)
 					if (val is true or (typeof val== 'number' && val)) or val?.length
 						spec.substr(1)
-							.replace (new RegExp '['+ spec.substr(0,1)+ ']', 'g'), ' '
-							.replace (new RegExp '[%]', 'g'), val
+							.replace( (new RegExp '['+ spec.substr(0,1)+ ']', 'g'), ' ')
+							.replace( (new RegExp '[%]', 'g'), val)
 					else ''
 				else val
 	varGet3: (view_nm, tbl_nm, key, format_spec, custom_spec) ->
