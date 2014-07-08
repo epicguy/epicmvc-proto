@@ -5,14 +5,41 @@ class TagExe
 		@viewExe= @Epic.getView()
 		@resetForNextRequest()
 	resetForNextRequest: (state) ->
+		f= 'Base::TagExe.resetForNextRequest:state?'+ if state then 'T' else 'F'
 		@forms_included= {}
 		@fist_objects= {}
 		@info_foreach= {} # [table-name|subtable-name]['table'&'row'&'size'&'count']=value
 		@info_if_nms= {} # [if-name]=boolean (from <if_xxx name="if-name" ..>
 		@info_varGet3= {} # for &obj/table/var; type variables
 		@info_parts= [] # Push p:attrs with each part, then pop; getTable uses last pushed
+		@Epic.log2 f, 'state', state
 		if state
-			@info_foreach= $.extend true, {}, state
+			for nm,rec of state.info_foreach.dyn
+				@Epic.log2 f, 'info_foreach nm=', nm, rec
+				[dyn_m, dyn_t, dyn_list_orig]= rec
+				dyn_list= []
+				oM= @Epic.getInstance dyn_m
+				for t_set in dyn_list_orig
+					@Epic.log2 f, nm, 't_set', t_set
+					[rh, rh_alias]= t_set
+					dyn_list.push t_set
+					if rh_alias not of @info_foreach
+						@Epic.log2 f, nm, 'rh_alias', rh_alias
+						# TODO CONSIDER TABLES THAT HOW HAVE NO ROWS OR LESS THAN ROW_NUM
+						# TODO FULLY NESTED DYNAMIC PARTS THAT REBUILD FROM THE PARENT REFERENCE WILL HELP WITH THE ABOVE ISSUE
+						if dyn_list.length is 1 # Get table from model, else nested
+							tbl= oM.getTable rh
+						else
+							tbl= prev_row[ rh]
+						row_num= state.info_foreach.row_num[ rh_alias]
+						row= $.extend true, {}, tbl[ row_num] # TODO DOES NOT HAVE TAG_FOREACH'S _COUNT, _FIRST, ETC.
+						@info_foreach[ rh_alias]= dyn: [dyn_m, dyn_t, dyn_list], row: row
+						prev_row= row
+					else prev_row= @info_foreach[ rh_alias].row
+
+			info_parts= $.extend true, {}, state.info_parts
+			@info_parts= info_parts.stuff # Added 'stuff' for an array vs. an object
+			@Epic.log2 f, 'info_parts', @info_parts
 	formatFromSpec: (val, spec, custom_spec) ->
 		switch spec
 			when '' then window.EpicMvc.custom_filter? val, custom_spec
@@ -65,7 +92,12 @@ class TagExe
 				when 'delay' then delay= @viewExe.handleIt val
 				when 'id' then id= @viewExe.handleIt val
 				else plain_attrs.push "#{attr}=\"#{@viewExe.handleIt val}\""
-		state= $.extend true, {}, @info_foreach # TODO SNAPSHOT MORE STUFF?
+		# TODO SNAPSHOT MORE STUFF?
+		dyn= {}; row_num= {}
+		( dyn[ nm]= rec.dyn; row_num[ nm]= rec.row._COUNT) for nm,rec of @info_foreach
+		state= $.extend true, {},
+			info_foreach: {dyn,row_num}
+			info_parts: stuff: @info_parts
 		return [ "<#{tag} id=\"#{id}\" #{plain_attrs.join ' '}>", "</#{tag}>",
 			id: id, delay: delay* 1000, state: state]
 	loadPartAttrs: (oPt) ->
@@ -203,12 +235,7 @@ class TagExe
 					flip= true if nm is 'table_has_no_values' or nm is 'table_is_empty'
 					[lh, rh]= val.split '/' # Left/right halfs
 					# If left exists, it's nested as table/sub-table else assume model/table
-					if lh of @info_foreach
-						tbl= @info_foreach[lh].row[rh]
-					else
-						@viewExe.haveTableRefrence lh, rh
-						oMd= @Epic.getInstance lh
-						tbl= oMd.getTable rh
+					[tbl]= @_accessModelTable val, false
 					found_true= tbl.length isnt 0
 					break
 				when 'if_true', 'if_false'
@@ -233,23 +260,37 @@ class TagExe
 			@info_if_nms[found_nm]= found_true
 		out= @viewExe.doAllParts oPt.parts if found_true
 		out
+
+	# Make sure state contains orignal table reference, for dynmaic parts, etc. and create a 'build' list for dynamic restore-state
+	_accessModelTable: (spec, alias, spec_was_handled) ->
+
+		at_table= if spec_was_handled then spec else @viewExe.handleIt spec
+		[lh, rh]= at_table.split '/' # Left/right halfs
+		if lh of @info_foreach # Nested table reference
+			tbl= @info_foreach[lh].row[rh]
+			[dyn_m, dyn_t, dyn_list]= @info_foreach[ lh].dyn
+		else
+			oM= @Epic.getInstance lh
+			tbl= oM.getTable rh
+			[dyn_m, dyn_t, dyn_list]= [ lh, rh, []]
+
+		@viewExe.haveTableRefrence dyn_m, dyn_t # Requires only base model/table
+
+		return [tbl, rh, lh, rh, oM] if tbl.length is 0 # No rows, so no need to store state nor reference alias
+
+		rh_alias= rh # User may alias the tbl name, for e.g. reusable include-parts
+		rh_alias= @viewExe.handleIt alias if alias
+		dyn_list.push [rh, rh_alias]
+		@info_foreach[rh_alias]= dyn: [dyn_m, dyn_t, dyn_list]
+
+		[tbl, rh_alias, lh, rh, oM]
+
 	Tag_comment: (oPt) -> "\n<!--\n#{@viewExe.doAllParts oPt.parts}\n-->\n"
 
 	Tag_foreach: (oPt) ->
 		f= ':TagExe.Tag_foreach'
-		at_table= @viewExe.handleIt oPt.attrs.table
-		[lh, rh]= at_table.split '/' # Left/right halfs
-		# If left exists, it's nested as table/sub-table else assume model/table
-		if lh of @info_foreach
-			tbl= @info_foreach[lh].row[rh]
-		else
-			@viewExe.haveTableRefrence lh, rh
-			oMd= @Epic.getInstance lh
-			tbl= oMd.getTable rh
+		[tbl, rh_alias]= @_accessModelTable oPt.attrs.table, oPt.attrs.alias
 		return '' if tbl.length is 0 # No rows means no output
-		rh_alias= rh # User may alias the tbl name, for e.g. reusable include-parts
-		rh_alias= @viewExe.handleIt oPt.attrs.alias if 'alias' of oPt.attrs
-		@info_foreach[rh_alias]= {}
 		break_rows_list= @calcBreak tbl.length, oPt
 		#@Epic.log2 f, 'break_rows_list', break_rows_list
 		out= ''
