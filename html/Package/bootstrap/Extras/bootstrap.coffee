@@ -24,6 +24,7 @@ class bootstrap
 		#window.onhashchange = @LocationHashChanged
 		#TODO DETECT MANUAL HASHCHANGE window.onhashchange = (a) -> console.log 'onhashChange', a; alert 'hashChange'
 		window.onpopstate = @onPopState
+		$(document).on 'hidden.bs.modal', => @Epic.makeClick false, 'close_modal', {}, true
 		true
 	UnloadMessage: (ix,msg) ->
 		if msg
@@ -136,8 +137,6 @@ class bootstrap
 			container= '#'+ @modalId
 			$(container).html content
 			window.$('#'+@modalId+ ' div.modal').modal() # Activate it (must include boostrap-modal.js)
-			.on 'hidden', =>
-				@Epic.makeClick false, 'close_modal', {}, true
 		else
 			container= '#'+ @baseId
 			$(container).html content

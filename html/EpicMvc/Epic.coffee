@@ -25,10 +25,10 @@ class Epic
 		@options=
 			click_warning_text: 'WARNING: Still processing previous click event (check for javascript errors.)'
 
-	#log1: window.Function.prototype.bind.call( window.console.log, window.console)
-	log1: () -> null
-	#log2: window.Function.prototype.bind.call( window.console.log, window.console)
-	log2: () -> null
+	log1: window.Function.prototype.bind.call( window.console.log, window.console)
+	#log1: () -> null
+	log2: window.Function.prototype.bind.call( window.console.log, window.console)
+	#log2: () -> null
 	nextCounter: -> ++@counter
 	getPageflowPath: () ->
 		@getInstance( 'Pageflow').getStepPath().join '/'

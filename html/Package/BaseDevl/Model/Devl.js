@@ -16,7 +16,7 @@
         tag2: false,
         form: false,
         model: false,
-        stack: true
+        stack: false
       };
       this.open_model = '';
       this.open_table = '';

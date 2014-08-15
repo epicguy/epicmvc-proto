@@ -50,16 +50,6 @@
     ClickAction.prototype.doAction = function(node, prev_action_result) {
       var a_params_list, alias_params, class_method, dummy, f, found_result_tag, k, look_for_macro_result_tags, macro_node, path, r, rIssues, rMessages, rResults, r_vals, v;
       f = ":ClickAction.doAction(" + (node.getTarget()) + ")";
-      this.Epic.log2(f, 'getPAttrs/node/prev_action_result', ((function() {
-        var _ref, _results;
-        _ref = node.getPAttrs();
-        _results = [];
-        for (k in _ref) {
-          v = _ref[k];
-          _results.push("" + k + "=" + v);
-        }
-        return _results;
-      })()).join(', '), node, prev_action_result);
       r_vals = this.Epic.request().getValues();
       a_params_list = this.pullValueUsingAttr(node, r_vals, prev_action_result);
       class_method = node.getTarget();
@@ -94,17 +84,19 @@
     };
 
     ClickAction.prototype.pullValueUsingAttr = function(node, r_vals, prev_action_result) {
-      var a_params_list, attr, f, fields_list, form_name, oF;
+      var a_params_list, attr, f, fields_list, form_name, nm, oF;
       f = ':ClickAction.pullValueUsingAttr';
-      this.Epic.log2(f, {
-        node: node,
-        r_vals: r_vals,
-        prev_action_result: prev_action_result
-      });
       a_params_list = $.extend({}, node.getPAttrs());
       if (form_name = node.hasAttr('use_form')) {
         oF = this.Epic.getFistInstance(form_name);
-        fields_list = oF.getHtmlPostedFieldsList(form_name);
+        fields_list = (function() {
+          var _results;
+          _results = [];
+          for (nm in oF.getHtmlFieldValues()) {
+            _results.push(nm);
+          }
+          return _results;
+        })();
         $.extend(a_params_list, this.pullValues(r_vals, fields_list, 'use_form'));
       }
       if (attr = node.hasAttr('use_fields')) {

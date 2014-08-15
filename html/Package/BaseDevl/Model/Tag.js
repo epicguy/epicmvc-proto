@@ -39,8 +39,7 @@
         if (this.errors_cache._COUNT < 5) {
           _log2('### _Error type/key/e', type, key, e);
           msg = ((("" + key + "\n\n" + e.message).replace(/&lt;/g, '<')).replace(/&gt;/g, '>')).replace(/&amp;/g, '&');
-          prefix = type === 'varGet2' || type === 'varGet3' ? 'Variable reference' : 'Tag';
-          return window.alert("" + prefix + " error (" + type + "):\n\n" + msg);
+          return prefix = type === 'varGet2' || type === 'varGet3' ? 'Variable reference' : 'Tag';
         }
       }
     };
@@ -231,6 +230,9 @@
         at_table = this.viewExe.handleIt(oPt.attrs.table);
         _ref = at_table.split('/'), lh = _ref[0], rh = _ref[1];
         if (lh in this.info_foreach) {
+          if (!(rh in this.info_foreach[lh].row)) {
+            throw new Error("Sub-table missing: (" + rh + ")");
+          }
           tbl = this.info_foreach[lh].row[rh];
         } else {
           oMd = this.Epic.getInstance(lh);
@@ -385,7 +387,7 @@
       });
       stack = this.Opts().stack ? "<pre>\n" + e.stack + "</pre>" : '';
       title = (e.stack.split('\n'))[1];
-      return "<div class=\"dbg-" + type + "-error-box\">\n" + (this._TagText(oPt, true)) + "<span title=\"" + title + "\">- " + e.message + "</span>\n</div>" + stack;
+      return "<div class=\"dbg-" + type + "-error-box\">\n" + (this._TagText(oPt, true)) + "<br><span class=\"dbg-" + type + "-error-msg\" title=\"" + title + "\">" + e.message + "</span>\n</div>" + stack;
     };
 
     return TagExe;

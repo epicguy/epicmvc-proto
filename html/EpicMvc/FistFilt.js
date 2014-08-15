@@ -55,6 +55,7 @@
       var check_pat, re;
       switch (validateExpr) {
         case void 0:
+          value = value.replace(/[^0-9]/g, '');
           check_pat = '[0-9]{10}';
           break;
         default:
@@ -139,8 +140,22 @@
     };
 
     FistFilt.H2D_date_psuedo = function(fieldName, filtExpr, value) {
-      var Y, d, m;
+      var Y, d, f, m;
+      f = 'FF:H2D_date_psuedo';
+      oF.Epic.log2(f, fieldName, filtExpr, value);
       m = value[0], d = value[1], Y = value[2];
+      if (!((m != null) || (d != null) || (Y != null))) {
+        return '';
+      }
+      if (m == null) {
+        m = '';
+      }
+      if (d == null) {
+        d = '';
+      }
+      if (Y == null) {
+        Y = '';
+      }
       if (m.length === 1) {
         m = '0' + m;
       }
@@ -179,6 +194,7 @@
     };
 
     FistFilt.D2H_phone = function(fieldName, filtExpr, value) {
+      value = value.replace(/[^0-9]/g, '');
       return value.replace(/(...)(...)(...)/, '($1) $2-$3');
     };
 
@@ -187,8 +203,10 @@
     };
 
     FistFilt.D2H_date_psuedo = function(fieldName, filtExpr, value) {
-      var Y, d, m, _ref;
-      _ref = value.split('-'), Y = _ref[0], m = _ref[1], d = _ref[2];
+      var Y, d, f, m, _ref;
+      f = 'FF:D2H_date_psuedo';
+      oF.Epic.log2(f, fieldName, filtExpr, value);
+      _ref = ((value != null ? value : '--').split(/[^0-9-]/))[0].split('-'), Y = _ref[0], m = _ref[1], d = _ref[2];
       return [(m != null ? m : '').replace(/^0/, ''), (d != null ? d : '').replace(/^0/, ''), Y];
     };
 

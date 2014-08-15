@@ -53,7 +53,9 @@ class FistFilt
 
 	@CHECK_phone: (fieldName, validateExpr, value, oF) ->
 		switch validateExpr
-			when undefined then check_pat = '[0-9]{10}'
+			when undefined
+				value= value.replace /[^0-9]/g, ''
+				check_pat = '[0-9]{10}'
 			else BROKE()
 		re = new RegExp('^' + check_pat + '$')
 		if value.match re then true else false
@@ -104,8 +106,13 @@ class FistFilt
 		value
 
 	@H2D_date_psuedo: (fieldName, filtExpr, value) ->
+		f= 'FF:H2D_date_psuedo'
+		oF.Epic.log2 f, fieldName, filtExpr, value
 		# It's a list of control values (m/d/Y); db wants YYYY-MM-DD
 		[m,d,Y] = value
+		# TODO WHAT TO DO IF NOTHING ENTERED, AND NEED TO CHECK 'REQ' VS. VALID
+		return '' unless m? or d? or Y?
+		m?= ''; d?= ''; Y?= ''
 		m = '0' + m if m.length is 1
 		d = '0' + d if d.length is 1
 		"#{Y}-#{m}-#{d}"
@@ -130,14 +137,17 @@ class FistFilt
 	@D2H_null:      -> @D2H_.apply @, arguments # Alias
 
 	@D2H_phone: (fieldName, filtExpr, value) ->
+		value= value.replace /[^0-9]/g, ''# TODO: Remove if needed to handle international dates
 		value.replace /(...)(...)(...)/, '($1) $2-$3'
 
 	@D2H_date: (fieldName, filtExpr, value) ->
 		@D2H_date_psuedo(fieldName, filtExpr, value).join '/'
 
 	@D2H_date_psuedo: (fieldName, filtExpr, value) ->
+		f= 'FF:D2H_date_psuedo'
+		oF.Epic.log2 f, fieldName, filtExpr, value
 		# Control want's (m, d, y)
-		[Y, m, d]= value.split '-'
+		[Y, m, d]= ((value ? '--').split /[^0-9-]/)[0].split '-'
 		[((m ? '').replace /^0/, ''), ((d ? '').replace /^0/, ''), Y]
 
 	@D2H_blank_is_zero: (fieldName, filtExpr, value) ->

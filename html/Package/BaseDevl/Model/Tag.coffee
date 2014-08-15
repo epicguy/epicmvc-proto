@@ -21,7 +21,7 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 					.replace /&gt;/g, '>')
 					.replace /&amp;/g, '&'
 				prefix= if type is 'varGet2' or type is 'varGet3' then 'Variable reference' else 'Tag'
-				window.alert "#{prefix} error (#{type}):\n\n#{msg}"
+				#TODO CHROME BUG NOT SHOWING POPUP window.alert "#{prefix} error (#{type}):\n\n#{msg}"
 	Tag_defer: (oPt) ->
 		@in_defer= true; out= super oPt; @in_defer= false; out
 	Tag_debug: (oPt) ->
@@ -141,6 +141,7 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 			[lh, rh]= at_table.split '/' # Left/right halfs
 			# If left exists, it's nested as table/sub-table else assume model/table
 			if lh of @info_foreach
+				throw new Error "Sub-table missing: (#{rh})" if rh not of @info_foreach[lh].row
 				tbl= @info_foreach[lh].row[rh]
 			else
 				oMd= @Epic.getInstance lh
@@ -241,7 +242,7 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 		title= (e.stack.split '\n')[1]
 		"""
 <div class="dbg-#{type}-error-box">
-#{@_TagText oPt, true}<span title="#{title}">- #{e.message}</span>
+#{@_TagText oPt, true}<br><span class="dbg-#{type}-error-msg" title="#{title}">#{e.message}</span>
 </div>#{stack}
 """
 

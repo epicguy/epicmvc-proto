@@ -8,12 +8,55 @@
     function Push(io, host, port, push_url) {
       this._onUpdate = __bind(this._onUpdate, this);
 
-      var f;
+      var f, opts, uri,
+        _this = this;
       f = 'Push:';
       this.handlers = {};
-      this.socket = io.connect('http://' + host + ':' + port + '/' + push_url);
+      uri = 'http://' + host + ':' + port + '/' + push_url;
+      opts = {
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 10000,
+        reconnectionAttempts: 10
+      };
+      this.socket = io.connect(uri, opts);
+      this.manager = this.socket.io;
+      _log2(f, 'manager:', this.manager);
       this.socket.on('connected', this._onConnected);
       this.socket.on('update', this._onUpdate);
+      this.socket.on('connect', function() {
+        f = 'Push:socket:connect:';
+        return _log2(f, 'got connected');
+      });
+      this.socket.on('disconnect', function(reason) {
+        f = 'Push:socket:disconnect:';
+        return _log2(f, reason);
+      });
+      this.socket.on('reconnect_attempt', function(nextAttemptNum) {
+        f = 'Push:socket:reconnect_attempt:';
+        return _log2(f, 'about to try for the:', nextAttemptNum, 'time');
+      });
+      this.socket.on('reconnecting', function(attemptNum) {
+        f = 'Push:socket:reconnecting:';
+        return _log2(f, 'attempting reconnect for the:', attemptNum, 'time');
+      });
+      this.socket.on('reconnect_error', function(error) {
+        f = 'Push:socket:reconnect_error:';
+        return _log2(f, error.type, ":", error.message);
+      });
+      this.socket.on('reconnect', function(attemptNum) {
+        f = 'Push:socket:reconnect:';
+        return _log2(f, 'success after attempt:', attemptNum);
+      });
+      this.socket.on('reconnect_failed', function() {
+        f = 'Push:socket:reconnect_failed:';
+        return _log2(f, 'giving up trying to reconnect');
+      });
+      this.socket.on('error', function(error) {
+        f = 'Push:socket:error:';
+        return _log2(f, {
+          error: error
+        });
+      });
     }
 
     Push.prototype.sync = function(push_handle, syncFunc) {

@@ -41,13 +41,9 @@
       };
     }
 
-    Epic.prototype.log1 = function() {
-      return null;
-    };
+    Epic.prototype.log1 = window.Function.prototype.bind.call(window.console.log, window.console);
 
-    Epic.prototype.log2 = function() {
-      return null;
-    };
+    Epic.prototype.log2 = window.Function.prototype.bind.call(window.console.log, window.console);
 
     Epic.prototype.nextCounter = function() {
       return ++this.counter;

@@ -29,7 +29,7 @@ class ClickAction
 		[issue, message]
 	doAction: (node, prev_action_result) ->
 		f= ":ClickAction.doAction(#{node.getTarget()})"
-		@Epic.log2 f, 'getPAttrs/node/prev_action_result',(( "#{k}=#{v}" for k,v of node.getPAttrs()).join ', '), node, prev_action_result
+		#@Epic.log2 f, 'getPAttrs/node/prev_action_result',(( "#{k}=#{v}" for k,v of node.getPAttrs()).join ', '), node, prev_action_result
 		r_vals= @Epic.request().getValues()
 		a_params_list= @pullValueUsingAttr node, r_vals, prev_action_result
 		class_method= node.getTarget() # Call= or Macro= 's value
@@ -55,11 +55,12 @@ class ClickAction
 		[found_result_tag, rResults, rIssues, rMessages]
 	pullValueUsingAttr: (node, r_vals, prev_action_result) ->
 		f= ':ClickAction.pullValueUsingAttr'
-		@Epic.log2 f, node:node,r_vals:r_vals,prev_action_result:prev_action_result
+		#@Epic.log2 f, node:node,r_vals:r_vals,prev_action_result:prev_action_result
 		a_params_list= $.extend {}, node.getPAttrs() # Clone
 		if form_name= node.hasAttr 'use_form'
 			oF= @Epic.getFistInstance form_name
-			fields_list= oF.getHtmlPostedFieldsList form_name
+			#fields_list= oF.getHtmlPostedFieldsList form_name
+			fields_list= ( nm for nm of oF.getHtmlFieldValues())
 			$.extend a_params_list, @pullValues r_vals, fields_list, 'use_form'
 		if attr= node.hasAttr 'use_fields'
 			$.extend a_params_list, @pullValues r_vals, attr.split( ','), 'use_fields'

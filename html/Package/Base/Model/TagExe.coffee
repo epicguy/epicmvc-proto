@@ -12,10 +12,10 @@ class TagExe
 		@info_if_nms= {} # [if-name]=boolean (from <if_xxx name="if-name" ..>
 		@info_varGet3= {} # for &obj/table/var; type variables
 		@info_parts= [] # Push p:attrs with each part, then pop; getTable uses last pushed
-		@Epic.log2 f, 'state', state
+		#@Epic.log2 f, 'state', state
 		if state
 			for nm,rec of state.info_foreach.dyn
-				@Epic.log2 f, 'info_foreach nm=', nm, rec
+				#@Epic.log2 f, 'info_foreach nm=', nm, rec
 				[dyn_m, dyn_t, dyn_list_orig]= rec
 				dyn_list= []
 				oM= @Epic.getInstance dyn_m
@@ -39,7 +39,7 @@ class TagExe
 
 			info_parts= $.extend true, {}, state.info_parts
 			@info_parts= info_parts.stuff # Added 'stuff' for an array vs. an object
-			@Epic.log2 f, 'info_parts', @info_parts
+			#@Epic.log2 f, 'info_parts', @info_parts
 	formatFromSpec: (val, spec, custom_spec) ->
 		switch spec
 			when '' then window.EpicMvc.custom_filter? val, custom_spec
@@ -143,13 +143,14 @@ class TagExe
 		any_req= false
 		is_first= true
 		out= []
-		hpfl= oFi.getHtmlPostedFieldsList fm_nm
+		#hpfl= oFi.getHtmlPostedFieldsList fm_nm
+		hpfl=( nm for nm of oFi.getHtmlFieldValues())
 		issues= oFi.getFieldIssues()
 		map= window.EpicMvc['issues$'+ @Epic.appConf().getGroupNm()]
 		for fl_nm in hpfl
 			continue if one_field_nm isnt false and one_field_nm isnt fl_nm
 			orig= oFi.getFieldAttributes fl_nm
-			fl= $.extend {}, orig
+			fl= $.extend {tip:''}, orig
 			fl.is_first= if is_first is true then 'yes' else ''
 			is_first= false
 			fl.yes_val = if fl.type is 'yesno' then String (fl.cdata ? '1') else 'not_used'
