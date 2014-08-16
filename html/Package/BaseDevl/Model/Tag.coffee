@@ -1,4 +1,5 @@
 'use strict'
+# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 # TODO DON'T RENDER DEBUG IF RENDERING INSIDE EPIC:DEFER
 
 class TagExe extends window.EpicMvc.Model.TagExe$Base

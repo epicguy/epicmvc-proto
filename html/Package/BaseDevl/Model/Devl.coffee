@@ -1,3 +1,4 @@
+# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 class Devl extends window.EpicMvc.ModelJS
 	constructor: (Epic,view_nm) ->

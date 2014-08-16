@@ -1,4 +1,5 @@
 'use strict'
+# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 # Enhance core EpicMvc.ModelJS with error checking/reporting for Devl mode
 CoreModelJS= window.EpicMvc.ModelJS
