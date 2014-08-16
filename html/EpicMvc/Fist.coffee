@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2012 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 class Fist
 	constructor: (@Epic, @grp_nm, flist_nm, @view_nm) ->
@@ -24,6 +24,7 @@ class Fist
 		@fieldDef?= @Epic.getFistGroupCache().getFieldDefsForFist @grp_nm, @fist_nm # Lazy load
 	getFieldsDefs: -> @loadFieldDefs() # For models that xlate db_nm in load_table
 	loadFieldChoices: (fl) -> # for pulldown choices
+		f= ':Fist.loadFieldChoices:'+ fl
 		final_obj= options:[], values:[]
 		if true # Avoid cache for now, so model an refresh via REST or whatever: not @cache_field_choice[fl]?
 			@loadFieldDefs() # Lazy load
@@ -40,14 +41,13 @@ class Fist
 					json= $.parseJSON json
 					for k, v of json
 						final_obj.options.push k; final_obj.values.push v
-				when 'use_word_list'
-					split= @fieldDef[fl].cdata.split ':'
-					if split.length is 2 then [wist_grp, wist_nm]= split
-					else if split[0]? then wist_grp= @grp_nm; wist_nm= split[0]
-					else wist_grp= @grp_nm; wist_nm= fl
-					wist= @Epic.getViewTable 'Wist/'+ wist_nm
-					for k, v of wist
-						final_obj.options.push v.text; final_obj.valules.push v.word
+				when 'wist'
+					[wist_grp, wist_nm, w_val, w_opt]= @fieldDef[fl].cdata.split ':'
+					wist= @Epic.getViewTable "Wist/#{wist_grp}:#{wist_nm}"
+					for row in wist
+						final_obj.options.push row[w_opt]; final_obj.values.push row[w_val]
+					@Epic.log2 f, final_obj
+
 			@cache_field_choice[fl]= final_obj
 		return
 	getHtmlPostedFieldsList: (flist_nm) -> # flist_nm optional for sub-lists

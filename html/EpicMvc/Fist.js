@@ -43,7 +43,8 @@
     };
 
     Fist.prototype.loadFieldChoices = function(fl) {
-      var ct, final_obj, json, k, rec, split, v, wist, wist_grp, wist_nm, _i, _len, _ref;
+      var ct, f, final_obj, json, k, rec, row, v, w_opt, w_val, wist, wist_grp, wist_nm, _i, _j, _len, _len1, _ref, _ref1;
+      f = ':Fist.loadFieldChoices:' + fl;
       final_obj = {
         options: [],
         values: []
@@ -77,23 +78,15 @@
               final_obj.values.push(v);
             }
             break;
-          case 'use_word_list':
-            split = this.fieldDef[fl].cdata.split(':');
-            if (split.length === 2) {
-              wist_grp = split[0], wist_nm = split[1];
-            } else if (split[0] != null) {
-              wist_grp = this.grp_nm;
-              wist_nm = split[0];
-            } else {
-              wist_grp = this.grp_nm;
-              wist_nm = fl;
+          case 'wist':
+            _ref1 = this.fieldDef[fl].cdata.split(':'), wist_grp = _ref1[0], wist_nm = _ref1[1], w_val = _ref1[2], w_opt = _ref1[3];
+            wist = this.Epic.getViewTable("Wist/" + wist_grp + ":" + wist_nm);
+            for (_j = 0, _len1 = wist.length; _j < _len1; _j++) {
+              row = wist[_j];
+              final_obj.options.push(row[w_opt]);
+              final_obj.values.push(row[w_val]);
             }
-            wist = this.Epic.getViewTable('Wist/' + wist_nm);
-            for (k in wist) {
-              v = wist[k];
-              final_obj.options.push(v.text);
-              final_obj.valules.push(v.word);
-            }
+            this.Epic.log2(f, final_obj);
         }
         this.cache_field_choice[fl] = final_obj;
       }
