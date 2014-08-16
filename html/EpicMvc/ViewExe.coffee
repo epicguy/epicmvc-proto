@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2012 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 class ViewExe
 	constructor: (@Epic,@loadStrategy,@content_watch) ->
 		@dynamicParts= []

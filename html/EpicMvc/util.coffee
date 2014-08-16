@@ -1,5 +1,6 @@
 # Some utility functions (as class, not instance functions)
-#
+# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+
 escape_html= (str) ->
 	String(str)
 		.replace(/&/g,'&amp;') # '&' must be first

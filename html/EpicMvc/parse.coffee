@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2012 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 
 # Parse out varGet2/3's as array with func name set

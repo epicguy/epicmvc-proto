@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2012 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 class FistGroupCache
 	constructor: (@Epic,@loadStrategy) ->
