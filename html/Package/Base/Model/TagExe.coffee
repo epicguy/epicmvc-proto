@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2012 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 class TagExe
 	constructor: (@Epic,@view_nm) ->
 		@viewExe= @Epic.getView()
@@ -75,6 +75,8 @@ class TagExe
 		row= (@info_varGet3[view_nm].getTable tbl_nm)[0]
 		@formatFromSpec row[key], format_spec, custom_spec
 	varGet2: (table_ref, col_nm, format_spec, custom_spec, sub_nm) ->
+		[dyn_m, dyn_t]= @info_foreach[ table_ref].dyn
+		@viewExe.haveTableRefrence dyn_m, dyn_t # Requires only base model/table
 		ans= @info_foreach[table_ref].row[col_nm]
 		if sub_nm? then ans= ans[sub_nm]
 		@formatFromSpec ans, format_spec, custom_spec

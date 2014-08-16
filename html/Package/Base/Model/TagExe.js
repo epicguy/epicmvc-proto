@@ -109,7 +109,9 @@
     };
 
     TagExe.prototype.varGet2 = function(table_ref, col_nm, format_spec, custom_spec, sub_nm) {
-      var ans;
+      var ans, dyn_m, dyn_t, _ref;
+      _ref = this.info_foreach[table_ref].dyn, dyn_m = _ref[0], dyn_t = _ref[1];
+      this.viewExe.haveTableRefrence(dyn_m, dyn_t);
       ans = this.info_foreach[table_ref].row[col_nm];
       if (sub_nm != null) {
         ans = ans[sub_nm];
