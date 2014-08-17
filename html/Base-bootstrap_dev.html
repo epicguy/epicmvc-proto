@@ -6,69 +6,14 @@
   <link href="Package/bootstrap/css/bootstrap.css" rel="stylesheet" media="screen" />
   <link href="Package/Base/css.css" rel="stylesheet" />
   <link href="Package/BaseDevl/css.css" rel="stylesheet" />
-
   <script type="text/javascript" src="//code.jquery.com/jquery-latest.js"></script>
-        <!-- TODO Chooose the bootstrap widgets actually used (to build the min version later)
-  <script src="Package/bootstrap/js/bootstrap-affix.js" type="text/javascript" charset="utf-8"></script>
-  <script src="Package/bootstrap/js/bootstrap-carousel.js" type="text/javascript" charset="utf-8"></script>
-  <script src="Package/bootstrap/js/bootstrap-modal.js" type="text/javascript" charset="utf-8"></script>
-  <script src="Package/bootstrap/js/bootstrap-tab.js" type="text/javascript" charset="utf-8"></script>
-  <script src="Package/bootstrap/js/bootstrap-typeahead.js" type="text/javascript" charset="utf-8"></script>
-  <script src="Package/bootstrap/js/bootstrap-alert.js" type="text/javascript" charset="utf-8"></script>
-  <script src="Package/bootstrap/js/bootstrap-collapse.js" type="text/javascript" charset="utf-8"></script>
-  <script src="Package/bootstrap/js/bootstrap-tooltip.js" type="text/javascript" charset="utf-8"></script>
-  <script src="Package/bootstrap/js/bootstrap-popover.js" type="text/javascript" charset="utf-8"></script>
-  <script src="Package/bootstrap/js/bootstrap-button.js" type="text/javascript" charset="utf-8"></script>
-  <script src="Package/bootstrap/js/bootstrap-dropdown.js" type="text/javascript" charset="utf-8"></script>
-  <script src="Package/bootstrap/js/bootstrap-scrollspy.js" type="text/javascript" charset="utf-8"></script>
-  <script src="Package/bootstrap/js/bootstrap-transition.js" type="text/javascript" charset="utf-8"></script>
--->
-
-	<!-- EpicMvc core -->
-  <script src="EpicMvc/Epic.js" type="text/javascript" charset="utf-8"></script>
-  <script src="EpicMvc/util.js" type="text/javascript" charset="utf-8"></script>
-  <script src="EpicMvc/AppConf.js" type="text/javascript" charset="utf-8"></script>
-  <script src="EpicMvc/ClickAction.js" type="text/javascript" charset="utf-8"></script>
-  <script src="EpicMvc/ConfExe.js" type="text/javascript" charset="utf-8"></script>
-  <script src="EpicMvc/Issue.js" type="text/javascript" charset="utf-8"></script>
-  <script src="EpicMvc/ModelJS.js" type="text/javascript" charset="utf-8"></script>
-  <script src="EpicMvc/Request.js" type="text/javascript" charset="utf-8"></script>
-  <script src="EpicMvc/ViewExe.js" type="text/javascript" charset="utf-8"></script>
-
-  <script src="EpicMvc/FistGroupCache.js" type="text/javascript" charset="utf-8"></script>
-  <script src="EpicMvc/Fist.js" type="text/javascript" charset="utf-8"></script>
-  <script src="EpicMvc/FistFilt.js" type="text/javascript" charset="utf-8"></script>
-
-  <script src="EpicMvc/parse.js" type="text/javascript" charset="utf-8"></script>
-
-	<!-- Package/Base Extras,Model,app,fist -->
-  <script src="Package/Base/Model/Pageflow.js" type="text/javascript" charset="utf-8"></script>
-  <script src="Package/Base/Model/NoSecurity.js" type="text/javascript" charset="utf-8"></script>
-  <script src="Package/Base/Model/TagExe.js" type="text/javascript" charset="utf-8"></script>
-
-  <script src="Package/Base/app.js" type="text/javascript" charset="utf-8"></script>
-
-	<!-- Package/BaseDevl Extras,Model,app,fist -->
-  <script src="Package/BaseDevl/Model/ModelJS.js" type="text/javascript" charset="utf-8"></script>
-  <script src="Package/BaseDevl/Model/Tag.js" type="text/javascript" charset="utf-8"></script>
-  <script src="Package/BaseDevl/Model/Devl.js" type="text/javascript" charset="utf-8"></script>
-  <script src="Package/BaseDevl/app.js" type="text/javascript" charset="utf-8"></script>
-
+  <script src="EpicMvc-One-0.0.0-latest.js" type="text/javascript" charset="utf-8"></script>
 	<!-- Package/<YOUR_PKG> Extras,Model,app,fist -->
-
-	<!-- Development version logic -->
-  <script src="Package/bootstrap/Extras/bootstrap.js" type="text/javascript" charset="utf-8"></script>
-  <script src="Package/BaseDevl/Extras/LoadStrategy.js" type="text/javascript" charset="utf-8"></script>
-
-	<!-- Add any misc js here -->
-
 </head>
 <body id="base-body">
 <script type="text/javascript">
-
-        window.jQuery.support.cors= true; // IE needs this
-        window.EpicMvc.Epic.run( ['Base', 'BaseDevl' /*, <YOUR_PKG> */], 'LoadStrategy$BaseDevl', 'bootstrap$bootstrap', []);
-
+	window.jQuery.support.cors= true; // IE may need this
+	window.EpicMvc.Epic.run( ['Base', 'BaseDevl' /*, <YOUR_PKG> */], 'LoadStrategy$BaseDevl', 'bootstrap$bootstrap', []);
 </script>
 </body>
 </html>
