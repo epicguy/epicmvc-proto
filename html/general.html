@@ -1,4 +1,4 @@
-<h2>EpicMvc Documentation (Old outdated document - needs updating)</h2>
+<h2>EpicMvc Documentation (DRAFT)</h2>
 <div style="margin-left: 40px;">
 <ul>
   <li><a href="#quick_tags">Quick reference to tags</a></li>
@@ -83,10 +83,7 @@ staff</li>
 </ul>
 </div>
 
-<div style="margin-left: 40px;">
-<h4>Development Cycle Advantages</h4>
-</div>
-
+<div style="margin-left: 40px;"><h4>Development Cycle Advantages</h4></div>
 <div style="margin-left: 40px;">Once the HTML has been disconnected from
 the JavaScript Business logic, Product development will no longer need to be closely
 in sync with the development of the JavaScript logic. The HTML need only specify
@@ -98,8 +95,8 @@ changing specifications.<br>
 </div>
 
 <h4 style="margin-left: 40px;">Simplicity of JavaScript business logic</h4>
-
-<div style="margin-left: 40px;">Today, much of the logic in JavaScript is coded
+<div style="margin-left: 40px;">Today, much of the logic in JavaScript
+(or server side logic, such as PHP) is coded
 to handle, not only the core business functionality itself, but also the
 management of the 'flow' of the web page interface, as well as all the state
 handling from one form to the next, or to manage a 'context' - i.e. a logged
@@ -107,17 +104,16 @@ in customer or agent.<br>
 <br>
 </div>
 
-<div style="margin-left: 40px;">The legacy JavaScript code has references to each sub-page
+<div style="margin-left: 40px;">The legacy code has references to each sub-page
 created by the HTML team, and the names of each button and of each form control.
 Cookie values are routinely read and written to, to communicate between different
 parts of the same code from web page to web page.<br>
 <br>
 </div>
 
-<div style="margin-left: 40px;">Additionlay, in the legacy JavaScript code,
-almost every multi-page "&lt;!PROC ...&gt;" JavaScript
-procedure has three large case statements to handle (1) the button that was
-pressed in a form (2) the last web page that the user came from (3) the next
+<div style="margin-left: 40px;">Additionlay the legacy code
+must handle the follwoing to properly process any request: (1) Which button/link that was
+pressed on a page (2) the last web page that the user came from (3) the next
 web page the user is going to. Within (1), the actual next web page may be
 decided based on several factors. Within (2) for any exceptions that occur
 in handling the previous web page, a determination is made to flow back to
@@ -128,10 +124,10 @@ there is a failure in (3) which requires a major code change to handle this
 </div>
 
 <div style="margin-left: 40px;">The EpicMvc architecture removes all such references
-from the JavaScript business logic layer, and places it into a 'controller' configuration
-file with a simplified XML syntax. What is left for the developer, is to create and
+from the business logic layer, and places it into a 'controller' configuration
+file with a simplified syntax. What is left for the developer, is to create and
 implement well defined 'actions' and to provide a method for populating table data
-referenced by Product developement.<br>
+referenced by Product developement (designers).<br>
 </div>
 <br>
 <hr>
@@ -139,62 +135,56 @@ referenced by Product developement.<br>
 </h4>
 
 <h4><a name="what_files"></a>Organization of files on disk</h4>
-EpicMvc organizes your web site into 'applications'. To create an application,
-place a file into the /htdocs/b2c/ directory. Place a single tag in this file,
-&lt;EpicMvc app-def-name&gt;. Now create a file in neowebscript/epic/APP called
-app-def-name.app. This file will contain a few values, including a reference
-to the directory, where the JavaScript and HTML for this application reside. For example:<pre>
-set webenv(EPIC_APP) test_abc
-set webenv(EPIC_CONTROLLER) xml_based
-set webenv(EPIC_SHARED_APPS) {}
-set webenv(EPIC_SHARED_LIBS) {}
-</pre>
-In this example, code for JavaScript will reside in: neowebscipt/epic/applications/test_abc,
-and the HTML pages will appear in htdocs/apps/epic/test_abc.<BR><BR>
+EpicMvc organizes your web site into 'Package's. To create a package,
+place a folder into the /&lt;document-root&gt;/Package/ directory as the name of your package.
+In this example, code for JavaScript will reside in: Package/test_abc.
+<BR><BR>
 The configuration to support the 'controller' portion of EpicMvc is
-in the file 'app.conf' in the /epic/applications/simple directory. This file
-controls how the web pages flow together, and the CLASS names HTML will use
+in the file 'app.coffee'. This file
+controls how the web pages flow together, and the MODEL/CLASS names HTML will use
 to access the JavaScript logic. It also contains a map of any &lt;<b>epic:link_action</b>&gt;
 and &lt;<b>epic:form_action</b>&gt; references, to actual JavaScript business logic calls.
-Here is a directory listing of the 'simple' sample application:<br>
+Here is a directory listing of the 'simple' sample application (apache example):<br>
 <br>
-/usr/local/apache/<br>
+/usr/local/apache/htdocs<br>
 <br>
-&nbsp; /htdocs/epic/<br>
 &nbsp; &nbsp; simple.html<br>
 <br>
-&nbsp;/epic/applications/simple/<br>
-&nbsp; &nbsp; app.conf<br>
-&nbsp; &nbsp; prop.conf<br>
-&nbsp; &nbsp; /models/<br>
-&nbsp; &nbsp; &nbsp; simple.js<br>
-&nbsp; &nbsp; /views/<br>
-&nbsp; &nbsp; &nbsp; simple.tmpl<br>
-&nbsp; &nbsp; &nbsp; simple.page<br>
-&nbsp; &nbsp; &nbsp; hello.part<br>
-&nbsp; &nbsp; &nbsp; time.part<br>
+&nbsp; Package/test_abc<br>
+&nbsp; &nbsp; app.coffee<br>
+&nbsp; &nbsp; issue.coffee<br>
+&nbsp; &nbsp; ta.fist.coffee<br>
+<br>
+&nbsp; &nbsp; Model/<br>
+&nbsp; &nbsp; &nbsp; simple.coffee<br>
+<br>
+&nbsp; &nbsp; view/<br>
+&nbsp; &nbsp; &nbsp; simple.tmpl.html<br>
+&nbsp; &nbsp; &nbsp; page/simple.page.html<br>
+&nbsp; &nbsp; &nbsp; part/hello.part.html<br>
+&nbsp; &nbsp; &nbsp; part/time.part.html<br>
 <br>
 
-For details regarding the /views/ directory files, see the topic
+For details regarding the /view/ directory files, see the topic
 <a href="#what_tags_PPT">Assembling "Pages" from page "Parts", and using "Templates"</a>
 <hr><br>
 
 <h4><a name="what_controller"></a>What is the 'Controller'?</h4>
 This is the portion of EpicMvc that is written as JavaScript code, with the exception
 of the base classes that are written to support the JavaScript developer when writing
-supporting business logic for an application. The controller is run by apache
-to process web page requests. Each request has a particular "step" in the
+supporting business logic for an application. The controller is run withing the browser
+to simulate web page requests/flow. Each web page has a particular "step" in the
 flow of web pages in a given application, and the Controller reads the application's
-app.conf XML configuration to determine what actions to take, and what resulting
-web page to return to the customer. See the sample applications
+app.* configuration to determine what actions to take, and what resulting
+web page to show in the browser. See the sample applications
 <a href="#what_simple">Simple</a> and <a href="#what_example">Example</a>
 for examples of using app.conf to create applications from HTML pages and JavaScript business logic.<br>
 <br>
 
 <hr>
 <h4><a name="what_classes"></a>What are 'Classes'?</h4>
-All JavaScript business logic is grouped into 'Classes'. This is how the HTML references
-data, and how the 'Controller' using the app.conf file maps 'actions' (using
+All JavaScript business logic is grouped into 'Classes'. This is where the HTML references
+data, and how the 'Controller' using the app.* file maps 'actions' (using
 &lt;<b>epic:link_action</b>&gt; and &lt;<b>epic:form_action</b>&gt; tags) to the JavaScript business
 logic.<br>
 <br>
@@ -203,22 +193,24 @@ For example, suppose you wish to display the shopcart contents. This information
 is stored in the DB for a particular user. The HTML needs to create a loop
 over each line in the shopcart, to display the customer's items, along with
 markup for the browser. The tag &lt;<b>epic:foreach</b>&gt; is used, using the attribute
-"table=". This attribute requires the view-name of the 'class' which has
+"table=". This attribute requires the view-name of the 'Model' which has
 the business logic to load the shopcart from the DB. The JavaScript developer may
-write several such classes, for different applications, such as ety_base_cart,
-ety_promo_cart, ety_oes_cart. The app.conf file, for a give application chooses
+write several such classes, for different applications, such as base_cart,
+promo_cart, order_entry_cart. The app.* file, for a give application chooses
 a view-name to use by the HTML, and makes the appropriate connection to a
-JavaScript class (i.e. &lt;ObjectMap view="Shopcart" class="ety_promo_cart"/&gt;)
+JavaScript class (i.e. MODELS: name:'Shopcart', class:'promo_cart')
 Now, in the HTML, the shopcart class can be called, and assuming the 'table'
 of data is called 'items' the tag might look like: &lt;<b>epic:foreach</b> table="Shopcart/items"&gt;<br>
 <br>
 
-In the app.conf file, to map an action from HTML to business logic, it is
+In the app.* file, to map an action from HTML to business logic, it is
 important to know what view-name is mapped to the class that implements this
 action. Using the same shopcart example form above, if the HTML contained:
 &lt;<b>epic:link_action</b> action="delete" p:item="&amp;items/row_id;"&gt; - then
-the app.conf might have this entry: &lt;click action="delete" call="Shopcart/remove_item"
-use_fields="item"/&gt; - the view-name 'Shopcart' is used to "connect" the action
+the app.* might have this entry:
+<pre>CLICKS: delete: call:'Shopcart/remove_item', use_fields:'item'
+</pre>
+... the view-name 'Shopcart' is used to "connect" the action
 from the HTML to the proper JavaScript 'Class.'<br>
 <br>
 
@@ -227,12 +219,13 @@ from the HTML to the proper JavaScript 'Class.'<br>
 <div style="margin-left: 40px; text-align: justify;">
 For an overview of where files belong, see the topic
 <a href="#what_files">Organization of files on disk</a>.
-The three file types are discussed in the first topic below. Following that
-is a list of topics that organize custom tags into groups. For instance,
-the &lt;<b>epic:foreach</b>&gt; tag would be found under "Accessing dynamic data
-in Tables (using the 'foreach tag')". All EpicMvc tags are distinct by having
-the prefix "epic:". Some examples of actual use in an application can be
-found in <a href="#what_simple">The 'Simple' application</a> and
+The three file types (tmpl, page, part) are discussed in the first topic below.
+Following that is a list of topics that organize custom tags into groups.
+For instance, the &lt;<b>epic:foreach</b>&gt; tag would be found under
+"Accessing dynamic data in Tables (using the 'foreach tag')".
+All EpicMvc tags are distinct by having the prefix "epic:".
+Some examples of actual use in an application can be found in
+<a href="#what_simple">The 'Simple' application</a> and
 <a href="#what_example">The 'Example' application</a>.<br>
 </div>
 <br>
@@ -250,10 +243,10 @@ found in <a href="#what_simple">The 'Simple' application</a> and
 
 <hr width="100%" size="2"><br>
 <h4><a name="what_tags_PPT"></a>Assembling "Pages" from page "Parts", and using "Templates"</h4>
-A single response to a customer's browser, will begin with a "template",
+A single web page in a customer's browser, will begin with a "template",
 along with a "page" and any "parts" referenced in the "template" or "page"
 file. A single "Template" can be set up for many pages, sometimes for all
-pages used by a single application. The 'app.conf' controller configuration
+pages used by a single application. The 'app.*' controller configuration
 file will specify which template file to use, for any set of "pages" being
 displayed. The same page can be displayed using different templates, in different
 steps of the same applications. Therefore, when writing a 'page' do not assume
@@ -276,11 +269,11 @@ browser will receive, using an example from the sample 'Simple' application:
             <table cellpadding="20" cellspacing="2" border="1" style="text-align: left; width: 80%; background-color: rgb(192,192,192); margin-left: auto; margin-right: auto;">
               <tbody>
                 <tr align="center">
-                  <td valign="top">hello.part<br>
+                  <td valign="top">hello.part.html<br>
                   </td>
                 </tr>
                 <tr align="center">
-                  <td valign="top">time.part<br>
+                  <td valign="top">time.part.html<br>
                   </td>
                 </tr>
               </tbody>
@@ -302,7 +295,7 @@ A more sophisticated layout, where all pages are surrounded by a basic "heading"
 look like this:
 <table style="background-color: rgb(192,192,192); width: 50%; text-align: left; margin-left: auto; margin-right: auto; height: 400px;" border="1" cellspacing="2" cellpadding="2">
 
-<tbody><tr align="center"><td>header.part</td></tr><tr align="center"><td>issues.part</td></tr><tr><td><table style="width: 100%; height: 100%; text-align: left; margin-left: auto; margin-right: auto; background-color: rgb(204,204,204);" border="1" cellspacing="2" cellpadding="2"><tbody><tr><td style="height: 80%;">sidebar.part</td><td style="width: 80%; text-align: center;">(actual page)</td></tr></tbody></table></td></tr><tr align="center"><td>footer.part</td></tr></tbody>
+<tbody><tr align="center"><td>header.part.html</td></tr><tr align="center"><td>issues.part.html</td></tr><tr><td><table style="width: 100%; height: 100%; text-align: left; margin-left: auto; margin-right: auto; background-color: rgb(204,204,204);" border="1" cellspacing="2" cellpadding="2"><tbody><tr><td style="height: 80%;">sidebar.part.html</td><td style="width: 80%; text-align: center;">(actual page)</td></tr></tbody></table></td></tr><tr align="center"><td>footer.part.html</td></tr></tbody>
 </table>
 
 <br>
@@ -313,54 +306,105 @@ This template HTML using &lt;<b>epic:page</b>&gt; and &lt;<b>epic:page_part</b>&
 &nbsp; &lt;tr&gt;&lt;td&gt;&lt;table&gt;<br>
 &nbsp; &nbsp; &lt;tr&gt;&lt;td&gt;&lt;<b>epic:page_part</b> part="sidebar"/&gt;&lt;/td&gt;&lt;td&gt;&lt;<b>epic:page</b>/&gt;&lt;/td&gt;&lt;/tr&gt;<br>
 &nbsp; &lt;/table&gt;&lt;/td&gt;&lt;/tr&gt;<br>
-&nbsp; &lt;tr height=64&gt;&lt;td&gt;&lt;<b>epic:page_part</b> part="footer"&gt;&lt;/td&gt;&lt;/tr&gt;<br>
+&nbsp; &lt;tr height=64&gt;&lt;td&gt;&lt;<b>epic:page_part</b> part="footer"/&gt;&lt;/td&gt;&lt;/tr&gt;<br>
 &lt;/table&gt;<br>
 
 <hr width="100%" size="2">
 <h4><a name="what_tags_DDL"></a>Accessing dynamic data in Lists (using '&amp;' and ';' and 'format')</h4>
-<div style="margin-left: 40px;">To reference data in a 'list' (vs. a table,
-which requires the epic:foreach tag) you use three words separated by slashes,
+<div style="margin-left: 40px;">To reference data in a one-row (or first row of a) 'table'
+without looping through all rows you use three words separated by slashes,
 and preceded by an ampersand, and terminated with a semicolon. These rules
 are designed to allow you to insert a data value anywhere inside the content
-or markup in the HTML. The three parts of a list-data-value, are 'view-name',
-'list-set-name' and 'list-item-name'. These are placed as follows: &amp;view-name/list-set-name/list-item-name;
+or markup in the HTML (even inside a tag). The three parts of a table-value, are 'view-name',
+'table-name' and 'column-name'. These are placed as follows: &amp;view-name/table-name/column-name;
+or sometimes as &amp;Model/Table/column;
 <h4>Example</h4>
-&nbsp;Suppose you want to display today's date.<br>
-<h4>View-name</h4>
+&nbsp;Suppose you want to display the logged in users first name.<br>
+<h4>View-name (Model)</h4>
 </div>
 <div style="margin-left: 40px;">You first need to know what view-name to
 use. A veiw-name is linked with the JavaScript 'class' that makes dynamic data available
-to the HTML. We can use the sample 'Simple' application, which has the view-name
-of &nbsp;'Simple'.<br>
-<h4>List set name</h4>
-Next, you need the name of the 'set' of data values you are interested in.
+to the HTML. We can use the sample 'Simple' application, which implements
+a single 'class' called 'Simple' and exposes it with the view-name of &nbsp;'Simple'.<br>
+<h4>Table name</h4>
+Next, you need the name of the 'table' of data values you are interested in.
 Typically, the JavaScript developer will create online documentation showing you
-which list-set-names are available for a give view-name. In our case, the
-list-set-name is 'General' to describe a set of general values made available
+which table-names are available for a give view-name. In our case, the
+table-name is 'Self' to describe a set of logged-in-user values made available
 by this JavaScript class.<br>
-<h4>List item name</h4>
-Within each list-set, are a set of items by name. You choose an item by using
-its name as the third 'word' in a list-set reference. In our case, the developer
-has called "today's date" value: "date".<br>
+<h4>column name</h4>
+Within a table row, are a set of items referenced by column-name. You choose an item by using
+its column-name as the third 'word' in a reference. In our case, the developer
+has called "first name" value: "firstName".<br>
 <h4>Putting it all together</h4>
-Now, we can place this data list value, into our content, in our HTML. Here is an example:<br>
-Today is &amp;Simple/General/date;<br>
+Now, we can place this data table value, into our content, in our HTML. Here is an example:<br>
+My name is &amp;Simple/Self/firstName;.<br>
 <h4>Advanced formatting</h4>
 There are functions defined by the JavaScript programmers which can format a data
 value, for use in various places in the HTML. Suppose that a value is going
 to be used in a query, but might contain spaces, ampersand, equal sign, etc.:<br>
 <br>
-&lt;A HREF="/search.html?keywords=&amp;Search/terms/last_keywords;&gt;<br>
+<pre>&lt;A HREF="/search.html?keywords=&amp;Search/terms/last_keywords;"&gt;<br></pre>
 <br>
 The value needs to be formatted for use as a value inside the URL. Assuming
-the programmer created the function needed, the HTML would specify instead:<br>
+the programmer created the custom function needed, the HTML would specify instead:<br>
 <br>
-&lt;A HREF="/search.html?keywords=&amp;Search/terms/last_keywords#url(query_value);&gt;<br>
+<pre>&lt;A HREF="/search.html?keywords=&amp;Search/terms/last_keywords##url:query_value;"&gt;<br></pre>
+<br>
+Custom formatting is defined as a function with the name of window.EpicMvc.custom_filter. For example:<br>
+<pre>
+window.EpicMvc.custom_filter= (val,spec) -&gt;
+    [func,p1,p2,p3]= spec.split ':'
+    switch func
+        when 'age'
+            return '' if val is 'null' or val is '0000-00-00' or val is null
+            return val unless val?.length
+            # [y,m,d]= ( val.split 'T')[0].split '-'
+            now= new Date().getTime()
+            age=( now- Date.parse val)/( 60* 60* 24* 365.25) # TODO: Not 100% accurate.
+            Math.floor age/ 1000
+        when 'date'
+            return '' if val is 'null' or val is '0000-00-00' or val is null
+            return val unless val?.length
+            [y,m,d]= ( val.split 'T')[0].split '-'
+            if p1 is 'long'
+                mmap= ['0', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'June',
+                    'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
+                "#{mmap[ Number m]} #{d}, #{y}"
+            else if p1 is 'detail'
+                val # TODO
+            else if p1 is 'format'
+                oDate= moment val
+                oDate.format p2.replace /_/g, ':'
+            else "#{m}/#{d}/#{y}"
+        when 'to_upper'
+            val.toUpperCase()
+</pre>
+<h4>Formatting bult-in's</h4>
+Using a single '#' followed by these names, applies the formatting shown below:<br>
+<pre>
+when 'count' then val?.length
+when 'bytes' then window.bytesToSize Number val
+when 'uriencode' then encodeURIComponent val
+when 'esc' then window.EpicMvc.escape_html val
+when 'quo' then ((val.replace /\\/g, '\\\\').replace /'/g, '\\\'').replace /"/g, '\\"'  # Allows an item to be put into single quotes
+when '1' then (String val)[0]
+when 'lc' then (String val).toLowerCase()
+when 'ucFirst'
+	str= (String str).toLowerCase()
+	str.slice( 0, 1).toUpperCase()+ str.slice 1
+
+</pre>
+Additionally either #?. or just #. both without a name, can be used as a conditional to insert content.
+For example, to set a class attribte to 'hide' when a value exists:
+<pre>class="&amp;Model/Table/item#.hide;"</pre>
+or to set 'open' vs. 'closed': <pre>class="&amp;Model/Table/is_open#?.open?closed;"</pre>
+Note: the 'dot' can be any char other than '#' and represetns a space char if it occurs again. This is deprecated, and spaces would appear as themselves instead. Also, the '%' is special, and represents the value of the Table/item, for example to create a default value of say 10: <pre>&Model/Table/item#?.%?10;</pre>
 </div>
 <br>
 
 <hr width="100%" size="2"><br>
-
+TODO
 <h4><a name="what_tags_DDT"></a>Accessing dynamic data in Tables (using the 'foreach' tag)</h4>
 Most dynamic data is provided as multiple rows of values arranged in columns.
 These are accessed row-by-row using the &lt;<b>epic:foreach</b> table="Class/Table_name&gt;
@@ -652,7 +696,7 @@ can customize the loading of the form from the DB using the method "form_load".<
 wishlist, might be 'wl_User'. It makes three actions available 'createUser'
 'login' and 'logout' - with 'login' requiring fields defined by the 'wlLogin'
 form. This class also exposes its model 'ThisUser' containing a list of attributes
-that the view "wishList_header.part" later pulls, to display the user's login
+that the view "wishList_header.part.html" later pulls, to display the user's login
 name (e.g. &amp;Users/ThisUser/email;).<br>
 </div>
 <br>
