@@ -1,21 +1,11 @@
 <h2>EpicMvc Documentation (Old outdated document - needs updating)</h2>
-
-
-
 <div style="margin-left: 40px;">
 <ul>
   <li><a href="#quick_tags">Quick reference to tags</a></li>
 </ul>
 </div>
 
-
-
-
 <h3 style="margin-left: 40px;">Overview of the architecture (basic concepts)</h3>
-
-
-
-
 <div style="margin-left: 40px;">
 <ul>
   <li><a href="#what_epic">What is 'EpicMvc'?</a>
@@ -24,63 +14,39 @@
   </li>
   <li><a href="#what_controller">What is the 'Controller'?</a></li>
   <li><a href="#what_classes">
-What are 'Classes'?</a></li>
+What are 'Classes' (Models)?</a></li>
 </ul>
 </div>
-
-
-
 
 <h3 style="margin-left: 40px;">What the customer sees (working with HTML)</h3>
-
-
-
 <div style="margin-left: 40px;">
-
-
 <ul>
-  <li><a href="#what_tags">
-EpicMvc TAGS documentation</a></li>
+  <li><a href="#what_tags">EpicMvc TAGS documentation</a></li>
   <li><a href="#what_forms">&nbsp;Creating and Editing FORMS and FORM FIELDS</a></li>
-  <li><a href="#what_issues">&nbsp;Mapping ISSUES to user friendly messages</a>
+  <li><a href="#what_issues">&nbsp;Mapping ISSUES and MESSAGES to user friendly text</a>
   </li>
 </ul>
 </div>
 
-
-<h3 style="margin-left: 40px;">A programmer's view (working with JS)</h3>
-
-
-
+<h3 style="margin-left: 40px;">A programmer's view (working with code)</h3>
 <div style="margin-left: 40px;">
 <ul>
-  <li><a href="#what_module">Writing a 'CLASS' module</a><br>
+  <li><a href="#what_module">Writing a 'CLASS' (Model) module</a><br>
   </li>
-  <li><a href="file:///C:/Documents%20and%20Settings/James%20Shelby/Desktop/Epic_Documentation.html#what_simple">
-The 'Simple' application</a></li>
+  <li><a href="#what_simple">The 'Simple' application</a></li>
   <li><a href="#what_example">&nbsp;The 'Example' application</a>
   </li>
 </ul>
 </div>
 
-
-
-<h3 style="margin-left: 40px;">Connecting web pages to make applications (working with XML)</h3>
-
-
-
+<h3 style="margin-left: 40px;">Connecting web pages to make applications (Data-driven controller)</h3>
 <div style="margin-left: 40px;">
 <ul>
-  <li><a href="#what_flow">
-Scripted Page Flow: Turning HTML Pages into applications</a></li>
+  <li><a href="#what_flow">Scripted Page Flow: Turning HTML Pages into applications</a></li>
   <li><a href="#what_builtin">&nbsp;The built-in components (PageFlow, Tag, Form?, debug?, others?)</a>
   </li>
 </ul>
 </div>
-
-
-
-
 
 <hr>
 <h4><a name="what_epic"></a>
@@ -98,8 +64,6 @@ JavaScript logic now has a list of 'actions' that can be invoked by the 'Control
 the configurator is free to script multiple actions (i.e. macros) to simulate
 what an end user may have previously done by navigating the site.<br>
 </div>
-
-
 
 <div style="margin-left: 40px;">
 <h4>Motivation</h4>
@@ -119,13 +83,9 @@ staff</li>
 </ul>
 </div>
 
-
-
 <div style="margin-left: 40px;">
 <h4>Development Cycle Advantages</h4>
 </div>
-
-
 
 <div style="margin-left: 40px;">Once the HTML has been disconnected from
 the JavaScript Business logic, Product development will no longer need to be closely
@@ -137,11 +97,7 @@ by the JavaScript + DB development work with its own time schedules, risks, and
 changing specifications.<br>
 </div>
 
-
-
 <h4 style="margin-left: 40px;">Simplicity of JavaScript business logic</h4>
-
-
 
 <div style="margin-left: 40px;">Today, much of the logic in JavaScript is coded
 to handle, not only the core business functionality itself, but also the
@@ -151,16 +107,12 @@ in customer or agent.<br>
 <br>
 </div>
 
-
-
 <div style="margin-left: 40px;">The legacy JavaScript code has references to each sub-page
 created by the HTML team, and the names of each button and of each form control.
 Cookie values are routinely read and written to, to communicate between different
 parts of the same code from web page to web page.<br>
 <br>
 </div>
-
-
 
 <div style="margin-left: 40px;">Additionlay, in the legacy JavaScript code,
 almost every multi-page "&lt;!PROC ...&gt;" JavaScript
@@ -175,34 +127,18 @@ there is a failure in (3) which requires a major code change to handle this
 <br>
 </div>
 
-
-
 <div style="margin-left: 40px;">The EpicMvc architecture removes all such references
 from the JavaScript business logic layer, and places it into a 'controller' configuration
 file with a simplified XML syntax. What is left for the developer, is to create and
 implement well defined 'actions' and to provide a method for populating table data
 referenced by Product developement.<br>
 </div>
-
-
-
 <br>
-
-
-
-
-
 <hr>
 <h4><br>
 </h4>
 
-
-
-<h4><a name="what_files"></a>
-Organization of files on disk</h4>
-
-
-
+<h4><a name="what_files"></a>Organization of files on disk</h4>
 EpicMvc organizes your web site into 'applications'. To create an application,
 place a file into the /htdocs/b2c/ directory. Place a single tag in this file,
 &lt;EpicMvc app-def-name&gt;. Now create a file in neowebscript/epic/APP called
@@ -221,117 +157,47 @@ controls how the web pages flow together, and the CLASS names HTML will use
 to access the JavaScript logic. It also contains a map of any &lt;<b>epic:link_action</b>&gt;
 and &lt;<b>epic:form_action</b>&gt; references, to actual JavaScript business logic calls.
 Here is a directory listing of the 'simple' sample application:<br>
-
-
-
 <br>
-
-
-
 /usr/local/apache/<br>
-
-
-
 <br>
-
-
-
 &nbsp; /htdocs/epic/<br>
-
-
-
 &nbsp; &nbsp; simple.html<br>
-
-
-
 <br>
-
-
-
 &nbsp;/epic/applications/simple/<br>
-
-
-
 &nbsp; &nbsp; app.conf<br>
-
-
-
 &nbsp; &nbsp; prop.conf<br>
-
-
-
 &nbsp; &nbsp; /models/<br>
-
-
-
 &nbsp; &nbsp; &nbsp; simple.js<br>
-
-
-
 &nbsp; &nbsp; /views/<br>
-
-
-
 &nbsp; &nbsp; &nbsp; simple.tmpl<br>
-
-
-
 &nbsp; &nbsp; &nbsp; simple.page<br>
-
-
-
 &nbsp; &nbsp; &nbsp; hello.part<br>
-
-
-
 &nbsp; &nbsp; &nbsp; time.part<br>
-
-
-
 <br>
 
-
-
-For details regarding the /views/ directory files, see the topic <a href="#what_tags_PPT">Assembling "Pages" from page "Parts", and using "Templates"</a>
+For details regarding the /views/ directory files, see the topic
+<a href="#what_tags_PPT">Assembling "Pages" from page "Parts", and using "Templates"</a>
 <hr><br>
 
-
-
-<h4><a name="what_controller"></a>
-What is the 'Controller'?</h4>
-
-
-
+<h4><a name="what_controller"></a>What is the 'Controller'?</h4>
 This is the portion of EpicMvc that is written as JavaScript code, with the exception
 of the base classes that are written to support the JavaScript developer when writing
 supporting business logic for an application. The controller is run by apache
 to process web page requests. Each request has a particular "step" in the
 flow of web pages in a given application, and the Controller reads the application's
 app.conf XML configuration to determine what actions to take, and what resulting
-web page to return to the customer. See the sample applications <a href="#what_simple">Simple</a> and <a href="#what_example">Example</a> for examples of using app.conf to create applications from HTML pages and JavaScript business logic.<br>
-
-
-
+web page to return to the customer. See the sample applications
+<a href="#what_simple">Simple</a> and <a href="#what_example">Example</a>
+for examples of using app.conf to create applications from HTML pages and JavaScript business logic.<br>
 <br>
 
-
-
 <hr>
-<h4><a name="what_classes"></a>
-What are 'Classes'?</h4>
-
-
-
+<h4><a name="what_classes"></a>What are 'Classes'?</h4>
 All JavaScript business logic is grouped into 'Classes'. This is how the HTML references
 data, and how the 'Controller' using the app.conf file maps 'actions' (using
 &lt;<b>epic:link_action</b>&gt; and &lt;<b>epic:form_action</b>&gt; tags) to the JavaScript business
 logic.<br>
-
-
-
 <br>
-
-
 
 For example, suppose you wish to display the shopcart contents. This information
 is stored in the DB for a particular user. The HTML needs to create a loop
@@ -345,12 +211,7 @@ a view-name to use by the HTML, and makes the appropriate connection to a
 JavaScript class (i.e. &lt;ObjectMap view="Shopcart" class="ety_promo_cart"/&gt;)
 Now, in the HTML, the shopcart class can be called, and assuming the 'table'
 of data is called 'items' the tag might look like: &lt;<b>epic:foreach</b> table="Shopcart/items"&gt;<br>
-
-
-
 <br>
-
-
 
 In the app.conf file, to map an action from HTML to business logic, it is
 important to know what view-name is mapped to the class that implements this
@@ -359,38 +220,24 @@ action. Using the same shopcart example form above, if the HTML contained:
 the app.conf might have this entry: &lt;click action="delete" call="Shopcart/remove_item"
 use_fields="item"/&gt; - the view-name 'Shopcart' is used to "connect" the action
 from the HTML to the proper JavaScript 'Class.'<br>
-
-
-
 <br>
 
-
-
 <hr>
-<h4><a name="what_tags"></a>
-EpicMvc TAGS documentation</h4>
-
-
-
-<div style="margin-left: 40px; text-align: justify;">For an overview of where files belong, see the topic <a href="#what_files">Organization of files on disk</a>.
+<h4><a name="what_tags"></a>EpicMvc TAGS documentation</h4>
+<div style="margin-left: 40px; text-align: justify;">
+For an overview of where files belong, see the topic
+<a href="#what_files">Organization of files on disk</a>.
 The three file types are discussed in the first topic below. Following that
 is a list of topics that organize custom tags into groups. For instance,
 the &lt;<b>epic:foreach</b>&gt; tag would be found under "Accessing dynamic data
 in Tables (using the 'foreach tag')". All EpicMvc tags are distinct by having
 the prefix "epic:". Some examples of actual use in an application can be
-found in <a href="#what_simple">The 'Simple' application</a> and <a href="#what_example">The 'Example' application</a>.<br>
+found in <a href="#what_simple">The 'Simple' application</a> and
+<a href="#what_example">The 'Example' application</a>.<br>
 </div>
-
-
-
 <br>
 
-
-
 <ul style="margin-left: 40px;">
-
-
-
   <li><a href="#what_tags_PPT">Assembling "Pages" from page "Parts", and using "Templates"</a></li>
   <li><a href="#what_tags_DDL">Accessing dynamic data in Lists (using '&amp;' and ';' and 'format')</a></li>
   <li><a href="#what_tags_DDT">Accessing dynamic data in Tables (using the 'foreach' tag)</a></li>
@@ -399,21 +246,10 @@ found in <a href="#what_simple">The 'Simple' application</a> and <a href="#what_
   <li><a href="#what_tags_IF">Conditional logic ('if' tags)</a></li>
   <li><a href="#what_tags_OT">Other tags (script, comment, define)</a></li>
 </ul>
-
-
-
 <br>
 
-
-
 <hr width="100%" size="2"><br>
-
-
-
 <h4><a name="what_tags_PPT"></a>Assembling "Pages" from page "Parts", and using "Templates"</h4>
-
-
-
 A single response to a customer's browser, will begin with a "template",
 along with a "page" and any "parts" referenced in the "template" or "page"
 file. A single "Template" can be set up for many pages, sometimes for all
@@ -423,18 +259,14 @@ displayed. The same page can be displayed using different templates, in differen
 steps of the same applications. Therefore, when writing a 'page' do not assume
 what 'template' will be used for it.<br>
 <br>
+
 Here is visually what the customer's
 browser will receive, using an example from the sample 'Simple' application:
 <table border="1" style="width: 50%; text-align: left; margin-left: auto; margin-right: auto; background-color: rgb(153,153,153);" cellpadding="8" cellspacing="2">
-
-
-
 <tbody><tr><td>
       <div style="text-align: center;">simple.tmpl<br clear="all">
       <br>
-
       </div>
-
       <div style="text-align: center;">
       <table cellpadding="2" cellspacing="2" border="1" style="text-align: left; margin-left: auto; margin-right: auto; width: 80%; background-color: rgb(204,204,204);">
 <tbody><tr><td valign="top">
@@ -464,7 +296,6 @@ browser will receive, using an example from the sample 'Simple' application:
 </tbody>
 </table>
 
-
 <br>
 A more sophisticated layout, where all pages are surrounded by a basic "heading",
 "footing" and a "sidebar", with any text issues in an "issues" part, might
@@ -473,7 +304,6 @@ look like this:
 
 <tbody><tr align="center"><td>header.part</td></tr><tr align="center"><td>issues.part</td></tr><tr><td><table style="width: 100%; height: 100%; text-align: left; margin-left: auto; margin-right: auto; background-color: rgb(204,204,204);" border="1" cellspacing="2" cellpadding="2"><tbody><tr><td style="height: 80%;">sidebar.part</td><td style="width: 80%; text-align: center;">(actual page)</td></tr></tbody></table></td></tr><tr align="center"><td>footer.part</td></tr></tbody>
 </table>
-
 
 <br>
 This template HTML using &lt;<b>epic:page</b>&gt; and &lt;<b>epic:page_part</b>&gt; might look like this:<br>
@@ -485,7 +315,6 @@ This template HTML using &lt;<b>epic:page</b>&gt; and &lt;<b>epic:page_part</b>&
 &nbsp; &lt;/table&gt;&lt;/td&gt;&lt;/tr&gt;<br>
 &nbsp; &lt;tr height=64&gt;&lt;td&gt;&lt;<b>epic:page_part</b> part="footer"&gt;&lt;/td&gt;&lt;/tr&gt;<br>
 &lt;/table&gt;<br>
-
 
 <hr width="100%" size="2">
 <h4><a name="what_tags_DDL"></a>Accessing dynamic data in Lists (using '&amp;' and ';' and 'format')</h4>
@@ -530,8 +359,6 @@ the programmer created the function needed, the HTML would specify instead:<br>
 </div>
 <br>
 
-
-
 <hr width="100%" size="2"><br>
 
 <h4><a name="what_tags_DDT"></a>Accessing dynamic data in Tables (using the 'foreach' tag)</h4>
@@ -555,8 +382,6 @@ Shipment #&amp;Shipment/counter; to:&nbsp; &amp;Shipment/first_name; &amp;Shipme
 &nbsp; &lt;/epic:foreach&gt;<br>
 &lt;/epic:foreach&gt;<br>
 <br>
-
-
 
 <hr width="100%" size="2">
 <h4><a name="what_tags_CL"></a>Creating clickable links</h4>
@@ -594,8 +419,6 @@ must be included, which names the recipient. The HTML might look like this:<br>
 Later in the app.conf file, there would be a line such as: &lt;click action="send_email"
 call="ListMaintainer/send" use_fields="recipient"/&gt;<br>
 
-
-
 <hr width="100%" size="2">
 <h4><a name="what_tags_FFB"></a>Forms, form fields, and buttons</h4>
 Forms are created using &lt;<b>epic:form</b>&gt;, and the fields can typically be
@@ -615,9 +438,8 @@ HTML might look like this:<br>
 Notes: &lt;<b>epic:form</b>&gt; will default to 'method="post"'. You may also wish
 to add 'forms_used="example1"' to support persistent forms (forms saved and
 restored across multiple page requests.) To create a form and form fields
-in the DB or edit attributes of those fields, see the topic: <a href="#what_forms">Creating and Editing FORMS and FORM FIELDS</a>.<br>
-
-
+in the DB or edit attributes of those fields, see the topic:
+<a href="#what_forms">Creating and Editing FORMS and FORM FIELDS</a>.<br>
 
 <br>
 <hr width="100%" size="2">
@@ -699,12 +521,7 @@ customer. Use this tag to send the text between the tags. &lt;/epic:comment&gt;<
 called 'cool'. Use it anywhere you use other tags.&lt;/epic:deifine&gt;<br>
 <br>
 &lt;<b>epic:tag</b> name="cool"/&gt;<br>
-
-
-
 <br>
-
-
 
 <hr>
 <h4><a name="what_forms"></a>
@@ -771,8 +588,6 @@ validate those fields separately, and put the data back together again for
 storage into a single DB field, all without any extra effort in the JavaScript
 or the HTML.<br>
 
-
-
 <hr>
 <h4><a name="what_issues"></a>
 Mapping ISSUES to user friendly messages</h4>
@@ -791,18 +606,12 @@ vs. putting the item in the cart - or when the item goes out of stock after
 the user is in the checkout process.<br>
 <br>
 
-
-
 <hr width="100%" size="2">
 <h4><a name="what_module"></a>Writing a 'CLASS" module</h4>
-
-
 
 <div style="margin-left: 40px;">
 <h4>Creating MODELS for making data available to the HTML</h4>
 </div>
-
-
 
 <div style="margin-left: 40px;">The JavaScript business logic needs to support the
 'views' by making 'data' available to them as a 'model' of that data in memory,
@@ -818,8 +627,6 @@ the methods 'get_table_names' and 'get_table_rows' for data that utilizes
 a 'foreach' tag.
 <h4>Creating ACTIONS to be invoked as business logic rules</h4>
 </div>
-
-
 
 <div style="margin-left: 40px;">A JavaScript class also supports the configuration
 of a controller to invoke a set of actions by implementing the 'action' method,
@@ -841,8 +648,6 @@ can customize the loading of the form from the DB using the method "form_load".<
 <h4>Example</h4>
 </div>
 
-
-
 <div style="margin-left: 40px;">&nbsp;An example of a JavaScript class, for e.g.
 wishlist, might be 'wl_User'. It makes three actions available 'createUser'
 'login' and 'logout' - with 'login' requiring fields defined by the 'wlLogin'
@@ -850,48 +655,20 @@ form. This class also exposes its model 'ThisUser' containing a list of attribut
 that the view "wishList_header.part" later pulls, to display the user's login
 name (e.g. &amp;Users/ThisUser/email;).<br>
 </div>
-
-
-
+<br>
 <br>
 
-
-
-<br>
-
-
+<hr>
+<h4><a name="what_simple"></a>The 'Simple' application TBD</h4>
 
 <hr>
-<h4><a name="what_simple"></a>
-The 'Simple' application
-
-</h4>
-
-
+<h4><a name="what_example"></a>The 'Example' application TBD</h4>
 
 <hr>
-<h4><a name="what_example"></a>
-The 'Example' application
-
-</h4>
-
-
-
-<hr>
-<h4><a name="what_flow"></a>
-Scripted Page Flow: Turning HTML Pages into applications
-
-</h4>
-
-
+<h4><a name="what_flow"></a>Scripted Page Flow: Turning HTML Pages into applications</h4>
 
 <hr>
 <h4><a name="what_builtin"></a>
 The built-in components (PageFlow, Epic?, Form?, debug?, others?)</h4>
-
-
-
+TBD
 <hr width="100%" size="2"><br>
-
-
-
