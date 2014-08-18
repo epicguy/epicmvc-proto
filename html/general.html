@@ -403,51 +403,87 @@ Note: the 'dot' can be any char other than '#' and represetns a space char if it
 </div>
 <br>
 
-<hr width="100%" size="2"><br>
-TODO
+<hr width="100%" size="2">
 <h4><a name="what_tags_DDT"></a>Accessing dynamic data in Tables (using the 'foreach' tag)</h4>
 Most dynamic data is provided as multiple rows of values arranged in columns.
-These are accessed row-by-row using the &lt;<b>epic:foreach</b> table="Class/Table_name&gt;
-tag. Column values then are referenced in the content using &amp;Table_name/column_name;
+These are accessed row-by-row using the &lt;<b>epic:foreach</b> table="Model/Table&gt;
+tag. Column values then are referenced in the content using &amp;Table/column;
 Many times a particular column value is really a nested table itself. The
-nested table is accessed using: &lt;<b>epic:foreach</b> table="Table_name/column_name_of_nested_table"&gt;
-and value are accessed using &amp;column_name_of_nested_table/column_name;
+nested table is accessed using: &lt;<b>epic:foreach</b> table="Table/column_name_of_nested_table"&gt;
+and values are then accessed using &amp;column_name_of_nested_table/column;
 - this can be done to any depth. Here is an example of accessing the shipping
 rows of an order, and within each shipping row, the item rows, and within
 these items, any optional component information (such as doll attributes
 on a custom doll):<br>
 <br>
 &lt;<b>epic:foreach</b> table="OrderStatus/Shipment"&gt;<br>
-Shipment #&amp;Shipment/counter; to:&nbsp; &amp;Shipment/first_name; &amp;Shipment/last_name;&lt;BR&gt;<br>
+Shipment #&amp;Shipment/counter; to:&nbsp; &amp;Shipment/first_name; &amp;Shipment/last_name;&lt;br&gt;<br>
 &nbsp; &lt;<b>epic:foreach</b> table="Shipment/Items"&gt;<br>
-&nbsp; &nbsp; Item #&amp;Items/counter;: &amp;Items/description&lt;BR&gt;<br>
+&nbsp; &nbsp; Item #&amp;Items/counter;: &amp;Items/description&lt;br&gt;<br>
 &nbsp; &nbsp; &lt;<b>epic:foreach</b> table="Items/Components"&gt;<br>
+&nbsp; &nbsp; &nbsp; Add-on: &amp;Components/name;<br>
 &nbsp; &nbsp; &lt;/epic:foreach&gt;<br>
 &nbsp; &lt;/epic:foreach&gt;<br>
 &lt;/epic:foreach&gt;<br>
+<br>
+The 'alias' attribute allows forcing the name of the 'Table' which may help with view-parts that expect a common name:<br>
+&lt;<b>epic:foreach</b> table="OrderStatus/ShipmentAddress" alias="Address"&gt;<br>
+&nbsp; &lt;<b>epic:page_part</b> part="show_address"/&gt;<br>
+&lt;/epic:foreach&gt;<br>
+&lt;<b>epic:foreach</b> table="OrderStatus/BillingAddress" alias="Address"&gt;<br>
+&nbsp; &lt;<b>epic:page_part</b> part="show_address"/&gt;<br>
+&lt;/epic:foreach&gt;<br>
+<br>
+Another option shows how variable references can be used in the table="" attribute:<br>
+&lt;<b>epic:page_part</b> part="show_address" p:table="ShipmentAddress"/&gt;<br>
+&lt;<b>epic:page_part</b> part="show_address" p:table="BillingAddress"/&gt;<br>
+Then in the common page part:<br>
+&lt;<b>epic:foreach</b> table="OrderStatus/&amp;Tag/part/table;" alias="Address"&gt;<br>
+&nbsp; &Address/zip;<br>
+&lt;/epic:foreach&gt;<br>
+<br>
+This tag also exposes "built-in" column names as the rows are iterated over.
+The logic shows what and how these columns are calculated, and the values used
+(count is the current row index starting from 0):<br>
+<pre>
+_FIRST: (if count is 0 then 'F' else '')
+_LAST:  (if count is tbl.length- 1 then 'L' else '')
+_SIZE:  tbl.length
+_COUNT: count
+_BREAK: (if count+ 1 in break_rows_list then 'B' else '')
+</pre>
+NOTE: _BREAK is used to support multi-column table output.<br>
+'break_rows_list' is driven by the additional foreach tag attributes:
+'break_min', 'break_fixed', 'break_at', 'break_even';
+See the code for Tag_foreach in Base/Model/TagExe.coffee.<br>
+<p class="todo-doc-more">TODO MORE DOCUMENTATION ON _BREAK</p>
 <br>
 
 <hr width="100%" size="2">
 <h4><a name="what_tags_CL"></a>Creating clickable links</h4>
 Links that are outside of forms, can be hyperlinks on text or on images.
 For these, we use the tag &lt;<b>epic:link_action</b>&gt;. The HTML must be aware
-of the values needed to process an action, and provide these on the tag along
-with an action label. If you must pass data in a form, you will instead need
+of the values needed to process an action, and provide these as attributes in the tag along
+with an action attribute. If you must pass data in a form, you will instead need
 to use a form button within a form, so that the form data will be posted
 by the browser. This requires a different tag &lt;<b>epic:form_action</b>&gt; and
 this is documented in the next section called <a href="#what_tags_FFB">Forms, form fields, and buttons.<br>
 <br>
 </a>The &lt;<b>epic:link_action</b>&gt; tag does <span style="text-decoration: underline;">not</span>
-require you to specify which page to display next. The only information needed
+require you to specify which page to display next or what code to run, or module to call. The only information needed
 is (a) a unique name for this action used later to connect to the business
 logic, and (b) any values to pass to that action, Suppose you wish to create
 a link in the current application, which will log the user out. This may be
-done like this: &lt;<b>epic:link_action</b> action="logout"/&gt; - the app.conf
-file will contain an &lt;action&gt; tag that maps you action called 'logout'
+done like this: &lt;<b>epic:link_action</b> action="logout"/&gt; - the app.*
+file will contain an &lt;action&gt; reference that maps your action called 'logout'
 to the proper JavaScript logic module used to effect a logout. Additionally, the
-app.conf file will determine which page would naturally be displayed next,
-after this occurred.<br>
+app.* file will determine which page would naturally be displayed next,
+after this occurred. This would allow the configurator using app.* to map logout to a
+popup confirm page if desired, rather than effect an immeadiate logout call.
+Try to name your actions to indicate what the visible link 'means' and not
+what you want to 'happen'.<br>
 <br>
+TODO
 Typically, a link appears inside an &lt;<b>epic:foreach</b>&gt; loop, such that
 each link is supposed to reference a different row of data. For example,
 suppose you have a list of people to send an email to, and the link is designed
