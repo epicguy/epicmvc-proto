@@ -142,7 +142,7 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 			[lh, rh]= at_table.split '/' # Left/right halfs
 			# If left exists, it's nested as table/sub-table else assume model/table
 			if lh of @info_foreach
-				throw new Error "Sub-table missing: (#{rh})" if rh not of @info_foreach[lh].row
+				throw new Error "Sub-table missing: (#{rh}) in foreach table='#{lh}/#{rh}' (dyn:#{@info_foreach[lh].dyn.join ','}" if rh not of @info_foreach[lh].row
 				tbl= @info_foreach[lh].row[rh]
 			else
 				oMd= @Epic.getInstance lh

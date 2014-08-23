@@ -231,7 +231,7 @@
         _ref = at_table.split('/'), lh = _ref[0], rh = _ref[1];
         if (lh in this.info_foreach) {
           if (!(rh in this.info_foreach[lh].row)) {
-            throw new Error("Sub-table missing: (" + rh + ")");
+            throw new Error("Sub-table missing: (" + rh + ") in foreach table='" + lh + "/" + rh + "' (dyn:" + (this.info_foreach[lh].dyn.join(',')));
           }
           tbl = this.info_foreach[lh].row[rh];
         } else {
