@@ -193,11 +193,12 @@
     };
 
     TagExe.prototype.Tag_page_part = function(oPt) {
-      var after, before, dynamicInfo, f, out, _ref;
+      var after, before, dynamicInfo, f, out, part, _ref;
       f = ':tag.page-part:' + oPt.attrs.part;
+      part = this.viewExe.handleIt(oPt.attrs.part);
       this.info_parts.push(this.loadPartAttrs(oPt));
       _ref = this.checkForDynamic(oPt), before = _ref[0], after = _ref[1], dynamicInfo = _ref[2];
-      out = before + (this.viewExe.includePart(this.viewExe.handleIt(oPt.attrs.part), dynamicInfo)) + after;
+      out = before + (this.viewExe.includePart(part, dynamicInfo)) + after;
       this.info_parts.pop();
       return out;
     };

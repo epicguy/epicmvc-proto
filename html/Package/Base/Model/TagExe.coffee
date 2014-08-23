@@ -113,10 +113,11 @@ class TagExe
 		result
 	Tag_page_part: (oPt) ->
 		f= ':tag.page-part:'+ oPt.attrs.part
+		part= @viewExe.handleIt oPt.attrs.part # Before pushing stack, so part="&Tag/Part/whatever;" works
 		@info_parts.push @loadPartAttrs oPt
 		[before, after, dynamicInfo]= @checkForDynamic oPt
 		#@Epic.log2 f, dynamicInfo
-		out= before+ (@viewExe.includePart (@viewExe.handleIt oPt.attrs.part), dynamicInfo)+ after
+		out= before+ (@viewExe.includePart part, dynamicInfo)+ after
 		@info_parts.pop()
 		out
 	Tag_page: (oPt) -> @viewExe.includePage()
