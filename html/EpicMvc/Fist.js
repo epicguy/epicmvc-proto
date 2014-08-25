@@ -23,6 +23,7 @@
       this.upload_todo = [];
       this.upload_fl = {};
       this.eventLastPath = this.Epic.getPageflowPath();
+      this.focus_fl_nm = false;
     }
 
     Fist.prototype.getGroupNm = function() {
@@ -128,6 +129,14 @@
 
     Fist.prototype.getFieldIssues = function() {
       return this.fb_issues;
+    };
+
+    Fist.prototype.getFocus = function() {
+      return this.focus_fl_nm;
+    };
+
+    Fist.prototype.setFocus = function(fl_nm) {
+      return this.focus_fl_nm = fl_nm;
     };
 
     Fist.prototype.getChoices = function(fl_nm) {

@@ -18,6 +18,7 @@ class Fist
 		@upload_todo= []
 		@upload_fl= {}
 		@eventLastPath= @Epic.getPageflowPath()
+		@focus_fl_nm= false # fl_nm of current focus
 	getGroupNm: -> @grp_nm
 	getFistNm: -> @fist_nm
 	loadFieldDefs: ->
@@ -62,6 +63,8 @@ class Fist
 	getDbFieldValue: (fl_nm) -> @loadData(); @fb_DB[fl_nm]
 	getDbFieldValues: -> @loadData(); @fb_DB
 	getFieldIssues: -> @fb_issues
+	getFocus: -> @focus_fl_nm
+	setFocus: (fl_nm)-> @focus_fl_nm= fl_nm # false to reset
 	getChoices: (fl_nm) -> @loadFieldChoices fl_nm; @cache_field_choice[fl_nm]
 	# Posted values are comming to us, need to set values, and validate
 	fieldLevelValidate: (data,flist_nm,clear_issues) ->

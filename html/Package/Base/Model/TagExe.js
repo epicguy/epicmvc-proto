@@ -225,6 +225,7 @@
             field = _ref[_i];
             row[field.name] = [field];
           }
+          this.Epic.log2(f, row);
           return [row];
         default:
           return [];
@@ -232,7 +233,7 @@
     };
 
     TagExe.prototype.Tag_form_part = function(oPt) {
-      var any_req, choices, fl, fl_nm, fm_nm, help, hpfl, is_first, issues, ix, map, nm, oFi, one_field_nm, orig, out, part, row, rows, s, show_req, value_fl_nm, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
+      var any_req, choices, fl, fl_nm, fm_nm, focus_nm, help, hpfl, is_first, issues, ix, map, nm, oFi, one_field_nm, orig, out, part, row, rows, s, show_req, value_fl_nm, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
       part = this.viewExe.handleIt((_ref = oPt.attrs.part) != null ? _ref : 'fist_default');
       row = this.viewExe.handleIt((_ref1 = oPt.attrs.row) != null ? _ref1 : false);
       fm_nm = this.viewExe.handleIt(oPt.attrs.form);
@@ -252,6 +253,7 @@
         return _results;
       })();
       issues = oFi.getFieldIssues();
+      focus_nm = oFi.getFocus();
       map = window.EpicMvc['issues$' + this.Epic.appConf().getGroupNm()];
       for (_i = 0, _len = hpfl.length; _i < _len; _i++) {
         fl_nm = hpfl[_i];
@@ -260,8 +262,13 @@
         }
         orig = oFi.getFieldAttributes(fl_nm);
         fl = $.extend({
-          tip: ''
+          tip: '',
+          fistnm: fm_nm,
+          focus: ''
         }, orig);
+        if (fl_nm === focus_nm) {
+          fl.focus = 'yes';
+        }
         fl.is_first = is_first === true ? 'yes' : '';
         is_first = false;
         fl.yes_val = fl.type === 'yesno' ? String((_ref3 = fl.cdata) != null ? _ref3 : '1') : 'not_used';

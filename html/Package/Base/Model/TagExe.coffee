@@ -132,6 +132,7 @@ class TagExe
 				row= {}
 				for field in @fist_table.Control
 					row[field.name]= [field]
+				@Epic.log2 f, row
 				[row]
 			else []
 	Tag_form_part: (oPt) -> # part="" form="" (opt)field=""
@@ -149,11 +150,13 @@ class TagExe
 		#hpfl= oFi.getHtmlPostedFieldsList fm_nm
 		hpfl=( nm for nm of oFi.getHtmlFieldValues())
 		issues= oFi.getFieldIssues()
+		focus_nm= oFi.getFocus()
 		map= window.EpicMvc['issues$'+ @Epic.appConf().getGroupNm()]
 		for fl_nm in hpfl
 			continue if one_field_nm isnt false and one_field_nm isnt fl_nm
 			orig= oFi.getFieldAttributes fl_nm
-			fl= $.extend {tip:''}, orig
+			fl= $.extend { tip: '', fistnm: fm_nm, focus: '' }, orig
+			fl.focus= 'yes' if fl_nm is focus_nm
 			fl.is_first= if is_first is true then 'yes' else ''
 			is_first= false
 			fl.yes_val = if fl.type is 'yesno' then String (fl.cdata ? '1') else 'not_used'
