@@ -164,6 +164,7 @@
       if (this.was_modal) {
         window.$('#' + this.modalId + '>div.modal').modal('hide');
         window.$('.modal-backdrop').remove();
+        window.$('body').removeClass('modal-open');
         $('#' + this.modalId).html('');
       }
       if (modal) {

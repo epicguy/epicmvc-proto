@@ -130,8 +130,9 @@ class bootstrap
 		#if @was_modal and modal # to avoid 'snap'
 		#	return alert 'Attempting to create a modal, while one is active, may "snap" - check your JavaScript'
 		if @was_modal
-			window.$('#'+@modalId+ '>div.modal').modal 'hide' # Get rid of that backdrop
-			window.$('.modal-backdrop').remove()
+			window.$('#'+@modalId+ '>div.modal').modal 'hide'
+			window.$('.modal-backdrop').remove() # Get rid of that backdrop
+			window.$('body').removeClass 'modal-open' # Bootstrap 3 adds this class to the body to disable page scroll
 			$('#'+@modalId).html ''
 		if modal
 			container= '#'+ @modalId
