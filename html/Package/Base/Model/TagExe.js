@@ -23,7 +23,7 @@
       this.info_foreach = {};
       this.info_if_nms = {};
       this.info_varGet3 = {};
-      this.info_parts = [];
+      this.info_parts = [{}];
       if (state) {
         _ref = state.info_foreach.dyn;
         for (nm in _ref) {

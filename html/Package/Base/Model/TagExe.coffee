@@ -11,7 +11,7 @@ class TagExe
 		@info_foreach= {} # [table-name|subtable-name]['table'&'row'&'size'&'count']=value
 		@info_if_nms= {} # [if-name]=boolean (from <if_xxx name="if-name" ..>
 		@info_varGet3= {} # for &obj/table/var; type variables
-		@info_parts= [] # Push p:attrs with each part, then pop; getTable uses last pushed
+		@info_parts= [{}] # Push p:attrs with each part, then pop; getTable uses last pushed (top level appears an a row w/o attrs)
 		#@Epic.log2 f, 'state', state
 		if state
 			for nm,rec of state.info_foreach.dyn
