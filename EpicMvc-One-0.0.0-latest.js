@@ -2540,7 +2540,7 @@
       this.info_foreach = {};
       this.info_if_nms = {};
       this.info_varGet3 = {};
-      this.info_parts = [];
+      this.info_parts = [{}];
       if (state) {
         _ref = state.info_foreach.dyn;
         for (nm in _ref) {
@@ -4069,6 +4069,7 @@ tmpl: {
       if (this.was_modal) {
         window.$('#' + this.modalId + '>div.modal').modal('hide');
         window.$('.modal-backdrop').remove();
+        window.$('body').removeClass('modal-open');
         $('#' + this.modalId).html('');
       }
       if (modal) {
