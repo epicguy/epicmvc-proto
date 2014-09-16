@@ -177,6 +177,14 @@
       this.eventLastPath = path;
     };
 
+    Fist.prototype.clearIssues = function(html_nm) {
+      if (html_nm) {
+        return delete this.fb_issues[html_nm];
+      } else {
+        return this.fb_issues = {};
+      }
+    };
+
     Fist.prototype.clearValues = function() {
       if (this.form_state !== 'empty') {
         this.Fb_ClearValues();

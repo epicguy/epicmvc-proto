@@ -83,6 +83,11 @@ class Fist
  			@clearValues(); @upload_todo= []; @uploaded_fl= {}
 			@eventLastPath= path
  		return
+	clearIssues: (html_nm) -> # Optionaly takes a single name
+		if html_nm
+			delete @fb_issues[ html_nm]
+		else
+			@fb_issues= {} # Hash by HTML nm, if any
 	clearValues: ->
 		if @form_state isnt 'empty' then @Fb_ClearValues(); @form_state= 'empty'
 		return
