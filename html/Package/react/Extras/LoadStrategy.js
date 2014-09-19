@@ -60,7 +60,7 @@
             results = window.EpicMvc.Extras.ParseFile$react(full_nm, results);
           }
           if (results.must_wrap) {
-            results.content = new Function('v2', 'return [' + (results.content.join()) + '];');
+            results.content = new Function('return [' + (results.content.join()) + '];');
           }
         }
         if (this.cache_local_flag && results !== false) {

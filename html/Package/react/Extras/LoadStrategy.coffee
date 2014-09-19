@@ -22,7 +22,7 @@ class LoadStrategy
 				#{content,can_componentize,style,script,must_wrap}= window.EpicMvc.Extras.ParseFile$react full_nm, results if results isnt false
 				results= window.EpicMvc.Extras.ParseFile$react full_nm, results if results isnt false
 				# TODO RESULT NOW IS A HASH, WITH CONTENT AS AN ARRAY OF FUNCTION CALLS THAT WE WILL TRY TO RETURN TO A CALLING COMPONENT
-				results.content= new Function 'v2', 'return ['+( results.content.join())+ '];' if results.must_wrap
+				results.content= new Function 'return ['+( results.content.join())+ '];' if results.must_wrap
 			@cache[full_nm]= results if @cache_local_flag and results isnt false
 			break if results isnt false
 		if results is false
