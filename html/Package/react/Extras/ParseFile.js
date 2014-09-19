@@ -319,7 +319,6 @@
           comma = attrs.length === 2 ? '' : ',';
           attrs = (attrs.slice(0, -1)) + comma + 'dangerouslySetInnerHTML:{__html: ' + (children.join('+')) + '}' + '}';
           whole_tag = nm + '(' + attrs + ')';
-          console.log(f, 'style tag is special', whole_tag);
         } else {
           whole_tag = nm + '(' + attrs + ',' + (children.join(',')) + ')';
           if (!tag_wait.length) {
@@ -391,7 +390,7 @@
       children.push('React.DOM.span({},' + (findVars(text)).join('+') + ')');
       stats.text++;
     }
-    _log2(f, children.length, stats, children);
+    _log2(f, children.length, stats);
     return {
       content: children,
       must_wrap: true,

@@ -224,7 +224,7 @@ ParseFile= (file_stats, file_contents) ->
 				comma= if attrs.length is 2 then '' else ','
 				attrs=( attrs.slice 0, -1)+ comma+ 'dangerouslySetInnerHTML:{__html: '+( children.join '+')+ '}'+ '}'
 				whole_tag= nm+ '('+ attrs+ ')'
-				console.log f, 'style tag is special', whole_tag
+				#console.log f, 'style tag is special', whole_tag
 			else
 				whole_tag= nm+ '('+ attrs+ ','+( children.join ',')+ ')'
 				stats.dom++ unless tag_wait.length
@@ -266,7 +266,7 @@ ParseFile= (file_stats, file_contents) ->
 		text= text.replace /&([a-z]+);/gm, (m, p1) -> if p1 of dom_entity_map then dom_entity_map[ p1] else '&'+ p1+ 'BROKEN;'
 		children.push 'React.DOM.span({},'+ (findVars text).join( '+')+ ')'
 		stats.text++
-	_log2 f, children.length, stats, children
+	_log2 f, children.length, stats #, children
 	# Note: multi-child part content cannot be rendered as a component, since components require a single root tag
 	# Give to loadStrategy (or compiler) to handle as in-browser or minimized JavaScript
 	# Caller expects: content,can_componentize,defer,style,script,must_wrap
