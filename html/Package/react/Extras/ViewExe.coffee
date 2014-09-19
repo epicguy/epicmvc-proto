@@ -1,50 +1,31 @@
 'use strict'
 # Copyright 2014-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
-# new window.EpicMvc.ViewExe @, @loader, @content_watch # Uses AppConf in constructor
-# @oView.init template, page
-# @oView.run()
-# @oView.doDefer()
 
-# TODO DOES THIS WORK? Consider eliminating content if it's an array of just nulls or empty strings
-window.condense_content= (content) ->
-	return null unless content
-	# TODO CONSIDER EMPTY STRING HERE?
-	return content unless $.isArray content
-	result= []
-	for entry in content
-		result.push entry if entry? and ((typeof entry) isnt 'string' or entry.length)
-	return switch result.length
-		when 0 then null; when 1 then result[ 0]; else result
-
-window.is_empty_content= (content) ->
-	return true unless content
-	return false unless $.isArray content
-	for entry in content
-		return false if entry? or (typeof entry) isnt 'string' or entry.length
-	true
-
+# Interface: oE, oEhandle,  oEcontent (use oE.handleIt), oEroot (true/false has one non-epic root)
 window.PagePart= React.createClass
+	getInitialState: -> tableRefCnt: 1 # Updated by invalidateTables if we need to react to changes in this component
 	getDefaultProps: -> onClick: @handleClick
-	#getInitialState: -> part_content: @props.part_content
-	componentWillMount: -> console.log @props.displayName, 'componentWillMount'
+	componentWillMount: ->
+		console.log @props.oEhandle, 'componentWillMount'
+		@props.oE.context 'set_from_component', @props.oEhandle, @
 	#componentDidMount: -> # TODO HANDLE DEFER'S MARKED WITH E.G. when='DidMount,DidChange' (Default to DidMount)
 	componentDidMount: ->  # TODO ANOTHER WAY TO CONNECT CLICKS TO THE WHOLE COMPONENT, PUT IT HERE?
-	handleClick: -> alert 'YEP'
-	displayName: 'Epic-PagePart'
+	handleClick: -> alert 'YEP, component can "see" that last click of yours.'
+	displayName: 'Epic-PagePart:'
 	render: ->
-		content= condense_content @props.part_content # TODO WAS @part_content()
+		content= @props.oE.handleIt @props.oEcontent, @props.oEhandle
 		# Any part may have a dynamic wrapper, fyi
-		if 'dynamic' of @props
+		if 'dynamic' of @props # Always render the container, even if content is null # TODO MAYBE LET PROPS DECIDE, OR NOT IF TR/TBODY ?
 			React.DOM[ @props.dynamic] @props, content
-		else # TODO CLEAN THIS UP
-			return null unless content # TODO if is_empty_content content
-			if @props.can_componentize
-				console.log '::PagePart.render', @props
-				content # TODO CONDENSE WILL DROP THE OUTER BRACKETS FOR US: [ 0]
+		else
+			return null unless content
+			if @props.oEroot
+				content
 			else
 				React.DOM.div @props, content
 	
+# new window.EpicMvc.ViewExe @, @loader, @content_watch # Uses AppConf in constructor
 class ViewExe
 	constructor: (@Epic, @loader, @content_watch) ->
 		frames= @Epic.oAppConf.getFrames()
@@ -56,16 +37,6 @@ class ViewExe
 		window.oR= React.DOM # Global namespace shortcut for React DOM nodes. <oR.div>
 		@EpicMvcApp= React.createClass render: @T_page
 		@invalidateTablesTimer= false
-
-	# TODO FIGURE OUT WHAT MIGHT BE NEEDED HERE WITH THESE FUNCTIONS THAT OTHERS CALL (invalidateTables, doDefer)
-	invalidateTables: ->
-		return if @Epic.inClick isnt false or @page_name is false or @invalidateTablesTimer isnt false
-		@invalidateTablesTimer= setTimeout =>
-			@invalidateTablesTimer= false
-			@Epic.renderSecure() # TODO REACT HOW BEST TO GET A RE-RENDER BASED ON MODEL'S STATE CHANGES
-		, 0
-	doDefer: ->
-
 	init: ( @template, @page) ->
 		@page_name= page
 		@frames[ @frames.length- 1]= template
@@ -74,11 +45,129 @@ class ViewExe
 		@info_foreach= {}
 		@info_parts= [{}] # Push p:attrs with each part, then pop; (top level is row w/o attrs)
 		@info_if_nms= {} # [if-name]=boolean (from <if_xxx name="if-name" ..> # TODO REACT ADD TO T_if LOGIC
+		# State managers
+		@context_handles= {} # Blow away context info on init since we rebuild all components from scratch
+		@context_stack= [] # Last entry is active component, if empty, then we're not in a component context
+		@context_refs= {} # key is component_handle+ sep(~)+model+/+table for every combo
+		@context_invalidate_warning= {} # Only warn once for this component
 	run: () ->
 		_log2 'START RUN', start= new Date().getTime()
 		result= @T_page()
 		_log2 'END RUN', new Date().getTime()- start
 		result
+	invalidateTables: (view_nm, tbl_nms) ->
+		f= ':react:ViewExe.invalidateTables'
+		# Note: Sometimes we are called after construction, but before init
+		return 'no components' unless @context_refs
+		_log2 f, view_nm, tbl_nms #, (if @Epic.inClick then 'IN'), @context_handles, @context_refs
+		return 'in click' if @Epic.inClick
+		if true
+			# TODO MAP view_nm TO instance-name
+			results= {}
+			handles= {} # Hash to get unique list
+			for tbl in tbl_nms
+				keys= @context 'ref_find', view_nm, tbl
+				results[ tbl]= keys
+				handles[ key]= true for key in keys
+			# TODO FIGURE OUT WHY SOME COMPONENTS CANNOT DO THE STATE THING
+			for key of handles
+				comp= @context_handles[ key].component
+				if not comp.state
+					if key not of @context_invalidate_warning
+						@context_invalidate_warning[ key]= true
+						console.log 'oE.WARNING: Component could not render self, using owner', {key, comp, _owner: comp._owner}
+					handles[ comp._owner.props.oEhandle]= true
+					delete handles[ key]
+				else
+					if key of @context_invalidate_warning
+						console.log 'oE.INTERESING: Component could not render self previously, but seems to be now', {key, comp, _owner: comp._owner}
+			for key of handles
+				comp= @context_handles[ key].component
+				if comp.state?.tableRefCnt?
+					tableRefCnt= comp.state.tableRefCnt+ 1
+				else
+					tableRefCnt= 9000
+					if key not of @context_invalidate_warning
+						@context_invalidate_warning[ key]= true
+						console.log 'oE.WARNING: Component does not have state', {key, comp, _owner: comp._owner}
+					continue # TODO FIGURE OUT WHY YOU CANNOT SET STATE ANYMORE - ALSO NOTE: _OWNER IS NULL FOR patient_tbl_allX
+				comp.setState {tableRefCnt}
+		else
+			# TODO REMOVE THIS OLDER NON-DYNAMIC LOGIC WHEN WE'RE HAPPY WITH THE ABOVE LOGIC
+			return 'not now' if @Epic.inClick isnt false or @page_name is false or @invalidateTablesTimer isnt false
+			@invalidateTablesTimer= setTimeout =>
+				@invalidateTablesTimer= false
+				@Epic.renderSecure() # TODO REACT HOW BEST TO GET A RE-RENDER BASED ON MODEL'S STATE CHANGES
+			, 0
+			results= 'started timer'
+		results
+	doDefer: -> null # TODO STILL NEEDED?
+	context: (direction, component_handle, component) -> # Direction: 'new', 'set', 'enter', 'leave'
+		#f= ':render:ViewExe.context ('+ direction+ ')'+ '('+( if typeof component_handle is 'string' then component_handle else typeof component_handle)+ ')'
+		#_log2 f, (if typeof component is 'string' then component else if component then 'oEhandle:'+ component?.props.oEhandle else 'no3'), @context_handles[ component_handle] ? 'no_handle', if @context_stack.length then @context_stack[ @context_handles.length- 1] else 'zero'
+		sep= '~'
+		switch direction
+			when 'new' # For 'new' the component_handle is the view-name, which we use to prefix the unique handle
+				new_handle= component_handle+ @Epic.nextCounter()
+				# TODO NEED TO BUILD A TRUE FOREACH LIST, NOT A CLONE THAT IS STATIC, AND WON'T HAVE UPDATED WITH INVALIDATE-TABLES
+				info_foreach= $.extend true, {}, @info_foreach
+				info_parts= $.extend {}, @info_parts[ @info_parts.length- 1]
+				@context_handles[ new_handle]= {component: false, info_foreach, info_parts}
+				return new_handle # Caller is asking for this handle
+			when 'set', 'set_from_component' # For 'set', 'component' is the component's actual instance reference
+				@context_handles[ component_handle].component= component
+			when 'enter'
+				# TODO CONSIDER REMOVING ALL REFS FOR THIS COMPONENT, NOW THAT IT IS GOING TO RE-RENDER?
+				@context_stack.push component_handle
+				ref= @context_handles[ component_handle]
+				@info_parts.push ref.info_parts
+				# TODO FOR NOW JUST GOING TO SWAP INFO-FOREACH TILL I FIGURE OUT WHAT TO DO HERE
+				ref.save_fe= $.extend true, {}, @info_foreach
+				@info_foreach= $.extend true, {}, ref.info_foreach
+				# TODO PUSH/POP MORE STATE INFO_* STUFF
+			when 'leave'
+				was= @context_stack.pop()
+				BROKEN_VIEWEXE_CONTEXT_STACK_POP was, component_handle if was isnt component_handle
+				@info_parts.pop()
+				ref= @context_handles[ component_handle]
+				@info_foreach= ref.save_fe
+				delete ref.save_fe
+			when 'ref_add' # Have a model/table reference for a component, remember the association (use current context)
+				return if @context_stack.length is 0 # No components active
+				handle= @context_stack[ @context_stack.length- 1]
+				mt= component_handle+ '/'+ component # These params are really 'model' and 'table'
+				@context_refs[ handle+ sep+ mt]= true
+			when 'ref_find' # Which components have referenced this model/table (caller wants component objects, not my handles)
+				mt= component_handle+ '/'+ component # These params are really 'model' and 'table'
+				keys= []
+				for key of @context_refs
+					[key_comp, key_mt]= key.split sep
+					#keys.push @context_handles[ key_comp].component if key_mt is mt
+					keys.push key_comp if key_mt is mt
+				return keys
+			when 'remove' # Component un-mounted, remove any references
+				delete @context_handles[ component_handle]
+				match= context_handle+ sep
+				len= match.length
+				keys= key for key of @context_refs when key.slice 0, len is match
+				delete @context_refs[ key] for key of keys
+			else BROKEN_SWITCH__VIEWEXE_CONTEXT__DIRECTION direction
+		null # TODO
+	handleIt: (content, component_handle) =>
+		# Eliminating content if it's an array of just nulls or empty strings
+		if typeof content is 'function'
+			@context 'enter', component_handle if component_handle
+			content= content()
+			@context 'leave', component_handle if component_handle
+		return null unless content
+		# TODO CONSIDER EMPTY STRING HERE?
+		return content unless $.isArray content
+		result= []
+		for entry in content
+			result.push entry if entry? and ((typeof entry) isnt 'string' or entry.length)
+		return switch result.length
+			when 0 then null; when 1 then result[ 0]; else result
+
 	loadPartAttrs: (attrs) ->
 		f= ':tag.loadPartAttrs'
 		result= {}
@@ -93,29 +182,33 @@ class ViewExe
 			{content}= @loader.template name= @next_frame()
 		else
 			{content}= @loader.page @page_name
-		result= content attrs
+		result= @handleIt content
 		if result is undefined
 			console.log 'BIG ISSUE IN TMPL/PAGE: '+ name, 'func is', content_func
 			throw new Error 'Big Issue in Tmpl/Page '+ name
 		return result
 	T_page_part: ( attrs) ->
 		f= 'react:viewexe.T_page_part:'
-		displayName= attrs.part; # TODO consider attrs with p:
-		{content,can_componentize}= @loader.part displayName
+		view= attrs.part; # TODO consider attrs with p:
+		{content,can_componentize}= @loader.part view
 		@info_parts.push @loadPartAttrs attrs
-		part_content= content attrs
+		#TODO REACT-DYN MOVING THIS LINE TO INSIDE COMPONENT, AND PASSING ATTRS TO COMPONENT: part_content= content attrs
 		defer= false # TODO DETECT DEFER LOGIC BASED ON RUNNING part_content JUST NOW, ABOVE (DID IT CALL T_DEFER?)
 		if can_componentize or attrs.dynamic or defer
-			result= PagePart {displayName, can_componentize, part_content}
+			#TODO CONSIDER GENRATING A WARNING FOR THIS 'view' WHEN WE HAVE TO FORCE COMPONENTIZING (WILL ADD A DIV TAG)
+			oEhandle= @context 'new', view
+			#TODO REACT-DYN result= PagePart {oE: @, oEhandle, oEroot: can_componentize, part_content}
+			$.extend attrs, {oE: @, oEhandle, oEroot: can_componentize, oEcontent: content}
+			result= PagePart attrs
+			@context 'set', oEhandle, result # For two-way binding; we can now change this fellow's state on invalidateTables he's interested in
 		else
-			result= part_content
+			result= @handleIt content # Run directly with no context or component at this level
 		@info_parts.pop()
 		if result is undefined
 			console.log 'BIG ISSUE IN PART: '+ name, 'func is', content
 			throw new Error 'Big Issue in PART '+ name
-		_log2 f, 'result',( typeof result), result?.length, result
-		#TODO return if is_empty_content result then null else result
-		condense_content result
+		#_log2 f, 'result',( typeof result), result?.length #, result
+		result
 	T_defer: ( attrs, content) -> # TODO IMPLEMENT DEFER LOGIC
 		f= 'react:viewexe.T_defer:'
 		_log2 f, attrs
@@ -124,7 +217,7 @@ class ViewExe
 		return content() if @info_if_nms[ attrs.name]
 		null
 	T_if_false: ( attrs, content) -> # TODO
-		return content() unless @info_if_nms[ attrs.name]
+		return @handleIt content unless @info_if_nms[ attrs.name]
 		null
 	truthy: (val) ->
 		if switch typeof val
@@ -159,9 +252,7 @@ class ViewExe
 		console.log 'ISSUE T_if', attrs if issue
 		@info_if_nms[ attrs.name]= is_true if 'name' of attrs
 		return if is_true and content
-			#TODO result= content()
-			#TODO if is_empty_content result then null else result
-			condense_content content()
+			@handleIt content
 		else null
 	getTable: (nm) ->
 		f= 'react:viewexe.getTable:'+ nm
@@ -178,7 +269,6 @@ class ViewExe
 				[row]
 			else []
 	_accessModelTable: (at_table, alias) ->
-
 		[lh, rh]= at_table.split '/' # Left/right halfs
 		if lh of @info_foreach # Nested table reference
 			tbl= @info_foreach[lh].row[rh]
@@ -187,6 +277,8 @@ class ViewExe
 			oM= @Epic.getInstance lh
 			tbl= oM.getTable rh
 			[dyn_m, dyn_t, dyn_list]= [ lh, rh, []]
+
+		@context 'ref_add', dyn_m, dyn_t
 
 		return [tbl, rh, lh, rh, oM] if tbl.length is 0 # No rows, so no need to store state nor reference alias
 
@@ -212,11 +304,10 @@ class ViewExe
 			@info_foreach[rh_alias].row= $.extend true, {}, row,
 				_FIRST: (if count is 0 then 'F' else ''), _LAST: (if count is tbl.length- 1 then 'L' else ''),
 				_SIZE:tbl.length, _COUNT:count, _BREAK: (if count+ 1 in break_rows_list then 'B' else '')
-			out.push content_f()
+			out.push @handleIt content_f
 		delete @info_foreach[rh_alias]
 		return null unless out.length # Empty array causes issues if in table/tbody outside tr/td
-		#TODO if is_empty_content out then null else out
-		condense_content out
+		@handleIt out # Handle it can also collapse arrays of results, not just a function
 
 	# TODO MORE STUFF FROM THE OLD TAGEXE - NEED TO FIGURE OUT HOW TO LET PKGS 
 
@@ -317,7 +408,8 @@ class ViewExe
 		_log2 '======== content ======', f, content
 		ans= content()
 		_log2 '======== content() ====', f, ans
-		_log2 '======== condense =====', f, condense_content ans
-		condense_content ans
+		ans2= @handleIt content
+		_log2 '======== handleIt =====', f, ans2
+		ans2
 
 window.EpicMvc.Extras.ViewExe$react= ViewExe # Public API
