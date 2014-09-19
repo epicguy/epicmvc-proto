@@ -14,19 +14,20 @@ class LoadStrategy
 		return @cache[full_nm] if @cache[full_nm]?
 		@reverse_packages?=( @Epic.appconfs[i] for i in [@Epic.appconfs.length- 1..0])
 		for pkg in @reverse_packages
-			if p= @preLoaded pkg, type, nm
+			if false and p= @preLoaded pkg, type, nm # TODO DON'T LOOK AT PRECOMPILED STUFF, SINCE IT IS NOT YET REACT PRE COMPILED
 				results= p # Compiled and everything
 			else
 				results= @getFile pkg, full_nm
 				continue if results is false # Did not find it in XHR
+				#{content,can_componentize,style,script,must_wrap}= window.EpicMvc.Extras.ParseFile$react full_nm, results if results isnt false
 				results= window.EpicMvc.Extras.ParseFile$react full_nm, results if results isnt false
-				# TODO RESULT NOW IS AN ARRAY OF FUNCTION CALLS THAT WE WILL TRY TO RETURN TO A CALLING COMPONENT
-				results= new Function 'v2', 'return ['+( results.join())+ '];'
+				# TODO RESULT NOW IS A HASH, WITH CONTENT AS AN ARRAY OF FUNCTION CALLS THAT WE WILL TRY TO RETURN TO A CALLING COMPONENT
+				results.content= new Function 'v2', 'return ['+( results.content.join())+ '];' if results.must_wrap
 			@cache[full_nm]= results if @cache_local_flag and results isnt false
 			break if results isnt false
 		if results is false
 			console.log 'NO FILE FOUND! '+ nm
-			results= @missing type, nm+ ' USING XHR'
+			results= content: @missing type, nm+ ' USING XHR'
 		results
 	getFile: (pkg,nm) ->
 		results= false

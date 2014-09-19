@@ -49,7 +49,7 @@
       _ref1 = this.reverse_packages;
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
         pkg = _ref1[_i];
-        if (p = this.preLoaded(pkg, type, nm)) {
+        if (false && (p = this.preLoaded(pkg, type, nm))) {
           results = p;
         } else {
           results = this.getFile(pkg, full_nm);
@@ -59,7 +59,9 @@
           if (results !== false) {
             results = window.EpicMvc.Extras.ParseFile$react(full_nm, results);
           }
-          results = new Function('v2', 'return [' + (results.join()) + '];');
+          if (results.must_wrap) {
+            results.content = new Function('v2', 'return [' + (results.content.join()) + '];');
+          }
         }
         if (this.cache_local_flag && results !== false) {
           this.cache[full_nm] = results;
@@ -70,7 +72,9 @@
       }
       if (results === false) {
         console.log('NO FILE FOUND! ' + nm);
-        results = this.missing(type, nm + ' USING XHR');
+        results = {
+          content: this.missing(type, nm + ' USING XHR')
+        };
       }
       return results;
     };

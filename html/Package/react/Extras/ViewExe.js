@@ -6,6 +6,81 @@
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
+  window.condense_content = function(content) {
+    var entry, result, _i, _len;
+    if (!content) {
+      return null;
+    }
+    if (!$.isArray(content)) {
+      return content;
+    }
+    result = [];
+    for (_i = 0, _len = content.length; _i < _len; _i++) {
+      entry = content[_i];
+      if ((entry != null) && ((typeof entry) !== 'string' || entry.length)) {
+        result.push(entry);
+      }
+    }
+    switch (result.length) {
+      case 0:
+        return null;
+      case 1:
+        return result[0];
+      default:
+        return result;
+    }
+  };
+
+  window.is_empty_content = function(content) {
+    var entry, _i, _len;
+    if (!content) {
+      return true;
+    }
+    if (!$.isArray(content)) {
+      return false;
+    }
+    for (_i = 0, _len = content.length; _i < _len; _i++) {
+      entry = content[_i];
+      if ((entry != null) || (typeof entry) !== 'string' || entry.length) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  window.PagePart = React.createClass({
+    getDefaultProps: function() {
+      return {
+        onClick: this.handleClick
+      };
+    },
+    componentWillMount: function() {
+      return console.log(this.props.displayName, 'componentWillMount');
+    },
+    componentDidMount: function() {},
+    handleClick: function() {
+      return alert('YEP');
+    },
+    displayName: 'Epic-PagePart',
+    render: function() {
+      var content;
+      content = condense_content(this.props.part_content);
+      if ('dynamic' in this.props) {
+        return React.DOM[this.props.dynamic](this.props, content);
+      } else {
+        if (!content) {
+          return null;
+        }
+        if (this.props.can_componentize) {
+          console.log('::PagePart.render', this.props);
+          return content;
+        } else {
+          return React.DOM.div(this.props, content);
+        }
+      }
+    }
+  });
+
   ViewExe = (function() {
 
     function ViewExe(Epic, loader, content_watch) {
@@ -97,14 +172,14 @@
     };
 
     ViewExe.prototype.T_page = function(attrs) {
-      var content_func, name, result;
+      var content, name, result;
       name = this.page_name;
       if (this.frame_inx < this.frames.length) {
-        content_func = this.loader.template(name = this.next_frame());
+        content = this.loader.template(name = this.next_frame()).content;
       } else {
-        content_func = this.loader.page(this.page_name);
+        content = this.loader.page(this.page_name).content;
       }
-      result = content_func(attrs);
+      result = content(attrs);
       if (result === void 0) {
         console.log('BIG ISSUE IN TMPL/PAGE: ' + name, 'func is', content_func);
         throw new Error('Big Issue in Tmpl/Page ' + name);
@@ -113,17 +188,36 @@
     };
 
     ViewExe.prototype.T_page_part = function(attrs) {
-      var name, part, result;
-      name = attrs.part;
-      part = this.loader.part(name);
+      var can_componentize, content, defer, displayName, f, part_content, result, _ref;
+      f = 'react:viewexe.T_page_part:';
+      displayName = attrs.part;
+      _ref = this.loader.part(displayName), content = _ref.content, can_componentize = _ref.can_componentize;
       this.info_parts.push(this.loadPartAttrs(attrs));
-      result = part(attrs);
+      part_content = content(attrs);
+      defer = false;
+      if (can_componentize || attrs.dynamic || defer) {
+        result = PagePart({
+          displayName: displayName,
+          can_componentize: can_componentize,
+          part_content: part_content
+        });
+      } else {
+        result = part_content;
+      }
       this.info_parts.pop();
       if (result === void 0) {
-        console.log('BIG ISSUE IN PART: ' + name, 'func is', part);
+        console.log('BIG ISSUE IN PART: ' + name, 'func is', content);
         throw new Error('Big Issue in PART ' + name);
       }
-      return result;
+      _log2(f, 'result', typeof result, result != null ? result.length : void 0, result);
+      return condense_content(result);
+    };
+
+    ViewExe.prototype.T_defer = function(attrs, content) {
+      var f;
+      f = 'react:viewexe.T_defer:';
+      _log2(f, attrs);
+      return null;
     };
 
     ViewExe.prototype.T_if_true = function(attrs, content) {
@@ -138,6 +232,24 @@
         return content();
       }
       return null;
+    };
+
+    ViewExe.prototype.truthy = function(val) {
+      if ((function() {
+        var _ref;
+        switch (typeof val) {
+          case 'string':
+            return (val != null ? val.length : void 0) && ((_ref = val.toLowerCase()) !== 'n' && _ref !== 'no');
+          case 'boolean':
+            return val === true;
+          default:
+            return val;
+        }
+      })()) {
+        return true;
+      } else {
+        return false;
+      }
     };
 
     ViewExe.prototype.T_if = function(attrs, content) {
@@ -161,13 +273,9 @@
           issue = true;
         }
       } else if ('set' in attrs) {
-        if (attrs.set.length) {
-          is_true = true;
-        }
+        is_true = this.truthy(attrs.set);
       } else if ('not_set' in attrs) {
-        if (!attrs.not_set.length) {
-          is_true = true;
-        }
+        is_true = !this.truthy(attrs.not_set);
       } else if ('table_is_not_empty' in attrs) {
         val = attrs.table_is_not_empty;
         _ref1 = val.split('/'), lh = _ref1[0], rh = _ref1[1];
@@ -185,7 +293,7 @@
         this.info_if_nms[attrs.name] = is_true;
       }
       if (is_true && content) {
-        return content();
+        return condense_content(content());
       } else {
         return null;
       }
@@ -244,7 +352,6 @@
     ViewExe.prototype.T_foreach = function(attrs, content_f) {
       var break_rows_list, count, f, limit, out, rh_alias, row, tbl, _i, _len, _ref, _ref1;
       f = 'react:viewexe.T_foreach';
-      console.log(f, attrs);
       _ref = this._accessModelTable(attrs.table, attrs.alias), tbl = _ref[0], rh_alias = _ref[1];
       if (tbl.length === 0) {
         return '';
@@ -270,7 +377,10 @@
         out.push(content_f());
       }
       delete this.info_foreach[rh_alias];
-      return out;
+      if (!out.length) {
+        return null;
+      }
+      return condense_content(out);
     };
 
     ViewExe.prototype.formatFromSpec = function(val, spec, custom_spec) {
@@ -444,6 +554,25 @@
       return this.T_page_part({
         part: part
       });
+    };
+
+    ViewExe.prototype.T_react = function(attrs) {
+      var _base, _ref;
+      if ((_ref = (_base = EpicMvc.Extras).components) == null) {
+        _base.components = {};
+      }
+      return EpicMvc.Extras.components[attrs.func](attrs);
+    };
+
+    ViewExe.prototype.T_show_me = function(attrs, content) {
+      var ans, f;
+      f = ':tag(viewexe).T_showme';
+      _log2('======== attrs   ======', f, attrs);
+      _log2('======== content ======', f, content);
+      ans = content();
+      _log2('======== content() ====', f, ans);
+      _log2('======== condense =====', f, condense_content(ans));
+      return condense_content(ans);
     };
 
     return ViewExe;

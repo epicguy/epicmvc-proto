@@ -5,6 +5,46 @@
 # @oView.init template, page
 # @oView.run()
 # @oView.doDefer()
+
+# TODO DOES THIS WORK? Consider eliminating content if it's an array of just nulls or empty strings
+window.condense_content= (content) ->
+	return null unless content
+	# TODO CONSIDER EMPTY STRING HERE?
+	return content unless $.isArray content
+	result= []
+	for entry in content
+		result.push entry if entry? and ((typeof entry) isnt 'string' or entry.length)
+	return switch result.length
+		when 0 then null; when 1 then result[ 0]; else result
+
+window.is_empty_content= (content) ->
+	return true unless content
+	return false unless $.isArray content
+	for entry in content
+		return false if entry? or (typeof entry) isnt 'string' or entry.length
+	true
+
+window.PagePart= React.createClass
+	getDefaultProps: -> onClick: @handleClick
+	#getInitialState: -> part_content: @props.part_content
+	componentWillMount: -> console.log @props.displayName, 'componentWillMount'
+	#componentDidMount: -> # TODO HANDLE DEFER'S MARKED WITH E.G. when='DidMount,DidChange' (Default to DidMount)
+	componentDidMount: ->  # TODO ANOTHER WAY TO CONNECT CLICKS TO THE WHOLE COMPONENT, PUT IT HERE?
+	handleClick: -> alert 'YEP'
+	displayName: 'Epic-PagePart'
+	render: ->
+		content= condense_content @props.part_content # TODO WAS @part_content()
+		# Any part may have a dynamic wrapper, fyi
+		if 'dynamic' of @props
+			React.DOM[ @props.dynamic] @props, content
+		else # TODO CLEAN THIS UP
+			return null unless content # TODO if is_empty_content content
+			if @props.can_componentize
+				console.log '::PagePart.render', @props
+				content # TODO CONDENSE WILL DROP THE OUTER BRACKETS FOR US: [ 0]
+			else
+				React.DOM.div @props, content
+	
 class ViewExe
 	constructor: (@Epic, @loader, @content_watch) ->
 		frames= @Epic.oAppConf.getFrames()
@@ -50,30 +90,49 @@ class ViewExe
 	T_page: ( attrs) =>
 		name= @page_name
 		if @frame_inx< @frames.length
-			content_func= @loader.template name= @next_frame()
+			{content}= @loader.template name= @next_frame()
 		else
-			content_func= @loader.page @page_name
-		result= content_func attrs
+			{content}= @loader.page @page_name
+		result= content attrs
 		if result is undefined
 			console.log 'BIG ISSUE IN TMPL/PAGE: '+ name, 'func is', content_func
 			throw new Error 'Big Issue in Tmpl/Page '+ name
 		return result
 	T_page_part: ( attrs) ->
-		name= attrs.part; # TODO consider attrs with p:
-		part= @loader.part name
+		f= 'react:viewexe.T_page_part:'
+		displayName= attrs.part; # TODO consider attrs with p:
+		{content,can_componentize}= @loader.part displayName
 		@info_parts.push @loadPartAttrs attrs
-		result= part attrs
+		part_content= content attrs
+		defer= false # TODO DETECT DEFER LOGIC BASED ON RUNNING part_content JUST NOW, ABOVE (DID IT CALL T_DEFER?)
+		if can_componentize or attrs.dynamic or defer
+			result= PagePart {displayName, can_componentize, part_content}
+		else
+			result= part_content
 		@info_parts.pop()
 		if result is undefined
-			console.log 'BIG ISSUE IN PART: '+ name, 'func is', part
+			console.log 'BIG ISSUE IN PART: '+ name, 'func is', content
 			throw new Error 'Big Issue in PART '+ name
-		return result
+		_log2 f, 'result',( typeof result), result?.length, result
+		#TODO return if is_empty_content result then null else result
+		condense_content result
+	T_defer: ( attrs, content) -> # TODO IMPLEMENT DEFER LOGIC
+		f= 'react:viewexe.T_defer:'
+		_log2 f, attrs
+		null # No content for these
 	T_if_true: ( attrs, content) -> # TODO
 		return content() if @info_if_nms[ attrs.name]
 		null
 	T_if_false: ( attrs, content) -> # TODO
 		return content() unless @info_if_nms[ attrs.name]
 		null
+	truthy: (val) ->
+		if switch typeof val
+			when 'string' then val?.length and val.toLowerCase() not in ['n','no']
+			when 'boolean' then val is true
+			else val
+		then true
+		else false
 	T_if: ( attrs, content) -> # TODO
 		#console.log 'T_if', attrs, content?.length
 		issue= false
@@ -87,9 +146,9 @@ class ViewExe
 				is_true= true if attrs.val in attrs.in_list.split ','
 			else issue= true
 		else if 'set' of attrs
-			is_true= true if attrs.set.length
+			is_true= @truthy attrs.set
 		else if 'not_set' of attrs
-			is_true= true unless attrs.not_set.length
+			is_true= not @truthy attrs.not_set
 		else if 'table_is_not_empty' of attrs
 			val= attrs.table_is_not_empty
 			[lh, rh]= val.split '/' # Left/right halfs
@@ -99,7 +158,11 @@ class ViewExe
 		else issue= true
 		console.log 'ISSUE T_if', attrs if issue
 		@info_if_nms[ attrs.name]= is_true if 'name' of attrs
-		return if is_true and content then content() else null
+		return if is_true and content
+			#TODO result= content()
+			#TODO if is_empty_content result then null else result
+			condense_content content()
+		else null
 	getTable: (nm) ->
 		f= 'react:viewexe.getTable:'+ nm
 		#@Epic.log2 f, @info_parts if nm is 'Part'
@@ -136,7 +199,7 @@ class ViewExe
 
 	T_foreach: (attrs, content_f) ->
 		f= 'react:viewexe.T_foreach'
-		console.log f, attrs
+		#console.log f, attrs
 		[tbl, rh_alias]= @_accessModelTable attrs.table, attrs.alias
 		return '' if tbl.length is 0 # No rows means no output
 		break_rows_list= [] # TODO REACT @calcBreak tbl.length, oPt
@@ -151,7 +214,9 @@ class ViewExe
 				_SIZE:tbl.length, _COUNT:count, _BREAK: (if count+ 1 in break_rows_list then 'B' else '')
 			out.push content_f()
 		delete @info_foreach[rh_alias]
-		out
+		return null unless out.length # Empty array causes issues if in table/tbody outside tr/td
+		#TODO if is_empty_content out then null else out
+		condense_content out
 
 	# TODO MORE STUFF FROM THE OLD TAGEXE - NEED TO FIGURE OUT HOW TO LET PKGS 
 
@@ -243,5 +308,16 @@ class ViewExe
 			out.push fl
 		@fist_table= Form: [show_req: show_req, any_req: any_req, help: help], Control: out
 		@T_page_part {part} #TODO REACT @viewExe.includePart part, false # TODO DYNAMICINFO?
+	T_react: (attrs) ->
+		EpicMvc.Extras.components?= {}
+		EpicMvc.Extras.components[ attrs.func]( attrs)
+	T_show_me: (attrs, content) ->
+		f= ':tag(viewexe).T_showme'
+		_log2 '======== attrs   ======', f, attrs
+		_log2 '======== content ======', f, content
+		ans= content()
+		_log2 '======== content() ====', f, ans
+		_log2 '======== condense =====', f, condense_content ans
+		condense_content ans
 
 window.EpicMvc.Extras.ViewExe$react= ViewExe # Public API

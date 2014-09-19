@@ -111,7 +111,8 @@
     colspan: 'colSpan',
     cellpadding: 'cellPadding',
     cellspacing: 'cellSpacing',
-    maxlength: 'maxLength'
+    maxlength: 'maxLength',
+    tabindex: 'tabIndex'
   };
 
   FindAttrVal = function(i, a) {
@@ -246,20 +247,28 @@
   };
 
   ParseFile = function(file_stats, file_contents) {
-    var after, after_comment, after_defer, after_script, after_style, after_trim, attrs, base_nm, children, dom_close, dom_entity_map, dom_nms, empty, f, i, is_epic, nm, oi, parts, prev_children, t, tag_names_for_debugger, tag_wait, text, whole_tag, _ref, _ref1;
+    var after, after_comment, after_script, after_style, after_trim, attrs, base_nm, children, comma, dom_close, dom_entity_map, dom_nms, empty, f, i, is_epic, nm, oi, parts, prev_children, stats, t, tag_names_for_debugger, tag_wait, text, tw, whole_tag, _ref, _ref1;
     f = 'react/E/ParseFile.ParseFile:' + file_stats;
-    dom_nms = ['div', 'a', 'span', 'ul', 'li', 'p', 'b', 'i', 'dl', 'dd', 'dt', 'form', 'fieldset', 'label', 'legend', 'button', 'input', 'textarea', 'select', 'option', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5', 'img', 'br', 'hr'];
+    stats = {
+      text: 0,
+      dom: 0,
+      epic: 0
+    };
+    dom_nms = ['style', 'div', 'a', 'span', 'ol', 'ul', 'li', 'p', 'b', 'i', 'dl', 'dd', 'dt', 'form', 'fieldset', 'label', 'legend', 'button', 'input', 'textarea', 'select', 'option', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5', 'img', 'br', 'hr', 'header', 'footer', 'section'];
     dom_close = ['img', 'br', 'input', 'hr'];
     dom_entity_map = {
       nbsp: '\u00A0',
       reg: '\u00AE',
       copy: '\u00A9',
-      times: '\u22A0'
+      times: '\u22A0',
+      lt: '\u003C',
+      gt: '\u003E',
+      amp: '\u0026',
+      quot: '\u0022'
     };
     after_trim = file_contents.trim();
     after_comment = after_trim.replace(/-->/gm, '\x02').replace(/<!--[^\x02]*\x02/gm, '');
-    after_defer = after_comment.replace(/<\/epic:defer>/gm, '\x02').replace(/<epic:defer[^\x02]*\x02/gm, '');
-    after_style = after_defer.replace(/<\/style>/gm, '\x02').replace(/<style[^\x02]*\x02/gm, '');
+    after_style = after_comment;
     after_script = after_style.replace(/<\/script>/gm, '\x02').replace(/<script[^\x02]*\x02/gm, '');
     after = after_script;
     after = after.trim();
@@ -268,15 +277,24 @@
     tag_wait = [];
     children = [];
     while (i < parts.length - 1) {
-      text = parts[i].trim().replace(/&([a-z]+);/gm, function(m, p1) {
-        if (p1 in dom_entity_map) {
-          return dom_entity_map[p1];
+      text = parts[i].replace(/^\s+|\s+$/gm, ' ');
+      if (text.length && text !== ' ' && text !== '  ') {
+        text = text.replace(/&([a-z]+);/gm, function(m, p1) {
+          if (p1 in dom_entity_map) {
+            return dom_entity_map[p1];
+          } else {
+            return '&' + p1 + 'BROKEN;';
+          }
+        });
+        if (tag_wait.length) {
+          tw = tag_wait[tag_wait.length - 1];
+          children.push((findVars(text)).join('+'));
         } else {
-          return '&' + p1 + ';';
+          children.push('React.DOM.span({},' + (findVars(text)).join('+') + ')');
         }
-      });
-      if (text.length) {
-        children.push('React.DOM.span({},' + (findVars(text)).join('+') + ')');
+        if (!tag_wait.length) {
+          stats.text++;
+        }
       }
       if (parts[i + 1] === '/') {
         if (!tag_wait.length) {
@@ -294,8 +312,19 @@
           whole_tag = nm + '(' + attrs + ')';
         } else if (is_epic) {
           whole_tag = nm + '(' + attrs + ',function(){return [' + (children.join(',')) + ']})';
+          if (!tag_wait.length) {
+            stats.epic++;
+          }
+        } else if (nm === 'React.DOM.style') {
+          comma = attrs.length === 2 ? '' : ',';
+          attrs = (attrs.slice(0, -1)) + comma + 'dangerouslySetInnerHTML:{__html: ' + (children.join('+')) + '}' + '}';
+          whole_tag = nm + '(' + attrs + ')';
+          console.log(f, 'style tag is special', whole_tag);
         } else {
           whole_tag = nm + '(' + attrs + ',' + (children.join(',')) + ')';
+          if (!tag_wait.length) {
+            stats.dom++;
+          }
         }
         children = prev_children;
         children.push(whole_tag);
@@ -325,6 +354,13 @@
         if (empty === '/') {
           whole_tag = nm + '(' + attrs + ')';
           children.push(whole_tag);
+          if (!tag_wait.length) {
+            if (is_epic) {
+              stats.epic++;
+            } else {
+              stats.dom++;
+            }
+          }
         } else {
           tag_wait.push([i, nm, attrs, children, is_epic]);
           children = [];
@@ -343,15 +379,24 @@
         return _results;
       })()).join(', '));
     }
-    if (parts[i].length) {
-      children.push((findVars(parts[i])).join('+'));
-    }
-    text = parts[i].trim();
-    if (text.length) {
+    text = parts[i].replace(/^\s+|\s+$/g, ' ');
+    if (text.length && text !== ' ' && text !== '  ') {
+      text = text.replace(/&([a-z]+);/gm, function(m, p1) {
+        if (p1 in dom_entity_map) {
+          return dom_entity_map[p1];
+        } else {
+          return '&' + p1 + 'BROKEN;';
+        }
+      });
       children.push('React.DOM.span({},' + (findVars(text)).join('+') + ')');
+      stats.text++;
     }
-    _log2(f, file_stats, children);
-    return children;
+    _log2(f, children.length, stats, children);
+    return {
+      content: children,
+      must_wrap: true,
+      can_componentize: children.length === 1 && stats.epic === 0
+    };
   };
 
   if (typeof window !== "undefined" && window !== null) {

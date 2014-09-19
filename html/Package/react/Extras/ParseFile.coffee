@@ -80,8 +80,8 @@ findStyles= (file_info, parts) -> # Hash of styles w/EpicVars expressions if nee
 	styles
 		
 nm_map=
-	'class':'className', 'for':'htmlFor', defaultvalue:'defaultValue', defaultchecked:'defaultChecked' # TODO MADE THESE NON-DEFAULT MAPS SO SHARE-CHECKBOXES WORKED
-	colspan:'colSpan', cellpadding:'cellPadding', cellspacing:'cellSpacing', maxlength: 'maxLength'
+	'class':'className', 'for':'htmlFor', defaultvalue:'defaultValue', defaultchecked:'defaultChecked'
+	colspan:'colSpan', cellpadding:'cellPadding', cellspacing:'cellSpacing', maxlength: 'maxLength', tabindex: 'tabIndex'
 
 FindAttrVal= (i, a) -> # false if eof, 'string' if error, else [i, attr-name, quote-char, val-as-parts]
 	# Look for 'attr-name'
@@ -172,21 +172,22 @@ findVars= (text) ->
 
 ParseFile= (file_stats, file_contents) ->
 	f= 'react/E/ParseFile.ParseFile:'+file_stats
+	stats= text: 0, dom: 0, epic: 0
 	dom_nms= [
-		'div', 'a', 'span', 'ul', 'li', 'p', 'b', 'i', 'dl', 'dd', 'dt'
+		'style'
+		'div', 'a', 'span', 'ol', 'ul', 'li', 'p', 'b', 'i', 'dl', 'dd', 'dt'
 		'form', 'fieldset', 'label', 'legend', 'button', 'input', 'textarea', 'select', 'option'
 		'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5'
-		'img', 'br', 'hr'
+		'img', 'br', 'hr', 'header', 'footer', 'section'
 	]
 	dom_close= [ 'img', 'br', 'input', 'hr' ]
-	dom_entity_map= nbsp: '\u00A0',reg: '\u00AE', copy: '\u00A9', times: '\u22A0'
-	after_trim= file_contents.trim() # TODO FIGURE OUT HOW THIS HELPS AVOID [Object,Object] WHEN DOING '\n\n   '+React.DOM.div()
+	dom_entity_map= nbsp: '\u00A0',reg: '\u00AE', copy: '\u00A9', times: '\u22A0', lt: '\u003C', gt: '\u003E', amp: '\u0026', quot: '\u0022'
+	after_trim= file_contents.trim()
 	after_comment= after_trim.replace( /-->/gm, '\x02').replace /<!--[^\x02]*\x02/gm, ''
-	after_defer= after_comment.replace( /<\/epic:defer>/gm, '\x02').replace /<epic:defer[^\x02]*\x02/gm, '' # TODO MOVE TO COMPONENT?
-	after_style= after_defer.replace( /<\/style>/gm, '\x02').replace /<style[^\x02]*\x02/gm, '' # TODO MOVE TO COMPONENT?
-	after_script= after_style.replace( /<\/script>/gm, '\x02').replace /<script[^\x02]*\x02/gm, '' # TODO FIND WAY TO COMPLAIN?
+	after_style= after_comment # REACT ALLOWS STYLE TAGS .replace( /<\/style>/gm, '\x02').replace /<style[^\x02]*\x02/gm, '' # TODO MOVE TO COMPONENT?
+	after_script= after_style.replace( /<\/script>/gm, '\x02').replace /<script[^\x02]*\x02/gm, '' # React allows SCRIPT, but we dont' like it
 	after= after_script
-	after= after.trim() # TODO WHITESPACE IS LEFT AFTER REMOVING OTHER STUFF
+	after= after.trim() # Whitespace is left after removing other stuff above
 
 	# Create array of 4 parts: non-tag-content, leading-slash, tag-name, attrs
 	# End of 'attrs' may have a '/' (or is '/' if leading-slash is '/')
@@ -195,8 +196,17 @@ ParseFile= (file_stats, file_contents) ->
 	tag_wait= [] # Holds back list of indexes while doing a nested tag
 	children= [] # Current list of child expressions - can be text, DOM tags or Epic tags
 	while i< parts.length- 1
-		text= parts[ i].trim().replace /&([a-z]+);/gm, (m, p1) -> if p1 of dom_entity_map then dom_entity_map[ p1] else '&'+ p1+ ';'
-		children.push 'React.DOM.span({},'+ (findVars text).join( '+')+ ')' if text.length
+		text= parts[ i].replace(/^\s+|\s+$/gm, ' ')
+		if text.length and text isnt ' ' and text isnt '  ' # Not just whitespace
+			text= text.replace /&([a-z]+);/gm, (m, p1) -> if p1 of dom_entity_map then dom_entity_map[ p1] else '&'+ p1+ 'BROKEN;'
+			if tag_wait.length
+				tw= tag_wait[ tag_wait.length- 1]
+				# TODO DID NOT WORK text.replace /"/gm, dom_entity_map.quot if tw[ 1] is 'style'
+				#text= text.replace /"/gm, "\\u0022" if tw[ 1] is 'React.DOM.style'
+				children.push (findVars text).join( '+')
+			else
+				children.push 'React.DOM.span({},'+ (findVars text).join( '+')+ ')'
+			stats.text++ unless tag_wait.length
 		if parts[ i+ 1]== '/' # Close tag
 			if not tag_wait.length
 				# TODO ERRORS COULD INCLUDE LINE NUMBERS AND EVEN FILE-TEXT SNIPIT; MAY NEED TO MODIFY THOSE 'AFTER_*' REGEX'S TO PRESERVE NEWLINES/LINE COUNT
@@ -208,9 +218,16 @@ ParseFile= (file_stats, file_contents) ->
 			if children.length is 0 # Simple case
 				whole_tag= nm+ '('+ attrs+ ')'
 			else if is_epic
-				whole_tag= nm+  '('+ attrs+ ',function(){return ['+( children.join ',')+ ']})' # TODO TRY NOT USING '+' IN JOIN, BUT DO ARRAY INSTEAD?
+				whole_tag= nm+  '('+ attrs+ ',function(){return ['+( children.join ',')+ ']})'
+				stats.epic++ unless tag_wait.length
+			else if nm is 'React.DOM.style'
+				comma= if attrs.length is 2 then '' else ','
+				attrs=( attrs.slice 0, -1)+ comma+ 'dangerouslySetInnerHTML:{__html: '+( children.join '+')+ '}'+ '}'
+				whole_tag= nm+ '('+ attrs+ ')'
+				console.log f, 'style tag is special', whole_tag
 			else
 				whole_tag= nm+ '('+ attrs+ ','+( children.join ',')+ ')'
+				stats.dom++ unless tag_wait.length
 			children= prev_children # Move back to the enclosing tag's list
 			children.push whole_tag # Include this closing tag's content as a child
 		else # Open tag
@@ -234,6 +251,7 @@ ParseFile= (file_stats, file_contents) ->
 			if empty is '/' # This tag is the child, no need to push things
 				whole_tag= nm+ '('+ attrs+ ')'
 				children.push whole_tag
+				(if is_epic then stats.epic++ else stats.dom++) unless tag_wait.length
 			else
 				# Wait till closing tag...
 				tag_wait.push [ i, nm, attrs, children, is_epic]
@@ -242,12 +260,17 @@ ParseFile= (file_stats, file_contents) ->
 
 	if tag_wait.length
 		throw "[#{file_stats}] Missing closing tags#{(parts[t+2] for [t] in tag_wait).join ', '}"
-	children.push (findVars parts[ i]).join '+' if parts[ i].length
-	text= parts[ i].trim()
-	children.push 'React.DOM.span({},'+ (findVars text).join( '+')+ ')' if text.length
-	_log2 f, file_stats, children
-	# TODO CONSIDER RETURNING A FEW VALUES, NOT JUST CONTENT-CHILDREN - LIKE STYLE AND DEFER-LOGIC
-	return children # Give to loadStrategy (or compiler) to handle as in-browser or minimized JavaScript
+	#children.push (findVars parts[ i]).join '+' if parts[ i].length
+	text= parts[ i].replace /^\s+|\s+$/g, ' '
+	if text.length and text isnt ' ' and text isnt '  ' # Not just whitespace
+		text= text.replace /&([a-z]+);/gm, (m, p1) -> if p1 of dom_entity_map then dom_entity_map[ p1] else '&'+ p1+ 'BROKEN;'
+		children.push 'React.DOM.span({},'+ (findVars text).join( '+')+ ')'
+		stats.text++
+	_log2 f, children.length, stats, children
+	# Note: multi-child part content cannot be rendered as a component, since components require a single root tag
+	# Give to loadStrategy (or compiler) to handle as in-browser or minimized JavaScript
+	# Caller expects: content,can_componentize,defer,style,script,must_wrap
+	return content: children, must_wrap: true, can_componentize: children.length is 1 and stats.epic is 0
 
 # Public API
 if window? then window.EpicMvc.Extras.ParseFile$react= ParseFile
