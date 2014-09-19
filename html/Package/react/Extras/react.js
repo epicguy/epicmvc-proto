@@ -89,7 +89,7 @@
     };
 
     react.prototype.render = function(content, history, click_index, modal) {
-      var start, watch, _i, _len, _ref;
+      var container, start, watch, _i, _len, _ref;
       if (this.was_modal) {
         window.$('.modal-backdrop').remove();
         window.$('body').removeClass('modal-open');
@@ -98,12 +98,13 @@
       if (modal) {
         React.renderComponent(this.ModalComponent({
           content: React.DOM.div({}, content)
-        }), document.getElementById(this.modalId));
+        }), container = document.getElementById(this.modalId));
       } else {
         _log2('START RENDER', start = new Date().getTime());
-        React.renderComponent(React.DOM.div({}, content), document.getElementById(this.baseId));
+        React.renderComponent(React.DOM.div({}, content), container = document.getElementById(this.baseId));
         _log2('END RENDER', new Date().getTime() - start);
       }
+      console.log('render......', this.content_watch, container);
       _ref = this.content_watch;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         watch = _ref[_i];

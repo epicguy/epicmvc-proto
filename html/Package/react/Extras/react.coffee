@@ -55,11 +55,12 @@ class react
 		if modal
 			#React.renderComponent content, document.getElementById @modalId, =>
 				#window.$('#'+@modalId+ ' div.modal').modal() # Activate it (must include boostrap-modal.js)
-			React.renderComponent (@ModalComponent content: React.DOM.div {}, content), document.getElementById @modalId
+			React.renderComponent (@ModalComponent content: React.DOM.div {}, content), container= document.getElementById @modalId
 		else
 			_log2 'START RENDER', start= new Date().getTime()
-			React.renderComponent (React.DOM.div {}, content), document.getElementById @baseId
+			React.renderComponent (React.DOM.div {}, content), container= document.getElementById @baseId
 			_log2 'END RENDER', new Date().getTime()- start
+		console.log 'render......', @content_watch, container
 		(watch container) for watch in @content_watch
 		@handleRenderState(history, click_index)
 		@was_modal= modal
