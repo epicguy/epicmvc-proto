@@ -19,9 +19,8 @@ class LoadStrategy
 			else
 				results= @getFile pkg, full_nm
 				continue if results is false # Did not find it in XHR
-				#{content,can_componentize,style,script,must_wrap}= window.EpicMvc.Extras.ParseFile$react full_nm, results if results isnt false
+				# result: {content,can_componentize,style,script,must_wrap,defer}
 				results= window.EpicMvc.Extras.ParseFile$react full_nm, results if results isnt false
-				# TODO RESULT NOW IS A HASH, WITH CONTENT AS AN ARRAY OF FUNCTION CALLS THAT WE WILL TRY TO RETURN TO A CALLING COMPONENT
 				results.content= new Function 'return ['+( results.content.join())+ '];' if results.must_wrap
 			@cache[full_nm]= results if @cache_local_flag and results isnt false
 			break if results isnt false

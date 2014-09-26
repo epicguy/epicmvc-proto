@@ -2,14 +2,31 @@
 (function() {
   'use strict';
 
-  var ViewExe,
+  var ViewExe, pad_a, pad_b, pad_c,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
+  pad_a = 18;
+
+  pad_b = 4;
+
+  pad_c = 24;
+
+  window.pad = function(l, s) {
+    var r;
+    s = String(s);
+    r = l - s.length;
+    if (r < 0) {
+      r = 0;
+    }
+    return s + (new Array(r + 1)).join(' ');
+  };
+
   window.PagePart = React.createClass({
+    displayName: 'Epic-PagePart:',
     getInitialState: function() {
       return {
-        tableRefCnt: 1
+        oE: this.props.oE.cb('getInitialState', this)
       };
     },
     getDefaultProps: function() {
@@ -17,25 +34,29 @@
         onClick: this.handleClick
       };
     },
-    componentWillMount: function() {
-      console.log(this.props.oEhandle, 'componentWillMount');
-      return this.props.oE.context('set_from_component', this.props.oEhandle, this);
+    componentDidMount: function() {
+      this.props.oE.cb('componentDidMount', this);
+      return null;
     },
-    componentDidMount: function() {},
+    componentDidUpdate: function() {
+      return this.props.oE.cb('componentDidUpdate', this);
+    },
+    componentWillUnmount: function() {
+      return this.props.oE.cb('componentWillUnmount', this);
+    },
     handleClick: function() {
       return alert('YEP, component can "see" that last click of yours.');
     },
-    displayName: 'Epic-PagePart:',
     render: function() {
       var content;
-      content = this.props.oE.handleIt(this.props.oEcontent, this.props.oEhandle);
+      content = this.props.oE.cb('render', this);
       if ('dynamic' in this.props) {
         return React.DOM[this.props.dynamic](this.props, content);
       } else {
         if (!content) {
           return null;
         }
-        if (this.props.oEroot) {
+        if (this.props.oE.has_root) {
           return content;
         } else {
           return React.DOM.div(this.props, content);
@@ -54,6 +75,8 @@
       this.T_page = __bind(this.T_page, this);
 
       this.handleIt = __bind(this.handleIt, this);
+
+      this.context = __bind(this.context, this);
 
       frames = this.Epic.oAppConf.getFrames();
       this.frames = (function() {
@@ -87,6 +110,7 @@
     }
 
     ViewExe.prototype.init = function(template, page) {
+      var handle, _ref, _ref1, _ref2;
       this.template = template;
       this.page = page;
       this.page_name = page;
@@ -95,14 +119,33 @@
       this.info_foreach = {};
       this.info_parts = [{}];
       this.info_if_nms = {};
-      this.context_handles = {};
-      this.context_stack = [];
-      this.context_refs = {};
-      return this.context_invalidate_warning = {};
+      if (true) {
+        if ((_ref = this.context_handles) == null) {
+          this.context_handles = {};
+        }
+        for (handle in this.context_handles) {
+          this.context(':init', {
+            state: {
+              oE: handle
+            }
+          });
+        }
+        this.context_active = false;
+        if ((_ref1 = this.context_audit) == null) {
+          this.context_audit = [];
+        }
+        this.context_dirty = {};
+        return (_ref2 = this.context_refs) != null ? _ref2 : this.context_refs = {};
+      }
     };
 
     ViewExe.prototype.run = function() {
-      var result, start;
+      var handle, result, start;
+      if (true) {
+        for (handle in this.context_handles) {
+          this.context_audit.push("" + (pad(pad_a + pad_b, ':run')) + handle);
+        }
+      }
       _log2('START RUN', start = new Date().getTime());
       result = this.T_page();
       _log2('END RUN', new Date().getTime() - start);
@@ -110,170 +153,147 @@
     };
 
     ViewExe.prototype.invalidateTables = function(view_nm, tbl_nms) {
-      var comp, f, handles, key, keys, results, tableRefCnt, tbl, _i, _j, _len, _len1, _ref,
+      var f, tbl, _i, _len,
         _this = this;
       f = ':react:ViewExe.invalidateTables';
-      if (!this.context_refs) {
-        return 'no components';
-      }
       _log2(f, view_nm, tbl_nms);
-      if (this.Epic.inClick) {
-        return 'in click';
+      if (this.Epic.inClick !== false || this.page_name === false) {
+        return 'not now';
       }
       if (true) {
-        results = {};
-        handles = {};
         for (_i = 0, _len = tbl_nms.length; _i < _len; _i++) {
           tbl = tbl_nms[_i];
-          keys = this.context('ref_find', view_nm, tbl);
-          results[tbl] = keys;
-          for (_j = 0, _len1 = keys.length; _j < _len1; _j++) {
-            key = keys[_j];
-            handles[key] = true;
-          }
+          this.context('ref_dirty', view_nm, tbl);
         }
-        for (key in handles) {
-          comp = this.context_handles[key].component;
-          if (!comp.state) {
-            if (!(key in this.context_invalidate_warning)) {
-              this.context_invalidate_warning[key] = true;
-              console.log('oE.WARNING: Component could not render self, using owner', {
-                key: key,
-                comp: comp,
-                _owner: comp._owner
-              });
-            }
-            handles[comp._owner.props.oEhandle] = true;
-            delete handles[key];
-          } else {
-            if (key in this.context_invalidate_warning) {
-              console.log('oE.INTERESING: Component could not render self previously, but seems to be now', {
-                key: key,
-                comp: comp,
-                _owner: comp._owner
-              });
-            }
-          }
-        }
-        for (key in handles) {
-          comp = this.context_handles[key].component;
-          if (((_ref = comp.state) != null ? _ref.tableRefCnt : void 0) != null) {
-            tableRefCnt = comp.state.tableRefCnt + 1;
-          } else {
-            tableRefCnt = 9000;
-            if (!(key in this.context_invalidate_warning)) {
-              this.context_invalidate_warning[key] = true;
-              console.log('oE.WARNING: Component does not have state', {
-                key: key,
-                comp: comp,
-                _owner: comp._owner
-              });
-            }
-            continue;
-          }
-          comp.setState({
-            tableRefCnt: tableRefCnt
-          });
-        }
-      } else {
-        if (this.Epic.inClick !== false || this.page_name === false || this.invalidateTablesTimer !== false) {
-          return 'not now';
-        }
-        this.invalidateTablesTimer = setTimeout(function() {
-          _this.invalidateTablesTimer = false;
-          return _this.Epic.renderSecure();
-        }, 0);
-        results = 'started timer';
       }
-      return results;
+      if (this.invalidateTablesTimer === false) {
+        this.invalidateTablesTimer = setTimeout(function() {
+          var comp, key, val, _ref;
+          _this.invalidateTablesTimer = false;
+          _ref = _this.context_dirty;
+          for (key in _ref) {
+            val = _ref[key];
+            if (!(val === true)) {
+              continue;
+            }
+            comp = _this.context_handles[key].that;
+            _this.context_audit.push("" + (pad(pad_a + pad_b, ':IT in')) + key);
+            comp.setState({
+              oE: $.extend(comp.state.oE, {
+                tableRefCnt: comp.state.oE.tableRefCnt + 1
+              })
+            });
+            _this.context_audit.push("" + (pad(pad_a + pad_b, ':IT out')) + key);
+          }
+        }, 33);
+        return 'started timer';
+      }
     };
 
     ViewExe.prototype.doDefer = function() {
       return null;
     };
 
-    ViewExe.prototype.context = function(direction, component_handle, component) {
-      var handle, info_foreach, info_parts, key, key_comp, key_mt, keys, len, match, mt, new_handle, ref, sep, was, _ref;
+    ViewExe.prototype.context = function(action, that, extra, more) {
+      var content, defer, f, handle, info_foreach, info_parts, key, key_comp, key_mt, match, mt, ref, sep, _i, _len, _ref, _ref1, _ref10, _ref11, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+      f = ':react:ViewExe.context: ' + action;
+      handle = action === 'getInitialState' ? this.Epic.nextCounter() : that != null ? (_ref = that.state) != null ? (_ref1 = _ref.oE) != null ? _ref1.handle : void 0 : void 0 : void 0;
       sep = '~';
-      switch (direction) {
-        case 'new':
-          new_handle = component_handle + this.Epic.nextCounter();
+      if (action !== 'ref_add' && action !== 'ref_dirty') {
+        this.context_audit.push("" + (pad(pad_a, action)) + (pad(pad_b, handle != null ? handle : 'H')) + (pad(pad_c, (_ref2 = that != null ? (_ref3 = that.props) != null ? (_ref4 = _ref3.oE) != null ? _ref4.view : void 0 : void 0 : void 0) != null ? _ref2 : 'DN')) + " [" + ((_ref5 = that != null ? (_ref6 = that._owner) != null ? (_ref7 = _ref6.state) != null ? (_ref8 = _ref7.oE) != null ? _ref8.handle : void 0 : void 0 : void 0 : void 0) != null ? _ref5 : 'O') + "]");
+      }
+      if ((action !== 'ref_add' && action !== 'ref_dirty') && handle && this.context_handles[handle]) {
+        if ((_ref9 = this.context_handles[handle]) != null) {
+          _ref9.audit.push({
+            action: action,
+            that: that,
+            extra: extra,
+            more: more
+          });
+        }
+      }
+      switch (action) {
+        case 'getViewState':
           info_foreach = $.extend(true, {}, this.info_foreach);
           info_parts = $.extend({}, this.info_parts[this.info_parts.length - 1]);
-          this.context_handles[new_handle] = {
-            component: false,
+          return {
             info_foreach: info_foreach,
             info_parts: info_parts
           };
-          return new_handle;
-        case 'set':
-        case 'set_from_component':
-          this.context_handles[component_handle].component = component;
-          break;
-        case 'enter':
-          this.context_stack.push(component_handle);
-          ref = this.context_handles[component_handle];
-          this.info_parts.push(ref.info_parts);
-          ref.save_fe = $.extend(true, {}, this.info_foreach);
-          this.info_foreach = $.extend(true, {}, ref.info_foreach);
-          break;
-        case 'leave':
-          was = this.context_stack.pop();
-          if (was !== component_handle) {
-            BROKEN_VIEWEXE_CONTEXT_STACK_POP(was, component_handle);
+        case 'getInitialState':
+          this.context_handles[handle] = {
+            view: that.props.oE.view,
+            that: that,
+            audit: []
+          };
+          return {
+            handle: handle,
+            tableRefCnt: 1
+          };
+        case 'render':
+          if (this.context_active !== false) {
+            BLOWUP_CONTEXT_ACTIVE_NOT_FALSE();
           }
+          this.context_active = handle;
+          this.context_dirty[handle] = false;
+          match = handle + sep;
+          for (key in this.context_refs) {
+            if ((key.slice(0, match.length)) === match) {
+              delete this.context_refs[key];
+            }
+          }
+          ref = this.context_handles[handle];
+          ref.defer = [];
+          this.info_parts.push(that.props.oE.info_parts);
+          this.info_foreach = $.extend(true, {}, that.props.oE.info_foreach);
+          content = this.handleIt(that.props.oE.content);
           this.info_parts.pop();
-          ref = this.context_handles[component_handle];
-          this.info_foreach = ref.save_fe;
-          delete ref.save_fe;
-          break;
+          this.context_active = false;
+          return content;
         case 'ref_add':
-          if (this.context_stack.length === 0) {
-            return;
+          if (this.context_active === false) {
+            BLOWUP_CONTEXT_ACTIVE_IS_FALSE();
           }
-          handle = this.context_stack[this.context_stack.length - 1];
-          mt = component_handle + '/' + component;
-          this.context_refs[handle + sep + mt] = true;
+          mt = that + '/' + extra;
+          this.context_refs[this.context_active + sep + mt] = true;
           break;
-        case 'ref_find':
-          mt = component_handle + '/' + component;
-          keys = [];
+        case 'ref_dirty':
+          mt = that + '/' + extra;
           for (key in this.context_refs) {
-            _ref = key.split(sep), key_comp = _ref[0], key_mt = _ref[1];
+            _ref10 = key.split(sep), key_comp = _ref10[0], key_mt = _ref10[1];
             if (key_mt === mt) {
-              keys.push(key_comp);
+              this.context_dirty[key_comp] = true;
             }
-          }
-          return keys;
-        case 'remove':
-          delete this.context_handles[component_handle];
-          match = context_handle + sep;
-          len = match.length;
-          for (key in this.context_refs) {
-            if (key.slice(0, len === match)) {
-              keys = key;
-            }
-          }
-          for (key in keys) {
-            delete this.context_refs[key];
           }
           break;
-        default:
-          BROKEN_SWITCH__VIEWEXE_CONTEXT__DIRECTION(direction);
+        case 'componentDidMount':
+        case 'componentDidUpdate':
+          _ref11 = this.context_handles[handle].defer;
+          for (_i = 0, _len = _ref11.length; _i < _len; _i++) {
+            defer = _ref11[_i];
+            _log2(f, handle, defer);
+            defer.func('react', {
+              that: that
+            }, defer.attrs);
+          }
+          break;
+        case 'componentWillUnmount':
+          delete this.context_dirty[handle];
+          match = handle + sep;
+          for (key in this.context_refs) {
+            if ((key.slice(0, match.length)) === match) {
+              delete this.context_refs[key];
+            }
+          }
+          delete this.context_handles[handle];
       }
-      return null;
     };
 
-    ViewExe.prototype.handleIt = function(content, component_handle) {
-      var entry, result, _i, _len;
+    ViewExe.prototype.handleIt = function(content) {
+      var entry, f, result, _i, _len;
+      f = ':react:ViewExe.handleIt';
       if (typeof content === 'function') {
-        if (component_handle) {
-          this.context('enter', component_handle);
-        }
         content = content();
-        if (component_handle) {
-          this.context('leave', component_handle);
-        }
       }
       if (!content) {
         return null;
@@ -317,14 +337,34 @@
     };
 
     ViewExe.prototype.T_page = function(attrs) {
-      var content, name, result;
+      var can_componentize, content, f, name, result, view, _ref, _ref1;
+      f = ':react:ViewExe.T_page';
       name = this.page_name;
       if (this.frame_inx < this.frames.length) {
-        content = this.loader.template(name = this.next_frame()).content;
+        _ref = this.loader.template(name = this.next_frame()), content = _ref.content, can_componentize = _ref.can_componentize;
+        view = 'tmpl/' + name;
       } else {
-        content = this.loader.page(this.page_name).content;
+        _ref1 = this.loader.page(this.page_name), content = _ref1.content, can_componentize = _ref1.can_componentize;
+        view = 'page/' + name;
       }
-      result = this.handleIt(content);
+      this.context_audit.push('T_page   +' + view);
+      if (true) {
+        if (attrs == null) {
+          attrs = {};
+        }
+        attrs.oE = $.extend({
+          view: view,
+          cb: this.context,
+          has_root: can_componentize,
+          content: content
+        }, this.context('getViewState', view));
+        _log2(f, 'before PagePart', view, attrs);
+        result = PagePart(attrs);
+        _log2(f, 'after PagePart', view, attrs, result);
+      } else {
+        result = this.handleIt(content);
+      }
+      this.context_audit.push('T_page   -' + view);
       if (result === void 0) {
         console.log('BIG ISSUE IN TMPL/PAGE: ' + name, 'func is', content_func);
         throw new Error('Big Issue in Tmpl/Page ' + name);
@@ -333,22 +373,23 @@
     };
 
     ViewExe.prototype.T_page_part = function(attrs) {
-      var can_componentize, content, defer, f, oEhandle, result, view, _ref;
+      var can_componentize, content, defer, f, result, view, _ref;
       f = 'react:viewexe.T_page_part:';
       view = attrs.part;
-      _ref = this.loader.part(view), content = _ref.content, can_componentize = _ref.can_componentize;
+      this.context_audit.push((pad(pad_a + pad_b, 'T_page_part')) + view);
+      _ref = this.loader.part(view), content = _ref.content, can_componentize = _ref.can_componentize, defer = _ref.defer;
       this.info_parts.push(this.loadPartAttrs(attrs));
-      defer = false;
       if (can_componentize || attrs.dynamic || defer) {
-        oEhandle = this.context('new', view);
-        $.extend(attrs, {
-          oE: this,
-          oEhandle: oEhandle,
-          oEroot: can_componentize,
-          oEcontent: content
-        });
+        if (defer && !can_componentize && !attrs.dynamic) {
+          console.log("WARNING: DEFER logic has forced this page_part (" + view + ") to be a component, and will add a DIV tag.");
+        }
+        attrs.oE = $.extend({
+          view: view,
+          cb: this.context,
+          has_root: can_componentize,
+          content: content
+        }, this.context('getViewState', view));
         result = PagePart(attrs);
-        this.context('set', oEhandle, result);
       } else {
         result = this.handleIt(content);
       }
@@ -357,13 +398,21 @@
         console.log('BIG ISSUE IN PART: ' + name, 'func is', content);
         throw new Error('Big Issue in PART ' + name);
       }
+      this.context_audit.push(['T_page_p -' + view, result]);
       return result;
     };
 
     ViewExe.prototype.T_defer = function(attrs, content) {
-      var f;
+      var f, f_content;
       f = 'react:viewexe.T_defer:';
-      _log2(f, attrs);
+      f_content = this.handleIt(content);
+      if (this.context_active === false) {
+        BLOWUP_DEFER_MISSING_COMPONENT();
+      }
+      this.context_handles[this.context_active].defer.push({
+        attrs: attrs,
+        func: new Function('type', 'opts', 'attrs', f_content)
+      });
       return null;
     };
 
@@ -581,6 +630,7 @@
 
     ViewExe.prototype.v3 = function(view_nm, tbl_nm, key, format_spec, custom_spec) {
       var r, row;
+      this.context('ref_add', view_nm, tbl_nm);
       row = (this.Epic.getViewTable(view_nm + '/' + tbl_nm))[0];
       r = this.formatFromSpec(row[key], format_spec, custom_spec);
       if (r === void 0) {

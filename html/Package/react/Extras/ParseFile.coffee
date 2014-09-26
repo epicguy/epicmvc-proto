@@ -22,7 +22,7 @@
 #  8) class= everywhere, must be className= (and for= htmlFor=) (breaks: &T/c#.class="hide"; vs. class="&T/c#.hide;"
 #  8.1) attr's with e.g. - in them, must be quoted
 #  9) Style= attrs must not be strings but objects, with camelCase e.g. style={{fontSize:'1em'}}
-#  10) Epic:defer couold be moved to a componentDidMount section? Requires one root tag
+#  10) Epic:defer could be moved to a componentDidMount section? Requires one root tag
 
 # Questions/Posiers...
 #  - NOT USING JSX; Do we need to escape '{' somehow, if it appears in the HTML (since JSX things we broke out to JavaScript?
@@ -172,7 +172,7 @@ findVars= (text) ->
 
 ParseFile= (file_stats, file_contents) ->
 	f= 'react/E/ParseFile.ParseFile:'+file_stats
-	stats= text: 0, dom: 0, epic: 0
+	stats= text: 0, dom: 0, epic: 0, defer: 0, defer_body: 0
 	dom_nms= [
 		'style'
 		'div', 'a', 'span', 'ol', 'ul', 'li', 'p', 'b', 'i', 'dl', 'dd', 'dt'
@@ -182,12 +182,9 @@ ParseFile= (file_stats, file_contents) ->
 	]
 	dom_close= [ 'img', 'br', 'input', 'hr' ]
 	dom_entity_map= nbsp: '\u00A0',reg: '\u00AE', copy: '\u00A9', times: '\u22A0', lt: '\u003C', gt: '\u003E', amp: '\u0026', quot: '\u0022'
-	after_trim= file_contents.trim()
-	after_comment= after_trim.replace( /-->/gm, '\x02').replace /<!--[^\x02]*\x02/gm, ''
-	after_style= after_comment # REACT ALLOWS STYLE TAGS .replace( /<\/style>/gm, '\x02').replace /<style[^\x02]*\x02/gm, '' # TODO MOVE TO COMPONENT?
-	after_script= after_style.replace( /<\/script>/gm, '\x02').replace /<script[^\x02]*\x02/gm, '' # React allows SCRIPT, but we dont' like it
-	after= after_script
-	after= after.trim() # Whitespace is left after removing other stuff above
+	after_comment= file_contents.replace( /-->/gm, '\x02').replace /<!--[^\x02]*\x02/gm, (m) -> m.replace /[^\n]+/gm, '' # Preserve newlines
+	after_script= after_comment.replace( /<\/script>/gm, '\x02').replace /<script[^\x02]*\x02/gm, '' # React allows SCRIPT, but we dont' like it
+	after= after_script #TODO TRY TO PRESERVE LINE OFFSETS .trim() # Whitespace is left after removing other stuff above
 
 	# Create array of 4 parts: non-tag-content, leading-slash, tag-name, attrs
 	# End of 'attrs' may have a '/' (or is '/' if leading-slash is '/')
@@ -196,22 +193,25 @@ ParseFile= (file_stats, file_contents) ->
 	tag_wait= [] # Holds back list of indexes while doing a nested tag
 	children= [] # Current list of child expressions - can be text, DOM tags or Epic tags
 	while i< parts.length- 1
-		text= parts[ i].replace(/^\s+|\s+$/gm, ' ')
-		if text.length and text isnt ' ' and text isnt '  ' # Not just whitespace
-			text= text.replace /&([a-z]+);/gm, (m, p1) -> if p1 of dom_entity_map then dom_entity_map[ p1] else '&'+ p1+ 'BROKEN;'
-			if tag_wait.length
-				tw= tag_wait[ tag_wait.length- 1]
-				# TODO DID NOT WORK text.replace /"/gm, dom_entity_map.quot if tw[ 1] is 'style'
-				#text= text.replace /"/gm, "\\u0022" if tw[ 1] is 'React.DOM.style'
-				children.push (findVars text).join( '+')
-			else
-				children.push 'React.DOM.span({},'+ (findVars text).join( '+')+ ')'
-			stats.text++ unless tag_wait.length
+		if tag_wait.length and tag_wait[ tag_wait.length- 1][ 1] is 'defer'
+			children.push (findVars parts[ i]).join( '+')
+		else
+			text= parts[ i].replace(/^\s+|\s+$/gm, ' ')
+			if text.length and text isnt ' ' and text isnt '  ' # Not just whitespace
+				text= text.replace /&([a-z]+);/gm, (m, p1) -> if p1 of dom_entity_map then dom_entity_map[ p1] else '&'+ p1+ 'BROKEN;'
+				if tag_wait.length
+					children.push (findVars text).join( '+')
+				else
+					children.push 'React.DOM.span({},'+ (findVars text).join( '+')+ ')'
+				stats.text++ unless tag_wait.length
 		if parts[ i+ 1]== '/' # Close tag
 			if not tag_wait.length
-				# TODO ERRORS COULD INCLUDE LINE NUMBERS AND EVEN FILE-TEXT SNIPIT; MAY NEED TO MODIFY THOSE 'AFTER_*' REGEX'S TO PRESERVE NEWLINES/LINE COUNT
+				# TODO ERRORS COULD INCLUDE LINE NUMBERS AND EVEN FILE-TEXT SNIPIT; MODIFY THOSE 'AFTER_*' REGEX'S TO PRESERVE NEWLINES/LINE COUNT
 				throw "[#{file_stats}] Close tag found when none expected close=#{parts[i+2]}"
-			[oi, nm, attrs, prev_children, is_epic]= tag_wait.pop()
+			[oi, base_nm, nm, attrs, prev_children, is_epic]= tag_wait.pop()
+			if base_nm is 'defer'
+				stats.defer++
+				stats.defer_body++ if children.length
 			if parts[ i+ 2] isnt parts[ oi+ 2]
 				tag_names_for_debugger= open: parts[ oi+ 2], close: parts[ i+ 2]
 				throw "[#{file_stats}] Mismatched tags open=#{parts[oi+2]}, close=#{parts[i+2]}"
@@ -249,12 +249,13 @@ ParseFile= (file_stats, file_contents) ->
 					throw new Error 'Unknown tag name '+ base_nm+ ' in '+ file_stats
 				nm= 'React.DOM.'+ parts[ i+ 2]
 			if empty is '/' # This tag is the child, no need to push things
+				stats.defer++ if base_nm is 'defer'
 				whole_tag= nm+ '('+ attrs+ ')'
 				children.push whole_tag
 				(if is_epic then stats.epic++ else stats.dom++) unless tag_wait.length
 			else
 				# Wait till closing tag...
-				tag_wait.push [ i, nm, attrs, children, is_epic]
+				tag_wait.push [ i, base_nm, nm, attrs, children, is_epic]
 				children= [] # Start my tag fresh, without children
 		i+= 4
 
@@ -270,7 +271,7 @@ ParseFile= (file_stats, file_contents) ->
 	# Note: multi-child part content cannot be rendered as a component, since components require a single root tag
 	# Give to loadStrategy (or compiler) to handle as in-browser or minimized JavaScript
 	# Caller expects: content,can_componentize,defer,style,script,must_wrap
-	return content: children, must_wrap: true, can_componentize: children.length is 1 and stats.epic is 0
+	return content: children, must_wrap: true, defer: (stats.defer isnt 0), can_componentize: children.length is 1 and stats.epic is 0
 
 # Public API
 if window? then window.EpicMvc.Extras.ParseFile$react= ParseFile

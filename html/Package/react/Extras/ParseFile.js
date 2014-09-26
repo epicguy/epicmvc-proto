@@ -247,12 +247,14 @@
   };
 
   ParseFile = function(file_stats, file_contents) {
-    var after, after_comment, after_script, after_style, after_trim, attrs, base_nm, children, comma, dom_close, dom_entity_map, dom_nms, empty, f, i, is_epic, nm, oi, parts, prev_children, stats, t, tag_names_for_debugger, tag_wait, text, tw, whole_tag, _ref, _ref1;
+    var after, after_comment, after_script, attrs, base_nm, children, comma, dom_close, dom_entity_map, dom_nms, empty, f, i, is_epic, nm, oi, parts, prev_children, stats, t, tag_names_for_debugger, tag_wait, text, whole_tag, _ref, _ref1;
     f = 'react/E/ParseFile.ParseFile:' + file_stats;
     stats = {
       text: 0,
       dom: 0,
-      epic: 0
+      epic: 0,
+      defer: 0,
+      defer_body: 0
     };
     dom_nms = ['style', 'div', 'a', 'span', 'ol', 'ul', 'li', 'p', 'b', 'i', 'dl', 'dd', 'dt', 'form', 'fieldset', 'label', 'legend', 'button', 'input', 'textarea', 'select', 'option', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5', 'img', 'br', 'hr', 'header', 'footer', 'section'];
     dom_close = ['img', 'br', 'input', 'hr'];
@@ -266,41 +268,49 @@
       amp: '\u0026',
       quot: '\u0022'
     };
-    after_trim = file_contents.trim();
-    after_comment = after_trim.replace(/-->/gm, '\x02').replace(/<!--[^\x02]*\x02/gm, '');
-    after_style = after_comment;
-    after_script = after_style.replace(/<\/script>/gm, '\x02').replace(/<script[^\x02]*\x02/gm, '');
+    after_comment = file_contents.replace(/-->/gm, '\x02').replace(/<!--[^\x02]*\x02/gm, function(m) {
+      return m.replace(/[^\n]+/gm, '');
+    });
+    after_script = after_comment.replace(/<\/script>/gm, '\x02').replace(/<script[^\x02]*\x02/gm, '');
     after = after_script;
-    after = after.trim();
     parts = after.split(/<(\/?)([:a-z_0-9]+)([^>]*)>/);
     i = 0;
     tag_wait = [];
     children = [];
     while (i < parts.length - 1) {
-      text = parts[i].replace(/^\s+|\s+$/gm, ' ');
-      if (text.length && text !== ' ' && text !== '  ') {
-        text = text.replace(/&([a-z]+);/gm, function(m, p1) {
-          if (p1 in dom_entity_map) {
-            return dom_entity_map[p1];
+      if (tag_wait.length && tag_wait[tag_wait.length - 1][1] === 'defer') {
+        children.push((findVars(parts[i])).join('+'));
+      } else {
+        text = parts[i].replace(/^\s+|\s+$/gm, ' ');
+        if (text.length && text !== ' ' && text !== '  ') {
+          text = text.replace(/&([a-z]+);/gm, function(m, p1) {
+            if (p1 in dom_entity_map) {
+              return dom_entity_map[p1];
+            } else {
+              return '&' + p1 + 'BROKEN;';
+            }
+          });
+          if (tag_wait.length) {
+            children.push((findVars(text)).join('+'));
           } else {
-            return '&' + p1 + 'BROKEN;';
+            children.push('React.DOM.span({},' + (findVars(text)).join('+') + ')');
           }
-        });
-        if (tag_wait.length) {
-          tw = tag_wait[tag_wait.length - 1];
-          children.push((findVars(text)).join('+'));
-        } else {
-          children.push('React.DOM.span({},' + (findVars(text)).join('+') + ')');
-        }
-        if (!tag_wait.length) {
-          stats.text++;
+          if (!tag_wait.length) {
+            stats.text++;
+          }
         }
       }
       if (parts[i + 1] === '/') {
         if (!tag_wait.length) {
           throw "[" + file_stats + "] Close tag found when none expected close=" + parts[i + 2];
         }
-        _ref = tag_wait.pop(), oi = _ref[0], nm = _ref[1], attrs = _ref[2], prev_children = _ref[3], is_epic = _ref[4];
+        _ref = tag_wait.pop(), oi = _ref[0], base_nm = _ref[1], nm = _ref[2], attrs = _ref[3], prev_children = _ref[4], is_epic = _ref[5];
+        if (base_nm === 'defer') {
+          stats.defer++;
+          if (children.length) {
+            stats.defer_body++;
+          }
+        }
         if (parts[i + 2] !== parts[oi + 2]) {
           tag_names_for_debugger = {
             open: parts[oi + 2],
@@ -351,6 +361,9 @@
           nm = 'React.DOM.' + parts[i + 2];
         }
         if (empty === '/') {
+          if (base_nm === 'defer') {
+            stats.defer++;
+          }
           whole_tag = nm + '(' + attrs + ')';
           children.push(whole_tag);
           if (!tag_wait.length) {
@@ -361,7 +374,7 @@
             }
           }
         } else {
-          tag_wait.push([i, nm, attrs, children, is_epic]);
+          tag_wait.push([i, base_nm, nm, attrs, children, is_epic]);
           children = [];
         }
       }
@@ -394,6 +407,7 @@
     return {
       content: children,
       must_wrap: true,
+      defer: stats.defer !== 0,
       can_componentize: children.length === 1 && stats.epic === 0
     };
   };

@@ -1,26 +1,48 @@
 'use strict'
 # Copyright 2014-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
+#TODO 
+pad_a= 18
+pad_b= 4
+pad_c= 24
+window.pad= (l,s)->
+	s= String s
+	r= l- s.length
+	r= 0 if r< 0
+	s+( new Array r+ 1).join ' '
 
-# Interface: oE, oEhandle,  oEcontent (use oE.handleIt), oEroot (true/false has one non-epic root)
+# Interface: props: oE (mostly transparent)
+# oE.has_root (true/false has one non-epic root)
+# oE.cb (callback w/reason, and @ [looks for @props.oE,@state.oE])
+# Here is when to call the callback, and why
+#  getInitalState:       @props.oE.cb 'getInitialState',      @ (Returns info to put into @state.oE)
+#  render:               @props.oE.cb 'render',               @ (Returns content that may/maynot need to be wrapped)
+#  componentDidMount:    @props.oE.cb 'componentDidMount',    @ (To run defered logic)
+#  componentWillUnmount: @props.oE.cb 'componentWillUnmount', @ (To clean up memory)
+#  any:                  @props.oE.cb 'any-string',           @, {more:stuff} (Appends to audit, for debug)
+# Note: Props not available to @ in getDefaultProps, fyi
+
 window.PagePart= React.createClass
-	getInitialState: -> tableRefCnt: 1 # Updated by invalidateTables if we need to react to changes in this component
-	getDefaultProps: -> onClick: @handleClick
-	componentWillMount: ->
-		console.log @props.oEhandle, 'componentWillMount'
-		@props.oE.context 'set_from_component', @props.oEhandle, @
-	#componentDidMount: -> # TODO HANDLE DEFER'S MARKED WITH E.G. when='DidMount,DidChange' (Default to DidMount)
-	componentDidMount: ->  # TODO ANOTHER WAY TO CONNECT CLICKS TO THE WHOLE COMPONENT, PUT IT HERE?
-	handleClick: -> alert 'YEP, component can "see" that last click of yours.'
 	displayName: 'Epic-PagePart:'
+	getInitialState: -> oE: @props.oE.cb 'getInitialState', @
+	getDefaultProps: -> onClick: @handleClick
+	componentDidMount: ->
+		@props.oE.cb 'componentDidMount', @ # Run defered logic
+		# TODO HANDLE DEFER'S MARKED WITH E.G. when='DidMount,DidChange' (Default to DidMount)
+		# TODO ANOTHER WAY TO CONNECT CLICKS TO THE WHOLE COMPONENT, PUT IT HERE?
+		null
+	componentDidUpdate: -> @props.oE.cb 'componentDidUpdate', @ # Needed to delete old refs
+	componentWillUnmount: -> @props.oE.cb 'componentWillUnmount', @ # Needed to delete old refs
+	handleClick: -> alert 'YEP, component can "see" that last click of yours.'
 	render: ->
-		content= @props.oE.handleIt @props.oEcontent, @props.oEhandle
+		content= @props.oE.cb 'render', @
 		# Any part may have a dynamic wrapper, fyi
-		if 'dynamic' of @props # Always render the container, even if content is null # TODO MAYBE LET PROPS DECIDE, OR NOT IF TR/TBODY ?
+		# TODO MAYBE LET PROPS DECIDE HOW TO WRAP IT OR NOT, IF TR/TBODY ?
+		if 'dynamic' of @props # Always render the container, even if content is null
 			React.DOM[ @props.dynamic] @props, content
 		else
 			return null unless content
-			if @props.oEroot
+			if @props.oE.has_root
 				content
 			else
 				React.DOM.div @props, content
@@ -46,119 +68,107 @@ class ViewExe
 		@info_parts= [{}] # Push p:attrs with each part, then pop; (top level is row w/o attrs)
 		@info_if_nms= {} # [if-name]=boolean (from <if_xxx name="if-name" ..> # TODO REACT ADD TO T_if LOGIC
 		# State managers
-		@context_handles= {} # Blow away context info on init since we rebuild all components from scratch
-		@context_stack= [] # Last entry is active component, if empty, then we're not in a component context
-		@context_refs= {} # key is component_handle+ sep(~)+model+/+table for every combo
-		@context_invalidate_warning= {} # Only warn once for this component
+		#TODO PUT BACK AFTER DEBUGGING @context_handles= {} # Blow away context info on init since we rebuild all components from scratch
+		if true # TODO REMOVE '?' ON @context_handles?= 
+			@context_handles?= {} # Blow away context info on init since we rebuild all components from scratch
+			@context ':init', {state:oE:handle} for handle of @context_handles
+			@context_active= false
+			@context_audit?= [] # TODO DEBUG, DO NOT BLOW AWAY ON INIT, IF ALREADY DEFINED
+			@context_dirty= {} # Hash of component-handles to be updated using state # TODO IMPLENENT THIS IN INVALIDATE-TABLES
+			@context_refs?= {} # key is component_handle+ sep(~)+model+/+table for every combo
 	run: () ->
+		if true # TODO
+			@context_audit.push "#{pad pad_a+ pad_b, ':run'}#{handle}" for handle of @context_handles
 		_log2 'START RUN', start= new Date().getTime()
 		result= @T_page()
 		_log2 'END RUN', new Date().getTime()- start
 		result
 	invalidateTables: (view_nm, tbl_nms) ->
 		f= ':react:ViewExe.invalidateTables'
-		# Note: Sometimes we are called after construction, but before init
-		return 'no components' unless @context_refs
 		_log2 f, view_nm, tbl_nms #, (if @Epic.inClick then 'IN'), @context_handles, @context_refs
-		return 'in click' if @Epic.inClick
+		return 'not now' if @Epic.inClick isnt false or @page_name is false #TODO or @invalidateTablesTimer isnt false
 		if true
 			# TODO MAP view_nm TO instance-name
-			results= {}
-			handles= {} # Hash to get unique list
 			for tbl in tbl_nms
-				keys= @context 'ref_find', view_nm, tbl
-				results[ tbl]= keys
-				handles[ key]= true for key in keys
-			# TODO FIGURE OUT WHY SOME COMPONENTS CANNOT DO THE STATE THING
-			for key of handles
-				comp= @context_handles[ key].component
-				if not comp.state
-					if key not of @context_invalidate_warning
-						@context_invalidate_warning[ key]= true
-						console.log 'oE.WARNING: Component could not render self, using owner', {key, comp, _owner: comp._owner}
-					handles[ comp._owner.props.oEhandle]= true
-					delete handles[ key]
-				else
-					if key of @context_invalidate_warning
-						console.log 'oE.INTERESING: Component could not render self previously, but seems to be now', {key, comp, _owner: comp._owner}
-			for key of handles
-				comp= @context_handles[ key].component
-				if comp.state?.tableRefCnt?
-					tableRefCnt= comp.state.tableRefCnt+ 1
-				else
-					tableRefCnt= 9000
-					if key not of @context_invalidate_warning
-						@context_invalidate_warning[ key]= true
-						console.log 'oE.WARNING: Component does not have state', {key, comp, _owner: comp._owner}
-					continue # TODO FIGURE OUT WHY YOU CANNOT SET STATE ANYMORE - ALSO NOTE: _OWNER IS NULL FOR patient_tbl_allX
-				comp.setState {tableRefCnt}
-		else
-			# TODO REMOVE THIS OLDER NON-DYNAMIC LOGIC WHEN WE'RE HAPPY WITH THE ABOVE LOGIC
-			return 'not now' if @Epic.inClick isnt false or @page_name is false or @invalidateTablesTimer isnt false
+				@context 'ref_dirty', view_nm, tbl
+		# Defer processing dirty list, until models have a chance to mark as many as possible
+		if @invalidateTablesTimer is false
 			@invalidateTablesTimer= setTimeout =>
 				@invalidateTablesTimer= false
-				@Epic.renderSecure() # TODO REACT HOW BEST TO GET A RE-RENDER BASED ON MODEL'S STATE CHANGES
-			, 0
-			results= 'started timer'
-		results
+				for key,val of @context_dirty when val is true # Could be marked true during this update
+					comp= @context_handles[ key].that
+					@context_audit.push "#{pad pad_a+ pad_b, ':IT in'}#{key}"
+					comp.setState oE: ($.extend comp.state.oE, {tableRefCnt: comp.state.oE.tableRefCnt+ 1})
+					@context_audit.push "#{pad pad_a+ pad_b, ':IT out'}#{key}"
+				return
+			, 33
+			return 'started timer'
+		return
 	doDefer: -> null # TODO STILL NEEDED?
-	context: (direction, component_handle, component) -> # Direction: 'new', 'set', 'enter', 'leave'
-		#f= ':render:ViewExe.context ('+ direction+ ')'+ '('+( if typeof component_handle is 'string' then component_handle else typeof component_handle)+ ')'
-		#_log2 f, (if typeof component is 'string' then component else if component then 'oEhandle:'+ component?.props.oEhandle else 'no3'), @context_handles[ component_handle] ? 'no_handle', if @context_stack.length then @context_stack[ @context_handles.length- 1] else 'zero'
+	context: (action, that, extra, more) => # Action: 'getViewState', 'getInitalState', 'render', 'anystring'- just audit
+		f= ':react:ViewExe.context: '+action
+		handle= if action is 'getInitialState' then @Epic.nextCounter() else that?.state?.oE?.handle
 		sep= '~'
-		switch direction
-			when 'new' # For 'new' the component_handle is the view-name, which we use to prefix the unique handle
-				new_handle= component_handle+ @Epic.nextCounter()
+		if action not in ['ref_add', 'ref_dirty']
+			@context_audit.push "#{pad pad_a, action}#{pad pad_b, handle ? 'H'}#{pad pad_c, that?.props?.oE?.view ? 'DN'} [#{that?._owner?.state?.oE?.handle ? 'O'}]"
+		if action not in ['ref_add', 'ref_dirty'] and handle and @context_handles[ handle] #action isnt 'something'
+			@context_handles[ handle]?.audit.push {action,that,extra,more}
+		switch action
+			when 'getViewState' # Return a snapshot of the current view state, for a component to restore later when rendering
 				# TODO NEED TO BUILD A TRUE FOREACH LIST, NOT A CLONE THAT IS STATIC, AND WON'T HAVE UPDATED WITH INVALIDATE-TABLES
 				info_foreach= $.extend true, {}, @info_foreach
 				info_parts= $.extend {}, @info_parts[ @info_parts.length- 1]
-				@context_handles[ new_handle]= {component: false, info_foreach, info_parts}
-				return new_handle # Caller is asking for this handle
-			when 'set', 'set_from_component' # For 'set', 'component' is the component's actual instance reference
-				@context_handles[ component_handle].component= component
-			when 'enter'
-				# TODO CONSIDER REMOVING ALL REFS FOR THIS COMPONENT, NOW THAT IT IS GOING TO RE-RENDER?
-				@context_stack.push component_handle
-				ref= @context_handles[ component_handle]
-				@info_parts.push ref.info_parts
-				# TODO FOR NOW JUST GOING TO SWAP INFO-FOREACH TILL I FIGURE OUT WHAT TO DO HERE
-				ref.save_fe= $.extend true, {}, @info_foreach
-				@info_foreach= $.extend true, {}, ref.info_foreach
-				# TODO PUSH/POP MORE STATE INFO_* STUFF
-			when 'leave'
-				was= @context_stack.pop()
-				BROKEN_VIEWEXE_CONTEXT_STACK_POP was, component_handle if was isnt component_handle
-				@info_parts.pop()
-				ref= @context_handles[ component_handle]
-				@info_foreach= ref.save_fe
-				delete ref.save_fe
+				return {info_foreach, info_parts}
+			when 'getInitialState' # Calling component wants an oject for state.oEcontext
+				@context_handles[ handle]= {view:that.props.oE.view,that,audit:[]}
+				return handle: handle, tableRefCnt: 1 # Updated by invalidateTables if we need to react to changes in this component
+			when 'render'
+				BLOWUP_CONTEXT_ACTIVE_NOT_FALSE() unless @context_active is false
+				@context_active= handle
+				@context_dirty[ handle]= false
+				# Removing all refs for this component, now that it is going to re-render
+				match= handle+ sep
+				delete @context_refs[ key] for key of @context_refs when (key.slice 0, match.length) is match
+				ref= @context_handles[ handle]
+				ref.defer= [] # Start with no defers until it re-renders
+				# Enter
+				@info_parts.push that.props.oE.info_parts # These were sent as props to the component, as it's surounding content was evaluating
+				# TODO FOR NOW JUST GOING TO CLONE INFO-FOREACH - REALLY NEED TO DO THE RESTORE CURRENT ROWS THING LIKE OLD LOGIC
+				@info_foreach= $.extend true, {}, that.props.oE.info_foreach
+				# TODO PUSH/POP MORE STATE INFO_* STUFF, LIKE INFO_NAMES?
+				# Run
+				content= @handleIt that.props.oE.content
+				# Now leave
+				@info_parts.pop() # Just to clear the memory
+				@context_active= false
+
+				# Return content to caller
+				return content
 			when 'ref_add' # Have a model/table reference for a component, remember the association (use current context)
-				return if @context_stack.length is 0 # No components active
-				handle= @context_stack[ @context_stack.length- 1]
-				mt= component_handle+ '/'+ component # These params are really 'model' and 'table'
-				@context_refs[ handle+ sep+ mt]= true
-			when 'ref_find' # Which components have referenced this model/table (caller wants component objects, not my handles)
-				mt= component_handle+ '/'+ component # These params are really 'model' and 'table'
-				keys= []
+				BLOWUP_CONTEXT_ACTIVE_IS_FALSE() if @context_active is false
+				mt= that+ '/'+ extra # These params are really 'model' and 'table'
+				@context_refs[ @context_active+ sep+ mt]= true
+			when 'ref_dirty' # Which components have referenced this model/table
+				mt= that+ '/'+ extra # These params are really 'model' and 'table'
 				for key of @context_refs
 					[key_comp, key_mt]= key.split sep
-					#keys.push @context_handles[ key_comp].component if key_mt is mt
-					keys.push key_comp if key_mt is mt
-				return keys
-			when 'remove' # Component un-mounted, remove any references
-				delete @context_handles[ component_handle]
-				match= context_handle+ sep
-				len= match.length
-				keys= key for key of @context_refs when key.slice 0, len is match
-				delete @context_refs[ key] for key of keys
-			else BROKEN_SWITCH__VIEWEXE_CONTEXT__DIRECTION direction
-		null # TODO
-	handleIt: (content, component_handle) =>
+					@context_dirty[ key_comp]= true if key_mt is mt
+			when 'componentDidMount', 'componentDidUpdate' # Component mounted, run defer logic
+				for defer in @context_handles[ handle].defer
+					_log2 f, handle, defer
+					defer.func 'react', {that}, defer.attrs
+			when 'componentWillUnmount' # Component un-mounted, remove any references
+				delete @context_dirty[ handle]
+				match= handle+ sep
+				delete @context_refs[ key] for key of @context_refs when (key.slice 0, match.length) is match
+				delete @context_handles[ handle]
+		return
+	handleIt: (content) =>
+		f= ':react:ViewExe.handleIt'
 		# Eliminating content if it's an array of just nulls or empty strings
 		if typeof content is 'function'
-			@context 'enter', component_handle if component_handle
 			content= content()
-			@context 'leave', component_handle if component_handle
+			#_log2 f, 'content after function call', content
 		return null unless content
 		# TODO CONSIDER EMPTY STRING HERE?
 		return content unless $.isArray content
@@ -177,12 +187,24 @@ class ViewExe
 		result
 	next_frame: () -> @frames[ @frame_inx++]
 	T_page: ( attrs) =>
+		f= ':react:ViewExe.T_page'
 		name= @page_name
 		if @frame_inx< @frames.length
-			{content}= @loader.template name= @next_frame()
+			{content,can_componentize}= @loader.template name= @next_frame()
+			view= 'tmpl/'+ name
 		else
-			{content}= @loader.page @page_name
-		result= @handleIt content
+			{content,can_componentize}= @loader.page @page_name
+			view= 'page/'+ name
+		@context_audit.push 'T_page   +'+ view
+		if true # TODO REACT-DYN TRYING TO MAKE THESE TOPLEVELS A COMPONENT, SO ALL CONTENT IS OWNED BY SOMEONE
+			attrs?= {}
+			attrs.oE= $.extend {view, cb: @context, has_root: can_componentize, content: content}, @context 'getViewState', view
+			_log2 f, 'before PagePart', view, attrs
+			result= PagePart attrs
+			_log2 f, 'after PagePart', view, attrs, result
+		else
+			result= @handleIt content
+		@context_audit.push 'T_page   -'+ view
 		if result is undefined
 			console.log 'BIG ISSUE IN TMPL/PAGE: '+ name, 'func is', content_func
 			throw new Error 'Big Issue in Tmpl/Page '+ name
@@ -190,17 +212,15 @@ class ViewExe
 	T_page_part: ( attrs) ->
 		f= 'react:viewexe.T_page_part:'
 		view= attrs.part; # TODO consider attrs with p:
-		{content,can_componentize}= @loader.part view
+		@context_audit.push (pad pad_a+ pad_b, 'T_page_part')+ view
+		{content,can_componentize,defer}= @loader.part view
 		@info_parts.push @loadPartAttrs attrs
 		#TODO REACT-DYN MOVING THIS LINE TO INSIDE COMPONENT, AND PASSING ATTRS TO COMPONENT: part_content= content attrs
-		defer= false # TODO DETECT DEFER LOGIC BASED ON RUNNING part_content JUST NOW, ABOVE (DID IT CALL T_DEFER?)
 		if can_componentize or attrs.dynamic or defer
-			#TODO CONSIDER GENRATING A WARNING FOR THIS 'view' WHEN WE HAVE TO FORCE COMPONENTIZING (WILL ADD A DIV TAG)
-			oEhandle= @context 'new', view
-			#TODO REACT-DYN result= PagePart {oE: @, oEhandle, oEroot: can_componentize, part_content}
-			$.extend attrs, {oE: @, oEhandle, oEroot: can_componentize, oEcontent: content}
+			if defer and not can_componentize and not attrs.dynamic
+				console.log "WARNING: DEFER logic has forced this page_part (#{view}) to be a component, and will add a DIV tag."
+			attrs.oE= $.extend {view, cb: @context, has_root: can_componentize, content}, @context 'getViewState', view
 			result= PagePart attrs
-			@context 'set', oEhandle, result # For two-way binding; we can now change this fellow's state on invalidateTables he's interested in
 		else
 			result= @handleIt content # Run directly with no context or component at this level
 		@info_parts.pop()
@@ -208,11 +228,16 @@ class ViewExe
 			console.log 'BIG ISSUE IN PART: '+ name, 'func is', content
 			throw new Error 'Big Issue in PART '+ name
 		#_log2 f, 'result',( typeof result), result?.length #, result
+		@context_audit.push ['T_page_p -'+ view, result]
 		result
-	T_defer: ( attrs, content) -> # TODO IMPLEMENT DEFER LOGIC
+	T_defer: ( attrs, content) -> # TODO IMPLEMENT DEFER LOGIC ATTRS?
 		f= 'react:viewexe.T_defer:'
-		_log2 f, attrs
-		null # No content for these
+		#_log2 f, attrs, content, f_content= @handleIt content
+		#_log2 f, 'CONTENT BEING FUNCTIONIZED', f_content= @handleIt content
+		f_content= @handleIt content
+		BLOWUP_DEFER_MISSING_COMPONENT() if @context_active is false
+		@context_handles[ @context_active].defer.push {attrs, func: new Function 'type', 'opts', 'attrs', f_content}
+		null # No content to display for these
 	T_if_true: ( attrs, content) -> # TODO
 		return content() if @info_if_nms[ attrs.name]
 		null
@@ -342,6 +367,7 @@ class ViewExe
 					else ''
 				else val
 	v3: (view_nm, tbl_nm, key, format_spec, custom_spec) ->
+		@context 'ref_add', view_nm, tbl_nm
 		row=( @Epic.getViewTable view_nm+ '/'+ tbl_nm)[ 0]
 		#console.log 'G3:', view_nm, tbl_nm, key, format_spec, custom_spec, row #if key not of row
 		r= @formatFromSpec row[ key], format_spec, custom_spec
@@ -350,6 +376,7 @@ class ViewExe
 	v2: (table_ref, col_nm, format_spec, custom_spec, sub_nm) ->
 		#console.log 'G2:', {table_ref, col_nm, format_spec, custom_spec, sub_nm}
 		ans= @info_foreach[table_ref].row[col_nm]
+		#TODO FROM INFO_FOREACH.dyn: @context 'ref_add', dyn_m, dyn_t
 		if sub_nm? then ans= ans[sub_nm]
 		r= @formatFromSpec ans, format_spec, custom_spec
 		console.log 'G2:UNDEFINED', {table_ref, col_nm, format_spec, custom_spec, sub_nm}, info_foreach: @info_foreach if r is undefined
@@ -402,6 +429,7 @@ class ViewExe
 	T_react: (attrs) ->
 		EpicMvc.Extras.components?= {}
 		EpicMvc.Extras.components[ attrs.func]( attrs)
+	# TODO FIGURE OUT HOW TO ELIMINATE THAT ISSUE WITH React.DOM.tbody({}, React.DOM.tr({},..), NULL) with <Unknown>
 	T_show_me: (attrs, content) ->
 		f= ':tag(viewexe).T_showme'
 		_log2 '======== attrs   ======', f, attrs
