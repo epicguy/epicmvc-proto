@@ -11,15 +11,15 @@
   z-index: 99999;
 }
 .red { color: red; }
+.btn-group { background-color: #CCC; border-radius: 6px; }
+.dbg-toolbar .btn { padding: 6px 2px; }
 </style>
-<script type="text/javascript">
-	(function($) {
-		$(document).ready(function() {
+<epic:defer>
 			var $dur = "medium"; // Duration of Animation
 
 			$(".dbg-toolbar").css({
 				"right" : 0,
-				"top" : -52
+				"top" : -46
 			})
 			$(".dbg-toolbar").hover(function() {
 				$(this).stop().animate({
@@ -27,40 +27,37 @@
 				}, $dur);
 			}, function() {
 				$(this).stop().animate({
-					top : -52
+					top : -46
 				}, $dur);
 			});
 			$(".dbg-toolbar").show();
-		});
-	})(jQuery);
-</script>
-<epic:debug>
+</epic:defer>
 <div class="dbg-toolbar" style="position: fixed; z-index: 9999; background-color: #484848; font-size: 10px; padding: 10px 10px 0 10px; top: -52px; right: 0;">
 	<div class="btn-toolbar">
 		<div class="btn-group">
-			<epic:link_action action="dbg_refresh" p:what="file" class="btn btn-mini">
-				<i class="icon-refresh"><span class="epic-alternate">[R]</span></i>
-			</epic:link_action>
-			<epic:link_action action="dbg_toggle" p:what="file" class="btn btn-mini">
-					<i class="icon-h-sign icon-large &Devl/Opts/file#.red;"><span class="epic-alternate">[H]</span></i>
-			</epic:link_action>
-			<epic:link_action action="dbg_toggle" p:what="tag" class="btn btn-mini">
-					<i class="icon-chevron-left icon-large &Devl/Opts/tag#.red;"><span class="epic-alternate">[&lt;]</span></i>
-			</epic:link_action>
-			<epic:link_action action="dbg_toggle" p:what="tag2" class="btn btn-mini">
-					<i class="icon-chevron-right icon-large &Devl/Opts/tag2#.red;"><span class="epic-alternate">[&gt;]</span></i>
-			</epic:link_action>
-			<epic:link_action action="dbg_toggle" p:what="form" class="btn btn-mini">
-					<i class="icon-edit icon-large &Devl/Opts/form#.red;"><span class="epic-alternate">[F]</span></i>
-			</epic:link_action>
-			<epic:link_action action="dbg_toggle" p:what="model" class="btn btn-mini">
-					<i class="icon-reorder icon-large &Devl/Opts/model#.red;"><span class="epic-alternate">[M]</span></i>
-			</epic:link_action>
+			<a data-action="click:dbg_refresh" data-params='{"what":"file"}' class="btn btn-mini">
+				<span class="glyphicon glyphicon-repeat"></span>
+			</a>
+			<a data-action="click:dbg_toggle" data-params='{"what":"file"}' class="btn btn-mini">
+					<span class="glyphicon glyphicon-file &Devl/Opts/file#.red;"></span>
+			</a>
+			<a data-action="click:dbg_toggle" data-params='{"what":"tag"}' class="btn btn-mini">
+					<span class="glyphicon glyphicon-chevron-left &Devl/Opts/tag#.red;"></span>
+			</a>
+			<a data-action="click:dbg_toggle" data-params='{"what":"tag2"}' class="btn btn-mini">
+					<span class="glyphicon glyphicon-chevron-right &Devl/Opts/tag2#.red;"></span>
+			</a>
+			<a data-action="click:dbg_toggle" data-params='{"what":"form"}' class="btn btn-mini">
+					<span class="glyphicon glyphicon-edit &Devl/Opts/form#.red;"></span>
+			</a>
+			<a data-action="click:dbg_toggle" data-params='{"what":"model"}' class="btn btn-mini">
+					<span class="glyphicon glyphicon-list-alt &Devl/Opts/model#.red;"></span>
+			</a>
 		</div>
 	</div>
 	<div style="text-align: center; color: #FFF; letter-spacing: 5px; font-size: 10px; height: 18px; padding-left: 4px; margin-top: -3px;">EPIC</div>
 </div>
-</epic:debug>
+<!-- </epic:debug> -->
 <epic:if set="&Devl/Opts/model;">
 	<table width="100%"><tr><td width="20%" style="background-color:#90C0FF;vertical-align:top;padding-top:75px;padding-bottom:20px;">
 		<epic:page_part part="dbg_model" dynamic="div" /> <!-- Show model list w/tables -->

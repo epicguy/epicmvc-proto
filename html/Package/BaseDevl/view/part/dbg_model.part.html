@@ -6,29 +6,28 @@ ul.dbg-model.nav ul li a { padding-left: 15px; }
 <ul class="dbg-model nav nav-tabs nav-stacked">
 	<epic:foreach table="Devl/Model">
 	<li>
-		<epic:link_action action="dbg_open_model" p:name="&Model/name;">
+		<a data-action="click:dbg_open_model" data-params='{"name":"&Model/name;"}'>
 			[&Model/tables;] &Model/name; (&Model/inst;)
-		</epic:link_action>
-	</li>
+		</a>
 		<epic:if set="&Model/is_open;">
 			<ul class="nav nav-tabs nav-stacked">
 				<epic:foreach table="Model/Table">
 				<li>
-					<epic:link_action action="dbg_open_table" p:name="&Table/name;">
+					<a data-action="click:dbg_open_table" data-params='{"name":"&Table/name;"}'>
 						<span title="&Table/cols;">[&Table/rows;] &Table/name;</span>
-					</epic:link_action>
+					</a>
 					<epic:if set="&Table/is_open;">
-					<table border="1" style="font-size:8pt;line-height:1;">
+					<table border="1" style="font-size:8pt;line-height:1;"><tbody>
 						<tr>
 							<th>
 							<epic:if set="&Table/by_col;"> <!-- List of rows -->
-								<epic:link_action action="dbg_table_by_row">
+								<a data-action="click:dbg_table_by_row">
 									Row
-								</epic:link_action>
+								</a>
 							</epic:if>
 							<epic:if not_set="&Table/by_col;"> <!-- List of cols -->
 								Column
-								<epic:if set="&Table/is_sub;"><epic:link_action action="dbg_close_subtable" style="padding:0;">^</epic:link_action></epic:if>
+								<epic:if set="&Table/is_sub;"><a data-action="click:dbg_close_subtable" style="padding:0;">^</a></epic:if>
 							</epic:if>
 							</th><th>T</th><th center>
 								<epic:if val="&Table/rows;" eq="1">
@@ -39,9 +38,9 @@ ul.dbg-model.nav ul li a { padding-left: 15px; }
 										&nbsp;&nbsp;&Table/curr_col;&nbsp;&nbsp;
 									</epic:if>
 									<epic:if not_set="&Table/by_col;">
-										<epic:link_action action="dbg_table_left">&lt;</epic:link_action>
+										<a data-action="click:dbg_table_left">&lt;</a>
 										&nbsp;&nbsp;Value (row &Table/row_cnt;)&nbsp;&nbsp;
-										<epic:link_action action="dbg_table_right">&gt;</epic:link_action>
+										<a data-action="click:dbg_table_right">&gt;</a>
 									</epic:if>
 								</epic:if>
 							</th>
@@ -55,7 +54,7 @@ ul.dbg-model.nav ul li a { padding-left: 15px; }
 								&Cols/col;
 							</epic:if>
 							<epic:if val="&Table/rows;" ne="1">
-								<epic:link_action action="dbg_table_col_set" p:col="&Cols/col;">&Cols/col;</epic:link_action>
+								<a data-action="click:dbg_table_col_set" data-params='{"col":"&Cols/col;"}'>&Cols/col;</a>
 							</epic:if>
 							</th>
 							<epic:if set="&Cols/val;"><td style="color:green;">&Cols/type#1;</td></epic:if>
@@ -64,7 +63,7 @@ ul.dbg-model.nav ul li a { padding-left: 15px; }
 									<epic:if val="&Cols/type;" eq="object">
 										<epic:if not_set="&Cols/len;"> Table [ empty ]</epic:if>
 										<epic:if set="&Cols/len;">
-											<epic:link_action action="dbg_open_subtable" p:name="&Cols/col;" style="padding:0;">Table</epic:link_action>
+											<a data-action="click:dbg_open_subtable" data-params='{"name":"&Cols/col;"}' style="padding:0;">Table</a>
 											[&Cols/len; row<epic:if val="&Cols/len;" ne="1">s</epic:if>]
 										</epic:if>
 									</epic:if>
@@ -96,11 +95,12 @@ ul.dbg-model.nav ul li a { padding-left: 15px; }
 						</epic:if>
 
 
-					</table>
+					</tbody></table>
 					</epic:if>
 				</li>
 				</epic:foreach>
 			</ul>
 		</epic:if>
+	</li>
 	</epic:foreach>
 </ul>
