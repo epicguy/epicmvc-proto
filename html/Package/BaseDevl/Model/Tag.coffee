@@ -106,6 +106,7 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 			_log2 '##### Error in varGet3 key=', key, e
 			@_Error 'varGet3', key, e
 			throw e
+		#"<span title='&amp;#{view_nm}/#{tbl_nm}/#{col_nm}#{t_format_spec}#{t_custom_spec};'>#{val}</span>"
 		val
 	varGet2: (tbl_nm, col_nm, format_spec, custom_spec, sub_nm, give_error) ->
 		try
@@ -121,6 +122,7 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 			_log2 '##### Error in varGet2 key=', key, 'undefined'
 			@_Error 'varGet2', key, message: 'is undefined', stack: "\n"
 			val= "&amp;#{tbl_nm}/#{col_nm};" # Give back a visual of what is in the HTML
+		#"<span title='&amp;#{tbl_nm}/#{col_nm}#{t_format_spec}#{t_custom_spec};'>#{val}</span>"
 		val
 	Tag_if: (oPt) ->
 		try

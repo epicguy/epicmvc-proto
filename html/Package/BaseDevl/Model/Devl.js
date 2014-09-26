@@ -30,7 +30,7 @@
       var _this = this;
       this.invalidateTables(true);
       return setTimeout((function() {
-        return _this.invalidateTables(true);
+        return _this.invalidateTables(true, ['Opts']);
       }), 2000);
     };
 

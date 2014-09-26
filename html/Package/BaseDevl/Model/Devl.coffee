@@ -12,7 +12,7 @@ class Devl extends window.EpicMvc.ModelJS
 		@table_col= false
 	eventNewRequest: ->
 		@invalidateTables true
-		setTimeout (=> @invalidateTables true), 2000
+		setTimeout (=> @invalidateTables true, ['Opts']), 2000
 	action: (act,p) ->
 		f= 'dM:Devl('+ act+ ')'
 		r= {}
