@@ -35,10 +35,10 @@
         }
       }
       if (this._ModelJS.ss != null) {
-        $.extend(true, this, this._ModelJS.ss);
+        deep_extend(this, this._ModelJS.ss);
       }
       if (copy_of_state) {
-        $.extend(true, this, copy_of_state);
+        deep_extend(this, copy_of_state);
       }
       return this.Table = {};
     };
@@ -58,12 +58,13 @@
       if ($.isEmptyObject(st)) {
         return false;
       }
-      return $.extend(true, {}, st);
+      return deep_extend({}, st);
     };
 
     ModelJS.prototype.invalidateTables = function(tbl_nms, not_tbl_names) {
       var f, nm, _i, _len;
       f = ':ModelJs.invalidateTables';
+      _log2(f, tbl_nms, not_tbl_names);
       if (not_tbl_names == null) {
         not_tbl_names = [];
       }

@@ -2,30 +2,16 @@
 (function() {
   'use strict';
 
-  var Epic;
+  var Epic, deep_extend,
+    __slice = [].slice;
 
   Epic = (function() {
 
     function Epic() {
-      this.appNm = 'Epic::appNm=NOT-SET';
-      this.oView = null;
-      this.getView = function() {
-        return this.oView;
-      };
       this.oAppConf = null;
-      this.appConf = function() {
-        return this.oAppConf;
-      };
-      this.oRequest = null;
-      this.request = function() {
-        return this.oRequest;
-      };
       this.oFistGroupCache = null;
       this.getFistGroupCache = function() {
         return this.oFistGroupCache;
-      };
-      this.v = {
-        appConf: null
       };
       this.oModel = {};
       this.oFist = {};
@@ -40,10 +26,6 @@
         click_warning_text: 'WARNING: Still processing previous click event (check for javascript errors.)'
       };
     }
-
-    Epic.prototype.log1 = window.Function.prototype.bind.call(window.console.log, window.console);
-
-    Epic.prototype.log2 = window.Function.prototype.bind.call(window.console.log, window.console);
 
     Epic.prototype.nextCounter = function() {
       return ++this.counter;
@@ -128,19 +110,21 @@
 
     Epic.prototype.Execute = function(va, params) {
       var action, oM, view_nm, _ref;
-      this.log2(':Execute', va, params);
+      _log2(':Execute', va, params);
       _ref = va.split('/'), view_nm = _ref[0], action = _ref[1];
       oM = this.getInstance(view_nm);
       return oM.action(action, params);
     };
 
     Epic.prototype.run = function(appconfs, artifact_load_strategy_class, render_class, content_watch, options) {
-      var loader, renderer;
+      var loader, nm, renderer;
       if (this.guard_run) {
         return true;
       }
       this.guard_run = true;
-      $.extend(this.options, options);
+      for (nm in options) {
+        this.options[nm] = nm;
+      }
       loader = new window.EpicMvc.Extras[artifact_load_strategy_class](this);
       renderer = new window.EpicMvc.Extras[render_class](this, content_watch);
       return this.init(appconfs, loader, renderer, content_watch);
@@ -152,10 +136,8 @@
       this.loader = loader;
       this.renderer = renderer;
       this.content_watch = content_watch;
-      this.oRequest = new window.EpicMvc.Request(this);
       this.oFistGroupCache = new window.EpicMvc.FistGroupCache(this, this.loader);
       this.oAppConf = new window.EpicMvc.AppConf(this, this.loader);
-      this.oView = new window.EpicMvc.ViewExe(this, this.loader, this.content_watch);
       flow = this.oAppConf.loginF();
       (this.getInstance('Pageflow')).goTo(flow);
       return true;
@@ -183,12 +165,12 @@
       return null;
     };
 
-    Epic.prototype.render = function(template, sp, avoid_form_reset) {
-      var history, k, modal, o, page, stuff, _ref;
+    Epic.prototype.render = function(layout, sp, avoid_form_reset) {
+      var history, k, modal, o, oView, page, stuff, _ref;
       page = this.oAppConf.getPage(sp);
       modal = this.oAppConf.findAttr(sp[0], sp[1], sp[2], 'modal');
       if (modal) {
-        template = this.oAppConf.mapModalTemplate(modal);
+        layout = this.oAppConf.mapModalLayout(modal);
       }
       history = (function() {
         switch ("" + (this.wasModal ? 1 : 0) + ":" + (modal ? 1 : 0)) {
@@ -204,11 +186,12 @@
             return alert('my code is hosed');
         }
       }).call(this);
-      this.oView.init(template, page);
+      oView = this.getInstance('View');
+      oView.init(layout, page);
       try {
-        stuff = this.oView.run();
+        stuff = oView.run();
       } catch (e) {
-        this.log2(':render error', e, e.stack);
+        _log2(':render error', e, e.stack);
         if (this.isSecurityError(e)) {
           return e;
         } else {
@@ -233,7 +216,7 @@
     Epic.prototype.login = function() {
       var f, k, o, _ref, _results;
       f = ':login';
-      this.log2(f, this.oModel);
+      _log2(f, this.oModel);
       _ref = this.oModel;
       _results = [];
       for (k in _ref) {
@@ -272,7 +255,7 @@
     Epic.prototype.makeClick = function(form_flag, action, params, render_flag) {
       var click_index, f, p_action;
       f = ':makeClick:' + action;
-      this.log2(f, 'form?' + (form_flag ? 'Y' : 'N'), 'render' + (render_flag ? 'Y' : 'N'), params);
+      _log2(f, 'form?' + (form_flag ? 'Y' : 'N'), 'render' + (render_flag ? 'Y' : 'N'), params);
       p_action = {};
       p_action[form_flag ? '_b' : '_a'] = action;
       click_index = this.oRequest.addLink($.extend(p_action, params));
@@ -280,30 +263,24 @@
       return click_index;
     };
 
-    Epic.prototype.click = function(click_index, no_render) {
-      var action_attrs, after_sp, before_sp, click_result, f, first_node, k, o, oC, oPf, planned_action, ss, _ref, _ref1, _ref2, _ref3;
+    Epic.prototype.click = function(action_token, data, no_render) {
+      var action_attrs, after_sp, before_sp, click_result, f, first_node, k, o, oC, oPf, planned_action, ss, _ref, _ref1, _ref2;
       f = ':click';
-      this.log2(f, click_index);
-      if ((_ref = window.event) != null) {
-        _ref.returnValue = false;
-      }
+      _log2(f, action_token, data);
       if (this.inClick !== false && this.options.click_warning_text !== false) {
         alert(this.options.click_warning_text);
       }
       oPf = this.getInstance('Pageflow');
       before_sp = oPf.getStepPath();
-      if (click_index) {
-        this.oRequest.start(click_index);
-      }
-      if (click_index && no_render !== true) {
-        planned_action = this.oRequest.haveAction();
+      if (action_token && no_render !== true) {
+        planned_action = action_token;
         if (planned_action) {
           first_node = this.oAppConf.findClick(before_sp, planned_action);
         }
         if (first_node && (first_node.hasAttr('dynamic')) === true) {
           no_render = true;
         }
-        this.log2(f, 'render?', {
+        _log2(f, 'render?', {
           no_render: no_render,
           sp: before_sp,
           action: planned_action,
@@ -311,24 +288,24 @@
         });
       }
       if (!no_render) {
-        this.inClick = click_index;
+        this.inClick = action_token;
       }
-      _ref1 = this.oFist;
+      _ref = this.oFist;
+      for (k in _ref) {
+        o = _ref[k];
+        if (typeof o.eventNewRequest === "function") {
+          o.eventNewRequest(this.click_path_changed);
+        }
+      }
+      _ref1 = this.oModel;
       for (k in _ref1) {
         o = _ref1[k];
         if (typeof o.eventNewRequest === "function") {
           o.eventNewRequest(this.click_path_changed);
         }
       }
-      _ref2 = this.oModel;
-      for (k in _ref2) {
-        o = _ref2[k];
-        if (typeof o.eventNewRequest === "function") {
-          o.eventNewRequest(this.click_path_changed);
-        }
-      }
       oC = new window.EpicMvc.ClickAction(this);
-      click_result = oC.click();
+      click_result = oC.click(action_token, data);
       after_sp = oPf.getStepPath();
       oPf.setIssues(click_result[0]);
       oPf.setMessages(click_result[1]);
@@ -337,9 +314,9 @@
       this.click_path_changed.track = this.click_path_changed.flow || before_sp[1] !== after_sp[1];
       this.click_path_changed.step = this.click_path_changed.track || before_sp[2] !== after_sp[2];
       this.modelState = {};
-      _ref3 = this.oModel;
-      for (k in _ref3) {
-        o = _ref3[k];
+      _ref2 = this.oModel;
+      for (k in _ref2) {
+        o = _ref2[k];
         if ((o.saveState != null) && (ss = o.saveState())) {
           this.modelState[k] = ss;
         }
@@ -353,24 +330,25 @@
     };
 
     Epic.prototype.renderSecure = function(avoid_form_reset) {
-      var f, oC, oPf, render_attempts, render_result, sp, template;
+      var f, layout, oC, oPf, render_attempts, render_result, sp, _results;
       f = ':renderSecure';
-      this.log2(f, 'start, avoid_form_reset', avoid_form_reset);
+      _log2(f, 'start, avoid_form_reset', avoid_form_reset);
       oC = new window.EpicMvc.ClickAction(this);
       oPf = this.getInstance('Pageflow');
       render_result = false;
       render_attempts = 3;
+      _results = [];
       while (render_result !== true && --render_attempts > 0) {
-        this.log2(f, (render_result === true ? 'T' : render_result === false ? 'F' : render_result), render_attempts);
+        _log2(f, (render_result === true ? 'T' : render_result === false ? 'F' : render_result), render_attempts);
         sp = oPf.getStepPath();
         if (render_result !== false) {
           oC.click(render_result.message, sp);
         }
         sp = oPf.getStepPath();
-        template = this.oAppConf.findTemplate(sp);
-        render_result = this.render(template, sp, avoid_form_reset);
+        layout = this.oAppConf.findLayout(sp);
+        _results.push(render_result = this.render(layout, sp, avoid_form_reset));
       }
-      return this.oView.doDefer();
+      return _results;
     };
 
     Epic.prototype.getModelState = function() {
@@ -393,7 +371,74 @@
 
   })();
 
+  deep_extend = function() {
+    var atype, dest, dup, otype, source, sources, stype, utype, _i, _len;
+    dest = arguments[0], sources = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+    otype = '[object Object]';
+    atype = '[object Array]';
+    utype = 'undefined';
+    stype = 'scalar';
+    func[otype] = function(dest, source) {
+      var ans, snm;
+      if (typeof source !== otype) {
+        return void 0;
+      }
+      for (snm in source) {
+        ans = dup(dest[snm], source[snm]);
+        if (ans !== void 0) {
+          dest[snm] = ans;
+        }
+      }
+      return void 0;
+    };
+    func[atype] = function(dest, source) {
+      var ans, sinx;
+      if (typeof want !== atype) {
+        reutrn(void 0);
+      }
+      for (sinx in source) {
+        ans = dup(dest[sinx], source[sinx]);
+        if (ans !== void 0) {
+          dest[sinx] = ans;
+        }
+      }
+      return void 0;
+    };
+    func[utype] = function(was, want) {
+      var _ref, _ref1;
+      if ((_ref = typeof was) !== otype && _ref !== atype) {
+        if ((_ref1 = typeof want) !== otype && _ref1 !== atype) {
+          return want;
+        }
+        return was;
+      }
+      if (typeof was !== typeof want) {
+        return was;
+      }
+    };
+    func[stype] = function(was, want) {
+      if (typeof want in func) {
+        return want;
+      }
+      return was;
+    };
+    dup = function(dest, source) {
+      var type;
+      type = typeof dest;
+      if (!(type in func)) {
+        type = stype;
+      }
+      return func[typeof dest](dest, source);
+    };
+    for (_i = 0, _len = sources.length; _i < _len; _i++) {
+      source = sources[_i];
+      dup(dest, source);
+    }
+    return dest;
+  };
+
   window.EpicMvc = {
+    deep_extend: deep_extend,
     Extras: {},
     Model: {},
     Epic: new Epic()

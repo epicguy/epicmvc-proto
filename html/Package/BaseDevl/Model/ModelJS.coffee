@@ -2,9 +2,9 @@
 # Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 # Enhance core EpicMvc.ModelJS with error checking/reporting for Devl mode
-CoreModelJS= window.EpicMvc.ModelJS
+CoreModelJS= E.ModelJS
 class ModelJS extends CoreModelJS
-	action: (act,parms) ->
+	action: (ctx,act,parms) ->
 		throw new Error "Model (#{@view_nm}).action() needs (#{act})"
 		#return [ {}, {}, {} ]
 	loadTable: (tbl_nm) ->
@@ -18,4 +18,4 @@ class ModelJS extends CoreModelJS
 		throw new Error "Model (#{@view_nm}).fistGetFieldChoices() needs (#{oFist.getFistNm()}:#{field})"
 		#return options: ['fix me'], values: ['fix me']
 
-window.EpicMvc.ModelJS= ModelJS # Public API (replace with ours)
+E.ModelJS= ModelJS # Public API (replace with ours)

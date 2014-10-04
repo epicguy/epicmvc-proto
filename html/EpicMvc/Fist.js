@@ -22,7 +22,6 @@
       this.Fb_ClearValues();
       this.upload_todo = [];
       this.upload_fl = {};
-      this.eventLastPath = this.Epic.getPageflowPath();
       this.focus_fl_nm = false;
     }
 
@@ -87,7 +86,7 @@
               final_obj.options.push(row[w_opt]);
               final_obj.values.push(row[w_val]);
             }
-            this.Epic.log2(f, final_obj);
+            _log2(f, final_obj);
         }
         this.cache_field_choice[fl] = final_obj;
       }
@@ -113,7 +112,7 @@
 
     Fist.prototype.getHtmlFieldValues = function() {
       this.loadData();
-      this.Epic.log2('getHtmlFieldValues', this.fist_nm, this.fb_HTML);
+      _log2('getHtmlFieldValues', this.fist_nm, this.fb_HTML);
       return this.fb_HTML;
     };
 
@@ -152,7 +151,7 @@
     Fist.prototype.loadData = function(data) {
       if (this.form_state === 'empty') {
         this.oM.fistLoadData(this);
-        return this.form_state = 'loaded';
+        this.form_state = 'loaded';
       }
     };
 
@@ -166,22 +165,19 @@
       this.form_state = 'loaded';
     };
 
-    Fist.prototype.eventNewRequest = function() {
-      var path;
-      path = this.Epic.getPageflowPath();
-      if (this.eventLastPath !== path) {
+    Fist.prototype.eventNewRequest = function(changed) {
+      if (changed.step) {
         this.clearValues();
         this.upload_todo = [];
         this.uploaded_fl = {};
       }
-      this.eventLastPath = path;
     };
 
     Fist.prototype.clearIssues = function(html_nm) {
       if (html_nm) {
-        return delete this.fb_issues[html_nm];
+        delete this.fb_issues[html_nm];
       } else {
-        return this.fb_issues = {};
+        this.fb_issues = {};
       }
     };
 
@@ -189,57 +185,6 @@
       if (this.form_state !== 'empty') {
         this.Fb_ClearValues();
         this.form_state = 'empty';
-      }
-    };
-
-    Fist.prototype.getUploadedMsg = function(fl, val) {
-      return this.oM.fistGetUploadedMsg(this, fl, val);
-    };
-
-    Fist.prototype.haveUpload = function(fl, from_id, to_id, btn_id, msg_id, now) {
-      var details, uploader,
-        _this = this;
-      details = {
-        fl: fl,
-        from_id: from_id,
-        to_id: to_id,
-        btn_id: btn_id,
-        msg_id: msg_id
-      };
-      if (now !== true) {
-        this.upload_todo.push(details);
-        return;
-      }
-      uploader = new qq.FileUploaderBasic($.extend({
-        element: document.getElementById(from_id),
-        button: document.getElementById(btn_id),
-        debug: true,
-        multiple: false,
-        allowedExtensions: ['jpg', 'jpeg'],
-        onComplete: function(id, fileName, responseJSON) {
-          return _this.uploadComplete(fl, id, fileName, responseJSON);
-        }
-      }, this.oM.fistGetUploadOptions(this, fl, from_id, to_id)));
-      this.upload_fl[fl] = details;
-    };
-
-    Fist.prototype.uploadComplete = function(fl, the_id, fileName, responseJSON) {
-      var form_value;
-      form_value = this.oM.fistHandleUploadResponse(this, fl, responseJSON);
-      if (form_value === false) {
-        $('#' + this.upload_fl[fl].msg_id).text(' File failed to load, try again?');
-      } else {
-        $('#' + this.upload_fl[fl].msg_id).text(' ' + this.oM.fistGetUploadedMsg(this, fl, form_value) + '  uploaded.');
-        $('#' + this.upload_fl[fl].to_id).val(form_value);
-      }
-    };
-
-    Fist.prototype.eventInitializePage = function() {
-      var v, _i, _len, _ref;
-      _ref = this.upload_todo;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        v = _ref[_i];
-        this.haveUpload(v.fl, v.from_id, v.to_id, v.btn_id, v.msg_id, true);
       }
     };
 
@@ -327,7 +272,7 @@
       if ((_ref = this.issue_inline) == null) {
         this.issue_inline = this.Epic.appConf().getShowIssues() === 'inline';
       }
-      this.Epic.log2(f, field, token_data, {
+      _log2(f, field, token_data, {
         inline: this.issue_inline
       });
       if (this.issue_inline) {

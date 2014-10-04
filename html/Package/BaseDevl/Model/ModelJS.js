@@ -6,7 +6,7 @@
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  CoreModelJS = window.EpicMvc.ModelJS;
+  CoreModelJS = E.ModelJS;
 
   ModelJS = (function(_super) {
 
@@ -16,7 +16,7 @@
       return ModelJS.__super__.constructor.apply(this, arguments);
     }
 
-    ModelJS.prototype.action = function(act, parms) {
+    ModelJS.prototype.action = function(ctx, act, parms) {
       throw new Error("Model (" + this.view_nm + ").action() needs (" + act + ")");
     };
 
@@ -39,6 +39,6 @@
 
   })(CoreModelJS);
 
-  window.EpicMvc.ModelJS = ModelJS;
+  E.ModelJS = ModelJS;
 
 }).call(this);

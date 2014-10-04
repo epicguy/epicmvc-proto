@@ -6,7 +6,7 @@ class AppConf
 		@config= @loadStrategy.getCombinedAppConfs()
 		@config.CLICKS?= {}
 		@config.MACROS?= {}
-		@config.OPTIONS.frame?= {}
+		@config.OPTIONS.frames?= {}
 		@config.FORMS= false
 	# MODELS map functions
 	getObj: (view_name,attribute) ->
@@ -21,7 +21,7 @@ class AppConf
 			for own view_nm, node of @config.MODELS
 				continue if not ('forms' of node)
 				group= node.group
-				group?= @config.OPTIONS.settings.group
+				group?= @config.OPTIONS.group
 				@config.FORMS[group]?= {}
 				for form_nm in node.forms.split ','
 					@config.FORMS[group][form_nm]= view_nm
@@ -63,30 +63,30 @@ class AppConf
 		return new window.EpicMvc.ConfExe node if node
 		false
 
-	loginF: -> @config.OPTIONS.login.flow
+	firstF: -> @config.OPTIONS.flow
 
 	findClick: (p,a) ->
 		node= @findNode p[0], p[1], p[2], 'CLICKS', a
 		if node== false and (n= @config.CLICKS[a])? then node= n
 		return new window.EpicMvc.ConfExe node if node
 		null
-	mapModalTemplate: (modal) ->
-		@config.OPTIONS.template[modal] || modal
-	findTemplate: (f,t,s) ->
+	mapModalLayout: (modal) ->
+		@config.OPTIONS.modals[modal] || modal
+	findLayout: (f,t,s) ->
 		if typeof t is 'undefined' then s= f[2]; t=f[1]; f= f[0]
-		template= ( @findAttr f, t, s, 'template' ) || @config.OPTIONS.template.default
+		layout= ( @findAttr f, t, s, 'layout' ) || @config.OPTIONS.layout
 	getShowIssues: (f,t) ->
-		group= ( @findAttr f, t, false, 'show_issues' ) || @config.OPTIONS.settings.show_issues
+		group= ( @findAttr f, t, false, 'show_issues' ) || @config.OPTIONS.show_issues
 	getGroupNm: (f,t) ->
-		group= ( @findAttr f, t, false, 'group' ) || @config.OPTIONS.settings.group
+		group= ( @findAttr f, t, false, 'group' ) || @config.OPTIONS.group
 	getVars: (f,t,s) ->
 		f2= ':AppConf.getVars'
-		vars= $.extend {}, @config.FLOWS[f].v, @config.FLOWS[f].TRACKS[t].v, @config.FLOWS[f].TRACKS[t].STEPS[s].v
-		@Epic.log2 f2, ( "#{k}:#{v}" for own k,v of vars).join ', '
+		vars= deep_extend {}, @config.FLOWS[f].v, @config.FLOWS[f].TRACKS[t].v, @config.FLOWS[f].TRACKS[t].STEPS[s].v
+		_log2 f2, ( "#{k}:#{v}" for own k,v of vars).join ', '
 		vars
 
 	# returns: Object indexed by frame name (caller may alpha-sort for render order)
-	#Example: OPTIONS: frame: QQQ_BaseDevl: 'bdev' (view/bdev.frame.html)
-	getFrames: -> @config.OPTIONS.frame
+	#Example: OPTIONS: frames: QQQ_BaseDevl: 'bdev' (view/bdev.frame.html)
+	getFrames: -> @config.OPTIONS.frames
 
 window.EpicMvc.AppConf= AppConf # Public API

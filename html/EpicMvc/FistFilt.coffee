@@ -68,7 +68,7 @@ class FistFilt
 
 	@CHECK_choice: (fieldName, validateExpr, value, oF) ->
 		# Allow values that are in the pulldown choices (less first choice if validateExpr==1)
-		oF.Epic.log2 'CHECK_choice:value/values', value, oF.getChoices(fieldName).values
+		_log2 'CHECK_choice:value/values', value, oF.getChoices(fieldName).values
 		return false if value not in oF.getChoices(fieldName).values
 		if validateExpr
 			return false if oF.getChoices(fieldName).values[0] is value
@@ -107,7 +107,7 @@ class FistFilt
 
 	@H2D_date_psuedo: (fieldName, filtExpr, value) ->
 		f= 'FF:H2D_date_psuedo'
-		oF.Epic.log2 f, fieldName, filtExpr, value
+		_log2 f, fieldName, filtExpr, value
 		# It's a list of control values (m/d/Y); db wants YYYY-MM-DD
 		[m,d,Y] = value
 		# TODO WHAT TO DO IF NOTHING ENTERED, AND NEED TO CHECK 'REQ' VS. VALID
@@ -145,7 +145,7 @@ class FistFilt
 
 	@D2H_date_psuedo: (fieldName, filtExpr, value) ->
 		f= 'FF:D2H_date_psuedo'
-		oF.Epic.log2 f, fieldName, filtExpr, value
+		_log2 f, fieldName, filtExpr, value
 		# Control want's (m, d, y)
 		[Y, m, d]= ((value ? '--').split /[^0-9-]/)[0].split '-'
 		[((m ? '').replace /^0/, ''), ((d ? '').replace /^0/, ''), Y]

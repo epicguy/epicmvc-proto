@@ -3,16 +3,9 @@
 
 class Epic
 	constructor: ->
-		@appNm= 'Epic::appNm=NOT-SET'
-		@oView= null
-		@getView= -> @oView
 		@oAppConf= null
-		@appConf= -> @oAppConf
-		@oRequest= null
-		@request= -> @oRequest
 		@oFistGroupCache= null
 		@getFistGroupCache= -> @oFistGroupCache
-		@v= appConf: null
 		@oModel= {} # Model instances, including e.g. Pageflow, Tag, Security
 		@oFist= {} # Fist instances
 		@counter= 0 # A counter value to get unique numbers per epic instance
@@ -25,10 +18,6 @@ class Epic
 		@options=
 			click_warning_text: 'WARNING: Still processing previous click event (check for javascript errors.)'
 
-	log1: window.Function.prototype.bind.call( window.console.log, window.console)
-	#log1: () -> null
-	log2: window.Function.prototype.bind.call( window.console.log, window.console)
-	#log2: () -> null
 	nextCounter: -> ++@counter
 	getPageflowPath: () ->
 		@getInstance( 'Pageflow').getStepPath().join '/'
@@ -41,7 +30,7 @@ class Epic
 			if not window.EpicMvc.Model[cls]? # TODO CALL A DEBUG THINGY W/TOKEN AND view_nm/cls
 				alert ":Epic.getInstance: (app.js) MODELS: #{view_nm}: class: #{cls} [(#{cls}) not in window.EpicMvc.Model]"
 			@oModel[inst_nm]= new window.EpicMvc.Model[ cls] @, view_nm
-			#@log2 ':getInstance', inst_nm, @modelState
+			#_log2 ':getInstance', inst_nm, @modelState
 			@oModel[inst_nm].restoreState @modelState[inst_nm] if inst_nm of @modelState
 		@oModel[inst_nm]
 	getViewTable: (view_tbl_nm) ->
@@ -74,22 +63,20 @@ class Epic
 			@oFist[inst_nm]= new window.EpicMvc.Fist @, g, fist_nm, view_nm, flist_nm
 		@oFist[inst_nm]
 	Execute: (va,params) ->
-		@log2 ':Execute', va, params
+		_log2 ':Execute', va, params
 		[view_nm, action]= va.split '/'
 		oM= @getInstance view_nm
 		oM.action action, params
 	run: (appconfs,artifact_load_strategy_class,render_class,content_watch, options) ->
 		return true if @guard_run # Called twice for some reason
 		@guard_run= true
-		$.extend @options, options
+		@options[ nm]= nm for nm of options # TODO REWRITE NEW $.extend
 		loader=   new window.EpicMvc.Extras[ artifact_load_strategy_class] @
 		renderer= new window.EpicMvc.Extras[ render_class] @, content_watch
 		@init appconfs, loader, renderer, content_watch
 	init: (@appconfs, @loader, @renderer, @content_watch) ->
-		@oRequest=        new window.EpicMvc.Request @
 		@oFistGroupCache= new window.EpicMvc.FistGroupCache @, @loader
 		@oAppConf=        new window.EpicMvc.AppConf @, @loader # Uses @loader in constructor
-		@oView=           new window.EpicMvc.ViewExe @, @loader, @content_watch # Uses AppConf in constructor
 		flow= @oAppConf.loginF() # Find initial pageflow state
 		(@getInstance 'Pageflow').goTo flow
 		true
@@ -104,11 +91,11 @@ class Epic
 		else
 			@renderer.handleRenderState history, click_index
 		null
-	render: (template,sp,avoid_form_reset) ->
+	render: (layout,sp,avoid_form_reset) ->
 		page= @oAppConf.getPage sp
 		modal= @oAppConf.findAttr sp[0], sp[1], sp[2], 'modal'
 		if modal
-			template= @oAppConf.mapModalTemplate modal
+			layout= @oAppConf.mapModalLayout modal
 		#TODO IS THIS SET ON ACTION, NOT PAGE? SHOULD I USE FIND-ATTR? history= @oAppConf.getHistory sp
 		history= switch "#{if @wasModal then 1 else 0}:#{if modal then 1 else 0}"
 			when '0:0' then true
@@ -116,20 +103,22 @@ class Epic
 			when '0:1' then false
 			when '1:1' then false
 			else alert 'my code is hosed'
-		@oView.init template, page
+		oView= @getInstance 'View'
+		oView.init layout, page
 		try
-			stuff= @oView.run()
+			stuff= oView.run()
 		catch e
-			@log2 ':render error', e, e.stack
+			# TODO REWRITE FIGURE OUT HOW WE WANT TO HANDLE SECURITIY ISSUES DURING RENDER; TRY TO SIMPLIFY THE CORE
+			_log2 ':render error', e, e.stack
 			if @isSecurityError e then return e
 			else @inClick= false; throw e
 		@renderStrategy stuff, history, @inClick, modal
-		o.eventInitializePage?() for k,o of @oFist if avoid_form_reset isnt true # Load widgets (i.e. fileuploader)
+		o.eventInitializePage?() for k,o of @oFist if avoid_form_reset isnt true # Load widgets
 		@wasModal= modal
 		true # No security issues
 	login: ->
 		f= ':login'
-		@log2 f, @oModel
+		_log2 f, @oModel
 		for k,o of @oModel when o.eventLogin?() # True to (TODO)
 			continue
 	logout: (click_event, click_data)->
@@ -143,35 +132,32 @@ class Epic
 		@oFist= {}
 	makeClick: (form_flag,action,params,render_flag) -> # Convience method to build click on the fly
 		f= ':makeClick:'+action
-		@log2 f, 'form?'+(if form_flag then 'Y' else 'N'), 'render'+(if render_flag then 'Y' else 'N'), params
+		_log2 f, 'form?'+(if form_flag then 'Y' else 'N'), 'render'+(if render_flag then 'Y' else 'N'), params
 		p_action= {}
 		p_action[ if form_flag then '_b' else '_a']= action
 		click_index= @oRequest.addLink $.extend p_action, params
 		@click click_index, not render_flag
 		click_index
-	click: (click_index,no_render) ->
+	click: (action_token,data,no_render) ->
 		f= ':click'
-		@log2 f, click_index
-		window.event?.returnValue = false #IE
+		_log2 f, action_token, data
 		if @inClick isnt false and @options.click_warning_text isnt false then alert @options.click_warning_text
 
 		oPf= @getInstance 'Pageflow'
 		before_sp= oPf.getStepPath()
-		@oRequest.start click_index if click_index
-		if click_index and no_render isnt true
-			planned_action= @oRequest.haveAction()
+		if action_token and no_render isnt true
+			planned_action= action_token
 			first_node= @oAppConf.findClick before_sp, planned_action if planned_action
 			no_render= true if first_node and (first_node.hasAttr 'dynamic') is true # app.coffee CLICKS: some_action: dynamic:true
-			@log2 f, 'render?', no_render: no_render, sp: before_sp, action: planned_action, node: first_node
-		@inClick= click_index if not no_render
+			_log2 f, 'render?', no_render: no_render, sp: before_sp, action: planned_action, node: first_node
+		@inClick= action_token if not no_render
 
-		#TODO ALSO DO PREVENT DEFAULT, AND REMOVE THOSE RETURN FALSE'S
-		#TODO CONSIDER NOT DOING NEW-REQUEST IF NO_RENDER?
+		# TODO REWRITE FIND WAY TO MOVE FIST/MODEL STATE DURING FLOWS, TO APP.COFFEE
 		o.eventNewRequest?( @click_path_changed) for k,o of @oFist # Removing state where appropriate
 		o.eventNewRequest?( @click_path_changed) for k,o of @oModel
 
 		oC= new window.EpicMvc.ClickAction @
-		click_result= oC.click()
+		click_result= oC.click action_token, data
 		after_sp= oPf.getStepPath()
 		oPf.setIssues click_result[0]
 		oPf.setMessages click_result[1]
@@ -188,28 +174,66 @@ class Epic
 		@inClick= false
 	renderSecure: (avoid_form_reset) ->
 		f= ':renderSecure'
-		@log2 f, 'start, avoid_form_reset', avoid_form_reset
+		_log2 f, 'start, avoid_form_reset', avoid_form_reset
 		oC= new window.EpicMvc.ClickAction @
 		oPf= @getInstance 'Pageflow'
 		render_result= false
 		render_attempts= 3
 		while render_result!= true and --render_attempts> 0
-			@log2 f, (if render_result is true then 'T' else if render_result is false then 'F' else render_result), render_attempts
+			_log2 f, (if render_result is true then 'T' else if render_result is false then 'F' else render_result), render_attempts
 			sp= oPf.getStepPath()
 			if render_result!= false # Process secuirty exception (as click action)
 				oC.click render_result.message, sp
-			# Find names of template, page
+			# Find names of layout, page
 			sp= oPf.getStepPath()
-			template= @oAppConf.findTemplate sp
-			# Attempt to render view (by loading template, page, etc.)
-			render_result= @render template, sp, avoid_form_reset
-		# Process defered logic (e.g. generate keyup in a listview-filter) <epic:defer>
-		@oView.doDefer()
+			layout= @oAppConf.findLayout sp
+			# Attempt to render view (by loading layout, page, etc.)
+			render_result= @render layout, sp, avoid_form_reset
 	getModelState: -> @modelState
 	setModelState: (s) ->
 		@modelState= s if s?
-		#@log2 ':setModelState', s, @modelState
+		#_log2 ':setModelState', s, @modelState
 		for inst_nm of @oModel
 			@oModel[inst_nm].restoreState? @modelState[inst_nm]
 
-window.EpicMvc= Extras: {}, Model: {}, Epic: new Epic() # Singleton, Public API
+# O, O (dupo)
+# A, A (dupa)
+# U, !o/a/U (dupu)
+# S, !o/a/U =(dups)
+deep_extend= (dest,sources...) ->
+	# Dest rule: either object or array; sources must be the same (if deep is false, can be non o/a to copy only
+	# Dest's items are either non o/a, so source's must also be, and will copy, else o or a: use extend
+	# If Dest is array, walk source to copy to dest
+	otype= '[object Object]'
+	atype= '[object Array]'
+	utype= 'undefined'
+	stype= 'scalar'
+	func[ otype]= (dest,source)-> # Dest is an object, source must also be
+		return undefined if typeof source isnt otype
+		for snm of source
+			ans= dup( dest[ snm], source[ snm])
+			dest[ snm]= ans if ans isnt undefined
+		undefined
+	func[ atype]= (dest,source)-> # Update 'dest' as an array
+		reutrn undefined if typeof want isnt atype # only copy if same type
+		for sinx of source
+			ans= dup( dest[ sinx], source[ sinx])
+			dest[ sinx]= ans if ans isnt undefined
+		undefined
+	func[ utype]= (was,want)-> # Return new value, caller will assign
+		if typeof was not in [otype, atype] # Non objects are just copied, if 'want' isnt also an object
+			return want if typeof want not in [otype, atype]
+			return was # Don't copy to non object from object
+		return was if typeof was isnt typeof want # Nested items must be same type
+	func[ stype]= (was,want) -> # Copy if source isnt o/a/U
+		return want if typeof want of func
+		return was # May be undefined, which works
+	dup= (dest, source) ->
+		type= typeof dest
+		type= stype if type not of func
+		func[ typeof dest]( dest, source)
+	for source in sources
+		dup dest, source
+	return dest
+
+window.EpicMvc= deep_extend: deep_extend, Extras: {}, Model: {}, Epic: new Epic() # Singleton, Public API

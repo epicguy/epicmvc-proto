@@ -83,7 +83,7 @@
     };
 
     FistFilt.CHECK_choice = function(fieldName, validateExpr, value, oF) {
-      oF.Epic.log2('CHECK_choice:value/values', value, oF.getChoices(fieldName).values);
+      _log2('CHECK_choice:value/values', value, oF.getChoices(fieldName).values);
       if (__indexOf.call(oF.getChoices(fieldName).values, value) < 0) {
         return false;
       }
@@ -142,7 +142,7 @@
     FistFilt.H2D_date_psuedo = function(fieldName, filtExpr, value) {
       var Y, d, f, m;
       f = 'FF:H2D_date_psuedo';
-      oF.Epic.log2(f, fieldName, filtExpr, value);
+      _log2(f, fieldName, filtExpr, value);
       m = value[0], d = value[1], Y = value[2];
       if (!((m != null) || (d != null) || (Y != null))) {
         return '';
@@ -205,7 +205,7 @@
     FistFilt.D2H_date_psuedo = function(fieldName, filtExpr, value) {
       var Y, d, f, m, _ref;
       f = 'FF:D2H_date_psuedo';
-      oF.Epic.log2(f, fieldName, filtExpr, value);
+      _log2(f, fieldName, filtExpr, value);
       _ref = ((value != null ? value : '--').split(/[^0-9-]/))[0].split('-'), Y = _ref[0], m = _ref[1], d = _ref[2];
       return [(m != null ? m : '').replace(/^0/, ''), (d != null ? d : '').replace(/^0/, ''), Y];
     };

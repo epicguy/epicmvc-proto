@@ -18,8 +18,8 @@
       if ((_ref1 = (_base1 = this.config).MACROS) == null) {
         _base1.MACROS = {};
       }
-      if ((_ref2 = (_base2 = this.config.OPTIONS).frame) == null) {
-        _base2.frame = {};
+      if ((_ref2 = (_base2 = this.config.OPTIONS).frames) == null) {
+        _base2.frames = {};
       }
       this.config.FORMS = false;
     }
@@ -47,7 +47,7 @@
           }
           group = node.group;
           if (group == null) {
-            group = this.config.OPTIONS.settings.group;
+            group = this.config.OPTIONS.group;
           }
           if ((_ref1 = (_base = this.config.FORMS)[group]) == null) {
             _base[group] = {};
@@ -146,8 +146,8 @@
       return false;
     };
 
-    AppConf.prototype.loginF = function() {
-      return this.config.OPTIONS.login.flow;
+    AppConf.prototype.firstF = function() {
+      return this.config.OPTIONS.flow;
     };
 
     AppConf.prototype.findClick = function(p, a) {
@@ -162,35 +162,35 @@
       return null;
     };
 
-    AppConf.prototype.mapModalTemplate = function(modal) {
-      return this.config.OPTIONS.template[modal] || modal;
+    AppConf.prototype.mapModalLayout = function(modal) {
+      return this.config.OPTIONS.modals[modal] || modal;
     };
 
-    AppConf.prototype.findTemplate = function(f, t, s) {
-      var template;
+    AppConf.prototype.findLayout = function(f, t, s) {
+      var layout;
       if (typeof t === 'undefined') {
         s = f[2];
         t = f[1];
         f = f[0];
       }
-      return template = (this.findAttr(f, t, s, 'template')) || this.config.OPTIONS.template["default"];
+      return layout = (this.findAttr(f, t, s, 'layout')) || this.config.OPTIONS.layout;
     };
 
     AppConf.prototype.getShowIssues = function(f, t) {
       var group;
-      return group = (this.findAttr(f, t, false, 'show_issues')) || this.config.OPTIONS.settings.show_issues;
+      return group = (this.findAttr(f, t, false, 'show_issues')) || this.config.OPTIONS.show_issues;
     };
 
     AppConf.prototype.getGroupNm = function(f, t) {
       var group;
-      return group = (this.findAttr(f, t, false, 'group')) || this.config.OPTIONS.settings.group;
+      return group = (this.findAttr(f, t, false, 'group')) || this.config.OPTIONS.group;
     };
 
     AppConf.prototype.getVars = function(f, t, s) {
       var f2, k, v, vars;
       f2 = ':AppConf.getVars';
-      vars = $.extend({}, this.config.FLOWS[f].v, this.config.FLOWS[f].TRACKS[t].v, this.config.FLOWS[f].TRACKS[t].STEPS[s].v);
-      this.Epic.log2(f2, ((function() {
+      vars = deep_extend({}, this.config.FLOWS[f].v, this.config.FLOWS[f].TRACKS[t].v, this.config.FLOWS[f].TRACKS[t].STEPS[s].v);
+      _log2(f2, ((function() {
         var _results;
         _results = [];
         for (k in vars) {
@@ -204,7 +204,7 @@
     };
 
     AppConf.prototype.getFrames = function() {
-      return this.config.OPTIONS.frame;
+      return this.config.OPTIONS.frames;
     };
 
     return AppConf;

@@ -1,8 +1,8 @@
 # Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
-class Devl extends window.EpicMvc.ModelJS
-	constructor: (Epic,view_nm) ->
-		super Epic, view_nm
+class Devl extends E.ModelJS
+	constructor: (view_nm, options) ->
+		super view_nm, options
 		@opts= file: false, tag: false, tag2: false, form: false, model: false, stack: false
 		@open_model= ''
 		@open_table= ''
@@ -10,19 +10,13 @@ class Devl extends window.EpicMvc.ModelJS
 		@table_row_cnt= 0
 		@table_by_col= false
 		@table_col= false
-	eventNewRequest: ->
-		@invalidateTables true
-		setTimeout (=> @invalidateTables true, ['Opts']), 2000
-	action: (act,p) ->
+	action: (ctx,act,p) ->
 		f= 'dM:Devl('+ act+ ')'
-		r= {}
-		i= new window.EpicMvc.Issue @Epic
-		m= new window.EpicMvc.Issue @Epic
 		switch act
 			when 'toggle' # p.what(file,tag,form)
 				@opts[p.what]= not @opts[p.what]
 			when 'clear_cache'
-				@Epic.loader.clearCache()
+				E.oLoader.clearCache()
 			when 'open_model' # p.name
 				if @open_model isnt p.name
 					@open_model= p.name
@@ -61,19 +55,18 @@ class Devl extends window.EpicMvc.ModelJS
 				_log2 f, act, incr, @table_row_cnt
 				@table_row_cnt+= incr
 				delete @Table.Model
-			else return super act, p
-		[r, i, m]
+			else return super ctx, act, p
 	loadTable: (tbl_nm) ->
 		f= 'dM:Devl.loadTable('+ tbl_nm+ ')'
 		switch tbl_nm
 			when 'Opts' then @Table[tbl_nm]= [@opts]
 			when 'Model'
 				table= []
-				for inst of @Epic.oModel
-					nm= @Epic.oModel[inst].view_nm
+				for inst of E.oModel
+					nm= E.oModel[inst].view_nm
 					row= $.extend {is_open: '', Table: []}, {inst: inst, name: nm}
 					row.is_open= 'yes' if nm is @open_model
-					for tnm,rec of @Epic.oModel[ inst].Table # Walk to each of this model's tables
+					for tnm,rec of E.oModel[ inst].Table # Walk to each of this model's tables
 						# Check need to walk to a sub table and/or if this table is 'opened' (to populate Cols/Rows)
 						tnm_s= tnm # Push names of tables/sub-tables
 						rec_s= rec # Start at top of table
@@ -125,4 +118,4 @@ class Devl extends window.EpicMvc.ModelJS
 				@Table[tbl_nm]= table
 			else super tbl_nm
 
-window.EpicMvc.Model.Devl$BaseDevl= Devl
+E.Model.Devl$BaseDevl= Devl

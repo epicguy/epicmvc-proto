@@ -8,8 +8,8 @@
 
     __extends(Devl, _super);
 
-    function Devl(Epic, view_nm) {
-      Devl.__super__.constructor.call(this, Epic, view_nm);
+    function Devl(view_nm, options) {
+      Devl.__super__.constructor.call(this, view_nm, options);
       this.opts = {
         file: false,
         tag: false,
@@ -26,27 +26,14 @@
       this.table_col = false;
     }
 
-    Devl.prototype.eventNewRequest = function() {
-      var _this = this;
-      this.invalidateTables(true);
-      return setTimeout((function() {
-        return _this.invalidateTables(true, ['Opts']);
-      }), 2000);
-    };
-
-    Devl.prototype.action = function(act, p) {
-      var dummy, f, i, incr, m, r, _ref;
+    Devl.prototype.action = function(ctx, act, p) {
+      var dummy, f, incr, _ref;
       f = 'dM:Devl(' + act + ')';
-      r = {};
-      i = new window.EpicMvc.Issue(this.Epic);
-      m = new window.EpicMvc.Issue(this.Epic);
       switch (act) {
         case 'toggle':
-          this.opts[p.what] = !this.opts[p.what];
-          break;
+          return this.opts[p.what] = !this.opts[p.what];
         case 'clear_cache':
-          this.Epic.loader.clearCache();
-          break;
+          return E.oLoader.clearCache();
         case 'open_model':
           if (this.open_model !== p.name) {
             this.open_model = p.name;
@@ -55,22 +42,19 @@
           } else {
             this.open_model = '';
           }
-          delete this.Table.Model;
-          break;
+          return delete this.Table.Model;
         case 'close_subtable':
           if (!this.open_table_stack.length) {
             return;
           }
           _ref = this.open_table_stack.pop(), dummy = _ref[0], this.table_row_cnt = _ref[1], this.table_by_col = _ref[2], this.table_col = _ref[3];
-          delete this.Table.Model;
-          break;
+          return delete this.Table.Model;
         case 'open_subtable':
           this.open_table_stack.push([p.name, this.table_row_cnt, this.table_by_col, this.table_col]);
           this.table_row_cnt = 0;
           this.table_by_col = false;
           this.table_col = false;
-          delete this.Table.Model;
-          break;
+          return delete this.Table.Model;
         case 'open_table':
           if (this.open_table !== p.name) {
             this.table_row_cnt = 0;
@@ -81,29 +65,25 @@
           } else {
             this.open_table = '';
           }
-          delete this.Table.Model;
-          break;
+          return delete this.Table.Model;
         case 'table_row_set':
           this.table_by_col = false;
           if (p.row != null) {
-            this.table_row_cnt = p.row;
+            return this.table_row_cnt = p.row;
           }
           break;
         case 'table_col_set':
           this.table_col = p.col;
-          this.table_by_col = true;
-          break;
+          return this.table_by_col = true;
         case 'table_left':
         case 'table_right':
           incr = act === 'table_left' ? -1 : 1;
           _log2(f, act, incr, this.table_row_cnt);
           this.table_row_cnt += incr;
-          delete this.Table.Model;
-          break;
+          return delete this.Table.Model;
         default:
-          return Devl.__super__.action.call(this, act, p);
+          return Devl.__super__.action.call(this, ctx, act, p);
       }
-      return [r, i, m];
     };
 
     Devl.prototype.loadTable = function(tbl_nm) {
@@ -114,8 +94,8 @@
           return this.Table[tbl_nm] = [this.opts];
         case 'Model':
           table = [];
-          for (inst in this.Epic.oModel) {
-            nm = this.Epic.oModel[inst].view_nm;
+          for (inst in E.oModel) {
+            nm = E.oModel[inst].view_nm;
             row = $.extend({
               is_open: '',
               Table: []
@@ -126,7 +106,7 @@
             if (nm === this.open_model) {
               row.is_open = 'yes';
             }
-            _ref = this.Epic.oModel[inst].Table;
+            _ref = E.oModel[inst].Table;
             for (tnm in _ref) {
               rec = _ref[tnm];
               tnm_s = tnm;
@@ -240,8 +220,8 @@
 
     return Devl;
 
-  })(window.EpicMvc.ModelJS);
+  })(E.ModelJS);
 
-  window.EpicMvc.Model.Devl$BaseDevl = Devl;
+  E.Model.Devl$BaseDevl = Devl;
 
 }).call(this);
