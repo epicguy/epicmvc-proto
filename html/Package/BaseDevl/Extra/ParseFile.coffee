@@ -107,7 +107,8 @@ FindAttrVal= (i, a) -> # false if eof, 'string' if error, else [i, attr-name, qu
 # TODO TEST attr='"' attr="'" checked another== a=x/> or checked/>
 FindAttrs= (file_info, str)->
 	f= ':parse.FindAttrs:'
-	str= str.replace /\se-/gm, 'data-e-'
+	str= ' '+ str
+	str= str.replace /\se-/gm, ' data-e-'
 	attr_split= str.trim().split /([\s="':;])/
 	empty= if attr_split[ attr_split.length- 1] is '/' then '/' else ''
 	attrs_need_cleaning= false # If an attr nm has leading dash, flag to clean from list if value is empty/false/undef/null (m2)
@@ -130,6 +131,7 @@ FindAttrs= (file_info, str)->
 			debug= true # TODO DEBUG
 			attr_obj['data-e-action']?= []
 			attr_obj[ nm].push parts.join ''
+			continue
 		if nm is 'style'
 			style_obj= findStyles file_info, parts
 			attr_obj[ nm]= mkObj style_obj

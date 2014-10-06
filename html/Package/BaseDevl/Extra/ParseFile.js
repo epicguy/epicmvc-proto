@@ -170,7 +170,8 @@
   FindAttrs = function(file_info, str) {
     var attr_obj, attr_split, attrs_need_cleaning, data_nm, debug, empty, eq, f, good, i, nm, parts, quo, start, style_obj, _i, _len, _ref, _ref1, _ref2, _ref3;
     f = ':parse.FindAttrs:';
-    str = str.replace(/\se-/gm, 'data-e-');
+    str = ' ' + str;
+    str = str.replace(/\se-/gm, ' data-e-');
     attr_split = str.trim().split(/([\s="':;])/);
     empty = attr_split[attr_split.length - 1] === '/' ? '/' : '';
     attrs_need_cleaning = false;
@@ -213,6 +214,7 @@
           attr_obj['data-e-action'] = [];
         }
         attr_obj[nm].push(parts.join(''));
+        continue;
       }
       if (nm === 'style') {
         style_obj = findStyles(file_info, parts);
