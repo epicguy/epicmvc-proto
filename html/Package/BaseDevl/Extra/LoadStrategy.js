@@ -65,65 +65,79 @@
       return this.cache = {};
     };
 
+    LoadStrategy.prototype.inline = function(type, nm) {
+      var el;
+      el = document.getElementById('view-' + type + '-' + nm);
+      if (el) {
+        return el.innerHTML;
+      }
+      return null;
+    };
+
     LoadStrategy.prototype.preLoaded = function(pkg, type, nm) {
       var _ref, _ref1;
       return (_ref = E['view$' + pkg]) != null ? (_ref1 = _ref[type]) != null ? _ref1[nm] : void 0 : void 0;
     };
 
-    LoadStrategy.prototype.get = function(type, nm) {
-      var result;
-      result = m.deferred();
-      result.resolve(this._d_get(type, nm));
-      return result.promise;
+    LoadStrategy.prototype.compile = function(name, uncompiled) {
+      var parsed;
+      parsed = E.Extra.ParseFile(name, uncompiled);
+      parsed.content = new Function(parsed.content);
+      if (this.cache_local_flag) {
+        this.cache[name] = parsed;
+      }
+      return parsed;
     };
 
-    LoadStrategy.prototype._d_get = function(type, nm) {
-      var full_nm, _Do_while, _getFile_cb,
+    LoadStrategy.prototype.d_get = function(type, nm) {
+      var def, f, full_nm, pkg, promise, uncompiled, _fn, _i, _len, _ref,
         _this = this;
+      f = 'd_get';
       full_nm = type + '/' + nm + '.html';
       if (this.cache[full_nm] != null) {
         return this.cache[full_nm];
       }
-      _Do_while = function(count, cb) {
-        var offset, _until_not_false;
-        offset = 0;
-        _until_not_false = function(result) {
-          if (result !== false || offset >= count) {
+      if (uncompiled = this.inline(type, nm)) {
+        return this.compile(full_nm, uncompiled);
+      }
+      def = new m.Deferred();
+      def.resolve(false);
+      promise = def.promise;
+      _ref = this.reverse_packages;
+      _fn = function(pkg) {
+        return promise = promise.then(function(result) {
+          var compiled;
+          _log2(f, 'THEN-' + pkg, full_nm, (result === false ? false : result.slice(0, 40)));
+          if (result !== false) {
             return result;
           }
-          return (cb(offset++)).then(_until_not_false);
-        };
-        return _until_not_false(false);
-      };
-      _getFile_cb = function(offset) {
-        var f, p, pkg;
-        f = 'BaseDevl:E/LoadStrategy._getFile_cb';
-        pkg = _this.reverse_packages[offset];
-        if (p = _this.preLoaded(pkg, type, nm)) {
-          return p;
-        } else {
-          return _this.getFile(pkg, full_nm);
-        }
-      };
-      return (_Do_while(this.reverse_packages.length, _getFile_cb)).then(function(results) {
-        var ix, parsed, _i, _ref;
-        if (results !== false) {
-          parsed = E.Extra.ParseFile(full_nm, results);
-          for (ix = _i = 0, _ref = parsed.content.length; 0 <= _ref ? _i < _ref : _i > _ref; ix = 0 <= _ref ? ++_i : --_i) {
-            parsed.content[ix] = new Function('return ' + parsed.content[ix]);
+          if (compiled = _this.preLoaded(pkg, type, nm)) {
+            return compiled;
           }
-          if (_this.cache_local_flag) {
-            _this.cache[full_nm] = parsed;
+          return _this.D_getFile(pkg, full_nm);
+        });
+      };
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        pkg = _ref[_i];
+        _fn(pkg);
+      }
+      promise = promise.then(function(result) {
+        var parsed;
+        if (result !== false) {
+          if (result != null ? result.preloaded : void 0) {
+            return result;
           }
+          parsed = _this.compile(full_nm, result);
         } else {
-          _log2('ERROR', 'NO FILE FOUND! ' + nm);
+          _log2('ERROR', 'NO FILE FOUND! ' + type + ' - ' + nm);
           parsed = false;
         }
         return parsed;
       });
+      return promise;
     };
 
-    LoadStrategy.prototype.getFile = function(pkg, nm) {
+    LoadStrategy.prototype.D_getFile = function(pkg, nm) {
       var path;
       path = this.dir_map[pkg] + pkg + '/';
       return (m.request({
@@ -145,20 +159,20 @@
       });
     };
 
-    LoadStrategy.prototype.layout = function(nm) {
-      return this.get('Layout', nm);
+    LoadStrategy.prototype.d_layout = function(nm) {
+      return this.d_get('Layout', nm);
     };
 
-    LoadStrategy.prototype.page = function(nm) {
-      return this.get('Page', nm);
+    LoadStrategy.prototype.d_page = function(nm) {
+      return this.d_get('Page', nm);
     };
 
-    LoadStrategy.prototype.part = function(nm) {
-      return this.get('Part', nm);
+    LoadStrategy.prototype.d_part = function(nm) {
+      return this.d_get('Part', nm);
     };
 
     LoadStrategy.prototype.fist = function(grp_nm) {
-      return E['fist$' + grp_nm];
+      return BROKEN();
     };
 
     return LoadStrategy;

@@ -1,11 +1,7 @@
-dataAction= (type, data_action, data_params, val) ->
+dataAction= (type, data_action, data_params) ->
 	f= 'Base:E/dataAction:on[data-action]'+ type
 	E.option.activity? type
 	action_specs= data_action.split ','
-	data_params= JSON.parse(data_params || "{}")
-	# TODO ALLOW THE data-p-*="" PARAMS AGAIN -OR- DO MORE INTERESTING data-params: d-p="(a=&m/v;,b=stuff)"
-	# TODO THE HTML COULD BE p:id="&M/v;" AND PARSE TO data-params: (JSON.stringify {id: v2('M','v')})
-	data_params.val= val
 	for one_spec in action_specs
 		[spec_type, spec_action]= one_spec.split ':'
 		(spec_action= spec_type; spec_type= 'click') if not spec_action

@@ -28,23 +28,28 @@ class RenderStrategy$Base
 		@init()
 		true
 	handleEvent: (event_obj) =>
-		# Getting all events, need to weed out to 'data-action' nodes
+		f= 'on[data-e-action]'
+		# Getting all events, need to weed out to 'data-e-action' nodes
 		event_obj?= window.event # IE < 9
 		target= event_obj.target
-		data_action= target.getAttribute 'data-action'
-		return if not data_action
-		data_params= target.getAttribute 'data-params'
+		# Bubble up to any parent with a data-e-action
+		while target.tagName isnt 'BODY' and not data_action= target.getAttribute 'data-e-action'
+			target= target.parentElement
+		_log2 f, 'event', event_obj, target, data_action
+		return false if not data_action
+		data_params= {}; attrs= target.attributes
+		for ix in [0...attrs.length] when 'data-e-' is attrs[ ix].name.slice 0, 7
+			continue if 'action' is nm= attrs[ ix].name.slice 7
+			data_params[ nm]= attrs[ ix].value
 		type= event_obj.type
 		val= target.value
-		f= 'Base:E/RenderStrategy$Base.init:on[data-action]'
-		#_log2 f, 'event', event_obj, target, type, data_action, data_params, val
+		_log2 f, 'event', event_obj, target, type, data_action, data_params, val
 		event_obj.preventDefault(); # Added to keep LOGIN FORM from posting, causing fresh instance to start up
-		data_param_obj= JSON.parse data_params ? '{}'
-		data_param_obj.val= val
+		data_params.val= val
 		E.Extra[ E.option.data_action] event_obj.type, data_action, data_params
 		return false; # TODO CONSIDER MAKING SURE WE WANTED TO STOP, OR DO MORE TO ENSURE WE STOP DOING MORE THAN THIS
 	init: ->
-		document[ 'on'+ event_name]= @handleEvent for event_name in ['click', 'change', 'dblclick']
+		document.body[ 'on'+ event_name]= @handleEvent for event_name in ['click', 'change', 'dblclick']
 
 	UnloadMessage: (ix,msg) ->
 		if msg

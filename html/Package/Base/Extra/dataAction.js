@@ -2,15 +2,13 @@
 (function() {
   var dataAction;
 
-  dataAction = function(type, data_action, data_params, val) {
+  dataAction = function(type, data_action, data_params) {
     var action_specs, f, one_spec, spec_action, spec_type, _base, _i, _len, _ref, _results;
     f = 'Base:E/dataAction:on[data-action]' + type;
     if (typeof (_base = E.option).activity === "function") {
       _base.activity(type);
     }
     action_specs = data_action.split(',');
-    data_params = JSON.parse(data_params || "{}");
-    data_params.val = val;
     _results = [];
     for (_i = 0, _len = action_specs.length; _i < _len; _i++) {
       one_spec = action_specs[_i];

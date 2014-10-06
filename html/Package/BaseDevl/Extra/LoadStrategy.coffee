@@ -6,7 +6,7 @@ class LoadStrategy
 		@cache= {}
 		@cache_local_flag= true # False if we want browser to cache responses
 		@reverse_packages=( @appconfs[ i] for i in [@appconfs.length- 1..0])
-		# grab defined dirs for each package, from index.html's E.run([],{load_dirs:[{dir:'',pkgs:[]}]})
+		# Index defined dirs by package: *.html: E.run([],{load_dirs:[{dir:'Package/',pkgs:['Test']}]})
 		dir_map= {}
 		for {dir,pkgs} in E.option.load_dirs
 			dir_map[ pkg]= dir for pkg in pkgs
@@ -28,40 +28,50 @@ class LoadStrategy
 		# Note: caller should release the thread to allow browser to load the scripts
 		total
 	clearCache: () -> @cache= {}
+	inline: (type,nm) ->
+		el= document.getElementById 'view-'+ type+ '-'+ nm
+		return el.innerHTML if el
+		null
 	preLoaded: (pkg,type,nm) -> E['view$'+pkg]?[type]?[nm]
-	get: (type,nm) ->
-		result= m.deferred()
-		result.resolve @_d_get type, nm
-		result.promise
-	_d_get: (type,nm) ->
+	compile: (name,uncompiled) ->
+		parsed= E.Extra.ParseFile name, uncompiled
+		parsed.content= (new Function parsed.content)
+		@cache[name]= parsed if @cache_local_flag
+		return parsed
+	# This supports e.g. <script type="x/template" id="view-Layout-default"><:page/></script>
+	d_get: (type,nm) ->
+		f= 'd_get'
 		full_nm= type+ '/'+ nm+ '.html'
-		return @cache[ full_nm] if @cache[ full_nm]?
-		_Do_while= (count, cb) =>
-			offset= 0
-			_until_not_false= (result) =>
-				return result if result isnt false or offset >= count
-				(cb offset++).then _until_not_false
-			_until_not_false false
+		return @cache[ full_nm] if @cache[ full_nm]? # Note, could be a promise if same part asked again
 
-		_getFile_cb= (offset) =>
-			f= 'BaseDevl:E/LoadStrategy._getFile_cb'
-			pkg= @reverse_packages[ offset]
-			if p= @preLoaded pkg, type, nm
-				p # Compiled and everything
-			else
-				@getFile pkg, full_nm
+		# Inline overrides everything (not pkg specific)
+		return @compile full_nm, uncompiled if uncompiled= @inline type, nm
 
-		(_Do_while @reverse_packages.length, _getFile_cb).then (results) =>
-			if results isnt false
-				parsed= E.Extra.ParseFile full_nm, results
-				parsed.content[ ix]= (new Function 'return '+ parsed.content[ ix]) for ix in [0...parsed.content.length]
-				@cache[full_nm]= parsed if @cache_local_flag
+		def= new m.Deferred()
+		def.resolve false
+		promise= def.promise
+		for pkg in @reverse_packages
+			do (pkg) =>
+				promise= promise.then (result) =>
+					_log2 f, 'THEN-'+ pkg, full_nm, (if result is false then false else result.slice 0, 40)
+					return result if result isnt false # No need to hit network again
+					return compiled if compiled= @preLoaded pkg, type, nm
+					@D_getFile pkg, full_nm
+
+		promise= promise.then (result) => # False if no file ever found
+			#_log2 f, 'THEN-COMPILE', full_nm, result
+			if result isnt false
+				# Could have been precompiled content
+				return result if result?.preloaded  # TODO FIGURE OUT WHAT GOES HERE TO DETECT PRECOMPILED CONTENT
+				parsed= @compile full_nm, result
 			else
-				_log2 'ERROR', 'NO FILE FOUND! '+ nm
+				_log2 'ERROR', 'NO FILE FOUND! '+ type+ ' - '+ nm
 				parsed= false
-			#_log2 'DEFER-L', '>results parsed>', results, parsed
-			parsed
-	getFile: (pkg,nm) -> # Must return a deferred
+			#_log2 'DEFER-L', '>results parsed>', result, parsed
+			return parsed
+		return promise
+
+	D_getFile: (pkg,nm) -> # Must return a deferred
 		path= @dir_map[ pkg]+ pkg+ '/'
 		(m.request
 			background: true # Don't want 'm' to redraw the view
@@ -75,9 +85,9 @@ class LoadStrategy
 		).then null, (error) ->
 			#_log2 'AJAX ERROR ' #, error
 			false # Signal to try again
-	layout: (nm) -> @get 'Layout', nm
-	page: (nm) -> @get 'Page', nm
-	part: (nm) -> @get 'Part', nm
-	fist: (grp_nm) -> E[ 'fist$'+ grp_nm]
+	d_layout: (nm) -> @d_get 'Layout', nm
+	d_page: (nm) -> @d_get 'Page', nm
+	d_part: (nm) -> @d_get 'Part', nm
+	fist: (grp_nm) -> BROKEN() # TODO NEED TO BE AJAX NOW, ALSO DO ISSUES LOAD E[ 'fist$'+ grp_nm]
 
 E.Extra.LoadStrategy$BaseDevl= LoadStrategy

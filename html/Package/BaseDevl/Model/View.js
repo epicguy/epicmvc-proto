@@ -2,33 +2,31 @@
 (function() {
   'use strict';
 
-  var TagExe,
+  var View,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  TagExe = (function(_super) {
+  View = (function(_super) {
 
-    __extends(TagExe, _super);
+    __extends(View, _super);
 
-    function TagExe() {
-      return TagExe.__super__.constructor.apply(this, arguments);
+    function View() {
+      return View.__super__.constructor.apply(this, arguments);
     }
 
-    TagExe.prototype.resetForNextRequest = function(state) {
-      TagExe.__super__.resetForNextRequest.call(this, state);
-      this.bd_template = this.viewExe.template;
-      this.bd_page = this.viewExe.page;
+    View.prototype.run = function() {
       this.errors_cache = {
         _COUNT: 0
       };
-      return this.in_defer = false;
+      this.in_defer = false;
+      return View.__super__.run.call(this);
     };
 
-    TagExe.prototype.Opts = function() {
-      return (this.Epic.getViewTable('Devl/Opts'))[0];
+    View.prototype.Opts = function() {
+      return E.Devl('Opts')[0];
     };
 
-    TagExe.prototype._Error = function(type, key, e) {
+    View.prototype._Error = function(type, key, e) {
       var msg, prefix, _base, _ref;
       if ((_ref = (_base = this.errors_cache)[type]) == null) {
         _base[type] = {};
@@ -44,15 +42,15 @@
       }
     };
 
-    TagExe.prototype.Tag_defer = function(oPt) {
+    View.prototype.xT_defer = function(oPt) {
       var out;
       this.in_defer = true;
-      out = TagExe.__super__.Tag_defer.call(this, oPt);
+      out = View.__super__.xT_defer.call(this, oPt);
       this.in_defer = false;
       return out;
     };
 
-    TagExe.prototype.Tag_debug = function(oPt) {
+    View.prototype.xT_debug = function(oPt) {
       var out, save;
       save = this.Opts;
       this.Opts = function() {
@@ -63,10 +61,10 @@
       return out;
     };
 
-    TagExe.prototype.getTable = function(nm) {
+    View.prototype.xgetTable = function(nm) {
       var row, _i, _len, _ref;
       if (this.Opts().form !== true) {
-        return TagExe.__super__.getTable.call(this, nm);
+        return View.__super__.xgetTable.call(this, nm);
       }
       switch (nm) {
         case 'Control':
@@ -80,10 +78,10 @@
             this.fist_table.Debug = true;
           }
       }
-      return TagExe.__super__.getTable.call(this, nm);
+      return View.__super__.xgetTable.call(this, nm);
     };
 
-    TagExe.prototype.Tag_form_part = function(oPt) {
+    View.prototype.xT_fist = function(oPt) {
       var c, g, inside, v, _ref, _ref1, _ref2;
       try {
         if (!oPt.attrs.form) {
@@ -106,12 +104,12 @@
       try {
         inside = '';
         if (this.Opts().form === true) {
-          return this._Div('tag', oPt, inside, TagExe.__super__.Tag_form_part.call(this, oPt));
+          return this._Div('tag', oPt, inside, View.__super__.xT_fist.call(this, oPt));
         }
         if (this.Opts().file === true) {
-          return "<div class=\"dbg-part-box\" title=\"" + ((_ref1 = oPt.attrs.part) != null ? _ref1 : 'fist_default') + ".part.html (" + oPt.attrs.form + ")\">.</div>" + (TagExe.__super__.Tag_form_part.call(this, oPt));
+          return "<div class=\"dbg-part-box\" title=\"" + ((_ref1 = oPt.attrs.part) != null ? _ref1 : 'fist_default') + ".part.html (" + oPt.attrs.form + ")\">.</div>" + (View.__super__.xT_fist.call(this, oPt));
         }
-        return TagExe.__super__.Tag_form_part.call(this, oPt);
+        return View.__super__.xT_fist.call(this, oPt);
       } catch (e) {
         if (this.Epic.isSecurityError(e)) {
           throw e;
@@ -122,47 +120,80 @@
       }
     };
 
-    TagExe.prototype.Tag_page_part = function(oPt) {
+    View.prototype.T_part = function(attrs) {
       try {
         if (this.Opts().file !== true || this.in_defer) {
-          return TagExe.__super__.Tag_page_part.call(this, oPt);
+          return View.__super__.T_part.call(this, attrs);
         }
-        return "<div class=\"dbg-part-box\" title=\"" + oPt.attrs.part + ".part.html\">.</div>" + (TagExe.__super__.Tag_page_part.call(this, oPt));
+        return [
+          m('div.dbg-part-box', {
+            title: "Part/" + attrs.part + ".html"
+          }, '.'), View.__super__.T_part.call(this, attrs)
+        ];
       } catch (e) {
         if (this.Epic.isSecurityError(e)) {
           throw e;
         }
         _log2('##### Error in page-part', oPt.attrs.part, e, e.stack);
-        return "<pre>&lt;epic:page_part part=\"" + oPt.attrs.part + "\"&gt;<br>" + e + "<br>" + e.stack + "</pre>";
+        return "<pre>&lt;epic:page_part part=\"Part/" + attrs.part + "\"&gt;<br>" + e + "<br>" + e.stack + "</pre>";
       }
     };
 
-    TagExe.prototype.Tag_page = function(oPt) {
+    View.prototype.T_page = function(attrs) {
+      var letter, nest, page, type;
       try {
-        if (this.viewExe.current === false) {
-          throw new Error("Missing view page or template '");
-        }
-        if (!this.viewExe.current === void 0) {
-          throw new Error("Possibly too many page tags");
-        }
         if (this.Opts().file !== true) {
-          return TagExe.__super__.Tag_page.call(this, oPt);
+          return View.__super__.T_page.call(this, attrs);
         }
-        return "<div class=\"dbg-part-box\" title=\"" + this.bd_template + ".tmpl.html\">T</div>\n<div class=\"dbg-part-box\" title=\"" + this.bd_page + ".page.html\">P</div>\n" + (TagExe.__super__.Tag_page.call(this, oPt));
+        nest = this.frames.length - this.frame_inx;
+        letter = (function() {
+          switch (nest) {
+            case 0:
+              return 'P';
+            case 1:
+              return 'L';
+            default:
+              return 'F';
+          }
+        })();
+        type = {
+          P: 'Page',
+          L: 'Layout',
+          F: 'Frame'
+        }[letter];
+        page = (function() {
+          switch (nest) {
+            case 0:
+              return this.page_name;
+            default:
+              return this.frames[this.frame_inx];
+          }
+        }).call(this);
+        return [
+          {
+            tag: 'div',
+            attrs: {
+              className: "dbg-part-box",
+              title: "" + type + "/" + page + ".html"
+            },
+            children: letter
+          }, View.__super__.T_page.call(this, attrs)
+        ];
       } catch (e) {
-        if (this.Epic.isSecurityError(e)) {
-          throw e;
-        }
-        _log2('##### Error in page', this.bd_page, e, e.stack);
-        this._Error('page', this._TagText(oPt, true), e);
-        return this._Err('page', oPt, e);
+        _log2('##### Error in ', type, page, e, e.stack);
+        this._Error('page', this._TagText({
+          attrs: attrs
+        }, true), e);
+        return this._Err('page', {
+          attrs: attrs
+        }, e);
       }
     };
 
-    TagExe.prototype.varGet3 = function(view_nm, tbl_nm, col_nm, format_spec, custom_spec, give_error) {
+    View.prototype.xv3 = function(view_nm, tbl_nm, col_nm, format_spec, custom_spec, give_error) {
       var key, t_custom_spec, t_format_spec, val;
       try {
-        val = TagExe.__super__.varGet3.call(this, view_nm, tbl_nm, col_nm, format_spec, custom_spec);
+        val = View.__super__.xv3.call(this, view_nm, tbl_nm, col_nm, format_spec, custom_spec);
         t_format_spec = format_spec || custom_spec ? '#' + format_spec : '';
         t_custom_spec = custom_spec ? '#' + custom_spec : '';
         if (val === void 0) {
@@ -182,10 +213,10 @@
       return val;
     };
 
-    TagExe.prototype.varGet2 = function(tbl_nm, col_nm, format_spec, custom_spec, sub_nm, give_error) {
+    View.prototype.xv2 = function(tbl_nm, col_nm, format_spec, custom_spec, sub_nm, give_error) {
       var key, t_custom_spec, t_format_spec, val;
       try {
-        val = TagExe.__super__.varGet2.call(this, tbl_nm, col_nm, format_spec, custom_spec, sub_nm);
+        val = View.__super__.xv2.call(this, tbl_nm, col_nm, format_spec, custom_spec, sub_nm);
       } catch (e) {
         if (this.Epic.isSecurityError(e || give_error)) {
           throw e;
@@ -207,14 +238,14 @@
       return val;
     };
 
-    TagExe.prototype.Tag_if = function(oPt) {
+    View.prototype.xT_if = function(oPt) {
       var inside;
       try {
         if (this.Opts().tag2 !== true || this.in_defer) {
-          return TagExe.__super__.Tag_if.call(this, oPt);
+          return View.__super__.xT_if.call(this, oPt);
         }
         inside = '';
-        return this._Div('tag', oPt, inside, TagExe.__super__.Tag_if.call(this, oPt));
+        return this._Div('tag', oPt, inside, View.__super__.xT_if.call(this, oPt));
       } catch (e) {
         if (this.Epic.isSecurityError(e)) {
           throw e;
@@ -224,7 +255,7 @@
       }
     };
 
-    TagExe.prototype.Tag_foreach = function(oPt) {
+    View.prototype.xT_foreach = function(oPt) {
       var at_table, cols, inside, lh, nm, oMd, rh, tbl, _ref;
       try {
         at_table = this.viewExe.handleIt(oPt.attrs.table);
@@ -239,7 +270,7 @@
           tbl = oMd.getTable(rh);
         }
         if (this.Opts().tag !== true || this.in_defer) {
-          return TagExe.__super__.Tag_foreach.call(this, oPt);
+          return View.__super__.xT_foreach.call(this, oPt);
         }
         if (tbl != null ? tbl.length : void 0) {
           inside = 'len:' + tbl.length;
@@ -255,7 +286,7 @@
         } else {
           inside = 'empty';
         }
-        return this._Div('tag', oPt, inside, TagExe.__super__.Tag_foreach.call(this, oPt));
+        return this._Div('tag', oPt, inside, View.__super__.xT_foreach.call(this, oPt));
       } catch (e) {
         if (this.Epic.isSecurityError(e)) {
           throw e;
@@ -264,59 +295,11 @@
       }
     };
 
-    TagExe.prototype.Tag_form_action = function(oPt) {
-      var action, inside;
-      try {
-        if (!('action' in oPt.attrs)) {
-          throw new Error("Missing 'action' attribute");
-        }
-        if (!('title' in oPt.attrs)) {
-          action = this.viewExe.handleIt(oPt.attrs.action);
-          oPt.attrs.title = action;
-        }
-        if (this.Opts().tag !== true) {
-          return TagExe.__super__.Tag_form_action.call(this, oPt);
-        }
-        inside = '';
-        return this._Div('tag', oPt, inside, TagExe.__super__.Tag_form_action.call(this, oPt));
-      } catch (e) {
-        if (this.Epic.isSecurityError(e)) {
-          throw e;
-        }
-        this._Error('form_action', this._TagText(oPt, true), e);
-        return this._Err('tag', oPt, e);
-      }
-    };
-
-    TagExe.prototype.Tag_link_action = function(oPt) {
-      var action, inside;
-      try {
-        if (!('action' in oPt.attrs)) {
-          throw new Error("Missing 'action' attribute");
-        }
-        if (!('title' in oPt.attrs)) {
-          action = this.viewExe.handleIt(oPt.attrs.action);
-          oPt.attrs.title = action;
-        }
-        if (this.Opts().tag !== true) {
-          return TagExe.__super__.Tag_link_action.call(this, oPt);
-        }
-        inside = '';
-        return this._Div('tag', oPt, inside, TagExe.__super__.Tag_link_action.call(this, oPt));
-      } catch (e) {
-        if (this.Epic.isSecurityError(e)) {
-          throw e;
-        }
-        this._Error('link_action', this._TagText(oPt, true), e);
-        return this._Err('tag', oPt, e);
-      }
-    };
-
-    TagExe.prototype.Tag_explain = function(oPt) {
+    View.prototype.xT_explain = function(oPt) {
       return JSON.stringify(this.Epic.getViewTable(oPt.attrs.table));
     };
 
-    TagExe.prototype._TagText = function(oPt, asError) {
+    View.prototype._TagText = function(oPt, asError) {
       var ans, attrs, col_nm, custom_spec, format_spec, item, key, klass, list, sub_nm, t_custom_spec, t_format_spec, tag, tbl_nm, text, val, view_nm, _i, _len, _ref, _ref1, _ref2;
       tag = this.viewExe.current[oPt.parts + 1];
       attrs = [];
@@ -371,14 +354,14 @@
       return "&lt;epic:" + tag + " " + (attrs.join(' ')) + "&gt;";
     };
 
-    TagExe.prototype._Div = function(type, oPt, inside, after) {
+    View.prototype._Div = function(type, oPt, inside, after) {
       if (after == null) {
         after = '';
       }
       return "<div class=\"dbg-" + type + "-box\">" + (this._TagText(oPt)) + inside + "</div>" + after;
     };
 
-    TagExe.prototype._Err = function(type, oPt, e) {
+    View.prototype._Err = function(type, oPt, e) {
       var stack, title;
       _log2('### _Err type/oPt/e', type, oPt, {
         e: e,
@@ -390,10 +373,10 @@
       return "<div class=\"dbg-" + type + "-error-box\">\n" + (this._TagText(oPt, true)) + "<br><span class=\"dbg-" + type + "-error-msg\" title=\"" + title + "\">" + e.message + "</span>\n</div>" + stack;
     };
 
-    return TagExe;
+    return View;
 
-  })(window.EpicMvc.Model.TagExe$Base);
+  })(E.Model.View$Base);
 
-  window.EpicMvc.Model.TagExe$BaseDevl = TagExe;
+  E.Model.View$BaseDevl = View;
 
 }).call(this);

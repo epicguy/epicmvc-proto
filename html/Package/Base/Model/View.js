@@ -8,57 +8,6 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  window.m1 = function(tag, attrs, content) {
-    var deferreds, ix, offsets, stuff, _i, _len;
-    if (tag === 'table') {
-      _log2('m1', tag, attrs, content);
-    }
-    if ('A' !== E.type_oau(content)) {
-      if (content != null ? content.then : void 0) {
-        BLOWUP();
-      }
-      return m(tag, attrs, content);
-    }
-    offsets = [];
-    deferreds = [];
-    for (ix = _i = 0, _len = content.length; _i < _len; ix = ++_i) {
-      stuff = content[ix];
-      if (stuff.then) {
-        deferreds.push(stuff);
-        offsets.push(ix);
-      }
-    }
-    if (offsets.length === 0) {
-      return m(tag, attrs, content);
-    }
-    return (m.sync(deferreds)).then(function(answers) {
-      var ans;
-      for (ans in answers) {
-        ix = answers[ans];
-        content[offsets[ix]] = ans;
-      }
-      return m(tag, attrs, content);
-    });
-  };
-
-  window.m2 = function(tag, attrs, content) {
-    var clean_attrs, f, nm, val;
-    f = 'Base:M/View.m2';
-    clean_attrs = {};
-    for (nm in attrs) {
-      val = attrs[nm];
-      if (nm[0] !== '-') {
-        clean_attrs[nm] = val;
-      } else {
-        if (val) {
-          clean_attrs[nm.slice(1)] = val;
-        }
-      }
-    }
-    _log2(f, clean_attrs);
-    return m1(tag, clean_attrs, content);
-  };
-
   View$Base = (function(_super) {
 
     __extends(View$Base, _super);
@@ -97,29 +46,121 @@
       this.did_run = false;
       this.in_run = false;
       window.oE = this;
+      this.defer_it_cnt = 0;
+      this.start = false;
     }
 
-    View$Base.prototype.run = function() {
-      var flow, layout, step, track, _ref, _ref1,
-        _this = this;
-      if (this.in_run) {
-        BLOWUP();
+    View$Base.prototype.nest_up = function(who, what) {
+      var f;
+      f = 'nest_up:' + who + ':' + what;
+      if (this.defer_it_cnt === 0) {
+        if (this.in_run) {
+          BLOWUP();
+        }
+        this.in_run = true;
+        _log2('START RUN', this.frames, this.start = new Date().getTime());
+        this.defer_it = new m.Deferred();
       }
-      this.in_run = true;
+      return this.defer_it_cnt++;
+    };
+
+    View$Base.prototype.nest_dn = function(who, what) {
+      var f;
+      f = 'nest_dn:' + who + ':' + what;
+      if (this.defer_it_cnt > 0) {
+        this.defer_it_cnt--;
+      }
+      if (this.defer_it_cnt === 0) {
+        _log2('END RUN', this.defer_content, new Date().getTime() - this.start);
+        this.in_run = false;
+        return this.defer_it.resolve(this.defer_content);
+      }
+    };
+
+    View$Base.prototype.run = function() {
+      var f, flow, layout, step, track, _ref, _ref1;
+      f = 'run';
       _ref = E.App().getStepPath(), flow = _ref[0], track = _ref[1], step = _ref[2];
       layout = E.appGetSetting('layout', flow, track, step);
       this.page_name = (_ref1 = (E.appGetS(flow, track, step)).page) != null ? _ref1 : step;
       this.did_run = true;
       this.frames[this.frames.length - 1] = layout;
       this.frame_inx = 0;
+      this.resetInfo();
+      this.nest_up(f, 'before-kids');
+      this.defer_content = this.kids([['page', {}]]);
+      this.nest_dn(f, 'after-kids');
+      return this.defer_it.promise;
+    };
+
+    View$Base.prototype.resetInfo = function() {
       this.info_foreach = {};
       this.info_parts = [{}];
       this.info_if_nms = {};
-      this.info_defer = [[]];
-      return this.T_page().then(function(result) {
-        _this.in_run = false;
-        return result;
+      return this.info_defer = [[]];
+    };
+
+    View$Base.prototype.saveInfo = function() {
+      var dyn, f, nm, rec, row_num, saved_info, _ref;
+      f = 'saveInfo';
+      dyn = {};
+      row_num = {};
+      _ref = this.info_foreach;
+      for (nm in _ref) {
+        rec = _ref[nm];
+        dyn[nm] = rec.dyn;
+        row_num[nm] = rec.row._COUNT;
+      }
+      saved_info = E.merge({}, {
+        info_foreach: {
+          dyn: dyn,
+          row_num: row_num
+        },
+        info_parts: this.info_parts
       });
+      _log2(f, saved_info);
+      return saved_info;
+    };
+
+    View$Base.prototype.restoreInfo = function(saved_info) {
+      var dyn_list, dyn_list_orig, dyn_m, dyn_t, f, info_parts, nm, oM, prev_row, rec, rh, rh_alias, row, row_num, t_set, tbl, _i, _len, _ref, _results;
+      f = 'restoreInfo';
+      _log2(f, 'saved_info', saved_info);
+      this.resetInfo();
+      _ref = saved_info.info_foreach.dyn;
+      _results = [];
+      for (nm in _ref) {
+        rec = _ref[nm];
+        dyn_m = rec[0], dyn_t = rec[1], dyn_list_orig = rec[2];
+        dyn_list = [];
+        oM = E[dyn_m]();
+        for (_i = 0, _len = dyn_list_orig.length; _i < _len; _i++) {
+          t_set = dyn_list_orig[_i];
+          _log2(f, nm, 't_set', t_set);
+          rh = t_set[0], rh_alias = t_set[1];
+          dyn_list.push(t_set);
+          if (!(rh_alias in this.info_foreach)) {
+            _log2(f, nm, 'rh_alias', rh_alias);
+            if (dyn_list.length === 1) {
+              tbl = oM.getTable(rh);
+            } else {
+              tbl = prev_row[rh];
+            }
+            row_num = saved_info.info_foreach.row_num[rh_alias];
+            row = E.merge({}, tbl[row_num]);
+            this.info_foreach[rh_alias] = {
+              dyn: [dyn_m, dyn_t, dyn_list],
+              row: row
+            };
+            prev_row = row;
+          } else {
+            prev_row = this.info_foreach[rh_alias].row;
+          }
+        }
+        info_parts = E.merge([], saved_info.info_parts);
+        _results.push(_log2(f, 'info_parts', this.info_parts));
+      }
+      return _results;
     };
 
     View$Base.prototype.next_frame = function() {
@@ -157,7 +198,6 @@
         return;
       }
       f = 'Base:M/View.invalidateTables';
-      _log2(f, view_nm, tbl_nms);
       m.startComputation();
       m.endComputation();
     };
@@ -182,21 +222,33 @@
       };
       attrs['data-part'] = view;
       if ('dynamic' in attrs) {
-        return m1(attrs.dynamic, attrs, content);
+        return {
+          tag: attrs.dynamic,
+          attrs: attrs,
+          children: content
+        };
       } else {
         if (!content) {
-          return m();
+          return '';
         }
         if (has_root) {
           return content;
         } else {
-          return m1('div', attrs, content);
+          return {
+            tag: 'div',
+            attrs: attrs,
+            children: content
+          };
         }
       }
     };
 
     View$Base.prototype.doDefer = function(defer_obj, el) {
       var _this = this;
+      if ('A' === E.type_oau(defer_obj.defer)) {
+        _log2('WARNING', 'Got an array for defer', defer_obj.defer);
+        return 'WAS-ARRAY';
+      }
       if (defer_obj.func) {
         return defer_obj.func(el, defer_obj.attrs);
       }
@@ -206,87 +258,11 @@
       });
     };
 
-    View$Base.prototype.syncAny = function(content) {
-      var deferreds, ix, offsets, stuff, _i, _len;
-      if ('A' !== E.type_oau(content)) {
-        return content;
-      }
-      offsets = [];
-      deferreds = [];
-      for (ix = _i = 0, _len = content.length; _i < _len; ix = ++_i) {
-        stuff = content[ix];
-        if (stuff.then) {
-          deferreds.push(stuff);
-          offsets.push(ix);
-        }
-      }
-      if (offsets.length === 0) {
-        return content;
-      }
-      return (m.sync(deferreds)).then(function(answers) {
-        var ans;
-        for (ans in answers) {
-          ix = answers[ans];
-          content[offsets[ix]] = ans;
-        }
-        return content;
-      });
-    };
-
     View$Base.prototype.handleIt = function(content) {
-      var deferred, f;
+      var f;
       f = 'handleIt';
-      deferred = new m.Deferred();
-      deferred.resolve(this._d_handleIt(content));
-      return deferred.promise;
-    };
-
-    View$Base.prototype._d_handleIt = function(old_content) {
-      var ans, content, entry, f, result;
-      f = 'Base:M/View._d_handleIt';
-      if (typeof old_content === 'function') {
-        if (old_content.then) {
-          return old_content;
-        }
-        content = old_content();
-      } else if ((E.type_oau(old_content)) === 'A') {
-        content = (function() {
-          var _i, _len, _results;
-          _results = [];
-          for (_i = 0, _len = old_content.length; _i < _len; _i++) {
-            ans = old_content[_i];
-            _results.push(this.handleIt(ans));
-          }
-          return _results;
-        }).call(this);
-        return m.sync(content);
-      } else {
-        content = old_content;
-      }
-      if (!content) {
-        return '';
-      }
-      if ((E.type_oau(content)) !== 'A') {
-        return content;
-      }
-      result = (function() {
-        var _i, _len, _results;
-        _results = [];
-        for (_i = 0, _len = content.length; _i < _len; _i++) {
-          entry = content[_i];
-          if (entry) {
-            _results.push(entry);
-          }
-        }
-        return _results;
-      })();
-      switch (result.length) {
-        case 0:
-          return '';
-        case 1:
-          return result[0];
-        default:
-          return result;
+      if (typeof content === 'function') {
+        content = content();
       }
       return content;
     };
@@ -294,6 +270,8 @@
     View$Base.prototype.formatFromSpec = function(val, spec, custom_spec) {
       var left, right, str, _base, _ref;
       switch (spec) {
+        case void 0:
+          return val;
         case '':
           if (custom_spec) {
             return typeof (_base = window.EpicMvc).custom_filter === "function" ? _base.custom_filter(val, custom_spec) : void 0;
@@ -324,15 +302,9 @@
           str = (String(str)).toLowerCase();
           return str.slice(0, 1).toUpperCase() + str.slice(1);
         default:
-          if ((spec != null ? spec.length : void 0) > 3 && spec[0] === '?') {
+          if (spec[0] === '?') {
             _ref = spec.slice(1).split('?'), left = _ref[0], right = _ref[1];
-            return (val ? left : right).replace(new RegExp('[%]', 'g'), val);
-          } else if (spec != null ? spec.length : void 0) {
-            if (val) {
-              return spec.replace(new RegExp('[%]', 'g'), val);
-            } else {
-              return '';
-            }
+            return (val ? left : right != null ? right : '').replace(new RegExp('[%]', 'g'), val);
           } else {
             return val;
           }
@@ -354,6 +326,52 @@
       return this.formatFromSpec(ans, format_spec, custom_spec);
     };
 
+    View$Base.prototype.weed = function(attrs) {
+      var clean_attrs, f, nm, val;
+      f = 'weed';
+      clean_attrs = {};
+      for (nm in attrs) {
+        val = attrs[nm];
+        if (nm[0] !== '-') {
+          clean_attrs[nm] = val;
+        } else {
+          if (val) {
+            clean_attrs[nm.slice(1)] = val;
+          }
+        }
+      }
+      _log2(f, clean_attrs);
+      return clean_attrs;
+    };
+
+    View$Base.prototype.kids = function(kids) {
+      var ans, f, ix, kid, out, _i, _len,
+        _this = this;
+      f = 'kids';
+      out = [];
+      for (ix = _i = 0, _len = kids.length; _i < _len; ix = ++_i) {
+        kid = kids[ix];
+        if ('A' === E.type_oau(kid)) {
+          out.push(['TBD', kid[0], kid[1]]);
+          ans = this['T_' + kid[0]](kid[1], kid[2]);
+          if (ans != null ? ans.then : void 0) {
+            this.nest_up(f, '');
+            (function(ix) {
+              return ans.then(function(result) {
+                out[ix] = result;
+                return _this.nest_dn(f, '');
+              });
+            })(ix);
+          } else {
+            out[ix] = ans;
+          }
+        } else {
+          out.push(kid);
+        }
+      }
+      return out;
+    };
+
     View$Base.prototype.loadPartAttrs = function(attrs) {
       var attr, f, result, val;
       f = 'Base:M/View.loadPartAttrs';
@@ -368,68 +386,82 @@
       return result;
     };
 
-    View$Base.prototype.T_page = function(cv, ci, attrs) {
-      var can_componentize, d_load, f, name, view;
+    View$Base.prototype.T_page = function(attrs) {
+      var d_load, f, name, view;
       f = 'T_page';
-      _log2(f, cv, ci, attrs);
-      can_componentize = false;
       if (this.frame_inx < this.frames.length) {
-        d_load = E.oLoader.layout(name = this.next_frame());
+        d_load = E.oLoader.d_layout(name = this.next_frame());
         view = 'frame/' + name;
       } else {
-        d_load = E.oLoader.page(name = this.page_name);
+        d_load = E.oLoader.d_page(name = this.page_name);
         view = 'page/' + name;
       }
-      return this.piece(view, attrs != null ? attrs : {}, d_load);
+      return this.piece_handle(view, attrs != null ? attrs : {}, d_load);
     };
 
-    View$Base.prototype.T_part = function(cv, ci, attrs) {
+    View$Base.prototype.T_part = function(attrs) {
       var d_load, f, view;
       view = attrs.part;
       f = 'T_part:' + view;
-      d_load = E.oLoader.part(view);
-      return this.piece(view, attrs, d_load, true);
+      d_load = E.oLoader.d_part(view);
+      return this.piece_handle(view, attrs, d_load, true);
     };
 
-    View$Base.prototype.piece = function(view, attrs, d_load, is_part) {
-      var can_componentize, d_result,
-        _this = this;
-      d_result = new m.Deferred();
-      can_componentize = false;
-      d_load.then(function(obj) {
-        var content;
-        content = obj.content, can_componentize = obj.can_componentize;
-        _this.info_parts.push(_this.loadPartAttrs(attrs));
-        _this.info_defer.push([]);
-        return _this.handleIt(content);
-      }).then(function(content) {
-        var defer, result;
-        defer = _this.info_defer.pop();
-        if (can_componentize || attrs.dynamic || defer || !is_part) {
-          if (defer && !can_componentize && !attrs.dynamic) {
-            _log2("WARNING: DEFER logic in (" + view + "); wrapping DIV tag.");
-          }
-          result = _this.wrap(view, attrs, content, defer, can_componentize);
-        } else {
-          result = content;
+    View$Base.prototype.piece_handle = function(view, attrs, obj, is_part) {
+      var can_componentize, content, defer, f, result;
+      f = 'piece_handle';
+      if (obj != null ? obj.then : void 0) {
+        return this.D_piece(view, attrs, obj, is_part);
+      }
+      _log2(f, view);
+      content = obj.content, can_componentize = obj.can_componentize;
+      this.info_parts.push(this.loadPartAttrs(attrs));
+      this.info_defer.push([]);
+      content = this.handleIt(content);
+      defer = this.info_defer.pop();
+      if (can_componentize || attrs.dynamic || defer || !is_part) {
+        if (defer && !can_componentize && !attrs.dynamic) {
+          _log2("WARNING: DEFER logic in (" + view + "); wrapping DIV tag.");
         }
-        d_result.resolve(result);
+        result = this.wrap(view, attrs, content, defer, can_componentize);
+      } else {
+        result = content;
+      }
+      return result;
+    };
+
+    View$Base.prototype.D_piece = function(view, attrs, d_load, is_part) {
+      var d_result, f, saved_info,
+        _this = this;
+      f = 'D_piece';
+      this.nest_up(f, view);
+      saved_info = this.saveInfo();
+      d_result = d_load.then(function(obj) {
+        var result;
+        _log2(f, 'THEN', obj);
+        if (obj != null ? obj.then : void 0) {
+          BLOWUP();
+        }
+        _this.restoreInfo(saved_info);
+        result = _this.piece_handle(view, attrs, obj, is_part);
+        _this.nest_dn(f, view);
         return result;
       });
-      return d_result.promise;
+      return d_result;
     };
 
-    View$Base.prototype.T_defer = function(cv, ci, attrs, content) {
-      var f;
+    View$Base.prototype.T_defer = function(attrs, content) {
+      var f, f_content;
       f = 'Base:M/View.T_defer:';
+      f_content = this.handleIt(content);
       this.info_defer[this.info_defer.length - 1].push({
         attrs: attrs,
-        defer: this.handleIt(content)
+        func: new Function('el', 'attrs', f_content)
       });
       return '';
     };
 
-    View$Base.prototype.xT_if_true = function(attrs, content) {
+    View$Base.prototype.T_if_true = function(attrs, content) {
       if (this.info_if_nms[attrs.name]) {
         return this.handleIt(content());
       } else {
@@ -437,7 +469,7 @@
       }
     };
 
-    View$Base.prototype.xT_if_false = function(attrs, content) {
+    View$Base.prototype.T_if_false = function(attrs, content) {
       if (this.info_if_nms[attrs.name]) {
         return '';
       } else {
@@ -445,7 +477,7 @@
       }
     };
 
-    View$Base.prototype.T_if = function(cv, ci, attrs, content) {
+    View$Base.prototype.T_if = function(attrs, content) {
       var is_true, issue, lh, rh, tbl, val, _ref, _ref1;
       issue = false;
       is_true = false;
@@ -517,51 +549,28 @@
       return [tbl, rh_alias, lh, rh, oM];
     };
 
-    View$Base.prototype.T_foreach = function(cv, ci, attrs, content_f) {
-      var f, limit, result, rh_alias, tbl, _doRowCb, _doWhile, _ref,
-        _this = this;
-      f = 'Base:M/View.T_foreach';
+    View$Base.prototype.T_foreach = function(attrs, content_f) {
+      var count, f, limit, result, rh_alias, row, tbl, _i, _len, _ref;
+      f = 'T_foreach';
+      _log2(f, attrs);
       _ref = this._accessModelTable(attrs.table, attrs.alias), tbl = _ref[0], rh_alias = _ref[1];
       if (tbl.length === 0) {
         return '';
       }
       result = [];
       limit = 'limit' in attrs ? Number(attrs.limit) - 1 : tbl.length;
-      _doWhile = function(count, cb) {
-        var offset, _until_false;
-        offset = 0;
-        _until_false = function(result) {
-          if (result === false || offset >= count) {
-            return result;
-          }
-          return (cb(offset++)).then(_until_false);
-        };
-        return _until_false(true);
-      };
-      _doRowCb = function(count) {
-        var row;
+      for (count = _i = 0, _len = tbl.length; _i < _len; count = ++_i) {
         row = tbl[count];
-        _this.info_foreach[rh_alias].row = row;
-        _this.info_foreach[rh_alias].count = count;
-        return (_this.handleIt(content_f)).then(function(content) {
-          result.push(content);
-          return true;
-        });
-      };
-      return (_doWhile(limit, _doRowCb)).then(function(any) {
-        delete _this.info_foreach[rh_alias];
-        switch (result.length) {
-          case 0:
-            return '';
-          case 1:
-            return result[0];
-          default:
-            return _this.syncAny(result);
-        }
-      });
+        row = tbl[count];
+        this.info_foreach[rh_alias].row = row;
+        this.info_foreach[rh_alias].count = count;
+        result.push(this.handleIt(content_f));
+      }
+      delete this.info_foreach[rh_alias];
+      return result;
     };
 
-    View$Base.prototype.xT_fist = function(attrs) {
+    View$Base.prototype.T_fist = function(attrs) {
       var any_req, choices, fl, fl_nm, fm_nm, focus_nm, help, hpfl, is_first, issues, ix, map, nm, oFi, one_field_nm, orig, out, part, row, rows, s, show_req, value_fl_nm, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
       part = (_ref = attrs.part) != null ? _ref : 'fist_default';
       row = (_ref1 = attrs.row) != null ? _ref1 : false;

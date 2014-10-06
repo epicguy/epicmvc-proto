@@ -1,6 +1,6 @@
 window.EpicMvc.app$BaseDevl=
 	MANIFEST: #%#
-		Model: ['ModelJS', 'Devl'] #%#
+		Model: ['ModelJS', 'Devl', 'View'] #%#
 		Extra: ['ParseFile'] #%#
 	SETTINGS:
 		frames: MMM_BaseDevl: 'bdevl'
@@ -8,6 +8,7 @@ window.EpicMvc.app$BaseDevl=
 		loader: 'LoadStrategy$BaseDevl'
 	MODELS:
 		Devl:     class: "Devl$BaseDevl",       inst: "iBaseDevl_Devl"
+		View:     class: "View$BaseDevl",       inst: "iBaseDevl_View"
 	CLICKS:
 		dbg_toggle:         do: 'Devl.toggle', pass: 'what'
 		dbg_refresh:        do: 'Devl.clear_cache'

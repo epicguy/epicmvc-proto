@@ -4,103 +4,103 @@ ul.dbg-model.nav li a, ul.dbg-model.nav ul li a { padding: 0; border: 0; }
 ul.dbg-model.nav ul li a { padding-left: 15px; }
 </style>
 <ul class="dbg-model nav nav-tabs nav-stacked">
-	<epic:foreach table="Devl/Model">
+	<e-foreach table="Devl/Model">
 	<li>
-		<a data-action="click:dbg_open_model" data-params='{"name":"&Model/name;"}'>
+		<a e-click="dbg_open_model" e-name="&Model/name;">
 			[&Model/tables;] &Model/name; (&Model/inst;)
 		</a>
-		<epic:if set="&Model/is_open;">
+		<e-if set="&Model/is_open;">
 			<ul class="nav nav-tabs nav-stacked">
-				<epic:foreach table="Model/Table">
+				<e-foreach table="Model/Table">
 				<li>
-					<a data-action="click:dbg_open_table" data-params='{"name":"&Table/name;"}'>
+					<a e-click="dbg_open_table" e-name="&Table/name;">
 						<span title="&Table/cols;">[&Table/rows;] &Table/name;</span>
 					</a>
-					<epic:if set="&Table/is_open;">
+					<e-if set="&Table/is_open;">
 					<table border="1" style="font-size:8pt;line-height:1;"><tbody>
 						<tr>
 							<th>
-							<epic:if set="&Table/by_col;"> <!-- List of rows -->
-								<a data-action="click:dbg_table_by_row">
+							<e-if set="&Table/by_col;"> <!-- List of rows -->
+								<a e-click="dbg_table_by_row">
 									Row
 								</a>
-							</epic:if>
-							<epic:if not_set="&Table/by_col;"> <!-- List of cols -->
+							</e-if>
+							<e-if not_set="&Table/by_col;"> <!-- List of cols -->
 								Column
-								<epic:if set="&Table/is_sub;"><a data-action="click:dbg_close_subtable" style="padding:0;">^</a></epic:if>
-							</epic:if>
+								<e-if set="&Table/is_sub;"><a e-click="dbg_close_subtable" style="padding:0;">^</a></e-if>
+							</e-if>
 							</th><th>T</th><th center>
-								<epic:if val="&Table/rows;" eq="1">
+								<e-if val="&Table/rows;" eq="1">
 									Value
-								</epic:if>
-								<epic:if val="&Table/rows;" ne="1">
-									<epic:if set="&Table/by_col;">
+								</e-if>
+								<e-if val="&Table/rows;" ne="1">
+									<e-if set="&Table/by_col;">
 										&nbsp;&nbsp;&Table/curr_col;&nbsp;&nbsp;
-									</epic:if>
-									<epic:if not_set="&Table/by_col;">
-										<a data-action="click:dbg_table_left">&lt;</a>
+									</e-if>
+									<e-if not_set="&Table/by_col;">
+										<a e-click="dbg_table_left">&lt;</a>
 										&nbsp;&nbsp;Value (row &Table/row_cnt;)&nbsp;&nbsp;
-										<a data-action="click:dbg_table_right">&gt;</a>
-									</epic:if>
-								</epic:if>
+										<a e-click="dbg_table_right">&gt;</a>
+									</e-if>
+								</e-if>
 							</th>
 						</tr>
 
-						<epic:if not_set="&Table/by_col;"> <!-- Not one column, but a list of Cols -->
-						<epic:foreach table="Table/Cols">
+						<e-if not_set="&Table/by_col;"> <!-- Not one column, but a list of Cols -->
+						<e-foreach table="Table/Cols">
 						<tr>
 							<th>
-							<epic:if val="&Table/rows;" eq="1">
+							<e-if val="&Table/rows;" eq="1">
 								&Cols/col;
-							</epic:if>
-							<epic:if val="&Table/rows;" ne="1">
-								<a data-action="click:dbg_table_col_set" data-params='{"col":"&Cols/col;"}'>&Cols/col;</a>
-							</epic:if>
+							</e-if>
+							<e-if val="&Table/rows;" ne="1">
+								<a e-click="dbg_table_col_set" e-col="&Cols/col;">&Cols/col;</a>
+							</e-if>
 							</th>
-							<epic:if set="&Cols/val;"><td style="color:green;">&Cols/type#1;</td></epic:if>
-							<epic:if not_set="&Cols/val;"><td style="color:red;">&Cols/type#1;</td></epic:if>
+							<e-if set="&Cols/val;"><td style="color:green;">&Cols/type#1;</td></e-if>
+							<e-if not_set="&Cols/val;"><td style="color:red;">&Cols/type#1;</td></e-if>
 							<td title="&Cols/type;">
-									<epic:if val="&Cols/type;" eq="object">
-										<epic:if not_set="&Cols/len;"> Table [ empty ]</epic:if>
-										<epic:if set="&Cols/len;">
-											<a data-action="click:dbg_open_subtable" data-params='{"name":"&Cols/col;"}' style="padding:0;">Table</a>
-											[&Cols/len; row<epic:if val="&Cols/len;" ne="1">s</epic:if>]
-										</epic:if>
-									</epic:if>
-								<epic:if val="&Cols/type;" ne="object">
+									<e-if val="&Cols/type;" eq="object">
+										<e-if not_set="&Cols/len;"> Table [ empty ]</e-if>
+										<e-if set="&Cols/len;">
+											<a e-click="dbg_open_subtable" e-name="&Cols/col;" style="padding:0;">Table</a>
+											[&Cols/len; row<e-if val="&Cols/len;" ne="1">s</e-if>]
+										</e-if>
+									</e-if>
+								<e-if val="&Cols/type;" ne="object">
 									&Cols/val;
-								</epic:if>
+								</e-if>
 							</td>
 						</tr>
-						</epic:foreach>
-						</epic:if>
+						</e-foreach>
+						</e-if>
 
-						<epic:if set="&Table/by_col;"> <!-- All rows for this one column -->
-						<epic:foreach table="Table/Rows">
+						<e-if set="&Table/by_col;"> <!-- All rows for this one column -->
+						<e-foreach table="Table/Rows">
 						<tr>
 							<th>&Rows/row;</th>
-							<epic:if set="&Rows/val;"><td style="color:green;">&Rows/type#1;</td></epic:if>
-							<epic:if not_set="&Rows/val;"><td style="color:red;">&Rows/type#1;</td></epic:if>
+							<e-if set="&Rows/val;"><td style="color:green;">&Rows/type#1;</td></e-if>
+							<e-if not_set="&Rows/val;"><td style="color:red;">&Rows/type#1;</td></e-if>
 							<td title="&Rows/type;">
-								<epic:if val="&Rows/type;" eq="object">Table [
-									<epic:if set="&Rows/len;">&Rows/len; row<epic:if val="&Rows/len;" ne="1">s</epic:if></epic:if>
-									<epic:if not_set="&Rows/len;">empty</epic:if>
-								]</epic:if>
-								<epic:if val="&Rows/type;" ne="object">
+								<e-if val="&Rows/type;" eq="object">Table [
+									<e-if set="&Rows/len;">&Rows/len; row<e-if val="&Rows/len;" ne="1">s</e-if></e-if>
+									<e-if not_set="&Rows/len;">empty</e-if>
+								]</e-if>
+								<e-if val="&Rows/type;" ne="object">
 									&Rows/val;
-								</epic:if>
+								</e-if>
 							</td>
 						</tr>
-						</epic:foreach>
-						</epic:if>
+						</e-foreach>
+						</e-if>
 
 
 					</tbody></table>
-					</epic:if>
+					</e-if>
 				</li>
-				</epic:foreach>
+				</e-foreach>
 			</ul>
-		</epic:if>
+		</e-if>
 	</li>
-	</epic:foreach>
+	</e-foreach>
 </ul>

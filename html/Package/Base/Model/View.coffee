@@ -1,35 +1,6 @@
 'use strict'
 # Copyright 2014-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
-window.m1= (tag,attrs,content) ->
-	_log2 'm1', tag, attrs, content if tag is 'table'
-	if 'A' isnt E.type_oau content
-		BLOWUP() if content?.then
-		return m tag, attrs, content
-	offsets= []
-	deferreds= []
-	for stuff,ix in content
-		if stuff.then
-			deferreds.push stuff
-			offsets.push ix
-	if offsets.length is 0
-		return m tag, attrs, content
-	( m.sync deferreds).then (answers) ->
-		content[ offsets[ ix]]= ans for ans,ix of answers
-		m tag, attrs, content
-
-# Gloabl replacement for 'm' command, when attrs may have leading dash for special treatment
-window.m2= (tag,attrs,content) ->
-	f= 'Base:M/View.m2'
-	clean_attrs= {}
-	for nm,val of attrs
-		if nm[ 0] isnt '-'
-			clean_attrs[ nm]= val
-		else
-			clean_attrs[ nm.slice 1]= val if val
-	_log2 f, clean_attrs
-	m1 tag, clean_attrs, content
-
 class View$Base extends E.ModelJS
 	constructor: (view_nm, options) ->
 		super view_nm, options
@@ -39,27 +10,81 @@ class View$Base extends E.ModelJS
 		@invalidateTablesTimer= false
 		@did_run= false
 		@in_run= false
-		window.oE= @ # TODO REWRITE DO WE WANT TO DO SOMETHING ELSE HERE, NOW?
+		window.oE= @ # Used by parser for e.g. oE.kids/v2/v3/weed
+		@defer_it_cnt= 0
+		@start= false #A global timestamp for run:
+	nest_up: (who,what) ->
+		f= 'nest_up:'+ who+ ':'+ what
+		#_log2 f, @defer_it_cnt
+		if @defer_it_cnt is 0
+			BLOWUP() if @in_run
+			@in_run= true
+			_log2 'START RUN', @frames, @start= new Date().getTime()
+			@defer_it= new m.Deferred()
+		@defer_it_cnt++
+	nest_dn: (who,what) ->
+		f= 'nest_dn:'+ who+ ':'+ what
+		#_log2 f, @defer_it_cnt
+		@defer_it_cnt-- if @defer_it_cnt > 0
+		if @defer_it_cnt is 0
+			_log2 'END RUN', @defer_content, new Date().getTime()- @start
+			@in_run= false
+			#_log2 f, 'RESOLVE', @defer_content
+			@defer_it.resolve @defer_content
 	run: ->
-		BLOWUP() if @in_run
-		@in_run= true
+		f= 'run'
 		[flow, track, step]= E.App().getStepPath()
 		layout= E.appGetSetting 'layout', flow, track, step
 		@page_name=( E.appGetS flow, track, step).page ? step
 		@did_run= true
 		@frames[ @frames.length- 1]= layout
 		@frame_inx= 0 # Start on the outer most @frames
-		# State for one render loop
-		@info_foreach= {}
+		@resetInfo()
+		@nest_up f, 'before-kids'
+		@defer_content= @kids [['page',{}]]
+		#_log2 f, 'after @kids, @defer_content=', @defer_content
+		@nest_dn f, 'after-kids'
+		@defer_it.promise
+	resetInfo: () ->
+		# Info for one render loop
+		@info_foreach= {} # [table-name|subtable-name]['table'&'row'&'size'&'count']=value
 		@info_parts= [{}] # Push p:attrs with each part, then pop; (top level is row w/o attrs)
 		@info_if_nms= {} # [if-name]=boolean (from <if_xxx name="if-name" ..>
 		@info_defer= [[]] # Stack arrays of defers as we render parts
-		#_log2 'START RUN', @frames, start= new Date().getTime()
-		@T_page().then (result) =>
-			#_log2 'END RUN', result, new Date().getTime()- start
-			@in_run= false
-			#_log2 'DEFER-V-run', 'result in and out', result
-			result
+	saveInfo: () ->
+		f= 'saveInfo'
+		dyn= {}; row_num= {}
+		( dyn[ nm]= rec.dyn; row_num[ nm]= rec.row._COUNT) for nm,rec of @info_foreach
+		saved_info= E.merge {}, info_foreach: {dyn,row_num}, info_parts: @info_parts
+		_log2 f, saved_info
+		saved_info
+	restoreInfo: (saved_info) ->
+		f= 'restoreInfo'
+		_log2 f, 'saved_info', saved_info
+		@resetInfo()
+		for nm,rec of saved_info.info_foreach.dyn
+			#_log2 f, 'info_foreach nm=', nm, rec
+			[dyn_m, dyn_t, dyn_list_orig]= rec
+			dyn_list= []
+			oM= E[ dyn_m]()
+			for t_set in dyn_list_orig
+				_log2 f, nm, 't_set', t_set
+				[rh, rh_alias]= t_set
+				dyn_list.push t_set
+				if rh_alias not of @info_foreach
+					_log2 f, nm, 'rh_alias', rh_alias
+					if dyn_list.length is 1 # Get table from model, else nested
+						tbl= oM.getTable rh
+					else
+						tbl= prev_row[ rh]
+					row_num= saved_info.info_foreach.row_num[ rh_alias]
+					row= E.merge {}, tbl[ row_num]
+					@info_foreach[ rh_alias]= dyn: [dyn_m, dyn_t, dyn_list], row: row
+					prev_row= row
+				else prev_row= @info_foreach[ rh_alias].row
+
+			info_parts= E.merge [], saved_info.info_parts # TODO SEE IF MERGE WORKS FOR THIS ARRAY SOURCE
+			_log2 f, 'info_parts', @info_parts
 	next_frame: () -> @frames[ @frame_inx++]
 	getTable: (nm) ->
 		f= 'Base:M/View.getTable:'+ nm
@@ -78,7 +103,7 @@ class View$Base extends E.ModelJS
 	invalidateTables: (view_nm, tbl_nms) ->
 		return unless @did_run
 		f= 'Base:M/View.invalidateTables'
-		_log2 f, view_nm, tbl_nms #, (if E.inClick then 'IN')
+		#_log2 f, view_nm, tbl_nms #, (if E.inClick then 'IN')
 		m.startComputation()
 		m.endComputation()
 		return
@@ -92,57 +117,31 @@ class View$Base extends E.ModelJS
 				@doDefer defer, el
 		attrs[ 'data-part']= view
 		if 'dynamic' of attrs # Always render the container, even if content is null
-			m1 attrs.dynamic, attrs, content
+			tag: attrs.dynamic, attrs: attrs, children: content
 		else
-			return m() unless content
+			return '' unless content
 			if has_root
 				content
 			else
-				m1 'div', attrs, content
+				tag: 'div', attrs: attrs, children: content
 	doDefer: (defer_obj, el) =>
+		if 'A' is E.type_oau defer_obj.defer
+			_log2 'WARNING', 'Got an array for defer', defer_obj.defer
+			return 'WAS-ARRAY'
 		return defer_obj.func el, defer_obj.attrs if defer_obj.func
 		defer_obj.defer.then (f_content) =>
 			defer_obj.func= new Function 'el', 'attrs', f_content
 			@doDefer defer_obj, el
 			return
-	syncAny: (content) ->
-		return content if 'A' isnt E.type_oau content
-		offsets= []
-		deferreds= []
-		for stuff,ix in content
-			if stuff.then
-				deferreds.push stuff
-				offsets.push ix
-		if offsets.length is 0
-			return content
-		( m.sync deferreds).then (answers) ->
-			content[ offsets[ ix]]= ans for ans,ix of answers
-			content
 	handleIt: (content) =>
 		f= 'handleIt'
-		#_log2 f, content?.then, typeof content
-		deferred= new m.Deferred() # TODO M.DEFERRED m.deferred()
-		deferred.resolve @_d_handleIt content
-		deferred.promise
-	_d_handleIt: (old_content) ->
-		f= 'Base:M/View._d_handleIt'
-		# Eliminating content if it's an array of just nulls or empty strings
-		if typeof old_content is 'function'
-			return old_content if old_content.then # Was a deferred object
-			content= old_content()
-			#_log2 f, 'content after function call', {old_content,content},(typeof content),content?.then # Undefined means deferred object
-		else if (E.type_oau old_content) is 'A'
-			content=( @handleIt ans for ans in old_content)
-			return m.sync content
-		else content= old_content
-		return '' unless content
-		return content unless (E.type_oau content) is 'A'
-		result=( entry for entry in content when entry) # Weed out empties
-		return switch result.length
-			when 0 then ''; when 1 then result[ 0]; else result
+		#_log2 f, 'top',( typeof content) #, content
+		content= content() if typeof content is 'function'
+		#_log2 f, 'bottom',( typeof content), content
 		content
 	formatFromSpec: (val, spec, custom_spec) ->
 		switch spec
+			when undefined then val # No spec
 			when '' then (if custom_spec then (window.EpicMvc.custom_filter? val, custom_spec) else val)
 			when 'count' then val?.length
 			when 'bool' then (if val then true else false)
@@ -157,18 +156,11 @@ class View$Base extends E.ModelJS
 				str= (String str).toLowerCase()
 				str.slice( 0, 1).toUpperCase()+ str.slice 1
 			else
-				if spec?.length> 3 and spec[0] is '?' # Ex. &Model/Tbl/val#?true?false;
+				if spec[0] is '?' # Ex. &Model/Tbl/val#?true?false;
 					[left,right]= spec.slice(1).split '?'
-					(if val then left else right)
+					(if val then left else right ? '')
 						.replace( (new RegExp '[%]', 'g'), val)
-				else if spec?.length
-					# Default spec
-					# if val is set, xlate spec to a string w/replaced spaces using first char
-					# Ex. &Model/Table/flag#.Replace.with.this.string; (Don't use / or ; or # in the string though)
-					if val
-						spec.replace( (new RegExp '[%]', 'g'), val)
-					else ''
-				else val
+				else val # COULD CALL WARNING SINCE NOTHING MATCHED
 	v3: (view_nm, tbl_nm, key, format_spec, custom_spec) ->
 		row=( E[ view_nm] tbl_nm)[ 0]
 		#console.log 'G3:', view_nm, tbl_nm, key, format_spec, custom_spec, row #if key not of row
@@ -178,6 +170,35 @@ class View$Base extends E.ModelJS
 		ans= @info_foreach[table_ref].row[col_nm]
 		if sub_nm? then ans= ans[sub_nm]
 		@formatFromSpec ans, format_spec, custom_spec
+	# When attrs may have leading dash for special treatment
+	weed: (attrs) ->
+		f= 'weed'
+		clean_attrs= {}
+		for nm,val of attrs
+			if nm[ 0] isnt '-'
+				clean_attrs[ nm]= val
+			else
+				clean_attrs[ nm.slice 1]= val if val
+		_log2 f, clean_attrs
+		clean_attrs
+	kids: (kids) ->
+		f= 'kids'
+		#_log2 f, 'top', kids.length
+		# Build a new array, with either a copy if 'object' or 'text', else array is T_ funcs w/deferreds
+		out= []
+		for kid,ix in kids
+			if 'A' is E.type_oau kid # Arrays are the parser's indication of an epic tag
+				out.push ['TBD',kid[ 0],kid[ 1]] # Place holder in 'out' for later population
+				ans= @['T_'+ kid[ 0]] kid[ 1], kid[ 2]
+				if ans?.then # A deferred object, eh?
+					@nest_up f, ''
+					do (ix) => ans.then (result) =>
+						#_log2 f, 'THEN', result
+						out[ ix]= result; @nest_dn f, ''
+				else
+					out[ ix]= ans
+			else out.push kid
+		out # Must return an array, so we can fill it's slots later
 	# TODO REWRITE HAVE PARSER DO THIS: EPIC TAGS GET attr.p={}, NON EPIC: p:x => data-p-x=""
 	loadPartAttrs: (attrs) ->
 		f= 'Base:M/View.loadPartAttrs'
@@ -186,54 +207,64 @@ class View$Base extends E.ModelJS
 			continue if 'p_' isnt attr.slice 0, 2
 			result[ attr.slice 2]= val
 		result
-	T_page: ( cv, ci, attrs) =>
+	T_page: ( attrs) =>
 		f= 'T_page'
-		_log2 f, cv, ci, attrs
-		can_componentize= false # In closure
+		#_log2 f, attrs
 		if @frame_inx< @frames.length
-			d_load= E.oLoader.layout name= @next_frame()
+			d_load= E.oLoader.d_layout name= @next_frame()
 			view= 'frame/'+ name
 		else
-			d_load= E.oLoader.page name= @page_name
+			d_load= E.oLoader.d_page name= @page_name
 			view= 'page/'+ name
-		@piece view, (attrs ? {}), d_load
+		@piece_handle view, (attrs ? {}), d_load
 
-	T_part: ( cv, ci, attrs) ->
-		view= attrs.part # TODO consider attrs with p:
+	T_part: ( attrs) ->
+		view= attrs.part
 		f= 'T_part:'+ view
-		d_load= E.oLoader.part view
-		@piece view, attrs, d_load, true
+		d_load= E.oLoader.d_part view
+		@piece_handle view, attrs, d_load, true
 
-	piece: (view, attrs, d_load, is_part) ->
+	# This step, may be happen in a .then, or immeadiate
+	piece_handle: (view, attrs, obj, is_part) ->
+		f= 'piece_handle'
+		#_log2 f, view, obj
+		return @D_piece view, attrs, obj, is_part if obj?.then # Was a thenable
+		_log2 f, view #, obj
+		{content,can_componentize}= obj
+		@info_parts.push @loadPartAttrs attrs
+		@info_defer.push []
+		content= @handleIt content
+		defer= @info_defer.pop()
+		if can_componentize or attrs.dynamic or defer or not is_part
+			if defer and not can_componentize and not attrs.dynamic
+				_log2 "WARNING: DEFER logic in (#{view}); wrapping DIV tag."
+			result= @wrap view, attrs, content, defer, can_componentize
+		else
+			result= content
+		result
+	D_piece: (view, attrs, d_load, is_part) ->
+		f= 'D_piece'
+		@nest_up f, view
+		saved_info= @saveInfo()
+		d_result= d_load.then (obj) =>
+			_log2 f, 'THEN', obj
+			BLOWUP() if obj?.then # THIS WOULD CAUSE A LOOP BACK TO  US
+			@restoreInfo saved_info
+			result= @piece_handle view, attrs, obj, is_part
+			@nest_dn f, view
+			return result
+		d_result
 
-		# Closure vars
-		d_result= new m.Deferred() #TODO M.DEFERRED m.deferred()
-		can_componentize= false
-		d_load.then (obj) =>
-			{content,can_componentize}= obj
-			@info_parts.push @loadPartAttrs attrs
-			@info_defer.push []
-			@handleIt content # Deferred result
-		.then (content) =>
-			defer= @info_defer.pop()
-			if can_componentize or attrs.dynamic or defer or not is_part
-				if defer and not can_componentize and not attrs.dynamic
-					_log2 "WARNING: DEFER logic in (#{view}); wrapping DIV tag."
-				result= @wrap view, attrs, content, defer, can_componentize
-			else
-				result= content
-			d_result.resolve result
-			result
-		d_result.promise
-
-	T_defer: ( cv, ci, attrs, content) -> # TODO IMPLEMENT DEFER LOGIC ATTRS?
+	T_defer: ( attrs, content) -> # TODO IMPLEMENT DEFER LOGIC ATTRS?
 		f= 'Base:M/View.T_defer:'
-		@info_defer[ @info_defer.length- 1].push {attrs, defer: @handleIt content}
-		#TODO @info_defer[ @info_defer.length- 1].push {attrs, func: new Function 'el', 'attrs', f_content}
+		# TODO NEW-ASYNC FIGURE OUT WHAT HANDLE-IT WILL DO HERE, AND WHAT TO DO ABOUT IT
+		#@info_defer[ @info_defer.length- 1].push {attrs, defer: @handleIt content}
+		f_content= @handleIt content
+		@info_defer[ @info_defer.length- 1].push {attrs, func: new Function 'el', 'attrs', f_content}
 		'' # No content to display for these
-	xT_if_true: ( attrs, content) -> if @info_if_nms[ attrs.name] then @handleIt content() else ''
-	xT_if_false: ( attrs, content) -> if @info_if_nms[ attrs.name] then '' else @handleIt content
-	T_if: ( cv, ci, attrs, content) => # TODO
+	T_if_true: ( attrs, content) -> if @info_if_nms[ attrs.name] then @handleIt content() else ''
+	T_if_false: ( attrs, content) -> if @info_if_nms[ attrs.name] then '' else @handleIt content
+	T_if: ( attrs, content) => # TODO
 		#console.log 'T_if', attrs, content?.length
 		issue= false
 		is_true= false
@@ -271,7 +302,7 @@ class View$Base extends E.ModelJS
 			tbl= oM.getTable rh
 			[dyn_m, dyn_t, dyn_list]= [ lh, rh, []]
 
-		return [tbl, rh, lh, rh, oM] if tbl.length is 0 # No rows, so no need to store state nor reference alias
+		return [tbl, rh, lh, rh, oM] if tbl.length is 0 # No rows, so no need to store info nor reference alias
 
 		rh_alias= rh # User may alias the tbl name, for e.g. reusable include-parts
 		rh_alias= alias if alias
@@ -280,35 +311,22 @@ class View$Base extends E.ModelJS
 
 		[tbl, rh_alias, lh, rh, oM]
 
-	T_foreach: (cv, ci, attrs, content_f) ->
-		f= 'Base:M/View.T_foreach'
-		#console.log f, attrs
+	T_foreach: (attrs, content_f) ->
+		f= 'T_foreach'
+		_log2 f, attrs
 		[tbl, rh_alias]= @_accessModelTable attrs.table, attrs.alias
 		return '' if tbl.length is 0 # No rows means no output
 		result= []
 		limit= if 'limit' of attrs then Number( attrs.limit)- 1  else tbl.length
-
-		_doWhile= (count, cb) =>
-			offset= 0
-			_until_false= (result) =>
-				return result if result is false or offset >= count
-				(cb offset++).then _until_false
-			_until_false true
-
-		_doRowCb= (count) =>
+		for row,count in tbl
 			row= tbl[ count]
 			@info_foreach[rh_alias].row= row
 			@info_foreach[rh_alias].count= count
-			( @handleIt content_f).then (content) =>
-				result.push content
-				true
+			result.push @handleIt content_f
+		delete @info_foreach[rh_alias]
+		return result
 
-		( _doWhile limit, _doRowCb).then (any) => # TODO ASYNC ERROR HANDLING?
-			delete @info_foreach[rh_alias]
-			return switch result.length
-				when 0 then ''; when 1 then result[ 0]; else @syncAny result
-
-	xT_fist: (attrs) -> # part="" fist="" (opt)field=""
+	T_fist: (attrs) -> # part="" fist="" (opt)field=""
 		part= attrs.part ? 'fist_default'
 		row= attrs.row ? false
 		fm_nm= attrs.form

@@ -3,7 +3,7 @@
 
   window.EpicMvc.app$BaseDevl = {
     MANIFEST: {
-      Model: ['ModelJS', 'Devl'],
+      Model: ['ModelJS', 'Devl', 'View'],
       Extra: ['ParseFile']
     },
     SETTINGS: {
@@ -18,6 +18,10 @@
       Devl: {
         "class": "Devl$BaseDevl",
         inst: "iBaseDevl_Devl"
+      },
+      View: {
+        "class": "View$BaseDevl",
+        inst: "iBaseDevl_View"
       }
     },
     CLICKS: {

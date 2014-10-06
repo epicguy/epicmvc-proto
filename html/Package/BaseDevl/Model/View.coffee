@@ -2,14 +2,12 @@
 # Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 # TODO DON'T RENDER DEBUG IF RENDERING INSIDE EPIC:DEFER
 
-class TagExe extends window.EpicMvc.Model.TagExe$Base
-	resetForNextRequest: (state) ->
-		super state
-		@bd_template= @viewExe.template
-		@bd_page= @viewExe.page
+class View extends E.Model.View$Base
+	run: ->
 		@errors_cache= _COUNT: 0
 		@in_defer= false
-	Opts: -> (@Epic.getViewTable 'Devl/Opts')[0]
+		super()
+	Opts: -> E.Devl('Opts')[0]
 	_Error: (type,key,e) ->
 		@errors_cache[type]?= {}
 		if (not (key of @errors_cache[type]))
@@ -23,15 +21,15 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 					.replace /&amp;/g, '&'
 				prefix= if type is 'varGet2' or type is 'varGet3' then 'Variable reference' else 'Tag'
 				#TODO CHROME BUG NOT SHOWING POPUP window.alert "#{prefix} error (#{type}):\n\n#{msg}"
-	Tag_defer: (oPt) ->
+	xT_defer: (oPt) ->
 		@in_defer= true; out= super oPt; @in_defer= false; out
-	Tag_debug: (oPt) ->
+	xT_debug: (oPt) ->
 		save= @Opts
 		@Opts= -> {} #TODO file: false, tag: false, tag2: false, form: false # Simulate no debug display
 		out= @viewExe.doAllParts oPt.parts
 		@Opts= save
 		out
-	getTable:( nm) ->
+	xgetTable:( nm) ->
 		return super nm if @Opts().form isnt true
 		switch nm
 			when 'Control', 'Form'
@@ -42,7 +40,7 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 """
 					@fist_table.Debug= true
 		super nm
-	Tag_form_part: (oPt) ->
+	xT_fist: (oPt) ->
 		try
 			throw Error "Missing 'form' attribute" if not oPt.attrs.form
 			g= @Epic.getGroupNm()
@@ -65,34 +63,39 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 			@_Error 'form_part',( @_TagText oPt, true), e
 			@_Err 'tag', oPt, e
 
-	Tag_page_part: (oPt) ->
+	T_part: (attrs) ->
 		try
-			return super oPt if @Opts().file isnt true or @in_defer
-			return """<div class="dbg-part-box" title="#{oPt.attrs.part}.part.html">.</div>#{super oPt}"""
+			return super attrs if @Opts().file isnt true or @in_defer
+			return [
+				m( 'div.dbg-part-box', {title: "Part/#{attrs.part}.html"}, '.')
+				#{tag:'div', attrs:{className:"dbg-part-box", title:"Part/#{attrs.part}.html"}, children:'.'}
+				super attrs
+			]
 		catch e
 			throw e if @Epic.isSecurityError e
 			_log2 '##### Error in page-part', oPt.attrs.part, e, e.stack
-			return """<pre>&lt;epic:page_part part="#{oPt.attrs.part}"&gt;<br>#{e}<br>#{e.stack}</pre>"""
+			return """<pre>&lt;epic:page_part part="Part/#{attrs.part}"&gt;<br>#{e}<br>#{e.stack}</pre>"""
 
-	Tag_page: (oPt) ->
+	T_page: (attrs) ->
 		try
-			# TODO THESE CHECKS MUST BE DONE IN VIEW-EXE'S LOGIC, BEFORE CALLING RUN > DO-ALL-PARTS
-			throw new Error "Missing view page or template '" if @viewExe.current is false
-			throw new Error "Possibly too many page tags" if not @viewExe.current is undefined
-			return super oPt if @Opts().file isnt true
-			return """
-<div class="dbg-part-box" title="#{@bd_template}.tmpl.html">T</div>
-<div class="dbg-part-box" title="#{@bd_page}.page.html">P</div>
-#{super oPt}
-			"""
+			return super attrs if @Opts().file isnt true
+			nest= @frames.length- @frame_inx # TODO TEST IF THIS IS ONE INDEX VALUE OFF
+			letter= switch nest
+				when 0 then 'P'; when 1 then 'L'; else 'F'
+			type= {P:'Page',L:'Layout',F:'Frame'}[ letter]
+			page= switch nest
+				when 0 then @page_name; else @frames[ @frame_inx]
+			return [
+				{tag:'div', attrs: {className:"dbg-part-box", title:"#{type}/#{page}.html"}, children: letter}
+				super attrs
+			]
 		catch e
-			throw e if @Epic.isSecurityError e
-			_log2 '##### Error in page', @bd_page, e, e.stack
-			@_Error 'page',( @_TagText oPt, true), e
-			@_Err 'page', oPt, e
+			_log2 '##### Error in ', type, page, e, e.stack
+			@_Error 'page',( @_TagText {attrs}, true), e
+			@_Err 'page', {attrs}, e
 			#return """<pre>&lt;epic:page page:#{@bd_page}&gt;<br>#{e}<br>#{e.stack}</pre>"""
 
-	varGet3: (view_nm, tbl_nm, col_nm, format_spec, custom_spec, give_error) ->
+	xv3: (view_nm, tbl_nm, col_nm, format_spec, custom_spec, give_error) ->
 		try
 			val= super view_nm, tbl_nm, col_nm, format_spec, custom_spec
 			t_format_spec= if format_spec or custom_spec then '#'+ format_spec else ''
@@ -108,7 +111,7 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 			throw e
 		#"<span title='&amp;#{view_nm}/#{tbl_nm}/#{col_nm}#{t_format_spec}#{t_custom_spec};'>#{val}</span>"
 		val
-	varGet2: (tbl_nm, col_nm, format_spec, custom_spec, sub_nm, give_error) ->
+	xv2: (tbl_nm, col_nm, format_spec, custom_spec, sub_nm, give_error) ->
 		try
 			val= super tbl_nm, col_nm, format_spec, custom_spec, sub_nm
 		catch e
@@ -124,7 +127,7 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 			val= "&amp;#{tbl_nm}/#{col_nm};" # Give back a visual of what is in the HTML
 		#"<span title='&amp;#{tbl_nm}/#{col_nm}#{t_format_spec}#{t_custom_spec};'>#{val}</span>"
 		val
-	Tag_if: (oPt) ->
+	xT_if: (oPt) ->
 		try
 			# Pre-check attributes
 			# Standard thing w/o 'show' tag
@@ -137,7 +140,7 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 			throw e if @Epic.isSecurityError e
 			@_Error 'if',( @_TagText oPt, true), e
 			@_Err 'tag', oPt, e
-	Tag_foreach: (oPt) ->
+	xT_foreach: (oPt) ->
 		try
 			# Pre-check attributes
 			at_table= @viewExe.handleIt oPt.attrs.table
@@ -165,40 +168,7 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 		catch e
 			throw e if @Epic.isSecurityError e
 			@_Err 'tag', oPt, e
-	Tag_form_action: (oPt) ->
-		# TODO ERROR WHEN action not in lookahead-click
-		try
-			# Pre-check attributes
-			throw new Error "Missing 'action' attribute" if not ('action' of oPt.attrs)
-			if not ('title' of oPt.attrs)
-				action= @viewExe.handleIt oPt.attrs.action
-				oPt.attrs.title= action # TODO CONSIDER CLONING oPt
-			# Standard thing w/o 'show' tag
-			return super oPt if @Opts().tag isnt true
-			# 'Show' tag
-			inside= ''
-			@_Div 'tag', oPt, inside, super oPt
-		catch e
-			throw e if @Epic.isSecurityError e
-			@_Error 'form_action',( @_TagText oPt, true), e
-			@_Err 'tag', oPt, e
-	Tag_link_action: (oPt) ->
-		try
-			# Pre-check attributes
-			throw new Error "Missing 'action' attribute" if not ('action' of oPt.attrs)
-			if not ('title' of oPt.attrs)
-				action= @viewExe.handleIt oPt.attrs.action
-				oPt.attrs.title= action # TODO CONSIDER CLONING oPt
-			# Standard thing w/o 'show' tag
-			return super oPt if @Opts().tag isnt true
-			# 'Show' tag
-			inside= ''
-			@_Div 'tag', oPt, inside, super oPt
-		catch e
-			throw e if @Epic.isSecurityError e
-			@_Error 'link_action',( @_TagText oPt, true), e
-			@_Err 'tag', oPt, e
-	Tag_explain: (oPt) ->
+	xT_explain: (oPt) ->
 		JSON.stringify @Epic.getViewTable oPt.attrs.table
 
 	_TagText: (oPt,asError) ->
@@ -249,4 +219,4 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 </div>#{stack}
 """
 
-window.EpicMvc.Model.TagExe$BaseDevl= TagExe # Public API
+E.Model.View$BaseDevl= View # Public API

@@ -107,27 +107,39 @@ FindAttrVal= (i, a) -> # false if eof, 'string' if error, else [i, attr-name, qu
 # TODO TEST attr='"' attr="'" checked another== a=x/> or checked/>
 FindAttrs= (file_info, str)->
 	f= ':parse.FindAttrs:'
-	str= str.replace /\sp:([a-zA-Z0-9_]+=)/gm, ' p_$1' # Handle p:attr= as non-first chars
-	str= 'p_'+ str.slice 2 if (str.slice 0, 2) is 'p:' # Handle as first chars
+	str= str.replace /\se-/gm, 'data-e-'
 	attr_split= str.trim().split /([\s="':;])/
 	empty= if attr_split[ attr_split.length- 1] is '/' then '/' else ''
 	attrs_need_cleaning= false # If an attr nm has leading dash, flag to clean from list if value is empty/false/undef/null (m2)
 	attr_split.pop() if empty is '/'
 	attr_obj= {}
 	i= 0
+	debug= false # TODO DEBUG
 	while i< attr_split.length
 		[good, start, i, nm, eq, quo, parts]= FindAttrVal i, attr_split
 		break if good is false # EOF
 		if good isnt true
 			_log2 'ERROR - parse:', {file_info, good, start, i, nm, eq, quo, parts, str}
 			continue
+		if nm in ['data-e-click', 'data-e-change', 'data-e-dblclick'] # For data-e-action="click:action-name"
+			debug= true # TODO DEBUG
+			attr_obj['data-e-action']?= []
+			attr_obj['data-e-action'].push (nm.slice 7)+ ':'+ parts.join ''
+			continue
+		if nm is 'data-e-action' # Allow users to use this attribute directly
+			debug= true # TODO DEBUG
+			attr_obj['data-e-action']?= []
+			attr_obj[ nm].push parts.join ''
 		if nm is 'style'
 			style_obj= findStyles file_info, parts
 			attr_obj[ nm]= mkObj style_obj
 			continue
-		attrs_need_cleaning= true if nm[ 0] is '-'
+		attrs_need_cleaning= true if nm[ 0] is '?'
 		#_log2 f, 'nm,fl', nm, attrs_need_cleaning
 		attr_obj[ nm]=( findVars parts.join '').join '+'
+	for data_nm in ['data-e-action']
+		attr_obj[data_nm]=( findVars attr_obj[data_nm].join()).join '+' if attr_obj[data_nm]
+	_log2 f, 'bottom', str, attr_obj if debug
 	# A string of JavaScript code representing an object, and empty (as '' or '/')
 	[ (mkObj attr_obj), empty, attrs_need_cleaning]
 
@@ -163,10 +175,19 @@ findVars= (text) ->
 		results.push sq parts[ parts.length- 1]
 	return results # Return as array of expressions
 
+doError= (file_stats, text) ->
+	console.log 'ERROR', file_stats, text
+	throw Error text
 ParseFile= (file_stats, file_contents) ->
 	f= ':BaseDevl.E/ParseFile.ParseFile~'+file_stats
 	counter= 0
 	nextCounter= -> ++counter
+	etags= ['page','part', 'if', 'foreach', 'defer']
+	T_EPIC= 0
+	T_M1= 1
+	T_M2= 2
+	T_STYLE= 3
+	T_TEXT= 4
 	stats= text: 0, dom: 0, epic: 0, defer: 0
 	dom_nms= [
 		'style'
@@ -186,44 +207,43 @@ ParseFile= (file_stats, file_contents) ->
 
 	# Create array of 4 parts: non-tag-content, leading-slash, tag-name, attrs
 	# End of 'attrs' may have a '/' (or is '/' if leading-slash is '/')
-	parts= after.split /<(\/?)([:a-z_0-9]+)([^>]*)>/
+	parts= after.split /<(\/?)([:a-z_0-9-]+)([^>]*)>/
 	i= 0
 	tag_wait= [] # Holds back list of indexes while doing a nested tag
 	children= [] # Current list of child expressions - can be text, DOM tags or Epic tags
-	childvar= 'c'+ nextCounter()
 	while i< parts.length- 1
 		if tag_wait.length and tag_wait[ tag_wait.length- 1][ 1] is 'defer'
-			children.push (findVars parts[ i]).join( '+')
+			children.push [T_TEXT, (findVars parts[ i]).join( '+')]
 		else
 			text= parts[ i].replace(/^\s+|\s+$/gm, ' ')
 			if text.length and text isnt ' ' and text isnt '  ' # Not just whitespace
 				text= text.replace /&([a-z]+);/gm, (m, p1) -> if p1 of dom_entity_map then dom_entity_map[ p1] else '&'+ p1+ 'BROKEN;'
 				if tag_wait.length
-					children.push (findVars text).join( '+')
+					children.push [T_TEXT, (findVars text).join( '+')]
 				else
-					children.push 'm1("span",{},'+ (findVars text).join( '+')+ ')'
+					children.push [T_M1, 'span', {}, (findVars text).join( '+')]
 				stats.text++ unless tag_wait.length
 		if parts[ i+ 1]== '/' # Close tag
 			if not tag_wait.length
 				# TODO ERRORS COULD INCLUDE LINE NUMBERS AND EVEN FILE-TEXT SNIPIT
-				throw "[#{file_stats}] Close tag found when none expected close=#{parts[i+2]}"
-			[oi, base_nm, nm, attrs, prev_children, childvar, is_epic]= tag_wait.pop()
+				doError file_stats, "Close tag found when none expected close=#{parts[i+2]}"
+			[oi, base_nm, attrs, prev_children, flavor]= tag_wait.pop()
 			if base_nm is 'defer'
 				stats.defer++
 			if parts[ i+ 2] isnt parts[ oi+ 2]
 				tag_names_for_debugger= open: parts[ oi+ 2], close: parts[ i+ 2]
-				throw "[#{file_stats}] Mismatched tags open=#{parts[oi+2]}, close=#{parts[i+2]}"
+				doError file_stats, "Mismatched tags open=#{parts[oi+2]}, close=#{parts[i+2]}"
 			if children.length is 0 # Simple case
-				whole_tag= [is_epic, nm, attrs, []]
-			else if is_epic
-				#whole_tag= nm+  attrs+ ',function(){return '+ childvar+ '=['+( children.join ',')+ ']})'
-				whole_tag= nm+  attrs+ ',function(){return '+ childvar+ '=['+( children.join ',')+ ']})'
+				whole_tag= [flavor, base_nm, attrs, []]
+			else if flavor is T_EPIC
+				whole_tag= [flavor, base_nm,  attrs, children]
 				stats.epic++ unless tag_wait.length
-			else if nm is 'm1("style",'
-				whole_tag= nm+ attrs+ ',m.trust('+( children.join '+')+ '))'
+			else if base_nm is 'style'
+				flavor= T_STYLE
+				whole_tag= [flavor, base_nm, attrs, children]
 				#_log2 f, 'style tag is special', whole_tag
 			else
-				whole_tag= nm+ attrs+ ','+ childvar+ '=['+( children.join ',')+ '])'
+				whole_tag= [flavor, base_nm, attrs, children]
 				stats.dom++ unless tag_wait.length
 			children= prev_children # Move back to the enclosing tag's list
 			children.push whole_tag # Include this closing tag's content as a child
@@ -231,48 +251,79 @@ ParseFile= (file_stats, file_contents) ->
 			empty= ''
 			attrs= '{}'
 			attr_clean= false
-			is_epic= 'epic:' is parts[ i+ 2].slice 0, 5
+			flavor= if 'e-' is parts[ i+ 2].slice 0, 2 then T_EPIC else T_M1
 			if parts[ i+ 3].length> 0
 				[attrs, empty, attr_clean]= FindAttrs file_stats, parts[ i+ 3]
-			if is_epic
-				base_nm= parts[ i+ 2].slice 5
-				if base_nm in ['page', 'page_part']
+			if flavor is T_EPIC
+				base_nm= parts[ i+ 2].slice 2
+				if base_nm in ['page', 'part']
 					empty= '/' # Force as no-body
-				nm= 'oE.T_'+ base_nm+ '('+ childvar+ ','+ children.length+ ','
+				if base_nm not in etags
+					doError file_stats, "UNKNONW EPIC TAG (#{base_nm}) : Expected one of #{etags.join()}"
 			else
 				base_nm= parts[ i+ 2]
 				if base_nm in ['img', 'br', 'input', 'hr']
 					empty= '/' # Force as no-body or self-closing
 				if base_nm not in dom_nms
-					throw new Error 'Unknown tag name '+ base_nm+ ' in '+ file_stats
+					doError file_stats, 'Unknown tag name '+ base_nm+ ' in '+ file_stats
 				if attr_clean
 					#_log2 f, 'attr_clean', attrs
-					nm= 'm2("'+ parts[ i+ 2]+ '",'
-				else
-					nm= 'm1("'+ parts[ i+ 2]+ '",'
+					flavor= T_M2
 			if empty is '/' # This tag is the child, no need to push things
 				stats.defer++ if base_nm is 'defer'
-				whole_tag= [is_epic, nm, attrs, []]
+				whole_tag= [flavor, base_nm, attrs, []]
 				children.push whole_tag
-				(if is_epic then stats.epic++ else stats.dom++) unless tag_wait.length
+				(if flavor is T_EPIC then stats.epic++ else stats.dom++) unless tag_wait.length
 			else
 				# Wait till closing tag...
-				tag_wait.push [ i, base_nm, nm, attrs, children, childvar, is_epic]
+				tag_wait.push [ i, base_nm, attrs, children, flavor]
 				children= [] # Start my tag fresh, without children
-				childvar= 'c'+ nextCounter()
 		i+= 4
 
 	if tag_wait.length
-		throw "[#{file_stats}] Missing closing tags#{(parts[t+2] for [t] in tag_wait).join ', '}"
+		doError file_stats, "Missing closing tags#{(parts[t+2] for [t] in tag_wait).join ', '}"
 	text= parts[ i].replace /^\s+|\s+$/g, ' '
 	if text.length and text isnt ' ' and text isnt '  ' # Not just whitespace
 		text= text.replace /&([a-z]+);/gm, (m, p1) -> if p1 of dom_entity_map then dom_entity_map[ p1] else '&'+ p1+ 'BROKEN;'
-		children.push 'm1("span",{},'+ (findVars text).join( '+')+ ')'
+		children.push [T_M1, 'span', {}, (findVars text).join( '+')]
 		stats.text++
-	#_log2 f, children.length, stats #, children
+	#_log2 f, 'before do', children.length, stats, children
 	# Give to loadStrategy (or compiler) to handle as in-browser or minimized JavaScript
 	# Caller expects: content,can_componentize,defer
-	return  content: children, defer: stats.defer, can_componentize: children.length is 1 and stats.epic is 0
+	#
+	# Now, try to create a texual representation
+	# Return oE.kids(['page',{},function(){[]}),{tag:'div',attrs:{}},'text',{tag:'style',attrs:{},children:[]},
+	#
+	doChildren= (child_array, fwrap)->
+		GLOBWUP() if 'A' isnt E.type_oau child_array # LOOK OUT FOR T_M1'S WITHOUT BRACKETS ON KIDS
+		# fwrap means wrap with function as children of an epic tag
+		out= []
+		has_epic= false
+		for [flavor,tag,attr,kids],ix in child_array
+			switch flavor
+				when T_EPIC
+					has_epic= true
+					out.push "['#{tag}',#{attr},#{doChildren kids, true}]"
+				when T_M1
+					out.push "{tag:'#{tag}',attrs:#{attr},children:#{doChildren kids}}"
+				when T_M2
+					out.push "{tag:'#{tag}',attrs:oE.weed(#{attr}),children:#{doChildren kids}}"
+				when T_STYLE
+					GLOWUP() if kids.length isnt 1
+					BLOWUP() if kids[0][0] isnt T_TEXT
+					out.push "{tag:'#{tag}',attrs:#{attr},children:m.trust(#{kids[ 0][ 1]})}"
+				when T_TEXT
+					out.push tag # The 'text' part is at [1] not [3]
+				else BLOWUP_FLAVOR_NOT_KNOWN()
+		stuff='['+ out.join()+ ']'
+		if has_epic
+			stuff= 'oE.kids('+ stuff+ ')'
+		if fwrap
+			stuff= 'function(){return '+ stuff+ '}'
+		stuff
+	content= 'return '+ doChildren children
+	_log2 f, 'final', content
+	return  content: content, defer: stats.defer, can_componentize: children.length is 1 and stats.epic is 0
 
 # Public API
 if window? then E.Extra.ParseFile= ParseFile

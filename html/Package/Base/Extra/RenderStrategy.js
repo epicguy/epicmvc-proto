@@ -37,22 +37,35 @@
     }
 
     RenderStrategy$Base.prototype.handleEvent = function(event_obj) {
-      var data_action, data_param_obj, data_params, f, target, type, val;
+      var attrs, data_action, data_params, f, ix, nm, target, type, val, _i, _ref;
+      f = 'on[data-e-action]';
       if (event_obj == null) {
         event_obj = window.event;
       }
       target = event_obj.target;
-      data_action = target.getAttribute('data-action');
-      if (!data_action) {
-        return;
+      while (target.tagName !== 'BODY' && !(data_action = target.getAttribute('data-e-action'))) {
+        target = target.parentElement;
       }
-      data_params = target.getAttribute('data-params');
+      _log2(f, 'event', event_obj, target, data_action);
+      if (!data_action) {
+        return false;
+      }
+      data_params = {};
+      attrs = target.attributes;
+      for (ix = _i = 0, _ref = attrs.length; 0 <= _ref ? _i < _ref : _i > _ref; ix = 0 <= _ref ? ++_i : --_i) {
+        if (!('data-e-' === attrs[ix].name.slice(0, 7))) {
+          continue;
+        }
+        if ('action' === (nm = attrs[ix].name.slice(7))) {
+          continue;
+        }
+        data_params[nm] = attrs[ix].value;
+      }
       type = event_obj.type;
       val = target.value;
-      f = 'Base:E/RenderStrategy$Base.init:on[data-action]';
+      _log2(f, 'event', event_obj, target, type, data_action, data_params, val);
       event_obj.preventDefault();
-      data_param_obj = JSON.parse(data_params != null ? data_params : '{}');
-      data_param_obj.val = val;
+      data_params.val = val;
       E.Extra[E.option.data_action](event_obj.type, data_action, data_params);
       return false;
     };
@@ -63,7 +76,7 @@
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         event_name = _ref[_i];
-        _results.push(document['on' + event_name] = this.handleEvent);
+        _results.push(document.body['on' + event_name] = this.handleEvent);
       }
       return _results;
     };

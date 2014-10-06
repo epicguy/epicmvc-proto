@@ -2,7 +2,7 @@
 (function() {
   'use strict';
 
-  var FindAttrVal, FindAttrs, ParseFile, camelCase, findStyleVal, findStyles, findVars, mkNm, mkObj, nm_map, sq,
+  var FindAttrVal, FindAttrs, ParseFile, camelCase, doError, findStyleVal, findStyles, findVars, mkNm, mkObj, nm_map, sq,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   camelCase = function(input) {
@@ -168,12 +168,9 @@
   };
 
   FindAttrs = function(file_info, str) {
-    var attr_obj, attr_split, attrs_need_cleaning, empty, eq, f, good, i, nm, parts, quo, start, style_obj, _ref;
+    var attr_obj, attr_split, attrs_need_cleaning, data_nm, debug, empty, eq, f, good, i, nm, parts, quo, start, style_obj, _i, _len, _ref, _ref1, _ref2, _ref3;
     f = ':parse.FindAttrs:';
-    str = str.replace(/\sp:([a-zA-Z0-9_]+=)/gm, ' p_$1');
-    if ((str.slice(0, 2)) === 'p:') {
-      str = 'p_' + str.slice(2);
-    }
+    str = str.replace(/\se-/gm, 'data-e-');
     attr_split = str.trim().split(/([\s="':;])/);
     empty = attr_split[attr_split.length - 1] === '/' ? '/' : '';
     attrs_need_cleaning = false;
@@ -182,6 +179,7 @@
     }
     attr_obj = {};
     i = 0;
+    debug = false;
     while (i < attr_split.length) {
       _ref = FindAttrVal(i, attr_split), good = _ref[0], start = _ref[1], i = _ref[2], nm = _ref[3], eq = _ref[4], quo = _ref[5], parts = _ref[6];
       if (good === false) {
@@ -201,15 +199,40 @@
         });
         continue;
       }
+      if (nm === 'data-e-click' || nm === 'data-e-change' || nm === 'data-e-dblclick') {
+        debug = true;
+        if ((_ref1 = attr_obj['data-e-action']) == null) {
+          attr_obj['data-e-action'] = [];
+        }
+        attr_obj['data-e-action'].push((nm.slice(7)) + ':' + parts.join(''));
+        continue;
+      }
+      if (nm === 'data-e-action') {
+        debug = true;
+        if ((_ref2 = attr_obj['data-e-action']) == null) {
+          attr_obj['data-e-action'] = [];
+        }
+        attr_obj[nm].push(parts.join(''));
+      }
       if (nm === 'style') {
         style_obj = findStyles(file_info, parts);
         attr_obj[nm] = mkObj(style_obj);
         continue;
       }
-      if (nm[0] === '-') {
+      if (nm[0] === '?') {
         attrs_need_cleaning = true;
       }
       attr_obj[nm] = (findVars(parts.join(''))).join('+');
+    }
+    _ref3 = ['data-e-action'];
+    for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
+      data_nm = _ref3[_i];
+      if (attr_obj[data_nm]) {
+        attr_obj[data_nm] = (findVars(attr_obj[data_nm].join())).join('+');
+      }
+    }
+    if (debug) {
+      _log2(f, 'bottom', str, attr_obj);
     }
     return [mkObj(attr_obj), empty, attrs_need_cleaning];
   };
@@ -251,13 +274,24 @@
     return results;
   };
 
+  doError = function(file_stats, text) {
+    console.log('ERROR', file_stats, text);
+    throw Error(text);
+  };
+
   ParseFile = function(file_stats, file_contents) {
-    var after, after_comment, after_script, attr_clean, attrs, base_nm, children, childvar, counter, dom_close, dom_entity_map, dom_nms, empty, f, i, is_epic, nextCounter, nm, oi, parts, prev_children, stats, t, tag_names_for_debugger, tag_wait, text, whole_tag, _ref, _ref1;
+    var T_EPIC, T_M1, T_M2, T_STYLE, T_TEXT, after, after_comment, after_script, attr_clean, attrs, base_nm, children, content, counter, doChildren, dom_close, dom_entity_map, dom_nms, empty, etags, f, flavor, i, nextCounter, oi, parts, prev_children, stats, t, tag_names_for_debugger, tag_wait, text, whole_tag, _ref, _ref1;
     f = ':BaseDevl.E/ParseFile.ParseFile~' + file_stats;
     counter = 0;
     nextCounter = function() {
       return ++counter;
     };
+    etags = ['page', 'part', 'if', 'foreach', 'defer'];
+    T_EPIC = 0;
+    T_M1 = 1;
+    T_M2 = 2;
+    T_STYLE = 3;
+    T_TEXT = 4;
     stats = {
       text: 0,
       dom: 0,
@@ -281,14 +315,13 @@
     });
     after_script = after_comment.replace(/<\/script>/gm, '\x02').replace(/<script[^\x02]*\x02/gm, '');
     after = after_script;
-    parts = after.split(/<(\/?)([:a-z_0-9]+)([^>]*)>/);
+    parts = after.split(/<(\/?)([:a-z_0-9-]+)([^>]*)>/);
     i = 0;
     tag_wait = [];
     children = [];
-    childvar = 'c' + nextCounter();
     while (i < parts.length - 1) {
       if (tag_wait.length && tag_wait[tag_wait.length - 1][1] === 'defer') {
-        children.push((findVars(parts[i])).join('+'));
+        children.push([T_TEXT, (findVars(parts[i])).join('+')]);
       } else {
         text = parts[i].replace(/^\s+|\s+$/gm, ' ');
         if (text.length && text !== ' ' && text !== '  ') {
@@ -300,9 +333,9 @@
             }
           });
           if (tag_wait.length) {
-            children.push((findVars(text)).join('+'));
+            children.push([T_TEXT, (findVars(text)).join('+')]);
           } else {
-            children.push('m1("span",{},' + (findVars(text)).join('+') + ')');
+            children.push([T_M1, 'span', {}, (findVars(text)).join('+')]);
           }
           if (!tag_wait.length) {
             stats.text++;
@@ -311,9 +344,9 @@
       }
       if (parts[i + 1] === '/') {
         if (!tag_wait.length) {
-          throw "[" + file_stats + "] Close tag found when none expected close=" + parts[i + 2];
+          doError(file_stats, "Close tag found when none expected close=" + parts[i + 2]);
         }
-        _ref = tag_wait.pop(), oi = _ref[0], base_nm = _ref[1], nm = _ref[2], attrs = _ref[3], prev_children = _ref[4], childvar = _ref[5], is_epic = _ref[6];
+        _ref = tag_wait.pop(), oi = _ref[0], base_nm = _ref[1], attrs = _ref[2], prev_children = _ref[3], flavor = _ref[4];
         if (base_nm === 'defer') {
           stats.defer++;
         }
@@ -322,19 +355,20 @@
             open: parts[oi + 2],
             close: parts[i + 2]
           };
-          throw "[" + file_stats + "] Mismatched tags open=" + parts[oi + 2] + ", close=" + parts[i + 2];
+          doError(file_stats, "Mismatched tags open=" + parts[oi + 2] + ", close=" + parts[i + 2]);
         }
         if (children.length === 0) {
-          whole_tag = [is_epic, nm, attrs, []];
-        } else if (is_epic) {
-          whole_tag = nm + attrs + ',function(){return ' + childvar + '=[' + (children.join(',')) + ']})';
+          whole_tag = [flavor, base_nm, attrs, []];
+        } else if (flavor === T_EPIC) {
+          whole_tag = [flavor, base_nm, attrs, children];
           if (!tag_wait.length) {
             stats.epic++;
           }
-        } else if (nm === 'm1("style",') {
-          whole_tag = nm + attrs + ',m.trust(' + (children.join('+')) + '))';
+        } else if (base_nm === 'style') {
+          flavor = T_STYLE;
+          whole_tag = [flavor, base_nm, attrs, children];
         } else {
-          whole_tag = nm + attrs + ',' + childvar + '=[' + (children.join(',')) + '])';
+          whole_tag = [flavor, base_nm, attrs, children];
           if (!tag_wait.length) {
             stats.dom++;
           }
@@ -345,53 +379,52 @@
         empty = '';
         attrs = '{}';
         attr_clean = false;
-        is_epic = 'epic:' === parts[i + 2].slice(0, 5);
+        flavor = 'e-' === parts[i + 2].slice(0, 2) ? T_EPIC : T_M1;
         if (parts[i + 3].length > 0) {
           _ref1 = FindAttrs(file_stats, parts[i + 3]), attrs = _ref1[0], empty = _ref1[1], attr_clean = _ref1[2];
         }
-        if (is_epic) {
-          base_nm = parts[i + 2].slice(5);
-          if (base_nm === 'page' || base_nm === 'page_part') {
+        if (flavor === T_EPIC) {
+          base_nm = parts[i + 2].slice(2);
+          if (base_nm === 'page' || base_nm === 'part') {
             empty = '/';
           }
-          nm = 'oE.T_' + base_nm + '(' + childvar + ',' + children.length + ',';
+          if (__indexOf.call(etags, base_nm) < 0) {
+            doError(file_stats, "UNKNONW EPIC TAG (" + base_nm + ") : Expected one of " + (etags.join()));
+          }
         } else {
           base_nm = parts[i + 2];
           if (base_nm === 'img' || base_nm === 'br' || base_nm === 'input' || base_nm === 'hr') {
             empty = '/';
           }
           if (__indexOf.call(dom_nms, base_nm) < 0) {
-            throw new Error('Unknown tag name ' + base_nm + ' in ' + file_stats);
+            doError(file_stats, 'Unknown tag name ' + base_nm + ' in ' + file_stats);
           }
           if (attr_clean) {
-            nm = 'm2("' + parts[i + 2] + '",';
-          } else {
-            nm = 'm1("' + parts[i + 2] + '",';
+            flavor = T_M2;
           }
         }
         if (empty === '/') {
           if (base_nm === 'defer') {
             stats.defer++;
           }
-          whole_tag = [is_epic, nm, attrs, []];
+          whole_tag = [flavor, base_nm, attrs, []];
           children.push(whole_tag);
           if (!tag_wait.length) {
-            if (is_epic) {
+            if (flavor === T_EPIC) {
               stats.epic++;
             } else {
               stats.dom++;
             }
           }
         } else {
-          tag_wait.push([i, base_nm, nm, attrs, children, childvar, is_epic]);
+          tag_wait.push([i, base_nm, attrs, children, flavor]);
           children = [];
-          childvar = 'c' + nextCounter();
         }
       }
       i += 4;
     }
     if (tag_wait.length) {
-      throw "[" + file_stats + "] Missing closing tags" + (((function() {
+      doError(file_stats, "Missing closing tags" + (((function() {
         var _i, _len, _results;
         _results = [];
         for (_i = 0, _len = tag_wait.length; _i < _len; _i++) {
@@ -399,7 +432,7 @@
           _results.push(parts[t + 2]);
         }
         return _results;
-      })()).join(', '));
+      })()).join(', ')));
     }
     text = parts[i].replace(/^\s+|\s+$/g, ' ');
     if (text.length && text !== ' ' && text !== '  ') {
@@ -410,11 +443,58 @@
           return '&' + p1 + 'BROKEN;';
         }
       });
-      children.push('m1("span",{},' + (findVars(text)).join('+') + ')');
+      children.push([T_M1, 'span', {}, (findVars(text)).join('+')]);
       stats.text++;
     }
+    doChildren = function(child_array, fwrap) {
+      var attr, has_epic, ix, kids, out, stuff, tag, _i, _len, _ref2;
+      if ('A' !== E.type_oau(child_array)) {
+        GLOBWUP();
+      }
+      out = [];
+      has_epic = false;
+      for (ix = _i = 0, _len = child_array.length; _i < _len; ix = ++_i) {
+        _ref2 = child_array[ix], flavor = _ref2[0], tag = _ref2[1], attr = _ref2[2], kids = _ref2[3];
+        switch (flavor) {
+          case T_EPIC:
+            has_epic = true;
+            out.push("['" + tag + "'," + attr + "," + (doChildren(kids, true)) + "]");
+            break;
+          case T_M1:
+            out.push("{tag:'" + tag + "',attrs:" + attr + ",children:" + (doChildren(kids)) + "}");
+            break;
+          case T_M2:
+            out.push("{tag:'" + tag + "',attrs:oE.weed(" + attr + "),children:" + (doChildren(kids)) + "}");
+            break;
+          case T_STYLE:
+            if (kids.length !== 1) {
+              GLOWUP();
+            }
+            if (kids[0][0] !== T_TEXT) {
+              BLOWUP();
+            }
+            out.push("{tag:'" + tag + "',attrs:" + attr + ",children:m.trust(" + kids[0][1] + ")}");
+            break;
+          case T_TEXT:
+            out.push(tag);
+            break;
+          default:
+            BLOWUP_FLAVOR_NOT_KNOWN();
+        }
+      }
+      stuff = '[' + out.join() + ']';
+      if (has_epic) {
+        stuff = 'oE.kids(' + stuff + ')';
+      }
+      if (fwrap) {
+        stuff = 'function(){return ' + stuff + '}';
+      }
+      return stuff;
+    };
+    content = 'return ' + doChildren(children);
+    _log2(f, 'final', content);
     return {
-      content: children,
+      content: content,
       defer: stats.defer,
       can_componentize: children.length === 1 && stats.epic === 0
     };
