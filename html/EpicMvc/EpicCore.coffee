@@ -894,7 +894,7 @@ class ModelJS
 
 w= if typeof window isnt "undefined" then window else {}
 w.EpicMvc= w.E= new app w
-w.E[ nm]= klass for nm,klass of {Issue, Fist, ModelJS}
+w.E[ nm]= klass for nm,klass of {Issue, Fist, ModelJS, FistFilt}
 
 
 if typeof module isnt "undefined" and module isnt null then module.exports = w.E

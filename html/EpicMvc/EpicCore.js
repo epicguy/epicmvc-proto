@@ -1402,7 +1402,8 @@
   _ref = {
     Issue: Issue,
     Fist: Fist,
-    ModelJS: ModelJS
+    ModelJS: ModelJS,
+    FistFilt: FistFilt
   };
   for (nm in _ref) {
     klass = _ref[nm];
