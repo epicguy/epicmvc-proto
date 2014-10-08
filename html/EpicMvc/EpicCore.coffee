@@ -200,11 +200,10 @@ app= (window, undef) ->
 		appInit()
 		merge option, more_options
 		E.oLoader= new Extra[ option.loader] appconfs
-		total= E.oLoader.loadAsync()
-		setTimeout (->
+		promise= E.oLoader.D_loadAsync()
+		promise.then ->
 			E.App().go aSetting.go
 			E.oRender= new Extra[ option.render] # Sets mithril's redraw to self
-		), 32* total
 		return
 
 	# Caller has requested processing a click event w/data

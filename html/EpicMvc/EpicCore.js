@@ -157,16 +157,16 @@
       return oFist[inst_nm];
     };
     E.run = function(set_appconfs, more_options) {
-      var total;
+      var promise;
       appconfs = set_appconfs;
       appInit();
       merge(option, more_options);
       E.oLoader = new Extra[option.loader](appconfs);
-      total = E.oLoader.loadAsync();
-      setTimeout((function() {
+      promise = E.oLoader.D_loadAsync();
+      promise.then(function() {
         E.App().go(aSetting.go);
         return E.oRender = new Extra[option.render];
-      }), 32 * total);
+      });
     };
     click = function(action_token, data) {
       var f;

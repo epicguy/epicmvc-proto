@@ -9,7 +9,7 @@
     function LoadStrategy(appconfs) {
       var dir, dir_map, i, pkg, pkgs, _i, _j, _len, _len1, _ref, _ref1;
       this.appconfs = appconfs;
-      this.cache = {};
+      this.clearCache();
       this.cache_local_flag = true;
       this.reverse_packages = (function() {
         var _i, _ref, _results;
@@ -31,38 +31,64 @@
       this.dir_map = dir_map;
     }
 
-    LoadStrategy.prototype.loadAsync = function() {
-      var f, file, file_list, head, nm, pkg, script, script_attrs, total, type, val, _i, _j, _len, _len1, _ref, _ref1;
+    LoadStrategy.prototype.clearCache = function() {
+      this.cache = {};
+      return this.refresh_stamp = (new Date).valueOf();
+    };
+
+    LoadStrategy.prototype.D_loadAsync = function() {
+      var def, f, file, file_list, head, pkg, promise, script_attrs, type, url, _fn, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3,
+        _this = this;
       f = 'Base:E/LoadStragegy.loadAsync';
       head = document.getElementsByTagName('head')[0];
       script_attrs = {
         type: 'text/javascript'
       };
-      total = 0;
+      def = new m.Deferred();
+      promise = def.promise;
       _ref = this.appconfs;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         pkg = _ref[_i];
-        _ref1 = E['app$' + pkg].MANIFEST;
-        for (type in _ref1) {
-          file_list = _ref1[type];
+        if (!(pkg in this.dir_map)) {
+          continue;
+        }
+        _ref3 = (_ref1 = (_ref2 = E['app$' + pkg]) != null ? _ref2.MANIFEST : void 0) != null ? _ref1 : {};
+        for (type in _ref3) {
+          file_list = _ref3[type];
+          _fn = function(file, type, pkg, url) {
+            return promise = promise.then(function() {
+              return (m.request({
+                background: true,
+                method: 'GET',
+                url: url,
+                data: {
+                  _: _this.refresh_stamp
+                },
+                config: function(xhr, options) {
+                  xhr.setRequestHeader("Content-Type", "text/plain; charset=utf-8");
+                  return xhr;
+                },
+                deserialize: function(x) {
+                  return x;
+                }
+              })).then(function(data) {
+                _log2(f, 'Got a script', url, data.slice(0, 10));
+                return (Function(data))();
+              }).then(null, function(error) {
+                _log2('AJAX ERROR LOADING SCRIPT', url, error);
+                return false;
+              });
+            });
+          };
           for (_j = 0, _len1 = file_list.length; _j < _len1; _j++) {
             file = file_list[_j];
-            script = document.createElement('script');
-            script_attrs.src = this.dir_map[pkg] + pkg + '/' + type + '/' + file + '.js';
-            for (nm in script_attrs) {
-              val = script_attrs[nm];
-              script.setAttribute(nm, val);
-            }
-            head.appendChild(script);
-            total++;
+            url = this.dir_map[pkg] + pkg + '/' + type + '/' + file + '.js';
+            _fn(file, type, pkg, url);
           }
         }
       }
-      return total;
-    };
-
-    LoadStrategy.prototype.clearCache = function() {
-      return this.cache = {};
+      def.resolve(null);
+      return promise;
     };
 
     LoadStrategy.prototype.inline = function(type, nm) {
@@ -119,6 +145,9 @@
       };
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         pkg = _ref[_i];
+        if (!(pkg in this.dir_map)) {
+          continue;
+        }
         _fn(pkg);
       }
       promise = promise.then(function(result) {

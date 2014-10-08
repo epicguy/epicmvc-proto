@@ -3,7 +3,7 @@
 
 class LoadStrategy
 	constructor: (@appconfs) ->
-		@cache= {}
+		@clearCache()
 		@cache_local_flag= true # False if we want browser to cache responses
 		@reverse_packages=( @appconfs[ i] for i in [@appconfs.length- 1..0])
 		# Index defined dirs by package: *.html: E.run([],{load_dirs:[{dir:'Package/',pkgs:['Test']}]})
@@ -11,23 +11,39 @@ class LoadStrategy
 		for {dir,pkgs} in E.option.load_dirs
 			dir_map[ pkg]= dir for pkg in pkgs
 		@dir_map= dir_map
-	loadAsync: () -> # Load up all the Model/Extra code stuff - caller should delay after
+	clearCache: () -> @cache= {}; @refresh_stamp= (new Date).valueOf() # Like jQuery's no_cache
+	D_loadAsync: () -> # Load up all the Model/Extra code stuff - caller should delay after
 		f= 'Base:E/LoadStragegy.loadAsync'
 		# Insert script tags for all MANIFEST entries of each package-app-config file
 		head= document.getElementsByTagName( 'head')[ 0]
 		script_attrs= type: 'text/javascript'
-		total= 0
+		def= new m.Deferred()
+		promise= def.promise
 		for pkg in @appconfs
-			for type,file_list of E[ 'app$'+ pkg].MANIFEST # Extra, Model: ['Render']
+			continue if pkg not of @dir_map
+			for type,file_list of E[ 'app$'+ pkg]?.MANIFEST ? {} # Extra, Model: ['Render']
 				for file in file_list
-					script= document.createElement 'script'
-					script_attrs.src= @dir_map[ pkg]+ pkg+ '/'+ type+ '/'+ file+ '.js'
-					script.setAttribute nm, val for nm, val of script_attrs
-					head.appendChild script
-					total++
+					url= @dir_map[ pkg]+ pkg+ '/'+ type+ '/'+ file+ '.js'
+					do (file, type, pkg, url) =>
+						promise= promise.then =>
+							(m.request
+								background: true # Don't want 'm' to redraw the view
+								method: 'GET'
+								url: url
+								data: _: @refresh_stamp
+								config: (xhr,options) ->
+									xhr.setRequestHeader "Content-Type", "text/plain; charset=utf-8"
+									xhr
+								deserialize: (x)->x
+							).then (data)->
+								_log2 f, 'Got a script', url, data.slice 0, 10
+								(Function data)()
+							.then null, (error) ->
+								_log2 'AJAX ERROR LOADING SCRIPT', url, error
+								false
 		# Note: caller should release the thread to allow browser to load the scripts
-		total
-	clearCache: () -> @cache= {}
+		def.resolve null
+		promise
 	inline: (type,nm) ->
 		el= document.getElementById 'view-'+ type+ '-'+ nm
 		return el.innerHTML if el
@@ -51,6 +67,7 @@ class LoadStrategy
 		def.resolve false
 		promise= def.promise
 		for pkg in @reverse_packages
+			continue if pkg not of @dir_map
 			do (pkg) =>
 				promise= promise.then (result) =>
 					_log2 f, 'THEN-'+ pkg, full_nm, (if result is false then false else result.slice 0, 40)
