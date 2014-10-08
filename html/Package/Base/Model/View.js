@@ -391,7 +391,7 @@
       f = 'T_page';
       if (this.frame_inx < this.frames.length) {
         d_load = E.oLoader.d_layout(name = this.next_frame());
-        view = 'frame/' + name;
+        view = (this.frame_inx < this.frames.length ? 'frame' : 'layout') + '/' + name;
       } else {
         d_load = E.oLoader.d_page(name = this.page_name);
         view = 'page/' + name;
@@ -419,8 +419,8 @@
       this.info_defer.push([]);
       content = this.handleIt(content);
       defer = this.info_defer.pop();
-      if (can_componentize || attrs.dynamic || defer || !is_part) {
-        if (defer && !can_componentize && !attrs.dynamic) {
+      if (can_componentize || attrs.dynamic || defer.length || !is_part) {
+        if (defer.length && !can_componentize && !attrs.dynamic) {
           _log2("WARNING: DEFER logic in (" + view + "); wrapping DIV tag.");
         }
         result = this.wrap(view, attrs, content, defer, can_componentize);

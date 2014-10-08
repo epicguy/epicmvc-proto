@@ -212,7 +212,7 @@ class View$Base extends E.ModelJS
 		#_log2 f, attrs
 		if @frame_inx< @frames.length
 			d_load= E.oLoader.d_layout name= @next_frame()
-			view= 'frame/'+ name
+			view= (if @frame_inx< @frames.length then 'frame' else 'layout')+ '/'+ name
 		else
 			d_load= E.oLoader.d_page name= @page_name
 			view= 'page/'+ name
@@ -235,8 +235,8 @@ class View$Base extends E.ModelJS
 		@info_defer.push []
 		content= @handleIt content
 		defer= @info_defer.pop()
-		if can_componentize or attrs.dynamic or defer or not is_part
-			if defer and not can_componentize and not attrs.dynamic
+		if can_componentize or attrs.dynamic or defer.length or not is_part
+			if defer.length and not can_componentize and not attrs.dynamic
 				_log2 "WARNING: DEFER logic in (#{view}); wrapping DIV tag."
 			result= @wrap view, attrs, content, defer, can_componentize
 		else
