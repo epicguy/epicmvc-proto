@@ -6,33 +6,33 @@ class View$Base extends E.ModelJS
 		super view_nm, options
 		frames= E.appGetSetting 'frames'
 		@frames=( frames[ix] for ix in (nm for nm of frames).sort())
-		@frames.push 'NOT-SET' # Placeholder for layout
-		@invalidateTablesTimer= false
+		@frames.push 'X' # Placeholder for layout
 		@did_run= false
 		@in_run= false
 		window.oE= @ # Used by parser for e.g. oE.kids/v2/v3/weed
 		@defer_it_cnt= 0
 		@start= false #A global timestamp for run:
-	nest_up: (who,what) ->
-		f= 'nest_up:'+ who+ ':'+ what
+	nest_up: (who) ->
+		f= 'nest_up:'+ who
 		#_log2 f, @defer_it_cnt
 		if @defer_it_cnt is 0
 			BLOWUP() if @in_run
 			@in_run= true
-			_log2 'START RUN', @frames, @start= new Date().getTime()
+			_log2 f, 'START RUN', @frames, @start= new Date().getTime()
 			@defer_it= new m.Deferred()
 		@defer_it_cnt++
-	nest_dn: (who,what) ->
-		f= 'nest_dn:'+ who+ ':'+ what
+	nest_dn: (who) ->
+		f= 'nest_dn:'+ who
 		#_log2 f, @defer_it_cnt
 		@defer_it_cnt-- if @defer_it_cnt > 0
 		if @defer_it_cnt is 0
-			_log2 'END RUN', @defer_content, new Date().getTime()- @start
+			_log2 f, 'END RUN', @defer_content, new Date().getTime()- @start
 			@in_run= false
 			#_log2 f, 'RESOLVE', @defer_content
 			@defer_it.resolve @defer_content
 	run: ->
 		f= 'run'
+		who= 'R'
 		[flow, track, step]= E.App().getStepPath()
 		layout= E.appGetSetting 'layout', flow, track, step
 		@page_name=( E.appGetS flow, track, step).page ? step
@@ -40,10 +40,10 @@ class View$Base extends E.ModelJS
 		@frames[ @frames.length- 1]= layout
 		@frame_inx= 0 # Start on the outer most @frames
 		@resetInfo()
-		@nest_up f, 'before-kids'
+		@nest_up who
 		@defer_content= @kids [['page',{}]]
 		#_log2 f, 'after @kids, @defer_content=', @defer_content
-		@nest_dn f, 'after-kids'
+		@nest_dn who
 		@defer_it.promise
 	resetInfo: () ->
 		# Info for one render loop
@@ -85,7 +85,6 @@ class View$Base extends E.ModelJS
 
 			info_parts= E.merge [], saved_info.info_parts # TODO SEE IF MERGE WORKS FOR THIS ARRAY SOURCE
 			_log2 f, 'info_parts', @info_parts
-	next_frame: () -> @frames[ @frame_inx++]
 	getTable: (nm) ->
 		f= 'Base:M/View.getTable:'+ nm
 		#_log2 f, @info_parts if nm is 'Part'
@@ -183,36 +182,38 @@ class View$Base extends E.ModelJS
 		clean_attrs
 	kids: (kids) ->
 		f= 'kids'
+		who= 'K'
 		#_log2 f, 'top', kids.length
 		# Build a new array, with either a copy if 'object' or 'text', else array is T_ funcs w/deferreds
 		out= []
 		for kid,ix in kids
 			if 'A' is E.type_oau kid # Arrays are the parser's indication of an epic tag
-				out.push ['TBD',kid[ 0],kid[ 1]] # Place holder in 'out' for later population
+				out.push ix #['TBD',kid[ 0],kid[ 1]] # Place holder in 'out' for later population
 				ans= @['T_'+ kid[ 0]] kid[ 1], kid[ 2]
 				#_log2 f, 'CHECK FOR THEN', (if ans?.then then 'YES' else 'NO'), ans
 				if ans?.then # A deferred object, eh?
-					@nest_up f, ''
+					@nest_up who
 					do (ix) => ans.then (result) =>
 						#_log2 f, 'THEN', result
-						out[ ix]= result; @nest_dn f, ''
+						out[ ix]= result; @nest_dn who
 				else
 					out[ ix]= ans
 			else out.push kid
 		out # Must return an array, so we can fill it's slots later
-	# TODO REWRITE HAVE PARSER DO THIS: EPIC TAGS GET attr.p={}, NON EPIC: p:x => data-p-x=""
+
+	# Process data-e-any="value" into hash of 'any: value'
 	loadPartAttrs: (attrs) ->
 		f= 'Base:M/View.loadPartAttrs'
 		result= {}
 		for attr,val of attrs
-			continue if 'p_' isnt attr.slice 0, 2
-			result[ attr.slice 2]= val
+			continue if 'data-e-' isnt attr.slice 0, 7
+			result[ attr.slice 7]= val
 		result
 	T_page: ( attrs) =>
 		f= 'T_page'
 		#_log2 f, attrs
 		if @frame_inx< @frames.length
-			d_load= E.oLoader.d_layout name= @next_frame()
+			d_load= E.oLoader.d_layout name= @frames[ @frame_inx++]
 			view= (if @frame_inx< @frames.length then 'frame' else 'layout')+ '/'+ name
 		else
 			d_load= E.oLoader.d_page name= @page_name
@@ -245,14 +246,15 @@ class View$Base extends E.ModelJS
 		result
 	D_piece: (view, attrs, d_load, is_part) ->
 		f= 'D_piece'
-		@nest_up f, view
+		who= 'P'
+		@nest_up who+ view
 		saved_info= @saveInfo()
 		d_result= d_load.then (obj) =>
 			_log2 f, 'THEN', obj
 			BLOWUP() if obj?.then # THIS WOULD CAUSE A LOOP BACK TO  US
 			@restoreInfo saved_info
 			result= @piece_handle view, attrs, obj, is_part
-			@nest_dn f, view
+			@nest_dn who+ view
 			return result
 		d_result
 
@@ -373,15 +375,5 @@ class View$Base extends E.ModelJS
 			out.push fl
 		@fist_table= Form: [show_req: show_req, any_req: any_req, help: help], Control: out
 		@T_part {part}
-	xT_mithril: (attrs) -> # TODO M WAS T_react - NEED TO DO A COMPONENT MITHRIL STYLE
-		E.Extra.components?= {}
-		E.Extra.components[ attrs.func]( attrs)
-	xT_show_me: (attrs, content) ->
-		f= 'Base:M/View.T_showme'
-		_log2 '======== attrs   ======', f, attrs
-		_log2 '======== content ======', f, content
-		ans= @handleIt content
-		_log2 '======== handleIt =====', f, ans
-		ans
 
 E.Model.View$Base= View$Base # Public API

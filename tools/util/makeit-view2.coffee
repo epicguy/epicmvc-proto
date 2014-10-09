@@ -6,10 +6,11 @@ window._log2= -> #console.log
 
 fs= require 'fs'
 
-dev_dir= process.argv[ 3]
-epic_path= process.argv[ 2]+ '/EpicMvc/'
+# Add the '../' because we are inside util/
+dev_dir= '../'+ process.argv[ 3]
+epic_path= '../'+ process.argv[ 2]
 #window= E: Extra: {}, Model: {}
-window.E= require epic_path+ 'EpicCore.js'
+window.E= require epic_path+ '/EpicCore.js'
 E= window.E # So it looks like it's in the global namespace, when used as closure below
 (require dev_dir+ '/Package/BaseDevl/Extra/ParseFile.js') window
 
@@ -78,4 +79,4 @@ doIt= (dev_dir,pkg_nm) ->
 	out+= '}};\n'
 	console.log ''+ out
 
-doIt process.argv[ 3], process.argv[ 4]
+doIt dev_dir, process.argv[ 4]

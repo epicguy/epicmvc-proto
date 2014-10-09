@@ -1499,8 +1499,7 @@
         }
         return _results;
       })();
-      this.frames.push('NOT-SET');
-      this.invalidateTablesTimer = false;
+      this.frames.push('X');
       this.did_run = false;
       this.in_run = false;
       window.oE = this;
@@ -1508,36 +1507,37 @@
       this.start = false;
     }
 
-    View$Base.prototype.nest_up = function(who, what) {
+    View$Base.prototype.nest_up = function(who) {
       var f;
-      f = 'nest_up:' + who + ':' + what;
+      f = 'nest_up:' + who;
       if (this.defer_it_cnt === 0) {
         if (this.in_run) {
           BLOWUP();
         }
         this.in_run = true;
-        _log2('START RUN', this.frames, this.start = new Date().getTime());
+        _log2(f, 'START RUN', this.frames, this.start = new Date().getTime());
         this.defer_it = new m.Deferred();
       }
       return this.defer_it_cnt++;
     };
 
-    View$Base.prototype.nest_dn = function(who, what) {
+    View$Base.prototype.nest_dn = function(who) {
       var f;
-      f = 'nest_dn:' + who + ':' + what;
+      f = 'nest_dn:' + who;
       if (this.defer_it_cnt > 0) {
         this.defer_it_cnt--;
       }
       if (this.defer_it_cnt === 0) {
-        _log2('END RUN', this.defer_content, new Date().getTime() - this.start);
+        _log2(f, 'END RUN', this.defer_content, new Date().getTime() - this.start);
         this.in_run = false;
         return this.defer_it.resolve(this.defer_content);
       }
     };
 
     View$Base.prototype.run = function() {
-      var f, flow, layout, step, track, _ref, _ref1;
+      var f, flow, layout, step, track, who, _ref, _ref1;
       f = 'run';
+      who = 'R';
       _ref = E.App().getStepPath(), flow = _ref[0], track = _ref[1], step = _ref[2];
       layout = E.appGetSetting('layout', flow, track, step);
       this.page_name = (_ref1 = (E.appGetS(flow, track, step)).page) != null ? _ref1 : step;
@@ -1545,9 +1545,9 @@
       this.frames[this.frames.length - 1] = layout;
       this.frame_inx = 0;
       this.resetInfo();
-      this.nest_up(f, 'before-kids');
+      this.nest_up(who);
       this.defer_content = this.kids([['page', {}]]);
-      this.nest_dn(f, 'after-kids');
+      this.nest_dn(who);
       return this.defer_it.promise;
     };
 
@@ -1617,10 +1617,6 @@
         _results.push(_log2(f, 'info_parts', this.info_parts));
       }
       return _results;
-    };
-
-    View$Base.prototype.next_frame = function() {
-      return this.frames[this.frame_inx++];
     };
 
     View$Base.prototype.getTable = function(nm) {
@@ -1801,21 +1797,22 @@
     };
 
     View$Base.prototype.kids = function(kids) {
-      var ans, f, ix, kid, out, _i, _len,
+      var ans, f, ix, kid, out, who, _i, _len,
         _this = this;
       f = 'kids';
+      who = 'K';
       out = [];
       for (ix = _i = 0, _len = kids.length; _i < _len; ix = ++_i) {
         kid = kids[ix];
         if ('A' === E.type_oau(kid)) {
-          out.push(['TBD', kid[0], kid[1]]);
+          out.push(ix);
           ans = this['T_' + kid[0]](kid[1], kid[2]);
           if (ans != null ? ans.then : void 0) {
-            this.nest_up(f, '');
+            this.nest_up(who);
             (function(ix) {
               return ans.then(function(result) {
                 out[ix] = result;
-                return _this.nest_dn(f, '');
+                return _this.nest_dn(who);
               });
             })(ix);
           } else {
@@ -1834,10 +1831,10 @@
       result = {};
       for (attr in attrs) {
         val = attrs[attr];
-        if ('p_' !== attr.slice(0, 2)) {
+        if ('data-e-' !== attr.slice(0, 7)) {
           continue;
         }
-        result[attr.slice(2)] = val;
+        result[attr.slice(7)] = val;
       }
       return result;
     };
@@ -1846,7 +1843,7 @@
       var d_load, f, name, view;
       f = 'T_page';
       if (this.frame_inx < this.frames.length) {
-        d_load = E.oLoader.d_layout(name = this.next_frame());
+        d_load = E.oLoader.d_layout(name = this.frames[this.frame_inx++]);
         view = (this.frame_inx < this.frames.length ? 'frame' : 'layout') + '/' + name;
       } else {
         d_load = E.oLoader.d_page(name = this.page_name);
@@ -1887,10 +1884,11 @@
     };
 
     View$Base.prototype.D_piece = function(view, attrs, d_load, is_part) {
-      var d_result, f, saved_info,
+      var d_result, f, saved_info, who,
         _this = this;
       f = 'D_piece';
-      this.nest_up(f, view);
+      who = 'P';
+      this.nest_up(who + view);
       saved_info = this.saveInfo();
       d_result = d_load.then(function(obj) {
         var result;
@@ -1900,7 +1898,7 @@
         }
         _this.restoreInfo(saved_info);
         result = _this.piece_handle(view, attrs, obj, is_part);
-        _this.nest_dn(f, view);
+        _this.nest_dn(who + view);
         return result;
       });
       return d_result;
@@ -2117,24 +2115,6 @@
       });
     };
 
-    View$Base.prototype.xT_mithril = function(attrs) {
-      var _base, _ref;
-      if ((_ref = (_base = E.Extra).components) == null) {
-        _base.components = {};
-      }
-      return E.Extra.components[attrs.func](attrs);
-    };
-
-    View$Base.prototype.xT_show_me = function(attrs, content) {
-      var ans, f;
-      f = 'Base:M/View.T_showme';
-      _log2('======== attrs   ======', f, attrs);
-      _log2('======== content ======', f, content);
-      ans = this.handleIt(content);
-      _log2('======== handleIt =====', f, ans);
-      return ans;
-    };
-
     return View$Base;
 
   })(E.ModelJS);
@@ -2164,7 +2144,6 @@
         sp: []
       };
       App$Base.__super__.constructor.call(this, view_nm, options, ss);
-      this.Table = {};
     }
 
     App$Base.prototype.goTo = function(f, t, s) {
@@ -2210,13 +2189,14 @@
     };
 
     App$Base.prototype.action = function(ctx, act, p) {
-      var q;
+      var i, m, q, r;
+      r = ctx.r, i = ctx.i, m = ctx.m;
       switch (act) {
         case 'path':
           return this.go(p.path);
-        case 'save_path':
+        case 'push':
           return this.sp.push([this.f, this.t, this.s]);
-        case 'restore_path':
+        case 'pop':
           if (this.sp.length) {
             q = this.sp.pop();
             return this.goTo(q[0], q[1], q[2]);
@@ -2249,8 +2229,8 @@
       return this.invalidateTables(['Message']);
     };
 
-    App$Base.prototype.loadTable = function(tbl_nm) {
-      var map, row;
+    App$Base.prototype.getTable = function(tbl_nm) {
+      var map;
       map = E['issues$' + this.appGet('group')];
       this.Table[tbl_nm] = (function() {
         switch (tbl_nm) {
@@ -2259,13 +2239,9 @@
           case 'Issue':
             return this.issues.asTable(map);
           case 'V':
-            row = E.appGetVars(this.f, this.t, this.s);
-            row.LAYOUT = this.appGet('layout');
-            row.PAGE = this.appGet('page');
-            row.MODAL = this.appGet('modal');
-            return [row];
+            return [E.appGetVars(this.f, this.t, this.s)];
           default:
-            return App$Base.__super__.loadTable.call(this, tbl_nm);
+            return App$Base.__super__.getTable.call(this, tbl_nm);
         }
       }).call(this);
     };

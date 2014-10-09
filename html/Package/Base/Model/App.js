@@ -19,7 +19,6 @@
         sp: []
       };
       App$Base.__super__.constructor.call(this, view_nm, options, ss);
-      this.Table = {};
     }
 
     App$Base.prototype.goTo = function(f, t, s) {
@@ -65,13 +64,14 @@
     };
 
     App$Base.prototype.action = function(ctx, act, p) {
-      var q;
+      var i, m, q, r;
+      r = ctx.r, i = ctx.i, m = ctx.m;
       switch (act) {
         case 'path':
           return this.go(p.path);
-        case 'save_path':
+        case 'push':
           return this.sp.push([this.f, this.t, this.s]);
-        case 'restore_path':
+        case 'pop':
           if (this.sp.length) {
             q = this.sp.pop();
             return this.goTo(q[0], q[1], q[2]);
@@ -104,8 +104,8 @@
       return this.invalidateTables(['Message']);
     };
 
-    App$Base.prototype.loadTable = function(tbl_nm) {
-      var map, row;
+    App$Base.prototype.getTable = function(tbl_nm) {
+      var map;
       map = E['issues$' + this.appGet('group')];
       this.Table[tbl_nm] = (function() {
         switch (tbl_nm) {
@@ -114,13 +114,9 @@
           case 'Issue':
             return this.issues.asTable(map);
           case 'V':
-            row = E.appGetVars(this.f, this.t, this.s);
-            row.LAYOUT = this.appGet('layout');
-            row.PAGE = this.appGet('page');
-            row.MODAL = this.appGet('modal');
-            return [row];
+            return [E.appGetVars(this.f, this.t, this.s)];
           default:
-            return App$Base.__super__.loadTable.call(this, tbl_nm);
+            return App$Base.__super__.getTable.call(this, tbl_nm);
         }
       }).call(this);
     };

@@ -10,11 +10,11 @@
 
   fs = require('fs');
 
-  dev_dir = process.argv[3];
+  dev_dir = '../' + process.argv[3];
 
-  epic_path = process.argv[2] + '/EpicMvc/';
+  epic_path = '../' + process.argv[2];
 
-  window.E = require(epic_path + 'EpicCore.js');
+  window.E = require(epic_path + '/EpicCore.js');
 
   E = window.E;
 
@@ -139,6 +139,6 @@
     return console.log('' + out);
   };
 
-  doIt(process.argv[3], process.argv[4]);
+  doIt(dev_dir, process.argv[4]);
 
 }).call(this);
