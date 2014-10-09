@@ -10,6 +10,12 @@ class Devl extends E.ModelJS
 		@table_row_cnt= 0
 		@table_by_col= false
 		@table_col= false
+		@timer= false
+	tableChange: (view_nm, tbls) ->
+		return if view_nm is @view_nm
+		return if @timer isnt false
+		# TODO NOTE This next line is needed, since models might not populate Table until end of render
+		@timer= setTimeout (=> @timer= false; @invalidateTables ['Model']), 0
 	action: (ctx,act,p) ->
 		f= 'dM:Devl('+ act+ ')'
 		switch act
@@ -64,7 +70,7 @@ class Devl extends E.ModelJS
 				table= []
 				for inst of E.oModel
 					nm= E.oModel[inst].view_nm
-					row= $.extend {is_open: '', Table: []}, {inst: inst, name: nm}
+					row= E.merge {is_open: '', Table: []}, {inst: inst, name: nm}
 					row.is_open= 'yes' if nm is @open_model
 					for tnm,rec of E.oModel[ inst].Table # Walk to each of this model's tables
 						# Check need to walk to a sub table and/or if this table is 'opened' (to populate Cols/Rows)

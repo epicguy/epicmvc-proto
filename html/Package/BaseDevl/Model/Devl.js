@@ -24,7 +24,22 @@
       this.table_row_cnt = 0;
       this.table_by_col = false;
       this.table_col = false;
+      this.timer = false;
     }
+
+    Devl.prototype.tableChange = function(view_nm, tbls) {
+      var _this = this;
+      if (view_nm === this.view_nm) {
+        return;
+      }
+      if (this.timer !== false) {
+        return;
+      }
+      return this.timer = setTimeout((function() {
+        _this.timer = false;
+        return _this.invalidateTables(['Model']);
+      }), 0);
+    };
 
     Devl.prototype.action = function(ctx, act, p) {
       var dummy, f, incr, _ref;
@@ -96,7 +111,7 @@
           table = [];
           for (inst in E.oModel) {
             nm = E.oModel[inst].view_nm;
-            row = $.extend({
+            row = E.merge({
               is_open: '',
               Table: []
             }, {
