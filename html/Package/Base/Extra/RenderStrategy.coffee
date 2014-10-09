@@ -2,8 +2,9 @@
 # Copyright 2014-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 #TODO Grab 'title' from Tag.head, and inject it?
-		
+
 # Put on-load event scripts here
+ENTER_KEY= 13
 
 # Strategy(s) for rendering content
 class RenderStrategy$Base
@@ -32,6 +33,10 @@ class RenderStrategy$Base
 		f= 'on[data-e-action]'
 		# Getting all events, need to weed out to 'data-e-action' nodes
 		event_obj?= window.event # IE < 9
+		type= event_obj.type
+		if type is 'keyup'
+			return false if event_obj.keyCode isnt ENTER_KEY
+			type= 'enter'
 		target= event_obj.target
 		# Bubble up to any parent with a data-e-action
 		while target.tagName isnt 'BODY' and not data_action= target.getAttribute 'data-e-action'
@@ -42,15 +47,14 @@ class RenderStrategy$Base
 		for ix in [0...attrs.length] when 'data-e-' is attrs[ ix].name.slice 0, 7
 			continue if 'action' is nm= attrs[ ix].name.slice 7
 			data_params[ nm]= attrs[ ix].value
-		type= event_obj.type
 		val= target.value
 		_log2 f, 'event', event_obj, target, type, data_action, data_params, val
 		event_obj.preventDefault(); # Added to keep LOGIN FORM from posting, causing fresh instance to start up
 		data_params.val= val
-		E.Extra[ E.option.data_action] event_obj.type, data_action, data_params
+		E.Extra[ E.option.data_action] type, data_action, data_params
 		return false; # TODO CONSIDER MAKING SURE WE WANTED TO STOP, OR DO MORE TO ENSURE WE STOP DOING MORE THAN THIS
 	init: ->
-		document.body[ 'on'+ event_name]= @handleEvent for event_name in ['click', 'change', 'dblclick']
+		document.body[ 'on'+ event_name]= @handleEvent for event_name in ['click', 'change', 'dblclick', 'keyup']
 
 	UnloadMessage: (ix,msg) ->
 		if msg
@@ -71,7 +75,7 @@ class RenderStrategy$Base
 			E.setModelState event.state if event.state
 			BROKEN() or @render() # TODO
 		return
-		
+
 	m_redraw: =>
 		f= 'm_redraw'
 		if @redraw_guard isnt false
