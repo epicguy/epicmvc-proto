@@ -56,11 +56,11 @@ class View$Base extends E.ModelJS
 		dyn= {}; row_num= {}
 		( dyn[ nm]= rec.dyn; row_num[ nm]= rec.row._COUNT) for nm,rec of @info_foreach
 		saved_info= E.merge {}, info_foreach: {dyn,row_num}, info_parts: @info_parts
-		_log2 f, saved_info
+		#_log2 f, saved_info
 		saved_info
 	restoreInfo: (saved_info) ->
 		f= 'restoreInfo'
-		_log2 f, 'saved_info', saved_info
+		#_log2 f, 'saved_info', saved_info
 		@resetInfo()
 		for nm,rec of saved_info.info_foreach.dyn
 			#_log2 f, 'info_foreach nm=', nm, rec
@@ -190,6 +190,7 @@ class View$Base extends E.ModelJS
 			if 'A' is E.type_oau kid # Arrays are the parser's indication of an epic tag
 				out.push ['TBD',kid[ 0],kid[ 1]] # Place holder in 'out' for later population
 				ans= @['T_'+ kid[ 0]] kid[ 1], kid[ 2]
+				#_log2 f, 'CHECK FOR THEN', (if ans?.then then 'YES' else 'NO'), ans
 				if ans?.then # A deferred object, eh?
 					@nest_up f, ''
 					do (ix) => ans.then (result) =>

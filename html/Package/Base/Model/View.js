@@ -118,14 +118,12 @@
         },
         info_parts: this.info_parts
       });
-      _log2(f, saved_info);
       return saved_info;
     };
 
     View$Base.prototype.restoreInfo = function(saved_info) {
       var dyn_list, dyn_list_orig, dyn_m, dyn_t, f, info_parts, nm, oM, prev_row, rec, rh, rh_alias, row, row_num, t_set, tbl, _i, _len, _ref, _results;
       f = 'restoreInfo';
-      _log2(f, 'saved_info', saved_info);
       this.resetInfo();
       _ref = saved_info.info_foreach.dyn;
       _results = [];
