@@ -21,6 +21,9 @@ class View extends E.Model.View$Base
 					.replace /&amp;/g, '&'
 				prefix= if type is 'varGet2' or type is 'varGet3' then 'Variable reference' else 'Tag'
 				#TODO CHROME BUG NOT SHOWING POPUP window.alert "#{prefix} error (#{type}):\n\n#{msg}"
+	invalidateTables: (view_nm, tbl_list) ->
+		E.Devl().tableChange view_nm, tbl_list
+		super view_nm, tbl_list
 	xT_defer: (oPt) ->
 		@in_defer= true; out= super oPt; @in_defer= false; out
 	xT_debug: (oPt) ->
@@ -79,7 +82,7 @@ class View extends E.Model.View$Base
 	T_page: (attrs) ->
 		try
 			return super attrs if @Opts().file isnt true
-			nest= @frames.length- @frame_inx # TODO TEST IF THIS IS ONE INDEX VALUE OFF
+			nest= @frames.length- @frame_inx
 			letter= switch nest
 				when 0 then 'P'; when 1 then 'L'; else 'F'
 			type= {P:'Page',L:'Layout',F:'Frame'}[ letter]
@@ -87,7 +90,7 @@ class View extends E.Model.View$Base
 				when 0 then @page_name; else @frames[ @frame_inx]
 			return [
 				{tag:'div', attrs: {className:"dbg-part-box", title:"#{type}/#{page}.html"}, children: letter}
-				super attrs
+				super attrs # TODO BREAKS IN EpicMvc-One SINCE @kids EXPECTS A PROMISE AS RETURN VALUE
 			]
 		catch e
 			_log2 '##### Error in ', type, page, e, e.stack

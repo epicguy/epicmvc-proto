@@ -42,6 +42,11 @@
       }
     };
 
+    View.prototype.invalidateTables = function(view_nm, tbl_list) {
+      E.Devl().tableChange(view_nm, tbl_list);
+      return View.__super__.invalidateTables.call(this, view_nm, tbl_list);
+    };
+
     View.prototype.xT_defer = function(oPt) {
       var out;
       this.in_defer = true;
