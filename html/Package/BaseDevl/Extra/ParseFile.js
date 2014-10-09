@@ -2,8 +2,12 @@
 (function() {
   'use strict';
 
-  var FindAttrVal, FindAttrs, ParseFile, camelCase, doError, findStyleVal, findStyles, findVars, mkNm, mkObj, nm_map, sq,
+  var E, FindAttrVal, FindAttrs, ParseFile, camelCase, doError, findStyleVal, findStyles, findVars, mkNm, mkObj, nm_map, sq, _log2,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+  E = {};
+
+  _log2 = function() {};
 
   camelCase = function(input) {
     return input.toLowerCase().replace(/-(.)/g, function(match, group1) {
@@ -503,10 +507,14 @@
   };
 
   if (typeof window !== "undefined" && window !== null) {
+    _log2 = window._log2;
+    E = window.E;
     E.Extra.ParseFile = ParseFile;
   } else {
     module.exports = function(w) {
-      return w.E.Extra.ParseFile = ParseFile;
+      _log2 = w._log2;
+      E = w.E;
+      return E.Extra.ParseFile = ParseFile;
     };
   }
 

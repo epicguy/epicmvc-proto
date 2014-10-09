@@ -17,6 +17,10 @@
 #  8.2) Attr's with leading - are 'special', use m2 function; allows that attr to be remove if value falsey
 #  9) Style= attrs must not be strings but objects, with camelCase e.g. style={{fontSize:'1em'}}
 
+# Access to globals as closure, even from nodejs: (updated below)
+E= {}
+_log2= ->
+
 # Parse attribute list
 
 # //stackoverflow.com/questions/10425287/convert-string-to-camelcase-with-regular-expression
@@ -328,5 +332,5 @@ ParseFile= (file_stats, file_contents) ->
 	return  content: content, defer: stats.defer, can_componentize: children.length is 1 and stats.epic is 0
 
 # Public API
-if window? then E.Extra.ParseFile= ParseFile
-else module.exports= (w)-> w.E.Extra.ParseFile= ParseFile
+if window? then _log2= window._log2; E= window.E; E.Extra.ParseFile= ParseFile
+else module.exports= (w)-> _log2= w._log2; E= w.E; E.Extra.ParseFile= ParseFile
