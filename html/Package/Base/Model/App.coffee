@@ -4,11 +4,13 @@
 class App$Base extends E.ModelJS
 	constructor: (view_nm, options) ->
 		ss= f: null, t: null, s: null, sp: [] # Save-path stack
+		@issues= new E.Issue @view_nm
+		@messages= new E.Issue @view_nm
 		super view_nm, options, ss
 	goTo: (f,t,s) ->
 		was= "#{@f}/#{@t}/#{@s}"
 		if not f or not E.appGetF(f)?
-			[f, t, s]= (E.appGetOpt 'go').split '/'
+			[f, t, s]= (E.appGetSetting 'go').split '/'
 		else if not t? or not E.appGetT(f, t)?
 			t= E.appStartT f; s= E.appStartS f, t
 		else if not s? or not E.appGetS( f, t, s)?
@@ -21,7 +23,7 @@ class App$Base extends E.ModelJS
 		for v,ix in [@f, @t, @s]
 			if not (q[ix]?.length) then q[ix]= v else break # Stop at first set value, rest will default
 		@goTo q[0], q[1], q[2]
-	appGet: (attr) -> E.appGetAttr @f, @t, @s, attr
+	appGet: (attr) -> E.appGetSetting attr, @f, @t, @s
 	getStepPath: -> [@f, @t, @s]
 	action: (ctx,act,p) ->
 		{r,i,m}= ctx
@@ -43,7 +45,7 @@ class App$Base extends E.ModelJS
 	setMessages: (issue_obj) ->
 		@messages.addObj issue_obj if issue_obj?.count() isnt 0
 		@invalidateTables ['Message']
-	getTable: (tbl_nm) ->
+	loadTable: (tbl_nm) ->
 		map= E['issues$'+ @appGet 'group']
 		@Table[ tbl_nm]= switch tbl_nm
 			when 'Message' then @messages.asTable map

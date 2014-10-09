@@ -71,7 +71,7 @@ findStyles= (file_info, parts) -> # Hash of styles w/EpicVars expressions if nee
 			continue
 		styles[ nm]=( findVars str).join '+'
 	styles
-		
+
 nm_map=
 	'class':'className', 'for':'htmlFor', defaultvalue:'defaultValue', defaultchecked:'defaultChecked'
 	colspan:'colSpan', cellpadding:'cellPadding', cellspacing:'cellSpacing', maxlength: 'maxLength', tabindex: 'tabIndex'
@@ -126,7 +126,7 @@ FindAttrs= (file_info, str)->
 		if good isnt true
 			_log2 'ERROR - parse:', {file_info, good, start, i, nm, eq, quo, parts, str}
 			continue
-		if nm in ['data-e-click', 'data-e-change', 'data-e-dblclick'] # For data-e-action="click:action-name"
+		if nm in ['data-e-click', 'data-e-change', 'data-e-dblclick', 'data-e-enter'] # For data-e-action="click:action-name"
 			debug= true # TODO DEBUG
 			attr_obj['data-e-action']?= []
 			attr_obj['data-e-action'].push (nm.slice 7)+ ':'+ parts.join ''
