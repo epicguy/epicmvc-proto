@@ -2,27 +2,27 @@
 
 # This 'Base' load strategy expects all assests to be in memory variables (E.* namespace)
 class LoadStrategy$Base
-	constructor: () ->
+	constructor: (appconfs) ->
+		@reverse_packages=( appconfs[i] for i in [appconfs.length- 1..0])
 	getArtifact: (nm, type) ->
 		results= false
-		@reverse_packages?=( E.appconfs[i] for i in [E.appconfs.length- 1..0])
 		for pkg in @reverse_packages
 			results= E['view$'+ pkg]?[type]?[nm] ? false
 			break if results isnt false
 		console.log 'NO FILE FOUND! '+ nm if results is false
 		results
-	getAppConfs: ->
-		result= []
-		for pkg in E.appconfs
-			result.push E['app$'+pkg]
-		result
+	D_loadAsync: ->
+		def= new m.Deferred()
+		def.resolve()
+		def.promise
 	fist: (grp_nm) ->
+		BROKEN()
 		E['fist$'+ grp_nm]
-	layout: (nm) ->
-		@getArtifact nm, 'tmpl'
-	page: (nm) ->
-		@getArtifact nm, 'page'
-	part: (nm) ->
-		@getArtifact nm, 'part'
+	d_layout: (nm) ->
+		@getArtifact nm, 'Layout'
+	d_page: (nm) ->
+		@getArtifact nm, 'Page'
+	d_part: (nm) ->
+		@getArtifact nm, 'Part'
 
 E.Extra.LoadStrategy$Base= LoadStrategy$Base

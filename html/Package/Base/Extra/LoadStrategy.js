@@ -4,25 +4,25 @@
 
   LoadStrategy$Base = (function() {
 
-    function LoadStrategy$Base() {}
+    function LoadStrategy$Base(appconfs) {
+      var i;
+      this.reverse_packages = (function() {
+        var _i, _ref, _results;
+        _results = [];
+        for (i = _i = _ref = appconfs.length - 1; _ref <= 0 ? _i <= 0 : _i >= 0; i = _ref <= 0 ? ++_i : --_i) {
+          _results.push(appconfs[i]);
+        }
+        return _results;
+      })();
+    }
 
     LoadStrategy$Base.prototype.getArtifact = function(nm, type) {
-      var i, pkg, results, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4;
+      var pkg, results, _i, _len, _ref, _ref1, _ref2, _ref3;
       results = false;
-      if ((_ref = this.reverse_packages) == null) {
-        this.reverse_packages = (function() {
-          var _i, _ref1, _results;
-          _results = [];
-          for (i = _i = _ref1 = E.appconfs.length - 1; _ref1 <= 0 ? _i <= 0 : _i >= 0; i = _ref1 <= 0 ? ++_i : --_i) {
-            _results.push(E.appconfs[i]);
-          }
-          return _results;
-        })();
-      }
-      _ref1 = this.reverse_packages;
-      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-        pkg = _ref1[_i];
-        results = (_ref2 = (_ref3 = E['view$' + pkg]) != null ? (_ref4 = _ref3[type]) != null ? _ref4[nm] : void 0 : void 0) != null ? _ref2 : false;
+      _ref = this.reverse_packages;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        pkg = _ref[_i];
+        results = (_ref1 = (_ref2 = E['view$' + pkg]) != null ? (_ref3 = _ref2[type]) != null ? _ref3[nm] : void 0 : void 0) != null ? _ref1 : false;
         if (results !== false) {
           break;
         }
@@ -33,31 +33,28 @@
       return results;
     };
 
-    LoadStrategy$Base.prototype.getAppConfs = function() {
-      var pkg, result, _i, _len, _ref;
-      result = [];
-      _ref = E.appconfs;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        pkg = _ref[_i];
-        result.push(E['app$' + pkg]);
-      }
-      return result;
+    LoadStrategy$Base.prototype.D_loadAsync = function() {
+      var def;
+      def = new m.Deferred();
+      def.resolve();
+      return def.promise;
     };
 
     LoadStrategy$Base.prototype.fist = function(grp_nm) {
+      BROKEN();
       return E['fist$' + grp_nm];
     };
 
-    LoadStrategy$Base.prototype.layout = function(nm) {
-      return this.getArtifact(nm, 'tmpl');
+    LoadStrategy$Base.prototype.d_layout = function(nm) {
+      return this.getArtifact(nm, 'Layout');
     };
 
-    LoadStrategy$Base.prototype.page = function(nm) {
-      return this.getArtifact(nm, 'page');
+    LoadStrategy$Base.prototype.d_page = function(nm) {
+      return this.getArtifact(nm, 'Page');
     };
 
-    LoadStrategy$Base.prototype.part = function(nm) {
-      return this.getArtifact(nm, 'part');
+    LoadStrategy$Base.prototype.d_part = function(nm) {
+      return this.getArtifact(nm, 'Part');
     };
 
     return LoadStrategy$Base;
