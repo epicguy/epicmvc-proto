@@ -92,8 +92,10 @@
     };
 
     LoadStrategy.prototype.inline = function(type, nm) {
-      var el;
-      el = document.getElementById('view-' + type + '-' + nm);
+      var el, f, id;
+      f = 'inline';
+      el = document.getElementById(id = 'view-' + type + '-' + nm);
+      _log2(f, 'inline el=', id, el);
       if (el) {
         return el.innerHTML;
       }
@@ -101,8 +103,12 @@
     };
 
     LoadStrategy.prototype.preLoaded = function(pkg, type, nm) {
-      var _ref, _ref1;
-      return (_ref = E['view$' + pkg]) != null ? (_ref1 = _ref[type]) != null ? _ref1[nm] : void 0 : void 0;
+      var f, r, _ref, _ref1;
+      f = 'preLoaded';
+      _log2(f, 'looking for ', pkg, type, nm);
+      r = (_ref = E['view$' + pkg]) != null ? (_ref1 = _ref[type]) != null ? _ref1[nm] : void 0 : void 0;
+      _log2(f, 'found', ((r != null ? r.preloaded : void 0) ? 'PRELOADED' : 'broken'), r);
+      return r;
     };
 
     LoadStrategy.prototype.compile = function(name, uncompiled) {
@@ -133,21 +139,21 @@
       _fn = function(pkg) {
         return promise = promise.then(function(result) {
           var compiled;
-          _log2(f, 'THEN-' + pkg, full_nm, (result === false ? false : result.slice(0, 40)));
+          _log2(f, 'THEN-' + pkg, full_nm, 'S' === E.type_oau(result) ? result.slice(0, 40) : result);
           if (result !== false) {
             return result;
           }
           if (compiled = _this.preLoaded(pkg, type, nm)) {
             return compiled;
           }
+          if (!(pkg in _this.dir_map)) {
+            return false;
+          }
           return _this.D_getFile(pkg, full_nm);
         });
       };
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         pkg = _ref[_i];
-        if (!(pkg in this.dir_map)) {
-          continue;
-        }
         _fn(pkg);
       }
       promise = promise.then(function(result) {
@@ -162,6 +168,9 @@
           parsed = false;
         }
         return parsed;
+      });
+      promise.then(null, function(error) {
+        throw error;
       });
       return promise;
     };

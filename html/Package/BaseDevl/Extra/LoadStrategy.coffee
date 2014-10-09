@@ -45,10 +45,17 @@ class LoadStrategy
 		def.resolve null
 		promise
 	inline: (type,nm) ->
-		el= document.getElementById 'view-'+ type+ '-'+ nm
+		f= 'inline'
+		el= document.getElementById id= 'view-'+ type+ '-'+ nm
+		_log2 f, 'inline el=', id, el
 		return el.innerHTML if el
 		null
-	preLoaded: (pkg,type,nm) -> E['view$'+pkg]?[type]?[nm]
+	preLoaded: (pkg,type,nm) ->
+		f= 'preLoaded'
+		_log2 f, 'looking for ', pkg, type, nm
+		r= E['view$'+pkg]?[type]?[nm]
+		_log2 f, 'found', (if r?.preloaded then 'PRELOADED' else 'broken'), r
+		r
 	compile: (name,uncompiled) ->
 		parsed= E.Extra.ParseFile name, uncompiled
 		parsed.content= (new Function parsed.content)
@@ -67,12 +74,12 @@ class LoadStrategy
 		def.resolve false
 		promise= def.promise
 		for pkg in @reverse_packages
-			continue if pkg not of @dir_map
 			do (pkg) =>
 				promise= promise.then (result) =>
-					_log2 f, 'THEN-'+ pkg, full_nm, (if result is false then false else result.slice 0, 40)
+					_log2 f, 'THEN-'+ pkg, full_nm, if 'S' is E.type_oau result then (result.slice 0, 40) else result
 					return result if result isnt false # No need to hit network again
 					return compiled if compiled= @preLoaded pkg, type, nm
+					return false if pkg not of @dir_map
 					@D_getFile pkg, full_nm
 
 		promise= promise.then (result) => # False if no file ever found
@@ -86,6 +93,7 @@ class LoadStrategy
 				parsed= false
 			#_log2 'DEFER-L', '>results parsed>', result, parsed
 			return parsed
+		promise.then null, (error) -> throw error
 		return promise
 
 	D_getFile: (pkg,nm) -> # Must return a deferred
