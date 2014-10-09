@@ -82,7 +82,7 @@ app= (window, undef) ->
 	oModel= {} # Instances of model classes
 	oFist= {} # Instances of model classes
 	appconfs= [] # Will be an array of the apps user sets in 'run'
-	option= {}
+	option= load_dirs: []
 		# load: loadstratgy-class-name placed into E.Extra
 		# render: render-class-name placed into E.Extra
 		# option.c1: Function to call if inClick when click called
@@ -102,7 +102,7 @@ app= (window, undef) ->
 		# option.ff1 fieldName, spec, one_spec [no such H2H 'one_spec']
 	#TODO option[ nm]= (-> _log2 'ERROR: ', arguments) for nm in [ 'c1', 'm1', 'a1', 'a2', 'ca1', 'fg1', 'fg2', 'fg3', 'fb1', 'ff1']
 
-	E= () -> # TODO FIGURE OUT IF ANYTHING INTERESTING GOES HERE
+	E= {} #() -> # TODO FIGURE OUT IF ANYTHING INTERESTING GOES HERE
 	E.nextCounter= -> ++counter
 
 	# O, O (Clone attrs that are not Undefined)
@@ -894,7 +894,9 @@ class ModelJS
 w= if typeof window isnt "undefined" then window else {}
 w.EpicMvc= w.E= new app w
 w.E[ nm]= klass for nm,klass of {Issue, Fist, ModelJS, FistFilt}
-
+# TODO NOTE This was needed, so EpicMvc-One has _log2 available as e.g. app.js's load
+w._log2= ->
+w._log2= Function.prototype.bind.call console.log, console #%# will be removed before uglify
 
 if typeof module isnt "undefined" and module isnt null then module.exports = w.E
 if typeof define is "function" and define.amd then define () -> w.E

@@ -16,8 +16,10 @@
     oModel = {};
     oFist = {};
     appconfs = [];
-    option = {};
-    E = function() {};
+    option = {
+      load_dirs: []
+    };
+    E = {};
     E.nextCounter = function() {
       return ++counter;
     };
@@ -1409,6 +1411,10 @@
     klass = _ref[nm];
     w.E[nm] = klass;
   }
+
+  w._log2 = function() {};
+
+  w._log2 = Function.prototype.bind.call(console.log, console);
 
   if (typeof module !== "undefined" && module !== null) {
     module.exports = w.E;
