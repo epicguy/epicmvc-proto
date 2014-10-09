@@ -24,6 +24,7 @@ class RenderStrategy$Base
 		window.onpopstate = @onPopState
 		# TODO IMPLEMENT MODALS WITHOUT JQUERY, SO WITHOUT BOOTSTRAP I THINK
 		#TODO JQUERY $(document).on 'hidden.bs.modal', => E.click 'close_modal', {}
+		@redraw_guard= false
 		m.redraw= @m_redraw
 		@init()
 		true
@@ -72,10 +73,15 @@ class RenderStrategy$Base
 		return
 		
 	m_redraw: =>
-		# TODO CALL VIEW TO GET CONTENT, THEN @render
+		f= 'm_redraw'
+		if @redraw_guard isnt false
+			_log2 f, 'GUARD REDRAW'
+			return
+		@redraw_guard= true
 		E.View().run().then (content) =>
 			_log2 'DEFER-R', 'RESULTS: content', content
 			@render content, 'TODO', 'TODO', false
+			@redraw_guard= false
 	render: (content, history, click_index, modal) ->
 		if @was_modal
 			BROKEN() # TODO JQUERY
