@@ -7,8 +7,8 @@ ECHO() {
 }
 
 EpicDir=../../html
-# OneEpic=../EpicMvc-One-0.0.0-%MD5_EPICMVC%.js
-OneEpic=../EpicMvc-One-0.0.0-latest.js
+# OneEpic=../EpicMvc-One-2.0.0-%MD5_EPICMVC%.js
+OneEpic=../EpicMvc-One-2.0.0-latest.js
 EnvPkg=bootstrap
 
 cat copyright.js > $OneEpic
@@ -18,19 +18,19 @@ PKG=Base
 echo "Building:    Package/$PKG"
 ./makeit-pkg2 ../html/Package/$PKG $OneEpic
 echo "Compressing: Package/$PKG/view"
- ./makeit-view $EpicDir $EpicDir $PKG >> $OneEpic
-
-PKG=$EnvPkg
-echo "Building:    Package/$PKG (the EnvPkg)"
-./makeit-pkg2 ../html/Package/$EnvPkg $OneEpic
-echo "Compressing: Package/$PKG/view"
 ./makeit-view $EpicDir $EpicDir $PKG >> $OneEpic
+
+#PKG=$EnvPkg
+#echo "Building:    Package/$PKG (the EnvPkg)"
+#./makeit-pkg2 ../html/Package/$EnvPkg $OneEpic
+#echo "Compressing: Package/$PKG/view"
+#./makeit-view $EpicDir $EpicDir $PKG >> $OneEpic
 
 PKG=BaseDevl
 echo "Building:    Package/$PKG"
 ./makeit-pkg2 ../html/Package/$PKG $OneEpic
 echo "Compressing: Package/$PKG/view"
- ./makeit-view $EpicDir $EpicDir $PKG >> $OneEpic
+./makeit-view $EpicDir $EpicDir $PKG >> $OneEpic
 
 KEY=%MD5_EPICMVC%
 FILE=$OneEpic

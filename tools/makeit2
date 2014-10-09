@@ -3,7 +3,7 @@
 EpicMvc=$1
 MinOut=$2
 
-for FILE in Epic util ModelJS Issue Request AppConf ClickAction ConfExe ViewExe FistGroupCache Fist FistFilt parse
+for FILE in EpicCore
 do
   echo -n "$FILE "
   echo -ne "/*${FILE}*/" >> $MinOut

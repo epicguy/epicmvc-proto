@@ -10,7 +10,7 @@ if [ -d $DevHtmlPkg/js ]
 then
   for FILE in `find -H $DevHtmlPkg/js -name \*.js` ; do JSS="$JSS $FILE" ; done
 fi
-for DIR in Model Extras
+for DIR in Model Extra
 do
   if [ -d $DevHtmlPkg/$DIR ]
   then

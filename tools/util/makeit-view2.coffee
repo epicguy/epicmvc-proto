@@ -1,74 +1,79 @@
 # Generate a compressed version of compiled view files
 #
+window= {}
 _log= -> #console.log
+window._log2= -> #console.log
 
 fs= require 'fs'
 
-epic_path= process.argv[ 2]+ '/EpicMvc'
-window= EpicMvc: Extras: {}, Model: {}
-(require epic_path+ '/parse.js') window
-(require epic_path+ '/util.js') window
+dev_dir= process.argv[ 3]
+epic_path= process.argv[ 2]+ '/EpicMvc/'
+#window= E: Extra: {}, Model: {}
+window.E= require epic_path+ 'EpicCore.js'
+E= window.E # So it looks like it's in the global namespace, when used as closure below
+(require dev_dir+ '/Package/BaseDevl/Extra/ParseFile.js') window
 
 class MockLoadStrategy
 	constructor: (dev_dir,pkg_nm) ->
-		@path= dev_dir+ '/Package/'+ pkg_nm+'/view/'
-	getTmplNm: (nm) -> @path+ nm+ '.tmpl.html'
-	getPageNm: (nm) -> @path+ 'page/'+ nm+ '.page.html'
-	getPartNm: (nm) -> @path+ 'part/'+ nm+ '.part.html'
+		@path= dev_dir+ '/Package/'+ pkg_nm+ '/'
+	getLayoNm: (nm) -> @path+ 'Layout/'+ nm+ '.html'
+	getPageNm: (nm) -> @path+ 'Page/'+   nm+ '.html'
+	getPartNm: (nm) -> @path+ 'Part/'+   nm+ '.html'
 	getFile: (nm) ->
 		results= 'bad request?'
 		results= fs.readFileSync nm
 		String results
-	getCombinedAppConfs: ->
-		#console.log "getCombinedAppConfs: #{@Epic.appconfs}"
-		result= {}
-		for pkg in @Epic.appconfs
-			window.$.extend true, result, window.EpicMvc['app$'+pkg]
-		result
-	template: (nm) ->
-		#console.log "template: #{nm}"
-		full_nm= @getTmplNm nm
-		out= window.EpicMvc.ParseFile full_nm, @getFile full_nm
-		#console.log out
+	layout: (nm) ->
+		_log "layout: #{nm}"
+		full_nm= @getLayoNm nm
+		out= E.Extra.ParseFile full_nm, @getFile full_nm
+		#_log out
 		out
 	page: (nm) ->
-		#console.log "page: #{nm}"
+		_log "page: #{nm}"
 		full_nm= @getPageNm nm
-		out= window.EpicMvc.ParseFile full_nm, @getFile full_nm
-		#console.log out
+		out= E.Extra.ParseFile full_nm, @getFile full_nm
+		#_log out
 		out
 	part: (nm) ->
-		#console.log "part: #{nm}"
+		_log "part: #{nm}"
 		full_nm= @getPartNm nm
-		window.EpicMvc.ParseFile full_nm, @getFile full_nm
+		E.Extra.ParseFile full_nm, @getFile full_nm
 	readdir: (type) ->
 		f= 'MockLoadStrategy.readdir'
 		_log f, '>', type
-		path_part= (if type is 'template' then '.' else type)
+		path_part= type
 		_log f, '@path path_part', @path, path_part
 		return [] if not fs.existsSync @path+ path_part
 		files= fs.readdirSync @path+ path_part
-		f[0] for f in (p.split '.' for p in files) when f?[1] is (if type is 'template' then 'tmpl' else type)
+		f[0] for f in (p.split '.' for p in files)
 
+doObj= (obj) ->
+		content= "function(){#{obj.content}}"
+		"{preloaded:1,can_componentize:#{obj.can_componentize},defer:#{obj.defer},content:#{content}}"
+	
 doIt= (dev_dir,pkg_nm) ->
 	f= 'doIt'
 	_log f, 'args', dev_dir, pkg_nm
-	out= 'window.EpicMvc.view$'+ pkg_nm+ '={\n'
+	out= 'E.view$'+ pkg_nm+ '={\n'
 	load= new MockLoadStrategy dev_dir, pkg_nm
-	out+= 'tmpl: {\n'
+
+	out+= 'Layout: {\n'
 	end= ''
-	for f in load.readdir 'template'
-		out+= end+ "\"#{f}\": #{JSON.stringify load.template f}"
+	for fnm in load.readdir 'Layout'
+		out+= end+ "\"#{fnm}\":#{doObj load.layout fnm}"
 		end= ",\n"
-	out+= '}, page: {\n'
+
+	out+= '}, Page: {\n'
 	end= ''
-	for f in load.readdir 'page'
-		out+= end+ "\"#{f}\": #{JSON.stringify load.page f}"
+	for fnm in load.readdir 'Page'
+		out+= end+ "\"#{fnm}\":#{doObj load.page fnm}"
 		end= ",\n"
-	out+= '}, part: {\n'
+
+	out+= '}, Part: {\n'
 	end= ''
-	for f in load.readdir 'part'
-		out+= end+ "\"#{f}\": #{JSON.stringify load.part f}"
+	for fnm in load.readdir 'Part'
+		out+= end+ "\"#{fnm}\":#{doObj load.part fnm}"
 		end= ",\n"
 	out+= '}};\n'
 	console.log ''+ out

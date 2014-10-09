@@ -30,8 +30,8 @@ echo Building: EpicMvc
 ./makeit
 echo Building: Package/Base
 ./makeit-pkg Base
-echo Building: Package/bootstrap
-./makeit-pkg bootstrap
+#echo Building: Package/bootstrap
+#./makeit-pkg bootstrap
 echo Building: Package/$PKG
 ./makeit-pkg $PKG
 echo Compressing: Package/$PKG/view
@@ -41,5 +41,5 @@ echo Compressing: Package/$PKG/view
 cp Base-index.html DeployHtml/index.html
 
 # Clean-up specific to our module
-rm DevHtml/Package/bootstrap/css/bootstrap-responsive.css
-rm DevHtml/Package/bootstrap/js/*.js
+#rm DevHtml/Package/bootstrap/css/bootstrap-responsive.css
+#rm DevHtml/Package/bootstrap/js/*.js
