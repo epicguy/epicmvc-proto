@@ -201,6 +201,7 @@ ParseFile= (file_stats, file_contents) ->
 	T_STYLE= 3
 	T_TEXT= 4
 	stats= text: 0, dom: 0, epic: 0, defer: 0
+	dom_pre_tags= [ 'pre', 'code']
 	dom_nms= [
 		'style'
 		'div', 'a', 'span', 'ol', 'ul', 'li', 'p', 'b', 'i', 'dl', 'dd', 'dt', 'u'
@@ -219,6 +220,7 @@ ParseFile= (file_stats, file_contents) ->
 	# Create array of 4 parts: non-tag-content, leading-slash, tag-name, attrs
 	# End of 'attrs' may have a '/' (or is '/' if leading-slash is '/')
 	parts= after.split /<(\/?)([:a-z_0-9-]+)([^>]*)>/
+	pre_count= 0
 	i= 0
 	tag_wait= [] # Holds back list of indexes while doing a nested tag
 	children= [] # Current list of child expressions - can be text, DOM tags or Epic tags
@@ -226,7 +228,8 @@ ParseFile= (file_stats, file_contents) ->
 		if tag_wait.length and tag_wait[ tag_wait.length- 1][ 1] is 'defer'
 			children.push [T_TEXT, (findVars parts[ i]).join( '+')]
 		else
-			text= parts[ i].replace(/^\s+|\s+$/gm, ' ')
+			text= parts[ i]
+			text= text.replace(/^\s+|\s+$/gm, ' ') if pre_count is 0
 			if text.length and text isnt ' ' and text isnt '  ' # Not just whitespace
 				if tag_wait.length
 					children.push [T_TEXT, (findVars text).join( '+')]
@@ -238,6 +241,7 @@ ParseFile= (file_stats, file_contents) ->
 				# TODO ERRORS COULD INCLUDE LINE NUMBERS AND EVEN FILE-TEXT SNIPIT
 				doError file_stats, "Close tag found when none expected close=#{parts[i+2]}"
 			[oi, base_nm, attrs, prev_children, flavor]= tag_wait.pop()
+			pre_count-- if base_nm in dom_pre_tags
 			if base_nm is 'defer'
 				stats.defer++
 			if parts[ i+ 2] isnt parts[ oi+ 2]
@@ -288,6 +292,7 @@ ParseFile= (file_stats, file_contents) ->
 				# Wait till closing tag...
 				tag_wait.push [ i, base_nm, attrs, children, flavor]
 				children= [] # Start my tag fresh, without children
+				pre_count++ if base_nm in dom_pre_tags
 		i+= 4
 
 	if tag_wait.length
