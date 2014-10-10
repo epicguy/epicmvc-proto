@@ -21,9 +21,9 @@ class View extends E.Model.View$Base
 					.replace /&amp;/g, '&'
 				prefix= if type is 'varGet2' or type is 'varGet3' then 'Variable reference' else 'Tag'
 				alert "#{prefix} error (#{type}):\n\n#{msg}" #TODO CHROME BUG NOT SHOWING POPUP
-	invalidateTables: (view_nm, tbl_list) ->
-		E.Devl().tableChange view_nm, tbl_list
-		super view_nm, tbl_list
+	invalidateTables: (view_nm, tbl_list, deleted_tbl_nms) ->
+		E.Devl().tableChange view_nm, tbl_list, deleted_tbl_nms if deleted_tbl_nms.length
+		super view_nm, tbl_list, deleted_tbl_nms
 	xT_defer: (oPt) ->
 		@in_defer= true; out= super oPt; @in_defer= false; out
 	xT_debug: (oPt) ->
