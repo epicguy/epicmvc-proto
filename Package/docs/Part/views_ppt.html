@@ -21,13 +21,13 @@
 </p>
 
 <p>Here is visually how EpicMvc will glue together all of the pieces:</p>
-<div class="container">
+<div class="container-fluid">
 	<div class="row" style="background-color: #CCC; border-radius: 10px; border: 2px solid #888;">
 		<div style="text-align: center; margin: 10px;">main.tmpl.html</div>
-		<div class="container">
+		<div class="container-fluid">
 			<div class="row" style="text-align: center; margin: 5px; padding: 10px; background-color: #DDD; border-radius: 10px; border: 2px solid #999;">
 				<div style="padding: 0 0 5px;">example.page.html</div>
-				<div class="container">
+				<div class="container-fluid">
 					<div class="row" style="text-align: center; margin: 5px; padding: 10px; background-color: #EEE; border-radius: 10px; border: 2px solid #AAA;">header.part.html</div>
 					<div class="row" style="text-align: center; margin: 5px; padding: 10px; background-color: #EEE; border-radius: 10px; border: 2px solid #AAA;">body.part.html</div>
 					<div class="row" style="text-align: center; margin: 5px; padding: 10px; background-color: #EEE; border-radius: 10px; border: 2px solid #AAA;">footer.part.html</div>
@@ -43,7 +43,7 @@
 		The <b>Template</b> HTML for main.tmpl.html would be:
 	</p>
 	<pre>
-	&lt;div class="container"&gt;
+	&lt;div class="container-fluid"&gt;
 		&lt;epic:page /&gt;
 	&lt;/div&gt;
 	</pre>
@@ -87,9 +87,9 @@
 	</pre>
 
 	<p>The following would render:</p>
-	<div class="container">
+	<div class="container-fluid">
 		<div style="padding: 10px; border: 1px solid #ccc; border-radius: 10px;">
-			<div class="container">
+			<div class="container-fluid">
 				<div class="row">
 					<p>Header Info</p>
 				</div>
