@@ -202,7 +202,7 @@ app= (window, undef) ->
 		E.oLoader= new Extra[ option.loader] appconfs
 		promise= E.oLoader.D_loadAsync()
 		promise.then ->
-			init_func()
+			init_func() if typeof init_func is 'function'
 			E.App().go aSetting.go
 			E.oRender= new Extra[ option.render] # Sets mithril's redraw to self
 		return

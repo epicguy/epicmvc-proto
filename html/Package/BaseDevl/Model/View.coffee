@@ -20,7 +20,7 @@ class View extends E.Model.View$Base
 					.replace /&gt;/g, '>')
 					.replace /&amp;/g, '&'
 				prefix= if type is 'varGet2' or type is 'varGet3' then 'Variable reference' else 'Tag'
-				#TODO CHROME BUG NOT SHOWING POPUP window.alert "#{prefix} error (#{type}):\n\n#{msg}"
+				alert "#{prefix} error (#{type}):\n\n#{msg}" #TODO CHROME BUG NOT SHOWING POPUP
 	invalidateTables: (view_nm, tbl_list) ->
 		E.Devl().tableChange view_nm, tbl_list
 		super view_nm, tbl_list
@@ -98,14 +98,13 @@ class View extends E.Model.View$Base
 			@_Err 'page', {attrs}, e
 			#return """<pre>&lt;epic:page page:#{@bd_page}&gt;<br>#{e}<br>#{e.stack}</pre>"""
 
-	xv3: (view_nm, tbl_nm, col_nm, format_spec, custom_spec, give_error) ->
+	v3: (view_nm, tbl_nm, col_nm, format_spec, custom_spec, give_error) ->
 		try
 			val= super view_nm, tbl_nm, col_nm, format_spec, custom_spec
 			t_format_spec= if format_spec or custom_spec then '#'+ format_spec else ''
 			t_custom_spec= if custom_spec then '#'+ custom_spec else ''
 			if val is undefined then throw new Error "Column/spec does not exist (#{view_nm}/#{tbl_nm}/#{col_nm}#{t_format_spec}#{t_custom_spec})."
 		catch e
-			throw e if @Epic.isSecurityError e or give_error
 			t_format_spec= if format_spec or custom_spec then '#'+ format_spec else ''
 			t_custom_spec= if custom_spec then '#'+ custom_spec else ''
 			key= '&amp;'+ view_nm+ '/'+ tbl_nm+ '/'+ col_nm+ t_format_spec+ t_custom_spec+ ';'

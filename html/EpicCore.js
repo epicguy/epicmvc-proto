@@ -165,7 +165,9 @@ app = function(window, undef) {
     E.oLoader = new Extra[option.loader](appconfs);
     promise = E.oLoader.D_loadAsync();
     promise.then(function() {
-      init_func();
+      if (typeof init_func === 'function') {
+        init_func();
+      }
       E.App().go(aSetting.go);
       return E.oRender = new Extra[option.render];
     });
