@@ -149,17 +149,22 @@ FindAttrs= (file_info, str)->
 	# A string of JavaScript code representing an object, and empty (as '' or '/')
 	[ (mkObj attr_obj), empty, attrs_need_cleaning]
 
+entities= (text)->
+	dom_entity_map=
+		nbsp: '\u00A0',reg: '\u00AE', copy: '\u00A9', times: '\u22A0'
+		lt: '\u003C', gt: '\u003E', amp: '\u0026', quot: '\u0022' # amp: '\u0026'
+	text= text.replace /&([a-z]+);/gm, (m, p1) -> if p1 of dom_entity_map then dom_entity_map[ p1] else '&'+ p1+ 'BROKEN;'
 # Parse out varGet2/3's from a textual string - return list of expressions
 findVars= (text) ->
 	# TODO CONSIDER USING [^&;] AND THEN ERROR IF LAST CHAR IS NOT THE ';' (was missing obviously)
 	parts= text.split /&([a-zA-Z0-9_]+\/[^;]{1,60});?/gm
 	results= [] # ['text',func,'text'...]
 	if parts.length== 1
-		return [ sq parts[ 0] ]
+		return [ entities sq parts[ 0] ]
 	i= 0
 	while i< parts.length- 1
 		if parts[ i].length
-			results.push sq parts[ i]
+			results.push entities sq parts[ i]
 		args= parts[ i+ 1].split '/'
 		last= args.length- 1
 		if last isnt 1 and last isnt 2
@@ -183,6 +188,7 @@ findVars= (text) ->
 
 doError= (file_stats, text) ->
 	console.log 'ERROR', file_stats, text
+	alert "#{file_stats}, #{text}"
 	throw Error text
 ParseFile= (file_stats, file_contents) ->
 	f= ':BaseDevl.E/ParseFile.ParseFile~'+file_stats
@@ -197,16 +203,14 @@ ParseFile= (file_stats, file_contents) ->
 	stats= text: 0, dom: 0, epic: 0, defer: 0
 	dom_nms= [
 		'style'
-		'div', 'a', 'span', 'ol', 'ul', 'li', 'p', 'b', 'i', 'dl', 'dd', 'dt'
+		'div', 'a', 'span', 'ol', 'ul', 'li', 'p', 'b', 'i', 'dl', 'dd', 'dt', 'u'
 		'form', 'fieldset', 'label', 'legend', 'button', 'input', 'textarea', 'select', 'option'
-		'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5'
+		'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'col', 'colgroup'
+		'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hgroup'
 		'img', 'br', 'hr', 'header', 'footer', 'section', 'nav'
-		'code', 'mark', 'pre'
+		'code', 'mark', 'pre', 'blockquote', 'address', 'kbd', 'var', 'samp'
 	]
 	dom_close= [ 'img', 'br', 'input', 'hr' ]
-	dom_entity_map=
-		nbsp: '\u00A0',reg: '\u00AE', copy: '\u00A9', times: '\u22A0'
-		lt: '\u003C', gt: '\u003E', amp: '\u0026', quot: '\u0022'
 	after_comment= file_contents.replace( /-->/gm, '\x02').replace /<!--[^\x02]*\x02/gm, (m) ->
 		m.replace /[^\n]+/gm, '' # Preserve newlines
 	after_script= after_comment.replace( /<\/script>/gm, '\x02').replace /<script[^\x02]*\x02/gm, ''
@@ -224,7 +228,6 @@ ParseFile= (file_stats, file_contents) ->
 		else
 			text= parts[ i].replace(/^\s+|\s+$/gm, ' ')
 			if text.length and text isnt ' ' and text isnt '  ' # Not just whitespace
-				text= text.replace /&([a-z]+);/gm, (m, p1) -> if p1 of dom_entity_map then dom_entity_map[ p1] else '&'+ p1+ 'BROKEN;'
 				if tag_wait.length
 					children.push [T_TEXT, (findVars text).join( '+')]
 				else
@@ -288,10 +291,9 @@ ParseFile= (file_stats, file_contents) ->
 		i+= 4
 
 	if tag_wait.length
-		doError file_stats, "Missing closing tags#{(parts[t+2] for [t] in tag_wait).join ', '}"
+		doError file_stats, "Missing closing tags #{(parts[t+2] for [t] in tag_wait).join ', '}"
 	text= parts[ i].replace /^\s+|\s+$/g, ' '
 	if text.length and text isnt ' ' and text isnt '  ' # Not just whitespace
-		text= text.replace /&([a-z]+);/gm, (m, p1) -> if p1 of dom_entity_map then dom_entity_map[ p1] else '&'+ p1+ 'BROKEN;'
 		children.push [T_M1, 'span', {}, (findVars text).join( '+')]
 		stats.text++
 	#_log2 f, 'before do', children.length, stats, children
