@@ -1,0 +1,16 @@
+<h3>Tables: Accessing Dynamic Data in Tables Using the "foreach"</h3>
+	<p>Most dynamic data is provided as multiple rows of values arranged in columns. These are accessed row-by-row using the <code>&lt;epic:foreach table="Class/Table"&gt;...&lt;/epic:foreach&gt;</code> tag. 
+	<p>Column values then are referenced in the content using <code>&amp;Table_name/column_name;</code> </p
+	<p>Many times a particular column value is really a nested table itself. </p>
+	<p>The nested table is accessed using: <code>&lt;epic:foreach table="Table_name/column_name_of_nested_table"&gt;</code> and value are accessed using <code>&amp;column_name_of_nested_table/column_name;</code>.  This can be done to any depth. </p>
+	<p>Here is an example of accessing the shipping rows of an order, and within each shipping row, the item rows, and within these items, any optional component information (such as doll attributes on a custom doll):</p>
+	<pre>
+&lt;epic:foreach table="OrderStatus/Shipment"&gt;
+	&lt;div class="shipments"&gt;Shipment <mark>&amp;Shipment/counter;</mark> to:&nbsp; <mark>&amp;Shipment/first_name;</mark> <mark>&amp;Shipment/last_name;</mark>&lt;/div&gt; 
+	&lt;epic:foreach table="Shipment/Items"&gt;
+		&lt;div class="items"&gt;Item <mark>&amp;Items/counter;</mark>: <mark>&amp;Items/description;</mark>&lt;/div&gt;
+		&lt;epic:foreach table="Items/Components" alias="C"&gt;  # Here is an example of the use of an "alias" to shorten names for reuse.
+			&lt;div class="components"&gt;Components <mark>&amp;C/counter;</mark>: <mark>&amp;C/description;</mark>&lt;/div&gt;
+		&lt;/epic:foreach&gt; 
+	&lt;/epic:foreach&gt;
+&lt;/epic:foreach&gt;</pre>

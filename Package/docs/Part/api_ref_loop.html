@@ -1,0 +1,52 @@
+<style>
+	table.args th {
+		background-color: #CCC;
+	}
+</style>
+<e-foreach table="ApiRef/&View/Part/class;" alias="func">
+<div class="code-section">
+	<h3>&View/Part/class;.&func/func_name;</h3>
+	<p>&func/description;</p>
+
+	<h4>Usage</h4>
+	<code>&func/signature;</code>
+
+	<e-if table_is_not_empty="func/Argument">
+		<h4>Arguments</h4>
+		<table class="args table table-striped table-bordered table-condensed">
+			<thead>
+				<tr>
+					<th>Param</th>
+					<th>Type</th>
+					<th>Details</th>
+				</tr>
+			</thead>
+			<tbody>
+				<e-foreach table="func/Argument">
+					<tr>
+						<td>
+							&Argument/param;
+						</td>
+						<td>
+							&Argument/type;
+						</td>
+						<td>
+							&Argument/details;
+						</td>
+					</tr>
+				</e-foreach>
+			</tbody>
+		</table>
+	</e-if>
+
+	<e-if table_is_not_empty="func/Return">
+		<h4>Returns</h4>
+		<e-foreach table="func/Return">
+			<div class="row">
+				<div class="col-md-2"><code>&Return/type;</code></div>
+				<div class="col-md-10">&Return/details;</div>
+			</div>
+		</e-foreach>
+	</e-if>
+</div>
+</e-foreach>

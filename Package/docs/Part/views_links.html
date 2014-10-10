@@ -1,0 +1,42 @@
+<h3>Links and Navigation</h3>
+<p>
+This section explains how to make clickable links throughout your app.  Links that are outside of forms, can be hyperlinks on text or on images.
+For these, we use the tag <code>&lt;epic:link_action&gt;</code>.
+The HTML must be aware of the values needed to process an action, and provide these on the tag along with an action label.
+If you must pass data in a form, you will instead need to use a form button within a form, so that the form data will be posted by the browser.
+This requires a different tag <code>&lt;epic:form_action&gt;</code> and this is documented in the next section called
+<a class="link" data-action="click:go_views_forms" href="#forms_fields_buttons">Forms, form fields, and buttons.</a>
+</p>
+<p>
+The <code>&lt;epic:link_action&gt;</code> tag does <span style="text-decoration: underline;">not</span> require you to specify which page to display next.
+The only information needed is (a) a unique name for this action used later to connect to the business logic, and (b) any values to pass to that action.
+Suppose you wish to create a link in the current application, which will log the user out. This may be done like this:
+<code>&lt;epic:link_action action="logout" /&gt;</code> - the app.coffee file will contain a CLICK entry that maps your action called 'logout' to the proper JavaScript logic module used to effect a logout.
+Additionally, the app.coffee file will determine which page would naturally be displayed next, after this occurred.
+</p>
+<p>
+Typically, a link appears inside an <code>&lt;epic:foreach&gt;</code> loop, such that each link is supposed to reference a different row of data.
+For example, suppose you have a list of people to send an email to, and the link is designed to send an email to just one of those addresses.
+A combination of the <code>&lt;epic:foreach&gt;</code> and an <code>&lt;epic:link_action&gt;</code> would be used, however this time a parameter must be included, which names the recipient.
+The HTML might look like this:
+</p>
+<pre>
+&lt;h3&gt;Send email to one of the following:&lt;/h3&gt;
+&lt;epic:foreach table="ListMaintainer/Recipients"&gt;
+	&lt;epic:link_action action="send_email" p:recipient="&amp;Recipients/email;"&gt;&amp;Recipients/email;&lt;/epic:link_action&gt;
+&lt;/epic:foreach&gt;
+</pre>
+<h4>Via data attributes</h4>
+<pre>
+&lt;h3&gt;Send email to one of the following:&lt;/h3&gt;
+&lt;epic:foreach table="ListMaintainer/Recipients"&gt;
+	&lt;a data-action="click:send_email" data-params="{'recipient':'&amp;Recipients/email;'}"&gt;&amp;Recipients/email;&lt;/a&gt;
+&lt;/epic:foreach&gt;
+</pre>
+<p>Later in the app.coffee file, there would be instructions such as:</p>
+<pre>
+CLICKS:
+	send_email:	call: 'ListMaintainer/send', use_fields: 'recipient', RESULTS: [
+		{ r:{}, go: 'home/main/send_confirm' }
+	]
+</pre>

@@ -1,0 +1,69 @@
+<h3>Forms and FISTs (Field Lists): Creating and Editing</h3>
+<p>
+	Forms and Fields are created in the application's <mark>fist.coffee</mark> file. Fields are defined independent of a named Form, and later, a Form is made by simply listing the various Fields that make up the Form in the order to display them as a Field List or FIST. For any field, you specify a plethora of information designed to provide all the processing necessary for filtering between what the user sees and what the Model, database or REST Api will ultimately store/receive as data for those fields.
+</p>
+
+<p>Forms are organized in a file suffixed with <mark>.fist.coffee</mark></p>
+
+<legend>
+	example.fist.coffee
+	<span style="font-size: 11px; font-weight: normal;" class="label label-primary">coffeescript</span>
+</legend>
+<pre class="coffeescript">
+window.EpicMvc.fist$example=
+	FIELDS:
+		LoginName: db_nm:'username', type:'text',    req:true, h2h:'trim_spaces:lower_case', label:'Username'
+		LoginPass: db_nm:'password', type:'password', req:true, h2h:'trim_spaces', label:'Password'
+
+		CreatePass:
+			db_nm:'password', type:'password', req:true, h2h:'trim_spaces', label:'Password',
+			validate: 'pwd_strength', issue_text: 'Password must be at least 6 characters and have 1 or more number(s).
+		ConfirmPass:
+			db_nm:'confirm_pass', type:'password', h2h:'trim_spaces', label:'Confirm Password', req:true
+			validate: 'confirm', validate_expr: 'CreatePass',
+			issue_text: 'Passwords do not match. Please re-enter.  Passwords are case sensitive.'
+
+		Email:     db_nm:'email',    type: 'text', label: 'Email', validate:'email'
+		Gender:
+			db_nm:'genderTk',type:'pulldown:array', label:'Gender', choice: 'Select Gender'
+			cdata: [  ['M','Male'],  ['F','Female']  ]
+
+		CcCvv:
+			db_nm:'cc_cvv', type:'text', req:true, label: 'CVV'
+			h2h:'digits_only', validate: 'regexp', validate_expr: '[0-9]{3,4}'
+			req_text: 'CVV is required'
+			issue_text: 'CVV must be 3 or 4 digits (check the back of your card)'
+		CcMonth:
+			db_nm:'cc_month', type:'pulldown:array', req:true, label: 'Month',
+			cdata: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12' ]
+		CcYear:
+			db_nm:'cc_year', type:'pulldown:array', req:true, label: 'Year', default: '2014'
+			cdata: ['2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024']
+		CcZip:
+			db_nm:'cc_zip', type:'text', req:true, label: 'Zip Code'
+			validate:'zip', validate_expr: '5or9'
+
+		PrivayPolicy:
+			db_nm:'privacy_policy', type:'yesno', cdata:'yes', label: 'Agree to Privacy Policy?', req: true }
+		Terms:
+			db_nm:'terms_conditions', type:'yesno', cdata:'yes', label: 'Agree to Terms &amp; Conditions?', req: true }
+
+		Timezone:
+			db_nm:'timezone', type: 'pulldown:wist', cdata: 'world:timezone:token:nice', label: 'Timezone'
+			choice: 'Select Timezone'
+		AskInclude:
+			db_nm:'include_children', type:'radio:array', req:true, label: 'Options:'
+			cdata: [[0,'Parents Only'], [1,'Include Children']], default: 0
+			validate: 'choice', h2d: 'zero_is_blank', d2h: 'blank_is_zero'
+
+	FISTS:
+
+		Login: [ 'LoginName', 'LoginPass' ]
+		SignUp:  [ 'CreatePass', 'ConfirmPass' ]
+		CreditCard: [ 'CcCvv', 'CcMonth', 'CcYear', 'CcZip']
+		Legal:	[ 'PrivacyPolicy', 'Terms' ]
+		Profile: [ ..., 'Timezone', ... ]
+		...
+</pre>
+
+<e-part part="views_field_attrs"/>

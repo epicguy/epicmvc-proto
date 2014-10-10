@@ -1,0 +1,107 @@
+<h3>Templates, Pages, and Parts</h3>
+<p>
+	'Templates', 'Pages', and 'Parts' are HTML files located on disk, that contain valid HTML excluding the traditional <code>&lt;!DOCTYPE html&gt;</code>,<code>&lt;html&gt;</code>, <code>&lt;head&gt;</code>, <code>&lt;meta&gt;</code> and <code>&lt;body&gt;</code> tags. 'Templates' are saved with the extension <code>.tmpl.html</code>, 'Pages' are saved with the extension <code>.page.html</code> and 'Parts' are saved with the extension <code>.part.html</code>.
+</p>
+<h4>Parts</h4>
+<p>
+	EpicMvc 'Parts' are the most basic components of the 'View'. A 'Part' could be as simple as a single <code>&lt;p&gt;</code> tag, or include most of the HTML for the application. However, the idea is to design 'Parts' as meaningful and modularized pieces of the HTML that can be included or looped on elsewhere in the 'View'.
+</p>
+<p>
+	To include the HTML defined in the 'Part' simply use the tag <code>&lt;epic:page_part part="part_file_name"&gt;</code>. The 'part=' attribute is the name of .part.html file on disk. EpicMvc will then replace that tag with the actual HTML from the Part during render. The 'Part' tag can be included in any 'Page', 'Template' or even another 'Part'.
+</p>
+
+<h4>Pages</h4>
+<p>
+	An EpicMvc 'Page' is the main component of the 'View'. Only one 'Page' is displayed at a time, and it is composed of HTML and any 'Parts' that are included using the page_part tag.
+</p>
+
+<h4>Templates</h4>
+<p>
+	An EpicMvc 'Template' is HTML that includes a single EpicMvc 'Page' using the HTML tag <code>&lt;epic:page /&gt;</code> along with any other 'Parts'.
+</p>
+
+<p>Here is visually how EpicMvc will glue together all of the pieces:</p>
+<div class="container">
+	<div class="row" style="background-color: #CCC; border-radius: 10px; border: 2px solid #888;">
+		<div style="text-align: center; margin: 10px;">main.tmpl.html</div>
+		<div class="container">
+			<div class="row" style="text-align: center; margin: 5px; padding: 10px; background-color: #DDD; border-radius: 10px; border: 2px solid #999;">
+				<div style="padding: 0 0 5px;">example.page.html</div>
+				<div class="container">
+					<div class="row" style="text-align: center; margin: 5px; padding: 10px; background-color: #EEE; border-radius: 10px; border: 2px solid #AAA;">header.part.html</div>
+					<div class="row" style="text-align: center; margin: 5px; padding: 10px; background-color: #EEE; border-radius: 10px; border: 2px solid #AAA;">body.part.html</div>
+					<div class="row" style="text-align: center; margin: 5px; padding: 10px; background-color: #EEE; border-radius: 10px; border: 2px solid #AAA;">footer.part.html</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<h4>Example</h4>
+<blockquote>
+	<p>
+		The <b>Template</b> HTML for main.tmpl.html would be:
+	</p>
+	<pre>
+	&lt;div class="container"&gt;
+		&lt;epic:page /&gt;
+	&lt;/div&gt;
+	</pre>
+
+	<p>
+		The <b>Page</b> HTML for example.page.html would be:
+	</p>
+	<pre>
+	&lt;div class="row"&gt;
+		&lt;epic:page_part part="header" /&gt;
+	&lt;/div&gt;
+	&lt;hr&gt;
+	&lt;div class="row"&gt;
+		&lt;epic:page_part part="body" /&gt;
+	&lt;/div&gt;
+	&lt;hr&gt;
+	&lt;div class="row"&gt;
+		&lt;epic:page_part part="footer" /&gt;
+	&lt;/div&gt;
+	</pre>
+
+	<p>
+		The <b>Part</b> HTML for header.part.html could be:
+	</p>
+	<pre>
+	&lt;p&gt;Header Info&lt;/p&gt;
+	</pre>
+
+	<p>
+		The <b>Part</b> HTML for body.part.html could be:
+	</p>
+	<pre>
+	&lt;p&gt;Hello World!&lt;/p&gt;
+	</pre>
+
+	<p>
+		The <b>Part</b> HTML for footer.part.html could be:
+	</p>
+	<pre>
+	&lt;p&gt;Footer Info&lt;/p&gt;
+	</pre>
+
+	<p>The following would render:</p>
+	<div class="container">
+		<div style="padding: 10px; border: 1px solid #ccc; border-radius: 10px;">
+			<div class="container">
+				<div class="row">
+					<p>Header Info</p>
+				</div>
+				<hr>
+				<div class="row">
+					<p>Hello World!</p>
+				</div>
+				<hr>
+				<div class="row">
+					<p>Footer Info</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</blockquote>

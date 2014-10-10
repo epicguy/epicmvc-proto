@@ -1,0 +1,110 @@
+
+<li class="&App/V/is_overview#?active;">
+	<a class="link" e-click="go_overview">Developer Overview</a>
+</li>
+
+<li class="&App/V/is_models#?active;">
+	<a class="link" e-click="go_models">Models</a>
+</li>
+<e-if set="&App/V/is_models;">
+	<div class="models_sub_nav">
+		<ul class="nav nav-override sidebar-subnav">
+			<li class="&App/V/is_m_create#?active;">
+				<a class="link" e-click="go_models_create" href="#models_create">Creating a Model</a>
+			</li>
+			<li class="&App/V/is_m_install#?active;">
+				<a class="link" e-click="go_models_install" href="#models_install">Installing a Model</a>
+			</li>
+			<li class="&App/V/is_m_state#?active;">
+				<a class="link" e-click="go_models_state" href="#models_state">Model State</a>
+			</li>
+			<li class="&App/V/is_m_tables#?active;">
+				<a class="link" e-click="go_models_tables" href="#models_tables">View Tables</a>
+			</li>
+			<li class="&App/V/is_m_actions#?active;">
+				<a class="link" e-click="go_models_actions" href="#models_actions">Actions</a>
+			</li>
+			<li class="&App/V/is_m_forms#?active;">
+				<a class="link" e-click="go_models_forms" href="#models_forms">Using Forms</a>
+			</li>
+		</ul>
+	</div>
+</e-if>
+
+<li class="&App/V/is_views#?active;">
+	<a class="link" e-click="go_views">Views</a>
+</li>
+<e-if set="&App/V/is_views;">
+	<div class="views_sub_nav">
+		<ul class="nav nav-override sidebar-subnav">
+			<li class="&App/V/is_v_overview#?active;">
+				<a class="link" e-click="go_views_overview" href="#views_overview">Overview</a>
+			</li>
+			<li class="&App/V/is_v_ppt#?active;">
+				<a class="link" e-click="go_views_ppt" href="#page_part_tmpl">Pages, Parts, and Templates</a>
+			</li>
+			<li class="&App/V/is_v_data#?active;">
+				<a class="link" e-click="go_views_data" href="#views_data">Dynamic Data</a>
+			</li>
+			<li class="&App/V/is_v_links#?active;">
+				<a class="link" e-click="go_views_links" href="#links_nav">Links and Navigation</a>
+			</li>
+			<li class="&App/V/is_v_forms#?active;">
+				<a class="link" e-click="go_views_forms" href="#forms_fields_buttons">Forms, Fields, and Buttons</a>
+			</li>
+			<li class="&App/V/is_v_logic#?active;">
+				<a class="link" e-click="go_views_logic" href="#conditional_logic">Conditional Logic</a>
+			</li>
+			<li class="&App/V/is_v_tags#?active;">
+				<a class="link" e-click="go_views_tags" href="#other_tags">Other Tags</a>
+			</li>
+			<li class="&App/V/is_v_fists#?active;">
+				<a class="link" e-click="go_views_fists" href="#forms_fists">Forms &amp; FISTs</a>
+			</li>
+			<li class="&App/V/is_v_issues#?active;">
+				<a class="link" e-click="go_views_issues" href="#issues_messages">Issues &amp; Messages </a>
+			</li>
+		</ul>
+	</div>
+</e-if>
+
+
+<li class="&App/V/is_ctrl#?active;">
+	<a class="link" e-click="go_controller">Controller</a>
+</li>
+<e-if set="&App/V/is_ctrl;">
+<div class="ctrl_sub_nav">
+		<ul class="nav nav-override sidebar-subnav">
+			<li class="&App/V/is_c_overview#?active;">
+				<a class="link" e-click="go_ctrl_overview" href="#ctrl_overview">Overview</a>
+			</li>
+			<li class="&App/V/is_c_app#?active;">
+				<a class="link" e-click="go_ctrl_app" href="#ctrl_app">App File</a>
+			</li>
+			<li class="&App/V/is_c_options#?active;">
+				<a class="link" e-click="go_ctrl_options" href="#ctrl_options">OPTIONS</a>
+			</li>
+			<li class="&App/V/is_c_models#?active;">
+				<a class="link" e-click="go_ctrl_models" href="#ctrl_models">MODELS</a>
+			</li>
+			<li class="&App/V/is_c_flows#?active;">
+				<a class="link" e-click="go_ctrl_flows" href="#ctrl_flows">FLOWS, TRACKS, STEPS</a>
+			</li>
+			<li class="&App/V/is_c_clicks#?active;">
+				<a class="link" e-click="go_ctrl_clicks" href="#ctrl_clicks">CLICKS</a>
+			</li>
+			<li class="&App/V/is_c_results#?active;">
+				<a class="link" e-click="go_ctrl_results" href="#ctrl_results">RESULTS</a>
+			</li>
+			<li class="&App/V/is_c_macros#?active;">
+				<a class="link" e-click="go_ctrl_macros" href="#ctrl_macros">MACROS</a>
+			</li>
+		</ul>
+	</div>
+</e-if>
+<li class="&App/V/is_api_ref#?active;">
+	<a class="link" e-click="go_api">API Reference</a>
+</li>
+<li class="&App/V/is_examples#?active;">
+	<a class="link" e-click="go_examples">Doc Syntax Examples</a>
+</li>

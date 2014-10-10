@@ -1,0 +1,193 @@
+<div class="code-section">
+	<h3>For main sections &lt;h3&gt;</h3>
+	<h4>For sub sections &lt;h4&gt;</h4>
+	<p>For normal stuff &lt;p&gt;</p>
+</div>
+<div class="code-section">
+	<h3>Marking code &lt;code&gt;:</h3>
+	For example,
+	<code>&lt;epic:if&gt;</code>
+	can be marked as code.
+</div>
+<div class="code-section">
+	<h3>User typing instructions &lt;kbd&gt;:</h3>
+	To switch directories, type
+	<kbd>cd</kbd>
+	followed by the name of the directory.<br> To edit settings, press
+	<kbd>
+		<kbd>ctrl</kbd>
+		+
+		<kbd>,</kbd>
+	</kbd>
+</div>
+<div class="code-section">
+	<h3>Example code snippet &lt;pre&gt;:</h3>
+	<h4>Coffeescript:</h4>
+	<pre class="coffeescript">
+# Divisions
+x = 6/foo/i
+x = 6 /foo
+x = 6 / foo
+x = 6 /foo * 2/gm
+x = f /foo
+x = f / foo / gm
+x = f /foo * 2/6
+
+# Regexps
+x = /\//
+x = /\n/
+x = /ab\/ ab/
+x = f /6 * 2/ - 3
+x = f /foo * 2/gm
+x = if true then /\n/ else /[.,]+/
+x = ///^key-#{key}-\d+///
+
+grade = (student, period=(if b? then 7 else 6), messages={"A": "Excellent"}) ->
+  if student.excellentWork
+    "A+"
+  else if student.okayStuff
+    if student.triedHard then "B" else "B-"
+  else
+    "C"
+
+square = (x) -> x * x
+
+two = -> 2
+
+math =
+  root:   Math.sqrt
+  square: square
+  cube:   (x) -> x * square x
+
+race = (winner, runners...) ->
+  print winner, runners
+
+class Animal extends Being
+  constructor: (@name) ->
+
+  move: (meters) ->
+    alert @name + " moved #{meters}m."
+
+hi = `function() {
+  return [document.title, "Hello JavaScript"].join(": ");
+}`
+
+heredoc = """
+CoffeeScript subst test #{ 010 + 0xf / 0b10 + "nested string #{ /\n/ }"}
+"""
+
+###
+CoffeeScript Compiler v1.2.0
+Released under the MIT License
+###
+
+OPERATOR = /// ^ (
+?: [-=]>             # function
+) ///
+	</pre>
+	<h4>Javascript:</h4>
+	<pre class="javascript">
+function $initHighlight(block, flags) {
+  try {
+    if (block.className.search(/\bno\-highlight\b/) != -1)
+      return processBlock(block.function, true, 0x0F) + ' class=""';
+  } catch (e) {
+    /* handle exception */
+    var e4x =
+        <div>Example
+            <p>1234</p></div>;
+  }
+  for (var i = 0 / 2; i < classes.length; i++) { // "0 / 2" should not be parsed as regexp
+    if (checkCondition(classes[i]) === undefined)
+      return /\d+[\s/]/g;
+  }
+  console.log(Array.every(classes, Boolean));
+}		
+	</pre>
+	<h4>CSS:</h4>
+	<pre class="css">
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  body:first-of-type pre::after {
+    content: 'highlight: ' attr(class);
+  }
+  body {
+    background: linear-gradient(45deg, blue, red);
+  }
+}
+
+@import url('print.css');
+@page:right {
+ margin: 1cm 2cm 1.3cm 4cm;
+}
+
+@font-face {
+  font-family: Chunkfive; src: url('Chunkfive.otf');
+}
+
+div.text,
+#content,
+li[lang=ru] {
+  font: Tahoma, Chunkfive, sans-serif;
+  background: url('hatch.png') /* wtf? */;  color: #F0F0F0 !important;
+  width: 100%;
+}		
+	</pre>
+	<h4>JSON:</h4>
+	<pre class="json">
+[
+  {
+    "title": "apples",
+    "count": [12000, 20000],
+    "description": {"text": "...", "sensitive": false}
+  },
+  {
+    "title": "oranges",
+    "count": [17500, null],
+    "description": {"text": "...", "sensitive": false}
+  }
+]		
+	</pre>
+	<h4>SQL:</h4>
+	<pre class="sql">
+BEGIN;
+CREATE TABLE "topic" (
+    -- This is the greatest table of all time
+    "id" serial NOT NULL PRIMARY KEY,
+    "forum_id" integer NOT NULL,
+    "subject" varchar(255) NOT NULL -- Because nobody likes an empty subject
+);
+ALTER TABLE "topic" ADD CONSTRAINT forum_id FOREIGN KEY ("forum_id") REFERENCES "forum" ("id");
+
+-- Initials
+insert into "topic" ("forum_id", "subject") values (2, 'D''artagnian');
+
+select /* comment */ count(*) from cicero_forum;
+
+-- this line lacks ; at the end to allow people to be sloppy and omit it in one-liners
+/*
+but who cares?
+*/
+COMMIT		
+	</pre>
+	
+</div>
+<div class="code-section">
+	<h3>Another way of marking code &lt;var&gt;:</h3>
+	<var>y = mx + b</var>
+</div>
+<div class="code-section">
+	<h3>Used for Sample Output &lt;samp&gt;:</h3>
+	<samp>This text is meant to be treated as sample output from a computer program.</samp>
+</div>
+<div class="code-section">
+	<h3>Standard Blockquote &lt;blockquote&gt;:</h3>
+	<blockquote>
+		<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.</p>
+	</blockquote>
+</div>
+<div class="code-section">
+	<h3>Highlighting &lt;mark&gt;:</h3>
+	You can use the mark tag to
+	<mark>highlight</mark>
+	text.
+</div>

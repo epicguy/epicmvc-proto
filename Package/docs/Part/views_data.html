@@ -1,0 +1,154 @@
+<h3>Dynamic Data: Accessing Model View Tables</h3>
+<p>
+	Outputting dynamic, variable data within the 'View' is done by accessing 'Tables' made available through a 'Model'. The 'View' simply has to reference the information defined in a 'Table' and whenever the 'Model' changes the data, EpicMvc will re-draw the page, and the new data will be displayed.
+</p>
+<p>
+	A 'Model' will typically expose it's data as either a single row or multiple row 'Table'. A 'Model' even has the ability to expose a 'Nested Table' within any row of any other 'Table' it's making available to the 'View'. There are countless possibilities of how Model Tables can be designed, so review the documentation for a specific Model to see what data is available to the view.
+</p>
+
+
+<br/>
+<h4>Single Row Table</h4>
+<p>
+	A single row 'Table' is typically designed so that the View can quickly and easily access it's data. Because there is only one row in the table, the 'View' can simply specify 3 things to access the data: The name of the 'Model', the name of the 'Table', and the name of the 'Column' of data interested in. The syntax used by the 'View' is these three names separated by slashes, preceded by an ampersand, and terminated with a semicolon as follows: <mark>&amp;ModelName/TableName/colName;</mark>
+</p>
+<br/>
+<h5>Example</h5>
+<blockquote>
+<pre>
+&lt;p&gt;
+	Team Name: <mark>&amp;League/Options/selected_team_name;</mark> &lt;br&gt;
+	Team Owner: <mark>&amp;League/Options/selected_team_owner;</mark> &lt;br&gt;
+	Place: <mark>&amp;League/Options/current_place;</mark> &lt;br&gt;
+&lt;/p&gt;
+</pre>
+
+	<p>
+	Team Name: Kershawshank Redemption <br/>
+	Team Owner: Joe Smith <br/>
+	Place: 8th <br/>
+	</p>
+</blockquote>
+
+
+<br/>
+<h4>Multiple Row Table</h4>
+<p>
+	When data is exposed using a multiple row Table, EpicMvc provides the <code>&lt;epic:foreach table="ModelName/TableName"&gt;</code> tag to draw the HTML content defined inside the tag for each row of the Model Table in the <mark>table=</mark> attribute. This is a convienient way to define the HTML once for a single row, but render it multiple times with dynamic data for each row.
+</p>
+<p>
+	Once inside the <code>&lt;epic:foreach&gt;</code> tag, row data can be accessed by using the syntax: <code>&amp;TableName/colName;</code>
+</p>
+<h5>Example</h5>
+<blockquote>
+<pre>
+&lt;table class="table table-condensed table-striped"&gt;
+	&lt;tr&gt;&lt;th&gt;Team&lt;/th&gt;&lt;th&gt;Points&lt;/th&gt;&lt;/tr&gt;
+	&lt;epic:foreach table="League/Standing"&gt;
+		&lt;tr&gt;&lt;td&gt;<mark>&amp;Standing/team_name;</mark>&lt;/td&gt;&lt;td&gt;<mark>&amp;Standing/points;</mark>&lt;/td&gt;&lt;/tr&gt;
+	&lt;/epic:foreach&gt;
+&lt;/table>
+</pre>
+<table class="table table-condensed table-striped">
+	<tr><th>Team</th><th>Points</th></tr>
+	<tr><td>Kershawshank Redemption</td><td>99</td></tr>
+	<tr><td>Hardmore Lumber</td><td>87</td></tr>
+	<tr><td>Bill's Awesome Team</td><td>84</td></tr>
+	<tr><td>Operation Trumbo Drop</td><td>76</td></tr>
+	<tr><td>Yeah Jeets</td><td>54</td></tr>
+</table>
+</blockquote>
+
+
+<br/>
+<h4>Nested Sub-Table</h4>
+<p>
+	Tables can be nested inside a row. To access the Nested Table, simply use another <code>&lt;epic:foreach&gt;</code> tag inside the outer 'epic:foreach' tag and set the <mark>table</mark> attribute using the syntax: <code>table="OuterTable/InnerTable"</code>.
+</p>
+<h5>Example</h5>
+<blockquote>
+<pre>
+&lt;table class="table table-condensed table-striped">
+	&lt;tbody>
+		&lt;tr>&lt;th>Team&lt;/th>&lt;th>Player&lt;/th>&lt;/tr>
+		<mark>&lt;epic:foreach table="League/Roster"></mark>
+			&lt;tr>
+				&lt;td rowspan="3" class="col-md-3">&amp;Roster/team_name;&lt;/td>
+				&lt;td>&nbsp;&lt;/td>
+			&lt;/tr>
+			<mark>&lt;epic:foreach table="Roster/Player"&gt;</mark>
+				&lt;tr>
+					&lt;td>&amp;Player/first_name; &amp;Player/last_name;&lt;/td>
+				&lt;/tr>
+			&lt;/epic:foreach>
+		&lt;/epic:foreach>
+	&lt;/tbody>
+&lt;/table>
+</pre>
+<table class="table table-condensed table-striped">
+	<tbody>
+		<tr><th>Team</th><th>Player</th></tr>
+		<tr>
+			<td rowspan="4" class="col-md-3">Kershawshank Redemption</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>Carlos Gonzalez</td>
+		</tr>
+		<tr>
+			<td>Clayton Kershaw</td>
+		</tr>
+		<tr>
+			<td>Nolan Arenado</td>
+		</tr>
+		<tr>
+			<td rowspan="4" class="col-md-3">Operation Trumbo Drop</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>Mark Trumbo</td>
+		</tr>
+		<tr>
+			<td>Troy Tulowitzki</td>
+		</tr>
+		<tr>
+			<td>Bryce Harper</td>
+		</tr>
+		<tr>
+			<td rowspan="4" class="col-md-3">Yeah Jeets</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>Derek Jeter</td>
+		</tr>
+		<tr>
+			<td>Billy Hamilton</td>
+		</tr>
+		<tr>
+			<td>Andrew McCutcheon</td>
+		</tr>
+	</tbody>
+</table>
+</blockquote>
+
+<br/>
+<h4>Using a Table Alias Name</h4>
+<p>
+	An alias can be used within the <mark>&lt;epic:foreach&gt;</mark> tag by using the attribute: <mark>alias="TableAlias"</mark>. This is useful if the table name is long, or you would like to use a single page_part for different tables.
+</p>
+<h5>Example</h5>
+<blockquote>
+<pre>
+&lt;table class="table table-condensed table-striped"&gt;
+	&lt;tr&gt;&lt;th&gt;Team&lt;/th&gt;&lt;th&gt;Points&lt;/th&gt;&lt;/tr&gt;
+	&lt;epic:foreach table="League/Standing" <mark>alias="S"</mark>&gt;
+		&lt;tr&gt;&lt;td&gt;<mark>&amp;S/team_name;</mark>&lt;/td&gt;&lt;td&gt;<mark>&amp;S/points;</mark>&lt;/td&gt;&lt;/tr&gt;
+	&lt;/epic:foreach&gt;
+&lt;/table>
+</pre>
+</blockquote>
+
+
+
+
+

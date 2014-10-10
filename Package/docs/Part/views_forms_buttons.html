@@ -1,0 +1,64 @@
+<h3>Forms, Form Fields, and Buttons</h3>
+<p>
+	Forms are created using a standard <code>&lt;form&gt;</code> tag. The HTML for Form Fields and thier attributes are created using the tag: <code>&lt;epic:form_part form="FormName"&gt;</code>. By default, EpicMvc will attempt to draw each field defined for the form using a generic HTML part that is included with EpicMvc.
+</p>
+<p>
+	Within a form, the clickable buttons are created by using the tag <code>&lt;epic:form_action action="my_action"&gt;</code>, or via data attributes on a valid HTML element using the syntax: <code>data-action="click:my_action:true"</code>.
+</p>
+<p>Assuming you have created a form called 'Login' with any number of fields, and wish to create a button ("Login") the HTML might look like this:</p>
+<blockquote>
+<h5>login.page.html</h5>
+<pre>
+&lt;form&gt;
+	&lt;div class="container"&gt;
+		&lt;epic:form_part form="Login"/&gt;
+	&lt;/div&gt;
+	&lt;epic:form_action action="login" 	value="Login" class="btn btn-primary" /&gt; &lt;!-- via Tag --&gt;
+	&lt;button data-action="click:login:true" value="Login" class="btn btn-primary" /&gt; &lt;!-- via data attributes --&gt;
+&lt;/form&gt;
+</pre>
+</blockquote>
+
+<p><b>Notes:</b> &lt;form&gt; method will default to POST.</p>
+
+<p>To create a form and form fields or edit attributes of those fields, see the topic: <a class="link" data-action="click:go_views_fists" href="#forms_fists">Creating Forms and Editing FISTs</a>.</p>
+
+<h4>Custom Form HTML</h4>
+<p>
+	Custom HTML for a Form can be used by specifying the HTML View Part within the attribute: <code>part=""</code> on the <code>&lt;epic:form_part/&gt;</code> tag. When using a custom View Part to display a Form, EpicMvc will use the "Tag" Model to populate the Field information. The "Tag" Model exposes 'Control' and 'Field' tables that can be looped on to display every Control or Field that is defined for that Form.
+</p>
+<p>
+	Using a custom View Part to display the Form, the above example could be written as follows:
+</p>
+
+<h4>Example</h4>
+<blockquote>
+<h5>login.page.html</h5>
+<pre>
+&lt;form&gt;
+	&lt;epic:form_part form="Login" part="fist_login"/&gt; &lt;!-- uses the part called fist_login.part.html --&gt;
+	&lt;epic:form_action action="login" value="Login" class="btn btn-primary" /&gt;
+&lt;/form&gt;
+</pre>
+<h5>fist_login.part.html</h5>
+<pre>
+&lt;epic:foreach table="Tag/Field">
+	&lt;div>
+		&lt;epic:foreach table="Field/UserName">
+			&lt;input type="&amp;UserName/type;"
+				name="&amp;UserName/name;"
+				value="&amp;UserName/value;"
+				placeholder="&amp;UserName/label;">
+		&lt;/epic:foreach>
+	&lt;/div>
+	&lt;div>
+		&lt;epic:foreach table="Field/Password">
+			&lt;input type="&amp;Password/type;"
+				name="&amp;Password/name;"
+				value="&amp;Password/value;"
+				placeholder="&amp;Password/label;">
+		&lt;/epic:foreach>
+	&lt;/div>
+&lt;/epic:foreach>
+</pre>
+</blockquote>

@@ -1,0 +1,33 @@
+<style>
+.alert {
+	text-align: left;
+	box-shadow: 0px 4px 8px #999;
+}
+</style>
+
+<e-if table_is_not_empty="App/Message">
+	<div class="alert alert-success alert-dismissable fade in">
+		<button data-dismiss="alert" class="close" type="button">
+			<i class="glyphicon glyphicon-remove"></i>
+		</button>
+		<e-foreach table="App/Message">
+			<p title="&Message/title;">&Message/issue;</p>
+		</e-foreach>
+	</div>
+	<e-defer name="fade-out">
+		<!-- window.setTimeout($.proxy(function() { $('.alert-success').fadeTo(500, 0).slideUp(400, function(){ $(this).remove(); }); }, this), 3000); -->
+	</e-defer>
+</e-if>
+
+<e-if table_is_not_empty="App/Issue">
+	<div class="alert alert-danger alert-dismissable fade in">
+		<button type="button" class="close" data-dismiss="alert">
+			<i class="glyphicon glyphicon-remove"></i>
+		</button>
+		<e-foreach table="App/Issue">
+			<p title="&Issue/title;">&Issue/issue;</p>
+		</e-foreach>
+	</div>
+</e-if>
+
+<div style="clear:both"></div>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="EpicMvc Documentation">
+  <meta name="author" content="DV Mobile">
+  <title>EpicMvc - Documentation</title>
+
+  <!-- 3PP Inlcuded CSS Frameworks
+  -->
+  <link rel="stylesheet" type="text/css" href="css/font-awesome.css"></link>
+  <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
+  <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.2/styles/default.min.css">
+
+  <!-- 3PP Included JS Frameworks
+  -->
+  <script type="text/javascript" charset="utf-8" src="js/jquery-2.1.1.js"></script>
+  <script type="text/javascript" charset="utf-8" src="js/bootstrap.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.2/highlight.min.js"></script>
+
+  <!-- EpicMvc v2.0 stuff
+  <script type="text/javascript" src="html/EpicMvc-One-2.0.0-latest.js"></script>
+  -->
+  <script type="text/javascript" charset="utf-8" src="html/mithril.js"></script>
+  <script type="text/javascript" charset="utf-8" src="html/EpicCore.js"></script>
+  <script type="text/javascript" charset="utf-8" src="html/Package/Base/app.js"></script>
+  <script type="text/javascript" charset="utf-8" src="html/Package/BaseDevl/app.js"></script>
+  <script type="text/javascript" charset="utf-8" src="html/Package/BaseDevl/Extra/LoadStrategy.js"></script>
+
+  <!-- Doc App
+  -->
+  <script type="text/javascript" charset="utf-8" src="Package/docs/app.js" ></script>
+  <script type="text/javascript" charset="utf-8" src="Package/docs/js/jquery.scrollTo.js" ></script>
+
+  <!-- Doc CSS
+  -->
+  <link rel="stylesheet" type="text/css" href="Package/docs/css/_style.css" >
+  <link rel="stylesheet" type="text/css" href="Package/docs/css/_highlight.css" >
+
+</head>
+<body id="base-body" >
+
+<!-- Init Script that sets the App in motion -->
+<script type="text/javascript">
+  _log1= _log2
+  E.run( ['Base', 'BaseDevl', 'docs'], {
+                        load_dirs: [
+                                {dir:'html/Package/', pkgs:['Base','BaseDevl']},
+                                {dir:'Package/', pkgs:['docs']}
+                        ]}
+            );
+</script>
+
+</body>
+</html>

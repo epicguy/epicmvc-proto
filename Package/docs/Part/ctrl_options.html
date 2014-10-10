@@ -1,0 +1,25 @@
+<h3>OPTIONS</h3>
+<p><code>OPTIONS</code> is a top level key of the Controller structure and is used to define various settings and defaults for the app.
+</p>
+
+<h4>Example</h4>
+<pre>
+window.EpicMvc.app$myPkg=
+	OPTIONS:
+		login: 		flow: 'anon'
+		template:	default: 'logged_out', popup: 'modal_popup', pop:'pop'
+		settings:	group: 'main_group', show_issues: 'inline'
+</pre>
+
+<h4>login:</h4>
+<p>The <code>login: flow:</code> option is used to tell the Controller which flow to start the application under.
+</p>
+
+<h4>template:</h4>
+<p>
+The <code>template:</code> option is used to define the file name of the default HTML template, <code>default:</code>, along with any other Modal templates that will be used in the application. In the example above, <code>popup</code> is the name for the modal that will be referenced by the Controller within the Flow, and <code>'modal_popup'</code> is the name of the file on disk <mark>modal_popup.tmpl.html</mark> that holds the HTML for that modal.
+</p>
+
+<h4>settings:</h4>
+<p>The <code>settings:</code> option is used to define which Fist Group, <code>group:</code>, this controller should be dealing with and weather or not to display form issues 'inline', <code>show_issues: 'inline'</code>. Inline issues are displayed next to the field that has an issue as opposed to a generic issue message at the top of the page.
+</p>

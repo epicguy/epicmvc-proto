@@ -1,0 +1,38 @@
+<h3>Issues and Messages: mapping return tokens to user friendly text</h3>
+<p>
+The JavaScript developer returns all user errors as 'tokens.' These tokens are then mapped by EpicMvc to user readable text.
+The <mark>issues.coffee</mark> file contains all mapping of issue tokens, to user text, and allows also for parameters to be included in the text. </p>
+<p>
+For example, if an item is out of stock, but the item name needs to be included in the error message, then the developer might return the token "OUT_OF_STOCK" along with a parameter value of "Blues Clues Treasure Chest".
+The map for this issue in the <mark>issues.coffee</mark> file might be: "Sorry <code>%1%</code> is out of stock."
+</p>
+
+<p>
+Issues can also be specialized by application, such that the same 'OUT_OF_STOCK' token can have its own text, when it occurs while placing an item in a wish-list vs. putting the item in the cart - or when the item goes out of stock after the user is in the checkout process.
+</p>
+<p>Issues and Messages are organized in a filed named issues.coffee</p>
+
+<legend>issues.coffee <span style="font-size: 11px; font-weight: normal;" class="label label-primary">coffeescript</span></legend>
+<pre class="coffeescript">
+window.EpicMvc.issues$app=
+	default:
+		default: [
+
+			[ /OUT_OF_STOCK/, 'Sorry %1% is out of stock.']
+
+			[ /MUST_MATCH_EMAIL/, 'The "Email" field must match the "Confirm Email" field.']
+			[ /NONE_SELECTED/, 'Please Select a Valid Row']
+			[ /SUCCESS/, 'Great Success!']
+			[ /UNCAUGHT_ERROR/, 'Unknown Error: %1%']
+			[ /MISSING/, 'Missing REST param: (%1%)']
+			[ /FORM_ERRORS/, 'There were errors on the form, see below.']
+			[ /FIELD_EMPTY_TEXT/, '%3%']
+			[ /FIELD_EMPTY/, 'Required'] # SI's version
+			[ /FIELD_EMPTY/, '%2:1% is a required field.']
+			[ /FIELD_ISSUE_TEXT/, '%3%']
+			[ /FIELD_ISSUE/, '%2:1% is invalid.']
+			[ /UNRECOGNIZED/, 'Unexpected server response: (%1%)']
+			[ /.*/, 'Unmapped Issues Token: (%0%). Update issues.coffee to fix.']
+			[ /.*/, 'Unknown error (Error: 900).']
+		]
+</pre>

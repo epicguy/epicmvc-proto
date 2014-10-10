@@ -1,0 +1,32 @@
+<h3>What is EpicMvc?</h3>
+
+<p>EpicMvc is a revolutionary architecture that allows non-programmers control over the "flow" of web pages within a Web-based application. The concept has its roots in the idea of 'scripting GUI objects' - much like writing Macros for Microsoft Word. The primary change in the architecture is to introduce a 'Controller', from the Smalltalk concept of 'Model, View, Controller (MVC), which will 'map' clickable-events within the HTML to actual JavaScript business logic calls. This 'map' then becomes configurable, and in the spirit of 'workflow' allows the configurator to determine the next 'web page' to display based on these events. In addition, because all JavaScript logic now has a list of 'actions' that can be invoked by the 'Controller', the configurator is free to script multiple actions (i.e. macros) to simulate what an end user may have previously done by navigating the site.</p>
+
+<h3>Motivation</h3>
+
+<p>Much of the development effort involved in creating a web based application is tied up in the flow of web pages, which must be simultaneously developed along with the HTML and the core business logic. Introducing a 'controller' to abstract the flow of web pages from these other two areas of development (the business logic, and the HTML) has these benefits:</p>
+<ul>
+<li>Business logic (JavaScript code) is simpler to read and modify, development cycles are shorter</li>
+<li>Code is more re-usable by being modularized, and organized into 'Classes'</li>
+<li>Non-programmers have the flexibility to configure complex user interactions, including shortcuts, without the need to perform additional QA cycles</li>
+<li>The requirements cycle is much shorter due to the fact that the required page-flows do not have to be finalized nor even communicated to the development staff</li>
+</ul>
+
+<h3>Development Cycle Advantages</h3>
+
+<p>Once the HTML has been disconnected from the JavaScript Business logic, Product development will no longer need to be closely in sync with the development of the JavaScript logic. The HTML need only specify a 'label' for an event within a portion of a web page, and let Product Development make the final connections to the business logic. By eliminating this dependency and the need for synchronizing efforts, HTML development can proceed unencumbered by the JavaScript + DB development work with its own time schedules, risks, and changing specifications.</p>
+
+<h3>Simplicity of JavaScript Business Logic</h3>
+
+<p>Today, much of the logic in JavaScript (or server side logic, such as PHP) is coded to handle, not only the core business functionality itself, but also the management of the 'flow' of the web page interface, as well as all the state handling from one form to the next, or to manage a 'context' - i.e. a logged in customer or agent.</p>
+
+<p>The legacy code has references to each sub-page created by the HTML team, and the names of each button and of each form control. Cookie values are routinely read and written to, to communicate between different parts of the same code from web page to web page.</p>
+
+<p>Additionally the legacy code must handle the following to properly process any request: (1) Which button/link that was pressed on a page (2) the last web page that the user came from (3) the next web page the user is going to. Within (1), the actual next web page may be decided based on several factors. Within (2) for any exceptions that occur in handling the previous web page, a determination is made to flow back to this page - which is then handled by the last piece of logic (3). Sometimes there is a failure in (3) which requires a major code change to handle this 'cascading exception' possibility.</p>
+
+<p>The EpicMvc architecture removes all such references from the business logic layer, and places it into a 'controller' configuration file with a simplified syntax. What is left for the developer, is to create and implement well defined 'actions' and to provide a method for populating table data referenced by Product development (designers).</p>
+
+<h3>Architecture Diagram</h3>
+<a href="Package/docs/images/EpicDiagram.jpg" target="_blank">
+	<img src="Package/docs/images/EpicDiagram.jpg" style="width:100%;">
+</a>

@@ -1,0 +1,40 @@
+<h3>MODELS</h3>
+<p><code>MODELS</code> is a top level key of the Controller structure and is used to define the Models (JavaScript Business Logic Classes) that are to be used in the application.
+</p>
+
+<h4>Example</h4>
+<pre>
+window.EpicMvc.app$myPkg=
+	MODELS:
+		League:		class: 'League',	inst: 'mpLg', forms: 'EditPlayer,AddPlayer'
+		Wist:		class: 'Wist',		inst: 'mpW'
+		Self:		class: 'Self',		inst: 'mpU'
+		User:		class: 'Self',		inst: 'mpU' # Alias for Self Model
+</pre>
+
+<h4>Define a Model</h4>
+<p>
+A Model is made available by defining it as a key under MODELS. This key is the name that will be used by the View and Controller when referencing the Model e.g <code>League</code> or <code>User</code>. The <code>class:</code> attribute is the name of the Javascript Class in code where the business logic resides, and the <code>inst:</code> attribute is the name of the instance created after calling <code>new</code> on the Javascript class.
+</p>
+
+<h4>Associate Forms to a Model</h4>
+<p>
+Forms are associated with a Model by using the <code>forms:</code> attribute and declaring the names of the Forms in a comma separated string. When a form needs to be posted or populated, the controller will ask the Model associated with the form to do the work.
+</p>
+
+<h4>Creating a Model Alias</h4>
+<p>
+It is possible to create an Alias name for a Model. In the example above, <code>User</code> is an alias for <code>Self</code>, where both refer to the same instance of the 'Self' class.
+</p>
+
+<h4>Built-in EpicMvc Models</h4>
+<p>EpicMvc has a few built-in Models that are made available to you. They are defined in the Base Package app.coffee file and are merged in to the App Controller at run time.
+</p>
+<pre>
+window.EpicMvc.app$Base=
+	MODELS:
+		Pageflow: class: "Pageflow$Base",   inst: "bP"
+		Security: class: "NoSecurity$Base", inst: "bS"
+		Property: class: "Property$Base",   inst: "bPr"
+		Tag:      class: "TagExe$Base",     inst: "bT"
+</pre>

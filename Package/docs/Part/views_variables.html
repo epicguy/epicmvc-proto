@@ -1,0 +1,29 @@
+<h3>Variables: Accessing Dynamic Data in Lists</h3>
+	<p>Outputing or using variables on pages/parts or in code is really accessing dynamic data in what Epic calls "Lists".</p>
+	<p>When variables are output in the code, they are scalar string values. However when used in other epic functions, they can be type specific (number, string, bool, etc); subject to the rules of JavaScript.</p>
+	<div>
+		To reference dynamic data in a 'List', you use three words separated by slashes, and preceded by an ampersand, and terminated with a semicolon. These rules are designed to allow you to insert a data value anywhere inside the content or markup in the HTML. The three parts of a list-data-value, are 'view-name', 'list-set-name' and 'list-item-name'. These are placed as follows: &amp;view-name/list-set-name/list-item-name;
+		<h4>
+			<b>Example:</b> Suppose you want to display today's date.
+		</h4>
+		<blockquote>
+			<b style="display: block; margin: 5px 0;">view-name</b>
+			<div>You first need to know what view-name to use. A veiw-name is linked with the JavaScript 'class' that makes dynamic data available to the HTML. We can use the sample 'Simple' application, which has the view-name of &nbsp;'Simple'.</div>
+			<b style="display: block; margin: 5px 0;">list-set-name</b>
+			<div>Next, you need the name of the 'set' of data values you are interested in. Typically, the JavaScript developer will create online documentation showing you which list-set-names are available for a give view-name. In our case, the list-set-name is 'General' to describe a set of general values made available by this JavaScript class.</div>
+			<b style="display: block; margin: 5px 0;">list-item-name</b>
+			<div>Within each list-set, are a set of items by name. You choose an item by using its name as the third 'word' in a list-set reference. In our case, the developer has called "today's date" value: "date".</div>
+		</blockquote>
+		<h4>Putting it all together</h4>
+		<p>Now, we can place this data list value, into our content; in our HTML:</p>
+		<pre>
+Today is <mark>&amp;Simple/General/date;</mark></pre>
+		<h4>Advanced formatting</h4>
+		<p>There are functions defined by the JavaScript programmers which can format a data value, for use in various places in the HTML. Suppose that a value is going to be used in a query, but might contain spaces, ampersand, equal sign, etc.:</p>
+		<pre class="html">&lt;a href="/search.html?keywords=<mark>&amp;Search/terms/last_keywords;</mark>"&gt;Link&lt;/a&gt;</pre>
+		<p>The value needs to be formatted for use as a value inside the URL. Assuming the programmer created the function needed, the HTML would specify instead:</p>
+		<pre class="html">&lt;a href="/search.html?keywords=<mark>&amp;Search/terms/last_keywords#url(query_value);</mark>"&gt;Link&lt;/a&gt;</pre>
+		</pre>
+	</div>
+
+	

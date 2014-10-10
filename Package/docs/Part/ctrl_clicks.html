@@ -1,0 +1,177 @@
+<h3>CLICKS</h3>
+<p></p>
+<h4>Main Concept</h4>
+<p>
+	A <mark>CLICK</mark> is a labeled event within the View of the application, and is handled by the 'Controller'. The main concept is that the 'View' can label buttons, images, and just about any other HTML element with a 'Click' event to represent the meaning of 'clicking' on that HTML element. The 'Controller' is aware of the context of the 'Click' and can execute the 'Click' based on the Flow of the Application, such as changing the 'View' that is displayed, or calling some Model to perform an action.
+</p>
+<p>
+	For example, the 'View' might use the exact same 'Submit' button in multiple places throughout the application. Instead of having to program what each 'Submit' button does, the HTML can just draw the button and assign a 'submit' click to it. Whenever the button is clicked, the 'Contoller' can do one thing for a given Flow context and a completely different thing for a different context. The 'submit' click can mean one thing in the context of a Login screen and have a different meaning in the context of Shopping Cart purchase, but the HTML is the exact same for both.
+</p>
+<h4>Click Context</h4>
+<p>
+	Using the Flows, Tracks and Steps system of the 'Controller', 'CLICKS' can be grouped together to share functionality between different HTML pages. Any particular Step will inherit any 'CLICKS' from it's Track and Flow as well as any 'CLICKS' defined only for that particular Step.
+	'CLICKS' can also be defined globaly for the application within the Controller by adding 'CLICKS' as a peer of 'OPTIONS' and 'FLOWS'.
+</p>
+<p>
+	To define a 'Click' for a particular context, simply add the <mark>CLICK</mark> attribute to the desired Global, Flow, Track or Step level as follows:
+</p>
+<pre class="coffeescript">
+# Example of Global Clicks
+window.EpicMvc.app$fantasy=
+	OPTIONS:
+		...
+	MODELS:
+		...
+	CLICKS:
+		goto_league_home: 	go: '//league_home'
+		goto_standings:		go: '//standings'
+		goto_free_agents:	go: '//free_agents'
+</pre>
+<pre class="coffeescript">
+# Example of Flow specific Clicks
+		...
+	FLOWS:
+		logged_in:
+			start: 'main'
+			template: 'logged_in'
+			CLICKS:
+				logout: go: 'logged_out//'
+			TRACKS:
+				...
+</pre>
+<pre class="coffeescript">
+# Example of Track specific Clicks
+		...
+			TRACKS:
+				view_only:
+					start: 'league_home'
+					CLICKS:
+						goto_login: go: '//login'
+					STEPS:
+						...
+</pre>
+
+<pre class="coffeescript">
+# Example of Step specific Clicks
+				...
+					STEPS:
+						...
+						login:
+							page: 'login'
+							CLICKS:
+								submit: go: 'logged_in//'
+</pre>
+
+<h4>Modifing Pageflow</h4>
+<p>
+	One of the most common uses of 'Clicks' is to modify the pageflow of the application. For example, clicking on the main banner logo at the top of the application could take you the main landing page of the application. This is accomplished with the use of the <code>go: 'flow/track/step'</code> syntax attached to a click.
+</p>
+<pre>
+	CLICKS:
+		banner_clicked:		go: 'logged_out/view_only/league_home'
+</pre>
+<p>
+	The <code>go:</code> command uses a slash ('/') separated string to tell the 'Controller' where to move next in the application. The first part of the string is the Flow, the second part is the Track and the third part is the Step. The string must contain exactly two '/', but any of the three parts can be left blank. The following table describes how the controller will handle the 'go' command.
+</p>
+<table class="table table-condensed table-striped">
+	<tr>
+		<th> Command</th><th>Description</th>
+	</tr>
+	<tr> <td><code>go: 'flow//'			</code></td> <td>Go to Flow; Use 'start' Track from the Flow; Use 'start' Step from the Track</td> </tr>
+	<tr> <td><code>go: 'flow/track/'	</code></td> <td>Go to Flow/Track; Use 'start' Step from the Track</td> </tr>
+	<tr> <td><code>go: 'flow/track/step'</code></td> <td>Go to a specific Flow, Track, Step</td> </tr>
+	<tr> <td><code>go: '/track/'		</code></td> <td>Go to Track in current Flow; Use 'start' Step from the Track</td> </tr>
+	<tr> <td><code>go: '/track/step'	</code></td> <td>Go to Track/Step in current Flow</td> </tr>
+	<tr> <td><code>go: '//step'			</code></td> <td>Go to Step in current Flow/Track</td> </tr>
+</table>
+
+
+<h4>Calling a Model Action</h4>
+<p>
+	Along with modifying the pageflow, the 'Controller' can call any 'Model' to perform an action. This is accomplished with the use of the <code>call: 'Model/action'</code> syntax. Below is an example of calling the 'Draft' Model with various actions.
+</p>
+
+<h5>Example</h5>
+<pre>
+	...
+	STEPS:
+		draft_room:  page: 'draft_room', CLICKS:
+			select_player:		call: 'Draft/choose_player',	use_fields: 'id'
+			preview_player: 	call: 'Draft/choose_player',	use_fields: 'id', p: {preview:'true'}
+			draft_player:		call: 'Draft/draft_player',	use_fields: 'id'
+			chat: 			call: 'Draft/send_msg',		use_form: 'Chat'
+</pre>
+<p>
+	The <code>call:</code> command will pass parameters to the 'Model' by using any of the attributes: <code>use_fields:</code>,<code>use_form:</code> and <code>p:</code> that are attached to a 'CLICK'.
+</p>
+
+<h5>Param Options</h5>
+<table class="table table-condensed table-striped">
+	<tr>
+		<th> Command</th><th>Params</th><th>Description</th>
+	</tr>
+	<tr> <td><code>use_fields:	</code></td> <td> 'field1,field2,...'	</td><td>Comma separated list of field names coming from the View</td> </tr>
+	<tr> <td><code>use_form:	</code></td> <td> 'FistName'			</td><td>The Name of the Fist to use</td> </tr>
+	<tr> <td><code>p:			</code></td> <td> {p1:'val1',p2:'val2'} </td><td>Custom JSON-like params</td> </tr>
+</table>
+
+<h4>Complete Example</h4>
+<pre>
+window.EpicMvc.app$fantasy=
+	OPTIONS:
+		login:		flow: logged_out
+		template:	default: 'logged_out'
+		settings:	group: 'fantasy'
+	MODELS:
+		League: class: 'League', 	inst: 'tlcLeague', 	forms: 'EditPlayer,AddPlayer'
+		Draft:  class: 'DraftRoom',	inst: 'tlcDraft', 	forms: 'Chat'
+
+	CLICKS:									# Global Clicks
+		banner_clicked:		go: '//league_home'			# Switch Step in current Flow/Track
+		goto_league_home: 	go: '//league_home'			# Switch Step in current Flow/Track
+		goto_standings:		go: '//standings'			# Switch Step in current Flow/Track
+		goto_free_agents:	go: '//free_agents'			# Switch Step in current Flow/Track
+	FLOWS:
+		logged_out:
+			start: 'view_only'
+			TRACKS:
+				view_only:
+					start: 'league_home'
+					CLICKS:						# Track specific Clicks
+						goto_login: go: '//login'		# Switch Step in current Flow/Track
+					STEPS:
+						league_home:	page: 'league_home'
+						standings:	page: 'standings'
+						free_agents:	page: 'free_agents'
+						login:
+							page: 'login'
+							CLICKS:					# Step Specific Clicks
+								submit: go: 'logged_in//'	# Switch Flow
+		logged_in:
+			start: 'main'
+			template: 'logged_in'
+			CLICKS:								# Flow specific Clicks
+				logout: go: 'logged_out//'				# Switch Flow
+			TRACKS:
+				main:
+					start: 'roster'
+					CLICKS:						# Track specific Clicks
+						enter_draft: go: '/draft/'		# Switch Track in current Flow
+						goto_roster: go: '//roster'		# Switch Step in current Flow/Track
+					STEPS:
+						roster: 	 page: 'roster'
+						league_home: page: 'league_home'
+						standings:	 page: 'standings'
+						free_agents: page: 'free_agents'
+				draft:
+					template: 'draft'
+					start: 'draft_room'
+					CLICKS:						# Track specific clicks
+						leave_draft: go: '/main/'		# Switch Track in current Flow
+					STEPS:
+						draft_room:  page: 'draft_room', CLICKS:
+							select_player: call: 'Draft/choose_player', use_fields: 'id'
+							preview_player: call: 'Draft/choose_player', use_fields: 'id', p: {preview:'true'}
+							draft_player:  call: 'Draft/draft_player', use_fields: 'id'
+							chat: call: 'Draft/send_msg', use_form: 'Chat'
+</pre>

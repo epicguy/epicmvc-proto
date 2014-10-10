@@ -1,0 +1,264 @@
+
+<h4>Field Attributes</h4>
+<table class="table table-condensed table-striped">
+	<thead>
+		<tr>
+			<th class="col-md-1">Attribute</th>
+			<th class="col-md-1">Required</th>
+			<th class="col-md-3">Example</th>
+			<th class="col-md-7">Description</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td><mark>db_nm</mark></td>
+			<td>yes</td>
+			<td>'username'</td>
+			<td>The database name of a field</td>
+		</tr>
+		<tr>
+			<td><mark>type</mark></td>
+			<td>yes</td>
+			<td>'textarea'</td>
+			<td>The type of the form field to display. See below for options.</td>
+		</tr>
+		<tr>
+			<td><mark>label</mark></td>
+			<td>no</td>
+			<td>'Confirm Password'</td>
+			<td>The label to place on a form field</td>
+		</tr>
+		<tr>
+			<td><mark>req</mark></td>
+			<td>no</td>
+			<td>true</td>
+			<td>Field must not be blank if set to true</td>
+		</tr>
+		<tr>
+			<td><mark>req_text</mark></td>
+			<td>no</td>
+			<td>'Password is required'</td>
+			<td>The text to display if the field is required, but left empty</td>
+		</tr>
+		<tr>
+			<td><mark>validate</mark></td>
+			<td>no</td>
+			<td>'regexp'</td>
+			<td>The name of the validation filter to run. See below for options.</td>
+		</tr>
+		<tr>
+			<td><mark>validate_expr</mark></td>
+			<td>no</td>
+			<td>'[0-9]{3,4}'</td>
+			<td>An expression passed to the validation filter</td>
+		</tr>
+		<tr>
+			<td><mark>issue_text</mark></td>
+			<td>no</td>
+			<td>'Password must be at least 6 characters long'</td>
+			<td>The text to display if there is an error validating the field</td>
+		</tr>
+		<tr>
+			<td><mark>max_len</mark></td>
+			<td>no</td>
+			<td>8</td>
+			<td>Return an error if the field value is larger than the max_len</td>
+		</tr>
+		<tr>
+			<td><mark>h2h</mark></td>
+			<td>no</td>
+			<td>'trimspaces:lower_case'</td>
+			<td>The spec that is passed to the H2H Pre-filter and H2H Generic Filter. See below for options.</td>
+		</tr>
+		<tr>
+			<td><mark>d2h</mark></td>
+			<td>no</td>
+			<td>'phone'</td>
+			<td>The name of the D2H filter to run. See below for options.</td>
+		</tr>
+		<tr>
+			<td><mark>d2h_expr</mark></td>
+			<td>no</td>
+			<td>'international'</td>
+			<td>An expression that gets passed to the D2H filter</td>
+		</tr>
+		<tr>
+			<td><mark>h2d</mark></td>
+			<td>no</td>
+			<td>'date'</td>
+			<td>The name of the H2D filter to run. See below for options</td>
+		</tr>
+		<tr>
+			<td><mark>h2d_expr</mark></td>
+			<td>no</td>
+			<td>'yyyy-mm-dd'</td>
+			<td>An expression that gets passed to the H2D filter</td>
+		</tr>
+		<tr>
+			<td><mark>cdata</mark></td>
+			<td>no</td>
+			<td>[1,2,3,4,5,6,7]</td>
+			<td>Data used to populate multiple choice field values. e.g. pulldown:array</td>
+		</tr>
+	</tbody>
+</table>
+
+<h4>Field Attribute Options</h4>
+<table class="table table-condensed table-striped">
+	<tbody>
+		<tr>
+			<td rowspan="9" class="col-md-1"><mark>type</mark></td>
+			<td class="col-md-2"><code>text</code></td>
+			<td class="col-md-9">Single line text box</td>
+		</tr>
+		<tr>
+			<td><code>textarea</code></td>
+			<td>Multi-line textbox</td>
+		</tr>
+		<tr>
+			<td><code>radio:array</code></td>
+			<td>Radio buttons populated with the array from cdata attribute</td>
+		</tr>
+		<tr>
+			<td><code>radio:custom</code></td>
+			<td>Radio buttons populated by the Model's fistGetFieldChoices() method</td>
+		</tr>
+		<tr>
+			<td><code>yesno</code></td>
+			<td>Checkbox</td>
+		</tr>
+		<tr>
+			<td><code>pulldown:array</code></td>
+			<td>Pulldown populated by an array of data from the cdata attribute</td>
+		</tr>
+		<tr>
+			<td><code>pulldown:custom</code></td>
+			<td>Pulldown populated by the Model's fistGetFieldChoices() method</td>
+		</tr>
+		<tr>
+			<td><code>pulldown:wist</code></td>
+			<td>Pulldown populated by the Wist Model; See cdata for details.
+			</td>
+		</tr>
+		<tr>
+			<td><code>pulldown:json_like</code></td>
+			<td>Pulldown populated with a JSON like key/value structure from the cdata atrribute.</td>
+		</tr>
+	</tbody>
+</table>
+
+<table class="table table-condensed table-striped">
+	<tbody>
+		<tr>
+			<td rowspan="3" class="col-md-1"><mark>cdata</mark></td>
+			<td class="col-md-2"><code>[val1, val2,...]</code></td>
+			<td class="col-md-9">Used by pulldown:array and radio:array. List of values that will be used as the db value and display in the HTML</td>
+		</tr>
+		<tr>
+			<td><code>[[val, opt],[val2,opt2]...]</code></td>
+			<td>Used by pulldown:array and radio:array. List of lists. Each sub-list will have a val that is used for the db, and an opt to display in the HTML</td>
+		</tr>
+		<tr>
+			<td><code>'wist_grp:wist_nm:val_nm:opt_nm'</code></td>
+			<td>Used with pulldown:wist type. Epic will call the 'Wist' Model with a table name of 'wist_grp:wist_nm' and use the 'val_nm' and 'opt_nm' of the Wist data to populate the options and values for a multiple choice input. </td>
+		</tr>
+		<tr>
+			<td><code>'yes_value'</code></td>
+			<td>Used with yesno type. Epic will assign the 'yes_value' when the checkbox is checked. Defaults to 1</td>
+		</tr>
+	</tbody>
+</table>
+
+<table class="table table-condensed table-striped">
+	<tbody>
+		<tr>
+			<td rowspan="6" class="col-md-1"><mark>validate</mark></td>
+			<td class="col-md-2"><code>phone</code></td>
+			<td class="col-md-9">Validates the value has exactly 10 digits</td>
+		</tr>
+		<tr>
+			<td><code>zip</code></td>
+			<td>Using: <code>validate_expr: '5or9'</code> validates the value is 5 or 9 digits</td>
+		</tr>
+		<tr>
+			<td><code>choice</code></td>
+			<td>Validates the value is a valid choice. If <code>validate_expr:true</code>, then the value must not be the first choice.</td>
+		</tr>
+		<tr>
+			<td><code>email</code></td>
+			<td>Validates a valid email format</td>
+		</tr>
+		<tr>
+			<td><code>regexp</code></td>
+			<td>Validate value matches the regexp on the <mark>validate_expr</mark> attribute</td>
+		</tr>
+		<tr>
+			<td><code>confirm</code></td>
+			<td>Validate value matches the field name defined in the <mark>validate_expr</mark> attribute</td>
+		</tr>
+	</tbody>
+</table>
+
+<table class="table table-condensed table-striped">
+	<tbody>
+		<tr>
+			<td rowspan="4" class="col-md-1"><mark>h2h</mark></td>
+			<td class="col-md-2"><code>trim_spaces</code></td>
+			<td class="col-md-9">Removes all whitespace</td>
+		</tr>
+		<tr>
+			<td><code>digits_only</code></td>
+			<td>Removes non-digit characters</td>
+		</tr>
+		<tr>
+			<td><code>lower_case</code></td>
+			<td>Converts to lower case</td>
+		</tr>
+		<tr>
+			<td><code>upper_case</code></td>
+			<td>Converts to upper case</td>
+		</tr>
+	</tbody>
+</table>
+
+<table class="table table-condensed table-striped">
+	<tbody>
+		<tr>
+			<td rowspan="3" class="col-md-1"><mark>d2h</mark></td>
+			<td class="col-md-2"><code>phone</code></td>
+			<td class="col-md-9">Removes non-digits; Converts to format <mark>(xxx) xxx-xxxx</mark></td>
+		</tr>
+		<tr>
+			<td><code>date</code></td>
+			<td>Converts to format <mark>m/d/y</mark></td>
+		</tr>
+		<tr>
+			<td><code>blank_is_zero</code></td>
+			<td>Converts to 0 if value is empty</td>
+		</tr>
+	</tbody>
+</table>
+
+<table class="table table-condensed table-striped">
+	<tbody>
+		<tr>
+			<td rowspan="2" class="col-md-1"><mark>h2d</mark></td>
+			<td class="col-md-2"><code>phone</code></td>
+			<td class="col-md-9">Removes non-digits</td>
+		</tr>
+		<tr>
+			<td><code>zero_is_blank</code></td>
+			<td>Converts to empty string if value is blank</td>
+		</tr>
+	</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
