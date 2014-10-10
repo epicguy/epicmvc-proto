@@ -161,7 +161,7 @@ app= (window, undef) ->
 			dup dest, source
 			#_log2 f+ depth, 'after', {dest, source}
 		return dest
-	
+
 	# Caller indicates a login event, let interested models know
 	E.login= ->
 		f= ':login'
@@ -195,13 +195,14 @@ app= (window, undef) ->
 		oFist[ inst_nm]
 
 	# Accept caller's request to start up an EpicMvc application
-	E.run= (set_appconfs, more_options) ->
+	E.run= (set_appconfs, more_options, init_func) ->
 		appconfs= set_appconfs
 		appInit()
 		merge option, more_options
 		E.oLoader= new Extra[ option.loader] appconfs
 		promise= E.oLoader.D_loadAsync()
 		promise.then ->
+			init_func()
 			E.App().go aSetting.go
 			E.oRender= new Extra[ option.render] # Sets mithril's redraw to self
 		return
@@ -232,6 +233,7 @@ app= (window, undef) ->
 
 	# The old 'AppConf' class; use app*() functions now
 	aSetting= frames: {}, modals: {}, layout: 'default', go: 'default//'
+	aMacros= {}
 	aClicks= {}
 	aFlows= default: start: 'default', TRACKS: default: start: 'default', STEPS: default: {}
 	aModels= {}
@@ -249,7 +251,7 @@ app= (window, undef) ->
 			app= E[ 'app$'+ nm] ? {}
 			merge aFlows.default.TRACKS.default.STEPS, app.STEPS if app.STEPS
 			merge aFlows.default.TRACKS, app.TRACKS if app.TRACKS
-			merge obj, app[ nm] for nm,obj of SETTINGS: aSetting, CLICKS: aClicks, FLOWS: aFlows, MODELS: aModels, OPTIONS: option
+			merge obj, app[ nm] for nm,obj of SETTINGS: aSetting, MACROS: aMacros, CLICKS: aClicks, FLOWS: aFlows, MODELS: aModels, OPTIONS: option
 		make_model_functions()
 		return
 
@@ -306,7 +308,7 @@ app= (window, undef) ->
 	make_model_functions= () ->
 		for view,model of aModels
 			do (view,model) ->
-				E[ view]= (table_or_ctx, act_if_action, action, data) ->
+				E[ view]= (table_or_ctx, act_if_action, data) ->
 					# First, get instance into oModel cache
 					inst_nm= model.inst
 					if inst_nm not of oModel
@@ -317,10 +319,10 @@ app= (window, undef) ->
 					oM= oModel[ inst_nm]
 					return oM if table_or_ctx is undef # Wanted an instance
 					return oM.getTable table_or_ctx if act_if_action is undef # Wanted a vew-table
-					oM.action table_or_ctx, act_if_action, action, data
+					oM.action table_or_ctx, act_if_action, data
 
 	clickAction= (action_token, data, original_path) ->
-		d= m.deferred()
+		d= new m.Deferred()
 		d.resolve _d_clickAction action_token, data, original_path
 		d.promise
 	_d_clickAction= (action_token, data, original_path) ->
@@ -335,7 +337,7 @@ app= (window, undef) ->
 			return [master_issue, master_message] # No recognized action
 		# Handle 'go:'
 		if click_node.go?
-			E.App().goTo click_node.go
+			E.App().go click_node.go
 		master_data= merge {}, data
 		# Process 'pass:' (just a syntax check)
 		nms= switch type_oau click_node.pass
@@ -348,10 +350,12 @@ app= (window, undef) ->
 		master_data[ nm]= val for nm,val of click_node.set
 		# Handle 'do:'
 		if click_node.do?
+			# TODO: No '.' means a MACRO
 			[view_nm,view_act]= click_node.do.split '.'
-			d= m.deferred(); r= {}; i= new E.Issue view_nm, view_act; mg= new E.Issue view_nm ,view_act
+			view_act= view_act ? action_token
+			d= new m.Deferred(); r= {}; i= new E.Issue view_nm, view_act; mg= new E.Issue view_nm ,view_act
 			ctx= {d,r,i,m:mg}
-			E[ view_nm] ctx, (view_act ? action_token), master_data
+			E[ view_nm] ctx, view_act, master_data
 			master_data[ nm]= val for nm,val of ctx.r # We just polute the one object
 			master_issue.addObj ctx.i
 			master_message.addObj ctx.m

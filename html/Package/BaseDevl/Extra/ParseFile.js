@@ -303,7 +303,7 @@ ParseFile = function(file_stats, file_contents) {
     epic: 0,
     defer: 0
   };
-  dom_nms = ['style', 'div', 'a', 'span', 'ol', 'ul', 'li', 'p', 'b', 'i', 'dl', 'dd', 'dt', 'form', 'fieldset', 'label', 'legend', 'button', 'input', 'textarea', 'select', 'option', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5', 'img', 'br', 'hr', 'header', 'footer', 'section'];
+  dom_nms = ['style', 'div', 'a', 'span', 'ol', 'ul', 'li', 'p', 'b', 'i', 'dl', 'dd', 'dt', 'form', 'fieldset', 'label', 'legend', 'button', 'input', 'textarea', 'select', 'option', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5', 'img', 'br', 'hr', 'header', 'footer', 'section', 'nav', 'code', 'mark', 'pre'];
   dom_close = ['img', 'br', 'input', 'hr'];
   dom_entity_map = {
     nbsp: '\u00A0',
@@ -402,7 +402,7 @@ ParseFile = function(file_stats, file_contents) {
           empty = '/';
         }
         if (__indexOf.call(dom_nms, base_nm) < 0) {
-          doError(file_stats, 'Unknown tag name ' + base_nm + ' in ' + file_stats);
+          doError(file_stats, 'Unknown tag name "' + base_nm + '" in ' + file_stats);
         }
         if (attr_clean) {
           flavor = T_M2;
