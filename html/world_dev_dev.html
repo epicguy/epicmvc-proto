@@ -3,11 +3,19 @@
 <head>
   <title>Hello Dude Demo (Dev Dev)</title>
   <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"/>
+<style>
+[data-e-action] {
+    -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+    -moz-user-select: none; /* mozilla browsers */
+    -khtml-user-select: none; /* webkit (konqueror) browsers */
+    -ms-user-select: none; /* IE10+ */
+}
+</style>
   <script type="text/javascript" src="mithril.js"></script>
-  <script type="text/javascript" src="epic/EpicMvc/EpicCore.js"></script>
-  <script type="text/javascript" src="epic/Package/Base/app.js"></script>
-  <script type="text/javascript" src="epic/Package/BaseDevl/app.js"></script>
-  <script type="text/javascript" src="epic/Package/BaseDevl/Extra/LoadStrategy.js"></script>
+  <script type="text/javascript" src="EpicCore.js"></script>
+  <script type="text/javascript" src="Package/Base/app.js"></script>
+  <script type="text/javascript" src="Package/BaseDevl/app.js"></script>
+  <script type="text/javascript" src="Package/BaseDevl/Extra/LoadStrategy.js"></script>
 
 <script type="text/coffeescript">
 E.app$World=
