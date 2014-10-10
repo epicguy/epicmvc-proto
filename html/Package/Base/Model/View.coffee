@@ -99,10 +99,10 @@ class View$Base extends E.ModelJS
 				_log2 f, row
 				[row]
 			else []
-	invalidateTables: (view_nm, tbl_nms) ->
-		return unless @did_run
+	invalidateTables: (view_nm, tbl_nms, deleted_tbl_nms) ->
+		return unless @did_run and deleted_tbl_nms.length
 		f= 'Base:M/View.invalidateTables'
-		#_log2 f, view_nm, tbl_nms #, (if E.inClick then 'IN')
+		#_log2 f, view_nm, tbl_nms, deleted_tbl_nms #, (if E.inClick then 'IN')
 		m.startComputation()
 		m.endComputation()
 		return

@@ -186,9 +186,9 @@
       }
     };
 
-    View$Base.prototype.invalidateTables = function(view_nm, tbl_nms) {
+    View$Base.prototype.invalidateTables = function(view_nm, tbl_nms, deleted_tbl_nms) {
       var f;
-      if (!this.did_run) {
+      if (!(this.did_run && deleted_tbl_nms.length)) {
         return;
       }
       f = 'Base:M/View.invalidateTables';
