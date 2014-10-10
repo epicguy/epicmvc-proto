@@ -200,7 +200,8 @@ ParseFile= (file_stats, file_contents) ->
 		'div', 'a', 'span', 'ol', 'ul', 'li', 'p', 'b', 'i', 'dl', 'dd', 'dt'
 		'form', 'fieldset', 'label', 'legend', 'button', 'input', 'textarea', 'select', 'option'
 		'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5'
-		'img', 'br', 'hr', 'header', 'footer', 'section'
+		'img', 'br', 'hr', 'header', 'footer', 'section', 'nav'
+		'code', 'mark', 'pre'
 	]
 	dom_close= [ 'img', 'br', 'input', 'hr' ]
 	dom_entity_map=
@@ -271,7 +272,7 @@ ParseFile= (file_stats, file_contents) ->
 				if base_nm in ['img', 'br', 'input', 'hr']
 					empty= '/' # Force as no-body or self-closing
 				if base_nm not in dom_nms
-					doError file_stats, 'Unknown tag name '+ base_nm+ ' in '+ file_stats
+					doError file_stats, 'Unknown tag name "'+ base_nm+ '" in '+ file_stats
 				if attr_clean
 					#_log2 f, 'attr_clean', attrs
 					flavor= T_M2
