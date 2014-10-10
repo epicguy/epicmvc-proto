@@ -7,21 +7,26 @@ class App$Base extends E.ModelJS
 		@issues= new E.Issue @view_nm
 		@messages= new E.Issue @view_nm
 		super view_nm, options, ss
-	goTo: (f,t,s) ->
+	goTo: (flow,t,s) ->
+		f= 'goTo'
 		was= "#{@f}/#{@t}/#{@s}"
-		if not f or not E.appGetF(f)?
-			[f, t, s]= (E.appGetSetting 'go').split '/'
-		else if not t? or not E.appGetT(f, t)?
-			t= E.appStartT f; s= E.appStartS f, t
-		else if not s? or not E.appGetS( f, t, s)?
-			s= E.appStartS f, t
-		@f= f; @t= t; @s= s
+		if not flow or not E.appGetF(flow)?
+			[flow, t, s]= (E.appGetSetting 'go').split '/'
+		else if not t? or not E.appGetT(flow, t)?
+			t= E.appStartT flow; s= E.appStartS flow, t
+		else if not s? or not E.appGetS( flow, t, s)?
+			s= E.appStartS flow, t
+		@f= flow; @t= t; @s= s
+		_log2 f, {was,is: "#{@f}/#{@t}/#{@s}"}
 		if was isnt "#{@f}/#{@t}/#{@s}"
 			@invalidateTables ['V'] # This table is specific to the 'path'
 	go: (path) ->
+		f= 'go'
 		q= path.split '/'
+		_log2 f, 'before', q, @f, @t, @s
 		for v,ix in [@f, @t, @s]
 			if not (q[ix]?.length) then q[ix]= v else break # Stop at first set value, rest will default
+		_log2 f, 'after', q, @f, @t, @s
 		@goTo q[0], q[1], q[2]
 	appGet: (attr) -> E.appGetSetting attr, @f, @t, @s
 	getStepPath: -> [@f, @t, @s]
