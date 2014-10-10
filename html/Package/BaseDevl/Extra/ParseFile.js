@@ -307,7 +307,7 @@ doError = function(file_stats, text) {
 };
 
 ParseFile = function(file_stats, file_contents) {
-  var T_EPIC, T_M1, T_M2, T_STYLE, T_TEXT, after, after_comment, after_script, attr_clean, attrs, base_nm, children, content, counter, doChildren, dom_close, dom_nms, empty, etags, f, flavor, i, nextCounter, oi, parts, prev_children, stats, t, tag_names_for_debugger, tag_wait, text, whole_tag, _ref, _ref1;
+  var T_EPIC, T_M1, T_M2, T_STYLE, T_TEXT, after, after_comment, after_script, attr_clean, attrs, base_nm, children, content, counter, doChildren, dom_close, dom_nms, dom_pre_tags, empty, etags, f, flavor, i, nextCounter, oi, parts, pre_count, prev_children, stats, t, tag_names_for_debugger, tag_wait, text, whole_tag, _ref, _ref1;
   f = ':BaseDevl.E/ParseFile.ParseFile~' + file_stats;
   counter = 0;
   nextCounter = function() {
@@ -325,6 +325,7 @@ ParseFile = function(file_stats, file_contents) {
     epic: 0,
     defer: 0
   };
+  dom_pre_tags = ['pre', 'code'];
   dom_nms = ['style', 'div', 'a', 'span', 'ol', 'ul', 'li', 'p', 'b', 'i', 'dl', 'dd', 'dt', 'u', 'form', 'fieldset', 'label', 'legend', 'button', 'input', 'textarea', 'select', 'option', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'col', 'colgroup', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hgroup', 'img', 'br', 'hr', 'header', 'footer', 'section', 'nav', 'code', 'mark', 'pre', 'blockquote', 'address', 'kbd', 'var', 'samp'];
   dom_close = ['img', 'br', 'input', 'hr'];
   after_comment = file_contents.replace(/-->/gm, '\x02').replace(/<!--[^\x02]*\x02/gm, function(m) {
@@ -333,6 +334,7 @@ ParseFile = function(file_stats, file_contents) {
   after_script = after_comment.replace(/<\/script>/gm, '\x02').replace(/<script[^\x02]*\x02/gm, '');
   after = after_script;
   parts = after.split(/<(\/?)([:a-z_0-9-]+)([^>]*)>/);
+  pre_count = 0;
   i = 0;
   tag_wait = [];
   children = [];
@@ -340,7 +342,10 @@ ParseFile = function(file_stats, file_contents) {
     if (tag_wait.length && tag_wait[tag_wait.length - 1][1] === 'defer') {
       children.push([T_TEXT, (findVars(parts[i])).join('+')]);
     } else {
-      text = parts[i].replace(/^\s+|\s+$/gm, ' ');
+      text = parts[i];
+      if (pre_count === 0) {
+        text = text.replace(/^\s+|\s+$/gm, ' ');
+      }
       if (text.length && text !== ' ' && text !== '  ') {
         if (tag_wait.length) {
           children.push([T_TEXT, (findVars(text)).join('+')]);
@@ -357,6 +362,9 @@ ParseFile = function(file_stats, file_contents) {
         doError(file_stats, "Close tag found when none expected close=" + parts[i + 2]);
       }
       _ref = tag_wait.pop(), oi = _ref[0], base_nm = _ref[1], attrs = _ref[2], prev_children = _ref[3], flavor = _ref[4];
+      if (__indexOf.call(dom_pre_tags, base_nm) >= 0) {
+        pre_count--;
+      }
       if (base_nm === 'defer') {
         stats.defer++;
       }
@@ -429,6 +437,9 @@ ParseFile = function(file_stats, file_contents) {
       } else {
         tag_wait.push([i, base_nm, attrs, children, flavor]);
         children = [];
+        if (__indexOf.call(dom_pre_tags, base_nm) >= 0) {
+          pre_count++;
+        }
       }
     }
     i += 4;
