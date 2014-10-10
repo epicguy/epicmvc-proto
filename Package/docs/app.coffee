@@ -1,7 +1,7 @@
 
 window.EpicMvc.app$docs=
 	MANIFEST:
-		MODEL: ['Wist','ApiRef']
+		Model: ['Wist','ApiRef']
 	SETTINGS:
 		go: 'anon//'
 		layout: 'logged_out'
