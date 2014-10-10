@@ -41,15 +41,16 @@ class RenderStrategy$Base
 		# Bubble up to any parent with a data-e-action
 		while target.tagName isnt 'BODY' and not data_action= target.getAttribute 'data-e-action'
 			target= target.parentElement
-		_log2 f, 'event', event_obj, target, data_action
+		_log2 f, 'event', {type, data_action}
 		return false if not data_action
 		data_params= {}; attrs= target.attributes
 		for ix in [0...attrs.length] when 'data-e-' is attrs[ ix].name.slice 0, 7
 			continue if 'action' is nm= attrs[ ix].name.slice 7
 			data_params[ nm]= attrs[ ix].value
 		val= target.value
-		_log2 f, 'event', event_obj, target, type, data_action, data_params, val
-		event_obj.preventDefault(); # Added to keep LOGIN FORM from posting, causing fresh instance to start up
+		_log2 f, 'event', {type, data_action, data_params, val}
+		event_obj.preventDefault()  # Added to keep LOGIN FORM from posting, causing fresh instance to start up
+		event_obj.stopPropagation() # Will this stop a dblclick from marking the text?
 		data_params.val= val
 		E.Extra[ E.option.data_action] type, data_action, data_params
 		return false; # TODO CONSIDER MAKING SURE WE WANTED TO STOP, OR DO MORE TO ENSURE WE STOP DOING MORE THAN THIS
@@ -83,7 +84,7 @@ class RenderStrategy$Base
 			return
 		@redraw_guard= true
 		E.View().run().then (content) =>
-			_log2 'DEFER-R', 'RESULTS: content', content
+			#_log2 'DEFER-R', 'RESULTS: content', content
 			@render content, 'TODO', 'TODO', false
 			@redraw_guard= false
 	render: (content, history, click_index, modal) ->
