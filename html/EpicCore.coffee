@@ -889,18 +889,20 @@ class ModelJS
 		E.merge {}, st # clone and return
 	invalidateTables: (tbl_nms,not_tbl_names) -> # Use true for all
 		f= ':ModelJS.invalidateTables~'+ @view_nm
-		_log2 f, tbl_nms, not_tbl_names
+		#_log2 f, tbl_nms, not_tbl_names
 		not_tbl_names?= []
 		tbl_nms= (nm for nm of @Table when not (nm in not_tbl_names)) if tbl_nms is true
-		delete @Table[nm] for nm in tbl_nms
-		E.View().invalidateTables @view_nm, tbl_nms
+		deleted_tbl_nms= []
+		(deleted_tbl_nms.push nm; delete @Table[nm]) for nm in tbl_nms when nm of @Table
+		E.View().invalidateTables @view_nm, tbl_nms, deleted_tbl_nms
+
 
 w= if typeof window isnt "undefined" then window else {}
 w.EpicMvc= w.E= new app w
 w.E[ nm]= klass for nm,klass of {Issue, Fist, ModelJS, FistFilt}
 # TODO NOTE This was needed, so EpicMvc-One has _log2 available as e.g. app.js's load
 w._log2= ->
-w._log2= Function.prototype.bind.call console.log, console #%# will be removed before uglify
+w._log2= Function.prototype.bind.call console.log, console #%# will be removed before uglify #	f= '
 
 if typeof module isnt "undefined" and module isnt null then module.exports = w.E
 if typeof define is "function" and define.amd then define () -> w.E
