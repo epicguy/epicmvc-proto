@@ -6,6 +6,9 @@ window.EpicMvc.app$BaseDevl=
 		frames: MMM_BaseDevl: 'bdevl'
 	OPTIONS:
 		loader: 'LoadStrategy$BaseDevl'
+		ca2: (action_token, original_path, click_node)->
+			_log2 "ERROR: There is a problem with this click_node:", click_node
+			throw new Error "ERROR: Missing '#{click_node.do}' from MACROS; Action: #{action_token}, Path: #{original_path}"
 	MODELS:
 		Devl:     class: "Devl$BaseDevl",       inst: "iBaseDevl_Devl"
 		View:     class: "View$BaseDevl",       inst: "iBaseDevl_View"
