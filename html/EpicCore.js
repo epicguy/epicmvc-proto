@@ -8,13 +8,12 @@
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   app = function(window, undef) {
-    var E, Extra, Model, aClicks, aFists, aFlows, aMacros, aModels, aSetting, appFindAttr, appFindClick, appFindNode, appFist, appGetF, appGetS, appGetSetting, appGetT, appGetVars, appInit, appLoadFormsIf, appModel, appStartS, appStartT, appconfs, click, clickAction, counter, fieldDef, finish_logout, fistDef, fistInit, inClick, issueInit, issueMap, make_model_functions, merge, nm, oFist, oModel, obj, option, setModelState, type_oau, _d_clickAction, _ref;
+    var E, Extra, Model, aClicks, aFists, aFlows, aMacros, aModels, aSetting, appFindAttr, appFindClick, appFindNode, appFist, appGetF, appGetS, appGetSetting, appGetT, appGetVars, appInit, appLoadFormsIf, appModel, appStartS, appStartT, appconfs, click, clickAction, counter, fieldDef, finish_logout, fistDef, fistInit, inClick, issueInit, issueMap, make_model_functions, merge, nm, oModel, obj, option, setModelState, type_oau, _d_clickAction, _ref;
     inClick = false;
     counter = 0;
     Model = {};
     Extra = {};
     oModel = {};
-    oFist = {};
     appconfs = [];
     option = {
       load_dirs: []
@@ -133,30 +132,17 @@
       }
     };
     finish_logout = function() {
-      var k, o;
+      var k, o, _results;
+      _results = [];
       for (k in oModel) {
         o = oModel[k];
         if (!(typeof o.eventLogout === "function" ? o.eventLogout() : void 0)) {
           continue;
         }
         delete modelState[k];
-        delete oModel[k];
+        _results.push(delete oModel[k]);
       }
-      return oFist = {};
-    };
-    E.fist = function(flist_nm, grp_nm) {
-      var f, fist_nm, inst_nm, t, view_nm, _ref;
-      if (!grp_nm) {
-        _ref = E.App().getStepPath(), f = _ref[0], t = _ref[1];
-        grp_nm = E.oA.getGroupNm(f(t));
-      }
-      fist_nm = E.fistGrp().fist(grp_nm, flist_nm);
-      inst_nm = "" + grp_nm + "_" + fist_nm;
-      if (!(inst_nm in oFist)) {
-        view_nm = E.oA.fist(grp_nm, fist_nm);
-        oFist[inst_nm] = new E.Fist(grp_nm, fist_nm, view_nm, flist_nm);
-      }
-      return oFist[inst_nm];
+      return _results;
     };
     E.run = function(set_appconfs, more_options, init_func) {
       var promise;
@@ -234,30 +220,10 @@
       }
     };
     aModels = {};
-    aFists = false;
-    appLoadFormsIf = function(config) {
-      var form_nm, group, node, view_nm, _i, _len, _ref, _ref1, _ref2;
-      if (aFists === false) {
-        aFists = {};
-        for (view_nm in aModels) {
-          node = aModels[view_nm];
-          if (!node.fists) {
-            continue;
-          }
-          group = (_ref = node.group) != null ? _ref : aSetting.group;
-          if ((_ref1 = aFists[group]) == null) {
-            aFists[group] = {};
-          }
-          _ref2 = node.forms;
-          for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
-            form_nm = _ref2[_i];
-            aFists[group][form_nm] = view_nm;
-          }
-        }
-      }
-    };
+    aFists = {};
+    appLoadFormsIf = function(config) {};
     appInit = function() {
-      var nm, obj, _i, _len, _ref, _ref1;
+      var form_nm, hash, nm, node, obj, view_nm, _i, _j, _len, _len1, _ref, _ref1;
       for (_i = 0, _len = appconfs.length; _i < _len; _i++) {
         nm = appconfs[_i];
         app = (_ref = E['app$' + nm]) != null ? _ref : {};
@@ -267,7 +233,7 @@
         if (app.TRACKS) {
           merge(aFlows["default"].TRACKS, app.TRACKS);
         }
-        _ref1 = {
+        hash = {
           SETTINGS: aSetting,
           MACROS: aMacros,
           CLICKS: aClicks,
@@ -275,9 +241,19 @@
           MODELS: aModels,
           OPTIONS: option
         };
-        for (nm in _ref1) {
-          obj = _ref1[nm];
+        for (nm in hash) {
+          obj = hash[nm];
           merge(obj, app[nm]);
+        }
+      }
+      for (view_nm in aModels) {
+        node = aModels[view_nm];
+        if (node.fists) {
+          _ref1 = node.fists;
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            form_nm = _ref1[_j];
+            aFists[form_nm] = view_nm;
+          }
         }
       }
       make_model_functions();
@@ -291,9 +267,8 @@
       }
       return aModels[view_name][attribute];
     };
-    appFist = function(group_nm, fist_nm) {
-      appLoadFormsIf();
-      return aFist[group_nm][fist_nm];
+    appFist = function(fist_nm) {
+      return aFists[fist_nm];
     };
     appFindNode = function(flow, t, s, cat, nm) {
       var ncat, nf, ns, nt, _ref, _ref1, _ref2, _ref3, _ref4;
@@ -585,11 +560,11 @@
       appFindClick: appFindClick,
       appGetSetting: appGetSetting,
       appGetVars: appGetVars,
+      appFist: appFist,
       fieldDef: fieldDef,
       fistDef: fistDef,
       issueMap: issueMap,
-      oModel: oModel,
-      oFist: oFist
+      oModel: oModel
     };
     for (nm in _ref) {
       obj = _ref[nm];
