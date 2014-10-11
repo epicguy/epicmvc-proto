@@ -328,52 +328,22 @@ class View$Base extends E.ModelJS
 			result.push @handleIt content_f
 		delete @info_foreach[rh_alias]
 		return result
-
-	T_fist: (attrs) -> # part="" fist="" (opt)field=""
-		part= attrs.part ? 'fist_default'
-		row= attrs.row ? false
-		fm_nm= attrs.form
-		oFi= E.fist fm_nm
-		# Optional fields
-		one_field_nm= if attrs.field? then attrs.field else false
-		help= attrs.help ? ''
-		show_req= if 'show_req' of attrs then attrs.show_req else 'yes'
-		any_req= false
-		is_first= true
-		out= []
-		hpfl=( nm for nm of oFi.getHtmlFieldValues())
-		issues= oFi.getFieldIssues()
-		focus_nm= oFi.getFocus()
-		map= E['issues$'+ E.appGetSetting E.App().path(), 'group']
-		for fl_nm in hpfl
-			continue if one_field_nm isnt false and one_field_nm isnt fl_nm
-			orig= oFi.getFieldAttributes fl_nm
-			fl= E.merge { tip: '', fistnm: fm_nm, focus: '' }, orig
-			fl.focus= 'yes' if fl_nm is focus_nm
-			fl.is_first= if is_first is true then 'yes' else ''
-			is_first= false
-			fl.yes_val = if fl.type is 'yesno' then String (fl.cdata ? '1') else 'not_used'
-			fl.req= if fl.req is true then 'yes' else ''
-			any_req= true if fl.req is true
-			fl.name= fl_nm
-			fl.default?= ''; fl.default= String fl.default
-			value_fl_nm= if row then fl_nm + '__' + row else fl_nm
-			fl.value= (oFi.getHtmlFieldValue value_fl_nm) ? fl.default
-			fl.selected= if fl.type is 'yesno' and fl.value is fl.yes_val then 'yes' else ''
-			fl.id= 'U'+ E.nextCounter()
-			fl.type= (fl.type.split ':')[0]
-			fl.width?= ''
-			fl.size?= ''
-			if fl.type is 'radio' or fl.type is 'pulldown'
-				choices= oFi.getChoices fl_nm
-				rows= []
-				for ix in [0...choices.options.length]
-					s= if choices.values[ix] is (String fl.value) then 'yes' else ''
-					rows.push option: choices.options[ix], value: choices.values[ix], selected: s
-				fl.Choice= rows
-			fl.issue= if issues[value_fl_nm] then issues[value_fl_nm].asTable( map)[0].issue else ''
-			out.push fl
-		@fist_table= Form: [show_req: show_req, any_req: any_req, help: help], Control: out
-		@T_part {part}
+	T_fist: (attrs, content_f) -> # Could have children, or a part=, or default to fist_default, (or E.fistDef[nm].part ?)
+		f= 'T_fist'
+		_log2 f, attrs, content_f
+		E.Fist false, 'F$start', attrs
+		if not attrs.using
+			[tbl, rh_alias]= @_accessModelTable 'Fist/'+ attrs.fist, attrs.alias
+			@info_foreach[rh_alias].row= tbl[ 0]
+		else
+			BROKEN() # TODO NEED TO DO THE .row LIKE THE ABOVE LINE
+			@_accessModelTable 'Fist/'+ attrs.fist
+			attrs.alias?= attrs.using
+			@_accessModelTable attrs.fist+ '/'+ attrs.using, attrs.alias
+		if content_f
+			@handleIt content_f
+		else
+			attrs.part?= E.fistDef[ attrs.fist].part? 'fist_default'
+			@T_part attrs
 
 E.Model.View$Base= View$Base # Public API

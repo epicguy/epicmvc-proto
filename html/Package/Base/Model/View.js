@@ -566,95 +566,30 @@
       return result;
     };
 
-    View$Base.prototype.T_fist = function(attrs) {
-      var any_req, choices, fl, fl_nm, fm_nm, focus_nm, help, hpfl, is_first, issues, ix, map, nm, oFi, one_field_nm, orig, out, part, row, rows, s, show_req, value_fl_nm, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
-      part = (_ref = attrs.part) != null ? _ref : 'fist_default';
-      row = (_ref1 = attrs.row) != null ? _ref1 : false;
-      fm_nm = attrs.form;
-      oFi = E.fist(fm_nm);
-      one_field_nm = attrs.field != null ? attrs.field : false;
-      help = (_ref2 = attrs.help) != null ? _ref2 : '';
-      show_req = 'show_req' in attrs ? attrs.show_req : 'yes';
-      any_req = false;
-      is_first = true;
-      out = [];
-      hpfl = (function() {
-        var _results;
-        _results = [];
-        for (nm in oFi.getHtmlFieldValues()) {
-          _results.push(nm);
+    View$Base.prototype.T_fist = function(attrs, content_f) {
+      var f, rh_alias, tbl, _base, _ref, _ref1, _ref2;
+      f = 'T_fist';
+      _log2(f, attrs, content_f);
+      E.Fist(false, 'F$start', attrs);
+      if (!attrs.using) {
+        _ref = this._accessModelTable('Fist/' + attrs.fist, attrs.alias), tbl = _ref[0], rh_alias = _ref[1];
+        this.info_foreach[rh_alias].row = tbl[0];
+      } else {
+        BROKEN();
+        this._accessModelTable('Fist/' + attrs.fist);
+        if ((_ref1 = attrs.alias) == null) {
+          attrs.alias = attrs.using;
         }
-        return _results;
-      })();
-      issues = oFi.getFieldIssues();
-      focus_nm = oFi.getFocus();
-      map = E['issues$' + E.appGetSetting(E.App().path(), 'group')];
-      for (_i = 0, _len = hpfl.length; _i < _len; _i++) {
-        fl_nm = hpfl[_i];
-        if (one_field_nm !== false && one_field_nm !== fl_nm) {
-          continue;
-        }
-        orig = oFi.getFieldAttributes(fl_nm);
-        fl = E.merge({
-          tip: '',
-          fistnm: fm_nm,
-          focus: ''
-        }, orig);
-        if (fl_nm === focus_nm) {
-          fl.focus = 'yes';
-        }
-        fl.is_first = is_first === true ? 'yes' : '';
-        is_first = false;
-        fl.yes_val = fl.type === 'yesno' ? String((_ref3 = fl.cdata) != null ? _ref3 : '1') : 'not_used';
-        fl.req = fl.req === true ? 'yes' : '';
-        if (fl.req === true) {
-          any_req = true;
-        }
-        fl.name = fl_nm;
-        if ((_ref4 = fl["default"]) == null) {
-          fl["default"] = '';
-        }
-        fl["default"] = String(fl["default"]);
-        value_fl_nm = row ? fl_nm + '__' + row : fl_nm;
-        fl.value = (_ref5 = oFi.getHtmlFieldValue(value_fl_nm)) != null ? _ref5 : fl["default"];
-        fl.selected = fl.type === 'yesno' && fl.value === fl.yes_val ? 'yes' : '';
-        fl.id = 'U' + E.nextCounter();
-        fl.type = (fl.type.split(':'))[0];
-        if ((_ref6 = fl.width) == null) {
-          fl.width = '';
-        }
-        if ((_ref7 = fl.size) == null) {
-          fl.size = '';
-        }
-        if (fl.type === 'radio' || fl.type === 'pulldown') {
-          choices = oFi.getChoices(fl_nm);
-          rows = [];
-          for (ix = _j = 0, _ref8 = choices.options.length; 0 <= _ref8 ? _j < _ref8 : _j > _ref8; ix = 0 <= _ref8 ? ++_j : --_j) {
-            s = choices.values[ix] === (String(fl.value)) ? 'yes' : '';
-            rows.push({
-              option: choices.options[ix],
-              value: choices.values[ix],
-              selected: s
-            });
-          }
-          fl.Choice = rows;
-        }
-        fl.issue = issues[value_fl_nm] ? issues[value_fl_nm].asTable(map)[0].issue : '';
-        out.push(fl);
+        this._accessModelTable(attrs.fist + '/' + attrs.using, attrs.alias);
       }
-      this.fist_table = {
-        Form: [
-          {
-            show_req: show_req,
-            any_req: any_req,
-            help: help
-          }
-        ],
-        Control: out
-      };
-      return this.T_part({
-        part: part
-      });
+      if (content_f) {
+        return this.handleIt(content_f);
+      } else {
+        if ((_ref2 = attrs.part) == null) {
+          attrs.part = typeof (_base = E.fistDef[attrs.fist]).part === "function" ? _base.part('fist_default') : void 0;
+        }
+        return this.T_part(attrs);
+      }
     };
 
     return View$Base;
