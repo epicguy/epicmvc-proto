@@ -220,6 +220,10 @@
         attr_obj[nm].push(parts.join(''));
         continue;
       }
+      if (nm === 'config') {
+        attr_obj[nm] = parts.join('');
+        continue;
+      }
       if (nm === 'style') {
         style_obj = findStyles(file_info, parts);
         attr_obj[nm] = mkObj(style_obj);

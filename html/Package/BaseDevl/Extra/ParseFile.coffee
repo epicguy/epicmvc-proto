@@ -136,6 +136,9 @@ FindAttrs= (file_info, str)->
 			attr_obj['data-e-action']?= []
 			attr_obj[ nm].push parts.join ''
 			continue
+		if nm is 'config'
+			attr_obj[ nm]= parts.join ''
+			continue
 		if nm is 'style'
 			style_obj= findStyles file_info, parts
 			attr_obj[ nm]= mkObj style_obj
