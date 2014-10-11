@@ -188,13 +188,13 @@ findVars= (text) ->
 
 doError= (file_stats, text) ->
 	console.log 'ERROR', file_stats, text
-	alert "#{file_stats}, #{text}"
+	#alert "#{file_stats}, #{text}"
 	throw Error text
 ParseFile= (file_stats, file_contents) ->
 	f= ':BaseDevl.E/ParseFile.ParseFile~'+file_stats
 	counter= 0
 	nextCounter= -> ++counter
-	etags= ['page','part', 'if', 'foreach', 'defer']
+	etags= ['page','part', 'if', 'foreach', 'fist', 'defer']
 	T_EPIC= 0
 	T_M1= 1
 	T_M2= 2
@@ -312,7 +312,7 @@ ParseFile= (file_stats, file_contents) ->
 			switch flavor
 				when T_EPIC
 					has_epic= true
-					out.push "['#{tag}',#{attr},#{doChildren kids, true}]"
+					out.push "['#{tag}',#{attr}#{doChildren kids, true}]"
 				when T_M1
 					out.push "{tag:'#{tag}',attrs:#{attr},children:#{doChildren kids}}"
 				when T_M2
@@ -328,7 +328,8 @@ ParseFile= (file_stats, file_contents) ->
 		if has_epic
 			stuff= 'oE.kids('+ stuff+ ')'
 		if fwrap
-			stuff= 'function(){return '+ stuff+ '}'
+			stuff= ',function(){return '+ stuff+ '}'
+			stuff= '' if child_array.length is 0
 		stuff
 	content= 'return '+ doChildren children
 	_log2 f, 'final', content
