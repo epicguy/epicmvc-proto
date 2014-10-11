@@ -423,17 +423,17 @@ app= (window, undef) ->
 
 class Issue
 	constructor: (@t_view, @t_action) -> @issue_list= [] # Instance member
-	@Make: (view,type,value_list) -> # Factory method (no t_view/t_action)
+	@Make: (view,token,value_list) -> # Factory method (no t_view/t_action)
 		issue= new Issue view
-		issue.add type, value_list
+		issue.add token, value_list
 		issue
-	add: (type,msgs) ->
+	add: (token, msgs) ->
 		f= ':Issue.add:'+@t_view+':'+@t_action
-		_log2 f, 'params:type/msgs', type, msgs
+		_log2 f, 'params:type/msgs', token, msgs
 		switch typeof msgs
 			when 'undefined' then msgs= []
 			when 'string' then msgs= [ msgs ]
-		@issue_list.push token:type, more:msgs, t_view: @t_view, t_action: @t_action
+		@issue_list.push token:token, more:msgs, t_view: @t_view, t_action: @t_action
 	addObj: (issue_obj) ->
 		f= ':Issue.addObj:'+ @t_view+'#'+@t_action
 		return if typeof issue_obj isnt 'object' or not ('issue_list' of issue_obj)
@@ -445,17 +445,18 @@ class Issue
 			@issue_list.push new_issue
 		return
 	count: -> @issue_list.length
-	asTable: (map) ->
-		#_log2 'asTable: issue_list,map', @issue_list, map
+	asTable: () ->
+		#_log2 'asTable: issue_list,map', @issue_list
 		final= []
 		for issue in @issue_list
 			final.push
 				token: issue.token
 				title: "#{issue.t_view}##{issue.t_action}##{issue.token}##{issue.more.join ','}"
-				issue: @map map, issue.t_view, issue.t_action, issue.token, issue.more
+				issue: @map issue.t_view, issue.t_action, issue.token, issue.more
 		final
-	map: (map,t_view,t_action,token,more) ->
-		if typeof map isnt 'object' then return "#{t_view}##{t_action}##{token}##{more.join ','}"
+	map: (t_view,t_action,token,more) ->
+		map= E.issueMap
+		if typeof map isnt 'object' then return "(no map) #{t_view}##{t_action}##{token}##{more.join ','}"
 		map_list= []
 		if t_view of map
 			if t_action of map[t_view]
@@ -473,7 +474,7 @@ class Issue
 				#_log2 'map:spec', spec
 				if token.match spec[0]
 					return @doMap token, spec[1], more, token
-		"#{t_view}##{t_action}##{token}##{more.join ','}"
+		"(no match)#{t_view}##{t_action}##{token}##{more.join ','}"
 	doMap: (token, pattern,vals) ->
 		#_log2 'doMap', token, pattern, vals
 		new_str= pattern.replace /%([0-9])(?::([0-9]))?%/g, (str,i1,i2,more) ->

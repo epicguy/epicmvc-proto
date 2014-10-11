@@ -606,17 +606,17 @@
       this.issue_list = [];
     }
 
-    Issue.Make = function(view, type, value_list) {
+    Issue.Make = function(view, token, value_list) {
       var issue;
       issue = new Issue(view);
-      issue.add(type, value_list);
+      issue.add(token, value_list);
       return issue;
     };
 
-    Issue.prototype.add = function(type, msgs) {
+    Issue.prototype.add = function(token, msgs) {
       var f;
       f = ':Issue.add:' + this.t_view + ':' + this.t_action;
-      _log2(f, 'params:type/msgs', type, msgs);
+      _log2(f, 'params:type/msgs', token, msgs);
       switch (typeof msgs) {
         case 'undefined':
           msgs = [];
@@ -625,7 +625,7 @@
           msgs = [msgs];
       }
       return this.issue_list.push({
-        token: type,
+        token: token,
         more: msgs,
         t_view: this.t_view,
         t_action: this.t_action
@@ -656,7 +656,7 @@
       return this.issue_list.length;
     };
 
-    Issue.prototype.asTable = function(map) {
+    Issue.prototype.asTable = function() {
       var final, issue, _i, _len, _ref;
       final = [];
       _ref = this.issue_list;
@@ -665,16 +665,17 @@
         final.push({
           token: issue.token,
           title: "" + issue.t_view + "#" + issue.t_action + "#" + issue.token + "#" + (issue.more.join(',')),
-          issue: this.map(map, issue.t_view, issue.t_action, issue.token, issue.more)
+          issue: this.map(issue.t_view, issue.t_action, issue.token, issue.more)
         });
       }
       return final;
     };
 
-    Issue.prototype.map = function(map, t_view, t_action, token, more) {
-      var map_list, spec, sub_map, _i, _j, _len, _len1, _ref;
+    Issue.prototype.map = function(t_view, t_action, token, more) {
+      var map, map_list, spec, sub_map, _i, _j, _len, _len1, _ref;
+      map = E.issueMap;
       if (typeof map !== 'object') {
-        return "" + t_view + "#" + t_action + "#" + token + "#" + (more.join(','));
+        return "(no map) " + t_view + "#" + t_action + "#" + token + "#" + (more.join(','));
       }
       map_list = [];
       if (t_view in map) {
@@ -703,7 +704,7 @@
           }
         }
       }
-      return "" + t_view + "#" + t_action + "#" + token + "#" + (more.join(','));
+      return "(no match)" + t_view + "#" + t_action + "#" + token + "#" + (more.join(','));
     };
 
     Issue.prototype.doMap = function(token, pattern, vals) {
