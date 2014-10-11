@@ -92,6 +92,7 @@ app= (window, undef) ->
 		# option.a2 view_name, attribute if attribute not of aModels[ view_name]
 		# ClickAction:
 		# option.ca1 action_token, original_path, click_node
+		# option.ca2 action_token, original_path, click_node # "ERROR: Missing '#{click_node.do}' from MACROS"
 		# FistGroupCache:
 		# option.fg1 grp_nm [if not oLoader.fist grp_nm]
 		# option.fg2 grp_nm, flist_nm [if not fgroup.FISTS[ flist_nm]]
@@ -332,38 +333,68 @@ app= (window, undef) ->
 		_log2 f, data, original_path
 		master_issue= new Issue 'App'
 		master_message= new Issue 'App'
+		master_data= merge {}, data
 		click_node= appFindClick original_path, action_token
 		_log2 f, click_node
 		if not click_node?
 			_log2 'WARNING', "No app. entry for action_token (#{action_token}) on path (#{original_path})" #TODO option.ca1
 			return [master_issue, master_message] # No recognized action
-		# Handle 'go:'
-		if click_node.go?
-			E.App().go click_node.go
-		master_data= merge {}, data
-		# Process 'pass:' (just a syntax check)
-		nms= switch type_oau click_node.pass
-			when 'A' then click_node.pass
-			when 'S' then click_node.pass.split ','
-			else []
-		for nm in nms
-			_log2 'WARNING', "Action (#{action_token}) request data is missing param #{nm}", data, click_node, original_path if nm not of data
-		# Process 'set:'
-		master_data[ nm]= val for nm,val of click_node.set
-		# Handle 'do:'
-		if click_node.do?
-			# TODO: No '.' means a MACRO
-			[view_nm,view_act]= click_node.do.split '.'
-			view_act= view_act ? action_token
-			d= new m.Deferred(); r= {}; i= new E.Issue view_nm, view_act; mg= new E.Issue view_nm ,view_act
-			ctx= {d,r,i,m:mg}
-			E[ view_nm] ctx, view_act, master_data
-			master_data[ nm]= val for nm,val of ctx.r # We just polute the one object
-			master_issue.addObj ctx.i
-			master_message.addObj ctx.m
-			[master_issue, master_message]
-		[master_issue, master_message]
 
+		doLeftSide= (click_node)->
+			_log2 f, 'doLeftSide:', {click_node}
+			# Handle 'go:'
+			if click_node.go?
+				E.App().go click_node.go
+			# Process 'pass:' (just a syntax check)
+			nms= switch type_oau click_node.pass
+				when 'A' then click_node.pass
+				when 'S' then click_node.pass.split ','
+				else []
+			for nm in nms
+				_log2 'WARNING', "Action (#{action_token}) request data is missing param #{nm}", data, click_node, original_path if nm not of data
+			# Process 'set:'
+			master_data[ nm]= val for nm,val of click_node.set
+			# Handle 'do:'
+			if click_node.do?
+				is_macro= not /[.]/.test click_node.do
+				if is_macro # Handle 'MACRO'
+					if not aMacros[click_node.do]
+						option.ca2? action_token, original_path, click_node
+					return doClickNode aMacros[click_node.do] if is_macro
+				[view_nm,view_act]= click_node.do.split '.'
+				view_act= view_act ? action_token
+				d= new m.Deferred(); r= {}; i= new E.Issue view_nm, view_act; mg= new E.Issue view_nm ,view_act
+				ctx= {d,r,i,m:mg}
+				E[ view_nm] ctx, view_act, master_data
+				master_data[ nm]= val for nm,val of ctx.r # We just polute the one object
+				master_issue.addObj ctx.i
+				master_message.addObj ctx.m
+					# TODO: Return null or false if do was not a macro
+
+		doRightSide= (click_node)->
+			next_node= null
+			for choice in click_node.next ? []
+				(next_node= choice; break) if choice.when is 'default'
+				(next_node= choice; break) if (typeof choice.when) is 'string' and choice.when is (master_data.success ? master_data.ok)
+				matches= true
+				for k,val of choice.when
+					(matches= false; break;) if master_data[k] isnt val
+				(next_node= choice; break) if matches
+			if next_node
+				_log2 'doRightSide:', {next_node}
+				doClickNode next_node
+			return
+
+		# ClickNode is { do: left_click_node, next: right_click_node }
+		#	execute left_click_node then
+		#	execute right_click_node
+		doClickNode= (click_node)->
+			doLeftSide click_node
+			doRightSide click_node
+
+		doClickNode click_node
+
+		[master_issue, master_message]
 
 	fieldDef= {}
 	fistDef= {}

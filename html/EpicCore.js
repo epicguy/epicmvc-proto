@@ -416,65 +416,121 @@
       return d.promise;
     };
     _d_clickAction = function(action_token, data, original_path) {
-      var click_node, ctx, d, f, i, master_data, master_issue, master_message, mg, nm, nms, r, val, view_act, view_nm, _i, _len, _ref, _ref1, _ref2;
+      var click_node, doClickNode, doLeftSide, doRightSide, f, master_data, master_issue, master_message;
       f = ":clickAction(" + action_token + ")";
       _log2(f, data, original_path);
       master_issue = new Issue('App');
       master_message = new Issue('App');
+      master_data = merge({}, data);
       click_node = appFindClick(original_path, action_token);
       _log2(f, click_node);
       if (!(click_node != null)) {
         _log2('WARNING', "No app. entry for action_token (" + action_token + ") on path (" + original_path + ")");
         return [master_issue, master_message];
       }
-      if (click_node.go != null) {
-        E.App().go(click_node.go);
-      }
-      master_data = merge({}, data);
-      nms = (function() {
-        switch (type_oau(click_node.pass)) {
-          case 'A':
-            return click_node.pass;
-          case 'S':
-            return click_node.pass.split(',');
-          default:
-            return [];
+      doLeftSide = function(click_node) {
+        var ctx, d, i, is_macro, mg, nm, nms, r, val, view_act, view_nm, _i, _len, _ref, _ref1, _ref2;
+        _log2(f, 'doLeftSide:', {
+          click_node: click_node
+        });
+        if (click_node.go != null) {
+          E.App().go(click_node.go);
         }
-      })();
-      for (_i = 0, _len = nms.length; _i < _len; _i++) {
-        nm = nms[_i];
-        if (!(nm in data)) {
-          _log2('WARNING', "Action (" + action_token + ") request data is missing param " + nm, data, click_node, original_path);
+        nms = (function() {
+          switch (type_oau(click_node.pass)) {
+            case 'A':
+              return click_node.pass;
+            case 'S':
+              return click_node.pass.split(',');
+            default:
+              return [];
+          }
+        })();
+        for (_i = 0, _len = nms.length; _i < _len; _i++) {
+          nm = nms[_i];
+          if (!(nm in data)) {
+            _log2('WARNING', "Action (" + action_token + ") request data is missing param " + nm, data, click_node, original_path);
+          }
         }
-      }
-      _ref = click_node.set;
-      for (nm in _ref) {
-        val = _ref[nm];
-        master_data[nm] = val;
-      }
-      if (click_node["do"] != null) {
-        _ref1 = click_node["do"].split('.'), view_nm = _ref1[0], view_act = _ref1[1];
-        view_act = view_act != null ? view_act : action_token;
-        d = new m.Deferred();
-        r = {};
-        i = new E.Issue(view_nm, view_act);
-        mg = new E.Issue(view_nm, view_act);
-        ctx = {
-          d: d,
-          r: r,
-          i: i,
-          m: mg
-        };
-        E[view_nm](ctx, view_act, master_data);
-        _ref2 = ctx.r;
-        for (nm in _ref2) {
-          val = _ref2[nm];
+        _ref = click_node.set;
+        for (nm in _ref) {
+          val = _ref[nm];
           master_data[nm] = val;
         }
-        master_issue.addObj(ctx.i);
-        master_message.addObj(ctx.m);
-        [master_issue, master_message];
-      }
+        if (click_node["do"] != null) {
+          is_macro = !/[.]/.test(click_node["do"]);
+          if (is_macro) {
+            if (!aMacros[click_node["do"]]) {
+              if (typeof option.ca2 === "function") {
+                option.ca2(action_token, original_path, click_node);
+              }
+            }
+            if (is_macro) {
+              return doClickNode(aMacros[click_node["do"]]);
+            }
+          }
+          _ref1 = click_node["do"].split('.'), view_nm = _ref1[0], view_act = _ref1[1];
+          view_act = view_act != null ? view_act : action_token;
+          d = new m.Deferred();
+          r = {};
+          i = new E.Issue(view_nm, view_act);
+          mg = new E.Issue(view_nm, view_act);
+          ctx = {
+            d: d,
+            r: r,
+            i: i,
+            m: mg
+          };
+          E[view_nm](ctx, view_act, master_data);
+          _ref2 = ctx.r;
+          for (nm in _ref2) {
+            val = _ref2[nm];
+            master_data[nm] = val;
+          }
+          master_issue.addObj(ctx.i);
+          return master_message.addObj(ctx.m);
+        }
+      };
+      doRightSide = function(click_node) {
+        var choice, k, matches, next_node, val, _i, _len, _ref, _ref1, _ref2, _ref3;
+        next_node = null;
+        _ref1 = (_ref = click_node.next) != null ? _ref : [];
+        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+          choice = _ref1[_i];
+          if (choice.when === 'default') {
+            next_node = choice;
+            break;
+          }
+          if ((typeof choice.when) === 'string' && choice.when === ((_ref2 = master_data.success) != null ? _ref2 : master_data.ok)) {
+            next_node = choice;
+            break;
+          }
+          matches = true;
+          _ref3 = choice.when;
+          for (k in _ref3) {
+            val = _ref3[k];
+            if (master_data[k] !== val) {
+              matches = false;
+              break;
+            }
+          }
+          if (matches) {
+            next_node = choice;
+            break;
+          }
+        }
+        if (next_node) {
+          _log2('doRightSide:', {
+            next_node: next_node
+          });
+          doClickNode(next_node);
+        }
+      };
+      doClickNode = function(click_node) {
+        doLeftSide(click_node);
+        return doRightSide(click_node);
+      };
+      doClickNode(click_node);
       return [master_issue, master_message];
     };
     fieldDef = {};
