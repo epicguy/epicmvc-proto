@@ -20,7 +20,8 @@ class View extends E.Model.View$Base
 					.replace /&gt;/g, '>')
 					.replace /&amp;/g, '&'
 				prefix= if type is 'varGet2' or type is 'varGet3' then 'Variable reference' else 'Tag'
-				alert "#{prefix} error (#{type}):\n\n#{msg}" #TODO CHROME BUG NOT SHOWING POPUP
+				#alert "#{prefix} error (#{type}):\n\n#{msg}" #TODO CHROME BUG NOT SHOWING POPUP
+				_log2 "ERROR", "#{prefix} error (#{type}):\n\n#{msg}" #TODO CHROME BUG NOT SHOWING POPUP
 	invalidateTables: (view_nm, tbl_list, deleted_tbl_nms) ->
 		E.Devl().tableChange view_nm, tbl_list, deleted_tbl_nms if deleted_tbl_nms.length
 		super view_nm, tbl_list, deleted_tbl_nms
@@ -43,6 +44,17 @@ class View extends E.Model.View$Base
 """
 					@fist_table.Debug= true
 		super nm
+	_accessModelTable: (at_table, alias) ->
+		[lh, rh]= at_table.split '/'
+		if lh of @info_foreach
+			row= @info_foreach[ lh].row
+			if rh not of row
+				_log2 'ERROR', err= "No such sub-table (#{rh}) in (#{lh}) row=", row
+				throw new Error err
+		else if lh not of E
+			_log2 'ERROR', err= "No such Model (#{lh}) for model/table (#{lh}/#{rh})"
+			throw new Error err
+		return super at_table, alias
 	xT_fist: (oPt) ->
 		try
 			throw Error "Missing 'form' attribute" if not oPt.attrs.form
@@ -68,34 +80,37 @@ class View extends E.Model.View$Base
 
 	T_part: (attrs) ->
 		try
-			return super attrs if @Opts().file isnt true or @in_defer
+			return super attrs if @Opts().file isnt true
 			return [
 				m( 'div.dbg-part-box', {title: "Part/#{attrs.part}.html"}, '.')
 				#{tag:'div', attrs:{className:"dbg-part-box", title:"Part/#{attrs.part}.html"}, children:'.'}
 				super attrs
 			]
 		catch e
-			throw e if @Epic.isSecurityError e
-			_log2 '##### Error in page-part', oPt.attrs.part, e, e.stack
-			return """<pre>&lt;epic:page_part part="Part/#{attrs.part}"&gt;<br>#{e}<br>#{e.stack}</pre>"""
+			_log2 '##### Error in page-part', attrs.part, e
+			return m 'pre',{},["<e-part part=\"Part/#{attrs.part}\">",(m 'br'), e, (m 'br'), e.stack]
 
-	T_page: (attrs) ->
-		try
-			return super attrs if @Opts().file isnt true
+	getLetTypPag: () ->
 			nest= @frames.length- @frame_inx
 			letter= switch nest
 				when 0 then 'P'; when 1 then 'L'; else 'F'
 			type= {P:'Page',L:'Layout',F:'Frame'}[ letter]
 			page= switch nest
 				when 0 then @page_name; else @frames[ @frame_inx]
+			[letter,type,page]
+	T_page: (attrs) ->
+		try
+			return super attrs if @Opts().file isnt true
+			[letter,type,page]= @getLetTypPag()
 			return [
 				{tag:'div', attrs: {className:"dbg-part-box", title:"#{type}/#{page}.html"}, children: letter}
 				super attrs # TODO BREAKS IN EpicMvc-One SINCE @kids EXPECTS A PROMISE AS RETURN VALUE
 			]
 		catch e
-			_log2 '##### Error in ', type, page, e, e.stack
-			@_Error 'page',( @_TagText {attrs}, true), e
-			@_Err 'page', {attrs}, e
+			#_log2 '##### Error in ', type, page, e, e.stack
+			_log2 '##### Error in T_page', attrs, e
+			@_Error 'page',( @_TagText {tag:'page',attrs}, true), e
+			@_Err 'page', {tag:'page',attrs}, e
 			#return """<pre>&lt;epic:page page:#{@bd_page}&gt;<br>#{e}<br>#{e.stack}</pre>"""
 
 	v3: (view_nm, tbl_nm, col_nm, format_spec, custom_spec, give_error) ->
@@ -174,40 +189,11 @@ class View extends E.Model.View$Base
 		JSON.stringify @Epic.getViewTable oPt.attrs.table
 
 	_TagText: (oPt,asError) ->
-		tag= @viewExe.current[ oPt.parts+ 1]
+		[letter,type,page]= @getLetTypPag()
 		attrs= []
 		for key,val of oPt.attrs
-			if typeof val is 'object'
-				list= val; val= ''
-				for item in list
-					text= false
-					ans= ''
-					if item[0] is 'varGet3'
-						[view_nm, tbl_nm, col_nm, format_spec, custom_spec]= item[1]
-						t_format_spec= if format_spec or custom_spec then '#'+ format_spec else ''
-						t_custom_spec= if custom_spec then '#'+ custom_spec else ''
-						text= '&'+ view_nm+ '/'+ tbl_nm+ '/'+ col_nm+ t_format_spec+ t_custom_spec+ ';'
-						if not asError then ans=
-							try
-								@varGet3 view_nm, tbl_nm, col_nm, format_spec, custom_spec, true
-							catch e
-								e.message
-					if item[0] is 'varGet2'
-						[tbl_nm, col_nm, format_spec, custom_spec, sub_nm]= item[1]
-						t_format_spec= if format_spec or custom_spec then '#'+ format_spec else ''
-						t_custom_spec= if custom_spec then '#'+ custom_spec else ''
-						text= '&'+ tbl_nm+ '/'+ col_nm+ t_format_spec+ t_custom_spec+ ';'
-						if not asError then ans=
-							try
-								@varGet2 tbl_nm, col_nm, format_spec, custom_spec, sub_nm, true
-							catch e
-								e.message
-					val+= if text is false then item else """<span title="#{ans}">#{text}</span>"""
 			attrs.push "#{key}=\"#{val}\""
-		klass= " class=\"#{klass}\"" if klass
-		"""
-&lt;epic:#{tag} #{attrs.join ' '}&gt;
-"""
+		"<e-#{oPt.tag} #{attrs.join ' '}>"
 	_Div:( type, oPt, inside, after) ->
 		after?= ''
 		"""<div class="dbg-#{type}-box">#{@_TagText oPt}#{inside}</div>#{after}"""
@@ -215,10 +201,10 @@ class View extends E.Model.View$Base
 		_log2 '### _Err type/oPt/e', type, oPt, e: e, m: e.message, s: e.stack
 		stack= if @Opts().stack then "<pre>\n#{e.stack}</pre>" else ''
 		title= (e.stack.split '\n')[1]
-		"""
-<div class="dbg-#{type}-error-box">
-#{@_TagText oPt, true}<br><span class="dbg-#{type}-error-msg" title="#{title}">#{e.message}</span>
-</div>#{stack}
-"""
+		tag: 'div'
+		attrs: {className:"dbg-#{type}-error-box"}
+		children: [
+			(@_TagText oPt, true), (m 'br'), (m 'dir', {className:"dbg-#{type}-error-msg", title:title}, e.message), stack
+		]
 
 E.Model.View$BaseDevl= View # Public API

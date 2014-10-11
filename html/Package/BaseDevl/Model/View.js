@@ -38,7 +38,7 @@
           _log2('### _Error type/key/e', type, key, e);
           msg = ((("" + key + "\n\n" + e.message).replace(/&lt;/g, '<')).replace(/&gt;/g, '>')).replace(/&amp;/g, '&');
           prefix = type === 'varGet2' || type === 'varGet3' ? 'Variable reference' : 'Tag';
-          return alert("" + prefix + " error (" + type + "):\n\n" + msg);
+          return _log2("ERROR", "" + prefix + " error (" + type + "):\n\n" + msg);
         }
       }
     };
@@ -89,6 +89,22 @@
       return View.__super__.xgetTable.call(this, nm);
     };
 
+    View.prototype._accessModelTable = function(at_table, alias) {
+      var err, lh, rh, row, _ref;
+      _ref = at_table.split('/'), lh = _ref[0], rh = _ref[1];
+      if (lh in this.info_foreach) {
+        row = this.info_foreach[lh].row;
+        if (!(rh in row)) {
+          _log2('ERROR', err = "No such sub-table (" + rh + ") in (" + lh + ") row=", row);
+          throw new Error(err);
+        }
+      } else if (!(lh in E)) {
+        _log2('ERROR', err = "No such Model (" + lh + ") for model/table (" + lh + "/" + rh + ")");
+        throw new Error(err);
+      }
+      return View.__super__._accessModelTable.call(this, at_table, alias);
+    };
+
     View.prototype.xT_fist = function(oPt) {
       var c, g, inside, v, _ref, _ref1, _ref2;
       try {
@@ -130,7 +146,7 @@
 
     View.prototype.T_part = function(attrs) {
       try {
-        if (this.Opts().file !== true || this.in_defer) {
+        if (this.Opts().file !== true) {
           return View.__super__.T_part.call(this, attrs);
         }
         return [
@@ -139,44 +155,47 @@
           }, '.'), View.__super__.T_part.call(this, attrs)
         ];
       } catch (e) {
-        if (this.Epic.isSecurityError(e)) {
-          throw e;
-        }
-        _log2('##### Error in page-part', oPt.attrs.part, e, e.stack);
-        return "<pre>&lt;epic:page_part part=\"Part/" + attrs.part + "\"&gt;<br>" + e + "<br>" + e.stack + "</pre>";
+        _log2('##### Error in page-part', attrs.part, e);
+        return m('pre', {}, ["<e-part part=\"Part/" + attrs.part + "\">", m('br'), e, m('br'), e.stack]);
       }
     };
 
-    View.prototype.T_page = function(attrs) {
+    View.prototype.getLetTypPag = function() {
       var letter, nest, page, type;
+      nest = this.frames.length - this.frame_inx;
+      letter = (function() {
+        switch (nest) {
+          case 0:
+            return 'P';
+          case 1:
+            return 'L';
+          default:
+            return 'F';
+        }
+      })();
+      type = {
+        P: 'Page',
+        L: 'Layout',
+        F: 'Frame'
+      }[letter];
+      page = (function() {
+        switch (nest) {
+          case 0:
+            return this.page_name;
+          default:
+            return this.frames[this.frame_inx];
+        }
+      }).call(this);
+      return [letter, type, page];
+    };
+
+    View.prototype.T_page = function(attrs) {
+      var letter, page, type, _ref;
       try {
         if (this.Opts().file !== true) {
           return View.__super__.T_page.call(this, attrs);
         }
-        nest = this.frames.length - this.frame_inx;
-        letter = (function() {
-          switch (nest) {
-            case 0:
-              return 'P';
-            case 1:
-              return 'L';
-            default:
-              return 'F';
-          }
-        })();
-        type = {
-          P: 'Page',
-          L: 'Layout',
-          F: 'Frame'
-        }[letter];
-        page = (function() {
-          switch (nest) {
-            case 0:
-              return this.page_name;
-            default:
-              return this.frames[this.frame_inx];
-          }
-        }).call(this);
+        _ref = this.getLetTypPag(), letter = _ref[0], type = _ref[1], page = _ref[2];
         return [
           {
             tag: 'div',
@@ -188,11 +207,13 @@
           }, View.__super__.T_page.call(this, attrs)
         ];
       } catch (e) {
-        _log2('##### Error in ', type, page, e, e.stack);
+        _log2('##### Error in T_page', attrs, e);
         this._Error('page', this._TagText({
+          tag: 'page',
           attrs: attrs
         }, true), e);
         return this._Err('page', {
+          tag: 'page',
           attrs: attrs
         }, e);
       }
@@ -305,58 +326,15 @@
     };
 
     View.prototype._TagText = function(oPt, asError) {
-      var ans, attrs, col_nm, custom_spec, format_spec, item, key, klass, list, sub_nm, t_custom_spec, t_format_spec, tag, tbl_nm, text, val, view_nm, _i, _len, _ref, _ref1, _ref2;
-      tag = this.viewExe.current[oPt.parts + 1];
+      var attrs, key, letter, page, type, val, _ref, _ref1;
+      _ref = this.getLetTypPag(), letter = _ref[0], type = _ref[1], page = _ref[2];
       attrs = [];
-      _ref = oPt.attrs;
-      for (key in _ref) {
-        val = _ref[key];
-        if (typeof val === 'object') {
-          list = val;
-          val = '';
-          for (_i = 0, _len = list.length; _i < _len; _i++) {
-            item = list[_i];
-            text = false;
-            ans = '';
-            if (item[0] === 'varGet3') {
-              _ref1 = item[1], view_nm = _ref1[0], tbl_nm = _ref1[1], col_nm = _ref1[2], format_spec = _ref1[3], custom_spec = _ref1[4];
-              t_format_spec = format_spec || custom_spec ? '#' + format_spec : '';
-              t_custom_spec = custom_spec ? '#' + custom_spec : '';
-              text = '&' + view_nm + '/' + tbl_nm + '/' + col_nm + t_format_spec + t_custom_spec + ';';
-              if (!asError) {
-                ans = (function() {
-                  try {
-                    return this.varGet3(view_nm, tbl_nm, col_nm, format_spec, custom_spec, true);
-                  } catch (e) {
-                    return e.message;
-                  }
-                }).call(this);
-              }
-            }
-            if (item[0] === 'varGet2') {
-              _ref2 = item[1], tbl_nm = _ref2[0], col_nm = _ref2[1], format_spec = _ref2[2], custom_spec = _ref2[3], sub_nm = _ref2[4];
-              t_format_spec = format_spec || custom_spec ? '#' + format_spec : '';
-              t_custom_spec = custom_spec ? '#' + custom_spec : '';
-              text = '&' + tbl_nm + '/' + col_nm + t_format_spec + t_custom_spec + ';';
-              if (!asError) {
-                ans = (function() {
-                  try {
-                    return this.varGet2(tbl_nm, col_nm, format_spec, custom_spec, sub_nm, true);
-                  } catch (e) {
-                    return e.message;
-                  }
-                }).call(this);
-              }
-            }
-            val += text === false ? item : "<span title=\"" + ans + "\">" + text + "</span>";
-          }
-        }
+      _ref1 = oPt.attrs;
+      for (key in _ref1) {
+        val = _ref1[key];
         attrs.push("" + key + "=\"" + val + "\"");
       }
-      if (klass) {
-        klass = " class=\"" + klass + "\"";
-      }
-      return "&lt;epic:" + tag + " " + (attrs.join(' ')) + "&gt;";
+      return "<e-" + oPt.tag + " " + (attrs.join(' ')) + ">";
     };
 
     View.prototype._Div = function(type, oPt, inside, after) {
@@ -375,7 +353,18 @@
       });
       stack = this.Opts().stack ? "<pre>\n" + e.stack + "</pre>" : '';
       title = (e.stack.split('\n'))[1];
-      return "<div class=\"dbg-" + type + "-error-box\">\n" + (this._TagText(oPt, true)) + "<br><span class=\"dbg-" + type + "-error-msg\" title=\"" + title + "\">" + e.message + "</span>\n</div>" + stack;
+      return {
+        tag: 'div',
+        attrs: {
+          className: "dbg-" + type + "-error-box"
+        },
+        children: [
+          this._TagText(oPt, true), m('br'), m('dir', {
+            className: "dbg-" + type + "-error-msg",
+            title: title
+          }, e.message), stack
+        ]
+      };
     };
 
     return View;
