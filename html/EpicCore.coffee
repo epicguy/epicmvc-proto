@@ -10,7 +10,7 @@
 #
 # TODO Define the new namespace I/F to the world: (under window.E)
 # E( "model's-view-name") - equivilent to getInstance( "model's-view--name")
-# E( "model", "action", {data} [, 'fist-name']) - replaces app.coffee's call: "model/action" ...
+# E( "model", "action", {data}) - replaces app.coffee's call: "model/action" ...
 # E.merge (replacement for jQuery.extend, to avoid jquery dependancy)
 #
 #
@@ -22,8 +22,7 @@
 #  - NOW USES GLOBAL _logX FUNCTIONS, USER MUST DEFINE IN E.G. index_dev.html (SHOULD BE REMOVE IN MIN VERSION)
 #
 # TODO FIST
-#  - Need to use mithril component features to push FIST data back to FIST object
-#    - I Removed 'Request' object, so no longer loading from a <form> tag
+#  - Need to to push FIST data back to FIST object
 #  - Would like to put a 'validate' choice in CLICKS: for app.coffee, so Models don't have to
 #
 # TODO APP.COFFEE
@@ -65,7 +64,7 @@
 #
 # TODO MITHRIL
 # A) Do sample component
-# B) Integrate fists
+# B) Integrate fist control fields (select, input, etc.) with correct attributes value vs. defaultValue ?
 # C) Use it's functions to avoid JQUERY dependancies
 # D) Look into how to allow defereds in Model action results
 #
@@ -80,7 +79,6 @@ app= (window, undef) ->
 	Model= {} # Namespace for others to populate with class implementations of Models
 	Extra= {} # Namespace for others to populate with class implementations that are not Models
 	oModel= {} # Instances of model classes
-	oFist= {} # Instances of model classes
 	appconfs= [] # Will be an array of the apps user sets in 'run'
 	option= load_dirs: []
 		# load: loadstratgy-class-name placed into E.Extra
@@ -93,14 +91,6 @@ app= (window, undef) ->
 		# ClickAction:
 		# option.ca1 action_token, original_path, click_node
 		# option.ca2 action_token, original_path, click_node # "ERROR: Missing '#{click_node.do}' from MACROS"
-		# FistGroupCache:
-		# option.fg1 grp_nm [if not oLoader.fist grp_nm]
-		# option.fg2 grp_nm, flist_nm [if not fgroup.FISTS[ flist_nm]]
-		# option.fg3 grp_nm, flist_nm, nm [if nm not of fgroup.FIELDS]
-		# Fist (fist back functions Fb_*)
-		# option.fb1 field [field.cdata.length is 0, for psuedo field spec, expect list of fields]
-		# FistFilt
-		# option.ff1 fieldName, spec, one_spec [no such H2H 'one_spec']
 	#TODO option[ nm]= (-> _log2 'ERROR: ', arguments) for nm in [ 'c1', 'm1', 'a1', 'a2', 'ca1', 'fg1', 'fg2', 'fg3', 'fb1', 'ff1']
 
 	E= {} #() -> # TODO FIGURE OUT IF ANYTHING INTERESTING GOES HERE
@@ -181,19 +171,6 @@ app= (window, undef) ->
 		for k,o of oModel when o.eventLogout?() # True to reset model and state
 			delete modelState[ k]
 			delete oModel[ k]
-		oFist= {}
-
-	# Give caller an instance of a 'fist'
-	E.fist= (flist_nm,grp_nm) -> # grp_nm optional
-		if not grp_nm
-			[f,t]= E.App().getStepPath()
-			grp_nm= E.oA.getGroupNm f t
-		fist_nm= E.fistGrp().fist grp_nm, flist_nm
-		inst_nm= "#{grp_nm}_#{fist_nm}"
-		if not (inst_nm of oFist)
-			view_nm= E.oA.fist grp_nm, fist_nm
-			oFist[ inst_nm]= new E.Fist grp_nm, fist_nm, view_nm, flist_nm
-		oFist[ inst_nm]
 
 	# Accept caller's request to start up an EpicMvc application
 	E.run= (set_appconfs, more_options, init_func) ->
@@ -240,21 +217,18 @@ app= (window, undef) ->
 	aClicks= {}
 	aFlows= default: start: 'default', TRACKS: default: start: 'default', STEPS: default: {}
 	aModels= {}
-	aFists= false # Loaded on demand
+	aFists= {}
 	appLoadFormsIf= (config) ->
-		if aFists is false # First time, build index
-			aFists= {}
-			for view_nm, node of aModels when node.fists
-				group= node.group ? aSetting.group
-				aFists[ group]?= {}
-				aFists[ group][ form_nm]= view_nm for form_nm in node.forms
 		return
 	appInit= ()->
 		for nm in appconfs
 			app= E[ 'app$'+ nm] ? {}
 			merge aFlows.default.TRACKS.default.STEPS, app.STEPS if app.STEPS
 			merge aFlows.default.TRACKS, app.TRACKS if app.TRACKS
-			merge obj, app[ nm] for nm,obj of SETTINGS: aSetting, MACROS: aMacros, CLICKS: aClicks, FLOWS: aFlows, MODELS: aModels, OPTIONS: option
+			hash= SETTINGS: aSetting, MACROS: aMacros, CLICKS: aClicks, FLOWS: aFlows, MODELS: aModels, OPTIONS: option
+			merge obj, app[ nm] for nm,obj of hash
+		for view_nm, node of aModels when node.fists
+			aFists[ form_nm]= view_nm for form_nm in node.fists
 		make_model_functions()
 		return
 
@@ -263,9 +237,8 @@ app= (window, undef) ->
 		config.a1 view_name if view_name not of aModels
 		option.a2 view_name, attribute if attribute not of aModels[ view_name]
 		aModels[ view_name][ attribute]
-	appFist= (group_nm,fist_nm) ->
-		appLoadFormsIf()
-		aFist[ group_nm][ fist_nm]
+	appFist= (fist_nm) ->
+		aFists[ fist_nm]
 
 	# Flow functions
 	appFindNode= (flow,t,s,cat,nm) ->
@@ -415,9 +388,9 @@ app= (window, undef) ->
 		type_oau # TODO SEE IF THIS WORKS FOR PEOPLE TO REPLACE E.G. $.IsArray
 		Model, Extra, option, click, merge, appconfs
 		appGetF, appGetT, appGetS, appStartT, appStartS
-		appFindClick, appGetSetting, appGetVars
+		appFindClick, appGetSetting, appGetVars, appFist
 		fieldDef, fistDef, issueMap
-		oModel, oFist # Just for internal checking / testing
+		oModel # Just for internal checking / testing
 	}
 	return E
 
