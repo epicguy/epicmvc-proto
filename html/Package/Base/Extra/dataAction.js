@@ -23,22 +23,14 @@
             return E.click(spec_action, data_params);
           }), 5);
         })(spec_action);
+        break;
+      } else {
+        _results.push(void 0);
       }
-      break;
     }
     return _results;
   };
 
   E.Extra.dataAction$Base = dataAction;
-
-  /*
-  $(document).on("click change dblclick", "[data-action]", function(event_obj) {
-  //console.log( 'event', event_obj, this, $(this).val());
-  event_obj.preventDefault(); // Added to keep LOGIN FORM from posting, causing fresh instance to start up
-  handle_data_action( event_obj.type, $(this).attr( 'data-action'), $(this).attr( 'data-params'), $(this).val());
-  return false; // TODO CONSIDER MAKING SURE WE WANTED TO STOP, OR DO MORE TO ENSURE WE STOP DOING MORE THAN THIS
-  });
-  */
-
 
 }).call(this);
