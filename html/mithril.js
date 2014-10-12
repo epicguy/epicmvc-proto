@@ -503,10 +503,18 @@ Mithril = m = new function app(window, undefined) {
 	}
 
 	var pendingRequests = 0
-	m.startComputation = function() {pendingRequests++}
+	var pendingMax= 0
+	var pendingGuardRequest= 0
+	m.startComputation = function(guard) {
+		if (guard && pendingRequests=== pendingGuardRequest) pendingGuardRequest++;
+		pendingMax= Math.max( pendingMax, ++pendingRequests);
+	}
 	m.endComputation = function() {
-		pendingRequests = Math.max(pendingRequests - 1, 0)
-		if (pendingRequests == 0) m.redraw()
+		pendingRequests = Math.max(pendingRequests - 1, 0);
+		if (pendingRequests=== 0) {
+			if( pendingMax> pendingGuardRequest) m.redraw();
+			pendingGuardRequest= pendingMax= 0;
+		 }
 	}
 
 	m.withAttr = function(prop, withAttrCallback) {
