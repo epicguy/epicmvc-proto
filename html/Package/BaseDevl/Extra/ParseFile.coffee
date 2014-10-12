@@ -111,6 +111,11 @@ FindAttrVal= (i, a) -> # false if eof, 'string' if error, else [i, attr-name, qu
 # TODO TEST attr='"' attr="'" checked another== a=x/> or checked/>
 FindAttrs= (file_info, str)->
 	f= ':parse.FindAttrs:'
+	# For data-e-action="click:action-name"
+	event_attrs_shortcuts= [
+		'data-e-click', 'data-e-change', 'data-e-dblclick', 'data-e-enter'
+		'data-e-keyup', 'data-e-focus', 'data-e-blur'
+	]
 	str= ' '+ str
 	str= str.replace /\se-/gm, ' data-e-'
 	attr_split= str.trim().split /([\s="':;])/
@@ -126,7 +131,7 @@ FindAttrs= (file_info, str)->
 		if good isnt true
 			_log2 'ERROR - parse:', {file_info, good, start, i, nm, eq, quo, parts, str}
 			continue
-		if nm in ['data-e-click', 'data-e-change', 'data-e-dblclick', 'data-e-enter'] # For data-e-action="click:action-name"
+		if nm in event_attrs_shortcuts
 			debug= true # TODO DEBUG
 			attr_obj['data-e-action']?= []
 			attr_obj['data-e-action'].push (nm.slice 7)+ ':'+ parts.join ''

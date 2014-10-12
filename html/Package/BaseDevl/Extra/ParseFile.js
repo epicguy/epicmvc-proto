@@ -172,8 +172,9 @@
   };
 
   FindAttrs = function(file_info, str) {
-    var attr_obj, attr_split, attrs_need_cleaning, data_nm, debug, empty, eq, f, good, i, nm, parts, quo, start, style_obj, _i, _len, _ref, _ref1, _ref2, _ref3;
+    var attr_obj, attr_split, attrs_need_cleaning, data_nm, debug, empty, eq, event_attrs_shortcuts, f, good, i, nm, parts, quo, start, style_obj, _i, _len, _ref, _ref1, _ref2, _ref3;
     f = ':parse.FindAttrs:';
+    event_attrs_shortcuts = ['data-e-click', 'data-e-change', 'data-e-dblclick', 'data-e-enter', 'data-e-keyup', 'data-e-focus', 'data-e-blur'];
     str = ' ' + str;
     str = str.replace(/\se-/gm, ' data-e-');
     attr_split = str.trim().split(/([\s="':;])/);
@@ -204,7 +205,7 @@
         });
         continue;
       }
-      if (nm === 'data-e-click' || nm === 'data-e-change' || nm === 'data-e-dblclick' || nm === 'data-e-enter') {
+      if (__indexOf.call(event_attrs_shortcuts, nm) >= 0) {
         debug = true;
         if ((_ref1 = attr_obj['data-e-action']) == null) {
           attr_obj['data-e-action'] = [];
