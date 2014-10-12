@@ -13,7 +13,20 @@
     },
     CLICKS: {
       F$change: {
+        pass: "fist",
         "do": 'Fist.F$change'
+      },
+      F$keyup: {
+        pass: "fist",
+        "do": 'Fist.F$keyup'
+      },
+      F$focus: {
+        pass: "fist",
+        "do": 'Fist.F$focus'
+      },
+      F$blur: {
+        pass: "fist",
+        "do": 'Fist.F$blur'
       }
     }
   };
