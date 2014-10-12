@@ -331,7 +331,6 @@ class View$Base extends E.ModelJS
 	T_fist: (attrs, content_f) -> # Could have children, or a part=, or default to fist_default, (or E.fistDef[nm].part ?)
 		f= 'T_fist'
 		_log2 f, attrs, content_f
-		E.Fist false, 'F$start', attrs
 		if not attrs.using
 			[tbl, rh_alias]= @_accessModelTable 'Fist/'+ attrs.fist, attrs.alias
 			@info_foreach[rh_alias].row= tbl[ 0]

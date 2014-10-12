@@ -570,7 +570,6 @@
       var f, rh_alias, tbl, _base, _ref, _ref1, _ref2;
       f = 'T_fist';
       _log2(f, attrs, content_f);
-      E.Fist(false, 'F$start', attrs);
       if (!attrs.using) {
         _ref = this._accessModelTable('Fist/' + attrs.fist, attrs.alias), tbl = _ref[0], rh_alias = _ref[1];
         this.info_foreach[rh_alias].row = tbl[0];
