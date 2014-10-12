@@ -34,10 +34,9 @@ class RenderStrategy$Base
 		# Getting all events, need to weed out to 'data-e-action' nodes
 		event_obj?= window.event # IE < 9
 		type= event_obj.type
-		if type is 'keyup'
-			return false if event_obj.keyCode isnt ENTER_KEY
-			type= 'enter'
+		type= 'enter' if type is 'keyup' and event_obj.keyCode is ENTER_KEY
 		target= event_obj.target
+		return false if target is window # blur had this
 		# Bubble up to any parent with a data-e-action
 		while target.tagName isnt 'BODY' and not data_action= target.getAttribute 'data-e-action'
 			target= target.parentElement
@@ -55,7 +54,9 @@ class RenderStrategy$Base
 		E.Extra[ E.option.data_action] type, data_action, data_params
 		return false; # TODO CONSIDER MAKING SURE WE WANTED TO STOP, OR DO MORE TO ENSURE WE STOP DOING MORE THAN THIS
 	init: ->
-		document.body[ 'on'+ event_name]= @handleEvent for event_name in ['click', 'change', 'dblclick', 'keyup']
+		interesting= ['click', 'change', 'dblclick', 'keyup', 'blur', 'focus']
+		#document.body[ 'on'+ event_name]= @handleEvent for event_name in interesting
+		document.body.addEventListener event_name, @handleEvent, true for event_name in interesting
 
 	UnloadMessage: (ix,msg) ->
 		if msg

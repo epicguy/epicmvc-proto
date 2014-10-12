@@ -46,13 +46,13 @@
         event_obj = window.event;
       }
       type = event_obj.type;
-      if (type === 'keyup') {
-        if (event_obj.keyCode !== ENTER_KEY) {
-          return false;
-        }
+      if (type === 'keyup' && event_obj.keyCode === ENTER_KEY) {
         type = 'enter';
       }
       target = event_obj.target;
+      if (target === window) {
+        return false;
+      }
       while (target.tagName !== 'BODY' && !(data_action = target.getAttribute('data-e-action'))) {
         target = target.parentElement;
       }
@@ -89,12 +89,12 @@
     };
 
     RenderStrategy$Base.prototype.init = function() {
-      var event_name, _i, _len, _ref, _results;
-      _ref = ['click', 'change', 'dblclick', 'keyup'];
+      var event_name, interesting, _i, _len, _results;
+      interesting = ['click', 'change', 'dblclick', 'keyup', 'blur', 'focus'];
       _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        event_name = _ref[_i];
-        _results.push(document.body['on' + event_name] = this.handleEvent);
+      for (_i = 0, _len = interesting.length; _i < _len; _i++) {
+        event_name = interesting[_i];
+        _results.push(document.body.addEventListener(event_name, this.handleEvent, true));
       }
       return _results;
     };
