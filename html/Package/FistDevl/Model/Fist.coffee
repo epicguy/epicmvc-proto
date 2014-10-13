@@ -67,6 +67,10 @@ class Fist extends E.ModelJS
 		switch act
 			when 'F$keyup', 'F$change' # User has changed a field's value possibly
 				# p.val
+				if field.type is 'yesno'
+					if p.val is field.cdata # Toggle value
+					then p.val= ''
+					else p.val= field.cdata
 				if field.hval isnt p.val # Update our html-value state with el.value
 					had_issue= field.issue
 					field.hval= p.val
@@ -131,10 +135,10 @@ class Fist extends E.ModelJS
 		fl.issue= field.issue.asTable()[0].issue if field.issue
 
 		if fl.type is 'radio' or fl.type is 'pulldown'
-			choices= _getChoices choice_type, fist, field, row
+			choices= @_getChoices choice_type, fist, field, row
 			rows= []; s= ''
 			for ix in [0...choices.options.length]
-				s= choices.values[ ix] is (String fl.value) if fieldVal
+				s= choices.values[ ix] is (String fl.value)
 				rows.push option: choices.options[ ix], value: choices.values[ ix], selected: s
 				fl.Choice= rows
 		fl
@@ -159,7 +163,12 @@ class Fist extends E.ModelJS
 	_getChoices: (type, fist, field) ->
 		switch type
 			when 'array'
-				field.cdata # TODO IF ONE ARRAY, MAKE IT THE HASH THING
+				final_obj= options: [], values: []
+				for rec in field.cdata
+					if typeof rec is 'object'
+					then final_obj.options.push String rec[1]; final_obj.values.push String rec[0]
+					else final_obj.options.push String rec; final_obj.values.push String rec
+				final_obj
 			when 'custom'
 				E[ E.appFist fist.nm]().fistGetChoices fist.nm, field.nm, fist.row
 			else BROKEN()

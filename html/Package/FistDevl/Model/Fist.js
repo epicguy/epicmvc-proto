@@ -138,6 +138,13 @@
       switch (act) {
         case 'F$keyup':
         case 'F$change':
+          if (field.type === 'yesno') {
+            if (p.val === field.cdata) {
+              p.val = '';
+            } else {
+              p.val = field.cdata;
+            }
+          }
           if (field.hval !== p.val) {
             had_issue = field.issue;
             field.hval = p.val;
@@ -255,13 +262,11 @@
         fl.issue = field.issue.asTable()[0].issue;
       }
       if (fl.type === 'radio' || fl.type === 'pulldown') {
-        choices = _getChoices(choice_type, fist, field, row);
+        choices = this._getChoices(choice_type, fist, field, row);
         rows = [];
         s = '';
         for (ix = _i = 0, _ref3 = choices.options.length; 0 <= _ref3 ? _i < _ref3 : _i > _ref3; ix = 0 <= _ref3 ? ++_i : --_i) {
-          if (fieldVal) {
-            s = choices.values[ix] === (String(fl.value));
-          }
+          s = choices.values[ix] === (String(fl.value));
           rows.push({
             option: choices.options[ix],
             value: choices.values[ix],
@@ -312,9 +317,25 @@
     };
 
     Fist.prototype._getChoices = function(type, fist, field) {
+      var final_obj, rec, _i, _len, _ref;
       switch (type) {
         case 'array':
-          return field.cdata;
+          final_obj = {
+            options: [],
+            values: []
+          };
+          _ref = field.cdata;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            rec = _ref[_i];
+            if (typeof rec === 'object') {
+              final_obj.options.push(String(rec[1]));
+              final_obj.values.push(String(rec[0]));
+            } else {
+              final_obj.options.push(String(rec));
+              final_obj.values.push(String(rec));
+            }
+          }
+          return final_obj;
         case 'custom':
           return E[E.appFist(fist.nm)]().fistGetChoices(fist.nm, field.nm, fist.row);
         default:
