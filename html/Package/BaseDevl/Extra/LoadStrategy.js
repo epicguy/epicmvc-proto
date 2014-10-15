@@ -37,13 +37,9 @@
     };
 
     LoadStrategy.prototype.D_loadAsync = function() {
-      var def, f, file, file_list, head, pkg, promise, script_attrs, type, url, _fn, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3,
-        _this = this;
+      var def, f, file, file_list, next, pkg, promise, type, url, work, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3;
       f = 'Base:E/LoadStragegy.loadAsync';
-      head = document.getElementsByTagName('head')[0];
-      script_attrs = {
-        type: 'text/javascript'
-      };
+      work = [];
       def = new m.Deferred();
       promise = def.promise;
       _ref = this.appconfs;
@@ -55,39 +51,29 @@
         _ref3 = (_ref1 = (_ref2 = E['app$' + pkg]) != null ? _ref2.MANIFEST : void 0) != null ? _ref1 : {};
         for (type in _ref3) {
           file_list = _ref3[type];
-          _fn = function(file, type, pkg, url) {
-            return promise = promise.then(function() {
-              return (m.request({
-                background: true,
-                method: 'GET',
-                url: url,
-                data: {
-                  _: _this.refresh_stamp
-                },
-                config: function(xhr, options) {
-                  xhr.setRequestHeader("Content-Type", "text/plain; charset=utf-8");
-                  return xhr;
-                },
-                deserialize: function(x) {
-                  return x;
-                }
-              })).then(function(data) {
-                _log2(f, 'Got a script', url, data.slice(0, 10));
-                return (Function(data))();
-              }).then(null, function(error) {
-                _log2('AJAX ERROR LOADING SCRIPT', url, error);
-                return false;
-              });
-            });
-          };
           for (_j = 0, _len1 = file_list.length; _j < _len1; _j++) {
             file = file_list[_j];
             url = this.dir_map[pkg] + pkg + '/' + type + '/' + file + '.js';
-            _fn(file, type, pkg, url);
+            work.push(url);
           }
         }
       }
-      def.resolve(null);
+      next = function(ix) {
+        var el;
+        if (ix >= work.length) {
+          _log2(f, ix, 'done.');
+          def.resolve(null);
+          return;
+        }
+        el = document.createElement('script');
+        el.setAttribute('type', 'text/javascript');
+        el.setAttribute('src', work[ix]);
+        el.onload = function() {
+          return next(ix + 1);
+        };
+        document.head.appendChild(el);
+      };
+      next(0);
       return promise;
     };
 

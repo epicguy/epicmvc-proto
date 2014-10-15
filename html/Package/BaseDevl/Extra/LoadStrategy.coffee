@@ -6,7 +6,7 @@ class LoadStrategy
 		@clearCache()
 		@cache_local_flag= true # False if we want browser to cache responses
 		@reverse_packages=( @appconfs[ i] for i in [@appconfs.length- 1..0])
-		# Index defined dirs by package: *.html: E.run([],{load_dirs:[{dir:'Package/',pkgs:['Test']}]})
+		# Index defined dirs by package: *.html: E.run([],{load_dirs:{Test:'Package/'}})
 		dir_map= {}
 		for {dir,pkgs} in E.option.load_dirs
 			dir_map[ pkg]= dir for pkg in pkgs
@@ -15,8 +15,7 @@ class LoadStrategy
 	D_loadAsync: () -> # Load up all the Model/Extra code stuff - caller should delay after
 		f= 'Base:E/LoadStragegy.loadAsync'
 		# Insert script tags for all MANIFEST entries of each package-app-config file
-		head= document.getElementsByTagName( 'head')[ 0]
-		script_attrs= type: 'text/javascript'
+		work= []
 		def= new m.Deferred()
 		promise= def.promise
 		for pkg in @appconfs
@@ -24,25 +23,23 @@ class LoadStrategy
 			for type,file_list of E[ 'app$'+ pkg]?.MANIFEST ? {} # Extra, Model: ['Render']
 				for file in file_list
 					url= @dir_map[ pkg]+ pkg+ '/'+ type+ '/'+ file+ '.js'
-					do (file, type, pkg, url) =>
-						promise= promise.then =>
-							(m.request
-								background: true # Don't want 'm' to redraw the view
-								method: 'GET'
-								url: url
-								data: _: @refresh_stamp
-								config: (xhr,options) ->
-									xhr.setRequestHeader "Content-Type", "text/plain; charset=utf-8"
-									xhr
-								deserialize: (x)->x
-							).then (data)->
-								_log2 f, 'Got a script', url, data.slice 0, 10
-								(Function data)()
-							.then null, (error) ->
-								_log2 'AJAX ERROR LOADING SCRIPT', url, error
-								false
+					work.push url
+					#_log2 f, 'to do ', url
+
+		next= (ix) ->
+			if ix>= work.length
+				_log2 f, ix, 'done.'
+				def.resolve null
+				return
+			#_log2 f, 'doing', ix, work[ ix]
+			el= document.createElement 'script'
+			el.setAttribute 'type', 'text/javascript'
+			el.setAttribute 'src', work[ ix]
+			el.onload= -> next ix+ 1
+			document.head.appendChild el
+			return
+		next 0
 		# Note: caller should release the thread to allow browser to load the scripts
-		def.resolve null
 		promise
 	inline: (type,nm) ->
 		f= 'inline'
