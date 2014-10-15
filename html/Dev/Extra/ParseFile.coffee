@@ -114,7 +114,7 @@ FindAttrs= (file_info, str)->
 	# For data-e-action="click:action-name"
 	event_attrs_shortcuts= [
 		'data-e-click', 'data-e-change', 'data-e-dblclick', 'data-e-enter'
-		'data-e-keyup', 'data-e-focus', 'data-e-blur'
+		'data-e-keyup', 'data-e-focus', 'data-e-blur', 'data-e-event'
 	]
 	str= ' '+ str
 	str= str.replace /\se-/gm, ' data-e-'

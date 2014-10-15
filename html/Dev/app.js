@@ -13,9 +13,9 @@
     },
     OPTIONS: {
       loader: 'LoadStrategy$Dev',
-      ca2: function(action_token, original_path, click_node) {
-        _log2("ERROR: There is a problem with this click_node:", click_node);
-        throw new Error("ERROR: Missing '" + click_node["do"] + "' from MACROS; Action: " + action_token + ", Path: " + original_path);
+      ca2: function(action_token, original_path, action_node) {
+        _log2("ERROR: There is a problem with this action_node:", action_node);
+        throw new Error("ERROR: Missing '" + action_node["do"] + "' from MACROS; Action: " + action_token + ", Path: " + original_path);
       }
     },
     MODELS: {
@@ -28,7 +28,7 @@
         inst: "iDev_View"
       }
     },
-    CLICKS: {
+    ACTIONS: {
       dbg_toggle: {
         "do": 'Devl.toggle',
         pass: 'what'

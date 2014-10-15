@@ -8,15 +8,15 @@
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   app = function(window, undef) {
-    var E, Extra, Model, aClicks, aFists, aFlows, aMacros, aModels, aSetting, appFindAttr, appFindClick, appFindNode, appFist, appGetF, appGetS, appGetSetting, appGetT, appGetVars, appInit, appLoadFormsIf, appModel, appStartS, appStartT, appconfs, click, clickAction, counter, fieldDef, finish_logout, fistDef, fistInit, inClick, issueInit, issueMap, make_model_functions, merge, nm, oModel, obj, option, setModelState, type_oau, _d_clickAction, _ref;
-    inClick = false;
+    var E, Extra, Model, aActions, aFists, aFlows, aMacros, aModels, aSetting, action, appFindAction, appFindAttr, appFindNode, appFist, appGetF, appGetS, appGetSetting, appGetT, appGetVars, appInit, appLoadFormsIf, appModel, appStartS, appStartT, appconfs, counter, doAction, fieldDef, finish_logout, fistDef, fistInit, inAction, issueInit, issueMap, make_model_functions, merge, nm, oModel, obj, option, setModelState, type_oau, _d_doAction, _ref;
+    inAction = false;
     counter = 0;
     Model = {};
     Extra = {};
     oModel = {};
     appconfs = [];
     option = {
-      load_dirs: {}
+      loadDirs: {}
     };
     E = {};
     E.nextCounter = function() {
@@ -115,16 +115,16 @@
       }
       return _results;
     };
-    E.logout = function(click_event, click_data) {
+    E.logout = function(action_event, action_data) {
       var _this = this;
-      if (inClick !== false) {
+      if (inAction !== false) {
         setTimeout((function() {
-          return E.logout(click_event, click_data);
+          return E.logout(action_event, action_data);
         }), 100);
         return;
       }
-      if (click_event) {
-        return (click(click_event, click_data)).then(function() {
+      if (action_event) {
+        return (action(action_event, action_data)).then(function() {
           return finish_logout();
         });
       } else {
@@ -161,22 +161,22 @@
         return E.oRender = new Extra[option.render];
       });
     };
-    click = function(action_token, data) {
+    action = function(action_token, data) {
       var f;
-      f = ':click:' + action_token;
+      f = ':action:' + action_token;
       _log2(f, data);
-      if (inClick !== false) {
+      if (inAction !== false) {
         if (typeof option.c1 === "function") {
           option.c1();
         }
       }
-      inClick = action_token;
+      inAction = action_token;
       m.startComputation();
-      return (clickAction(action_token, data, E.App().getStepPath())).then(function(click_result) {
+      return (doAction(action_token, data, E.App().getStepPath())).then(function(action_result) {
         var k, modelState, o, ss;
-        E.App().setIssues(click_result[0]);
-        E.App().setMessages(click_result[1]);
-        inClick = false;
+        E.App().setIssues(action_result[0]);
+        E.App().setMessages(action_result[1]);
+        inAction = false;
         modelState = {};
         for (k in oModel) {
           o = oModel[k];
@@ -188,7 +188,8 @@
       });
     };
     setModelState = function(s) {
-      var inst_nm, modelState, _base, _results;
+      var f, inst_nm, modelState, _base, _results;
+      f = ':setModelState';
       if (s != null) {
         modelState = s;
       }
@@ -205,7 +206,7 @@
       go: 'default//'
     };
     aMacros = {};
-    aClicks = {};
+    aActions = {};
     aFlows = {
       "default": {
         start: 'default',
@@ -236,7 +237,7 @@
         hash = {
           SETTINGS: aSetting,
           MACROS: aMacros,
-          CLICKS: aClicks,
+          ACTIONS: aActions,
           FLOWS: aFlows,
           MODELS: aModels,
           OPTIONS: option
@@ -325,9 +326,9 @@
     appStartS = function(flow, track) {
       return appGetT(flow, track).start;
     };
-    appFindClick = function(path, action_token) {
+    appFindAction = function(path, action_token) {
       var _ref;
-      return (_ref = appFindNode(path[0], path[1], path[2], 'CLICKS', action_token)) != null ? _ref : aClicks[action_token];
+      return (_ref = appFindNode(path[0], path[1], path[2], 'ACTIONS', action_token)) != null ? _ref : aActions[action_token];
     };
     appGetSetting = function(setting_name, flow, track, step) {
       var _ref;
@@ -384,39 +385,39 @@
       }
       return _results;
     };
-    clickAction = function(action_token, data, original_path) {
+    doAction = function(action_token, data, original_path) {
       var d;
       d = new m.Deferred();
-      d.resolve(_d_clickAction(action_token, data, original_path));
+      d.resolve(_d_doAction(action_token, data, original_path));
       return d.promise;
     };
-    _d_clickAction = function(action_token, data, original_path) {
-      var click_node, doClickNode, doLeftSide, doRightSide, f, master_data, master_issue, master_message;
-      f = ":clickAction(" + action_token + ")";
+    _d_doAction = function(action_token, data, original_path) {
+      var action_node, doActionNode, doLeftSide, doRightSide, f, master_data, master_issue, master_message;
+      f = ":doAction(" + action_token + ")";
       _log2(f, data, original_path);
       master_issue = new Issue('App');
       master_message = new Issue('App');
       master_data = merge({}, data);
-      click_node = appFindClick(original_path, action_token);
-      _log2(f, click_node);
-      if (!(click_node != null)) {
+      action_node = appFindAction(original_path, action_token);
+      _log2(f, action_node);
+      if (!(action_node != null)) {
         _log2('WARNING', "No app. entry for action_token (" + action_token + ") on path (" + original_path + ")");
         return [master_issue, master_message];
       }
-      doLeftSide = function(click_node) {
+      doLeftSide = function(action_node) {
         var ctx, d, i, is_macro, mg, nm, nms, r, val, view_act, view_nm, _i, _len, _ref, _ref1, _ref2;
         _log2(f, 'doLeftSide:', {
-          click_node: click_node
+          action_node: action_node
         });
-        if (click_node.go != null) {
-          E.App().go(click_node.go);
+        if (action_node.go != null) {
+          E.App().go(action_node.go);
         }
         nms = (function() {
-          switch (type_oau(click_node.pass)) {
+          switch (type_oau(action_node.pass)) {
             case 'A':
-              return click_node.pass;
+              return action_node.pass;
             case 'S':
-              return click_node.pass.split(',');
+              return action_node.pass.split(',');
             default:
               return [];
           }
@@ -424,27 +425,27 @@
         for (_i = 0, _len = nms.length; _i < _len; _i++) {
           nm = nms[_i];
           if (!(nm in data)) {
-            _log2('WARNING', "Action (" + action_token + ") request data is missing param " + nm, data, click_node, original_path);
+            _log2('WARNING', "Action (" + action_token + ") request data is missing param " + nm, data, action_node, original_path);
           }
         }
-        _ref = click_node.set;
+        _ref = action_node.set;
         for (nm in _ref) {
           val = _ref[nm];
           master_data[nm] = val;
         }
-        if (click_node["do"] != null) {
-          is_macro = !/[.]/.test(click_node["do"]);
+        if (action_node["do"] != null) {
+          is_macro = !/[.]/.test(action_node["do"]);
           if (is_macro) {
-            if (!aMacros[click_node["do"]]) {
+            if (!aMacros[action_node["do"]]) {
               if (typeof option.ca2 === "function") {
-                option.ca2(action_token, original_path, click_node);
+                option.ca2(action_token, original_path, action_node);
               }
             }
             if (is_macro) {
-              return doClickNode(aMacros[click_node["do"]]);
+              return doActionNode(aMacros[action_node["do"]]);
             }
           }
-          _ref1 = click_node["do"].split('.'), view_nm = _ref1[0], view_act = _ref1[1];
+          _ref1 = action_node["do"].split('.'), view_nm = _ref1[0], view_act = _ref1[1];
           view_act = view_act != null ? view_act : action_token;
           d = new m.Deferred();
           r = {};
@@ -466,10 +467,10 @@
           return master_message.addObj(ctx.m);
         }
       };
-      doRightSide = function(click_node) {
+      doRightSide = function(action_node) {
         var choice, k, matches, next_node, val, _i, _len, _ref, _ref1, _ref2, _ref3;
         next_node = null;
-        _ref1 = (_ref = click_node.next) != null ? _ref : [];
+        _ref1 = (_ref = action_node.next) != null ? _ref : [];
         for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
           choice = _ref1[_i];
           if (choice.when === 'default') {
@@ -495,17 +496,17 @@
           }
         }
         if (next_node) {
-          _log2('doRightSide:', {
+          _log2(f, 'doRightSide:', {
             next_node: next_node
           });
-          doClickNode(next_node);
+          doActionNode(next_node);
         }
       };
-      doClickNode = function(click_node) {
-        doLeftSide(click_node);
-        return doRightSide(click_node);
+      doActionNode = function(action_node) {
+        doLeftSide(action_node);
+        return doRightSide(action_node);
       };
-      doClickNode(click_node);
+      doActionNode(action_node);
       return [master_issue, master_message];
     };
     fieldDef = {};
@@ -549,7 +550,7 @@
       Model: Model,
       Extra: Extra,
       option: option,
-      click: click,
+      action: action,
       merge: merge,
       appconfs: appconfs,
       appGetF: appGetF,
@@ -557,7 +558,7 @@
       appGetS: appGetS,
       appStartT: appStartT,
       appStartS: appStartS,
-      appFindClick: appFindClick,
+      appFindAction: appFindAction,
       appGetSetting: appGetSetting,
       appGetVars: appGetVars,
       appFist: appFist,
@@ -757,6 +758,7 @@
     ModelJS.prototype.invalidateTables = function(tbl_nms, not_tbl_names) {
       var deleted_tbl_nms, f, nm, _i, _len;
       f = ':ModelJS.invalidateTables~' + this.view_nm;
+      _log2(f, tbl_nms, not_tbl_names);
       if (not_tbl_names == null) {
         not_tbl_names = [];
       }

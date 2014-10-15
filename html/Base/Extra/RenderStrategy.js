@@ -83,7 +83,7 @@
       });
       event_obj.preventDefault();
       data_params.val = val;
-      E.Extra[E.option.data_action](type, data_action, data_params);
+      E.Extra[E.option.dataAction](type, data_action, data_params);
       return false;
     };
 
@@ -137,7 +137,7 @@
       }
       this.was_popped = true;
       if (this.very_first) {
-        E.click('browser_hash', {
+        E.action('browser_hash', {
           hash: location.hash.substr(1)
         });
       } else {
@@ -163,8 +163,9 @@
       });
     };
 
-    RenderStrategy$Base.prototype.render = function(content, history, click_index, modal) {
-      var container, start;
+    RenderStrategy$Base.prototype.render = function(content, history, action, modal) {
+      var container, f, start;
+      f = 'render';
       if (this.was_modal) {
         BROKEN();
         m.render(document.getElementById(this.modalId), m());
@@ -173,19 +174,19 @@
         BROKEN();
         m.render((container = document.getElementById(this.modalId)), this.modalView(content));
       } else {
-        _log2('START RENDER', start = new Date().getTime());
+        _log2(f, 'START RENDER', start = new Date().getTime());
         m.render((container = document.getElementById(this.baseId)), m('div', {}, content));
-        _log2('END RENDER', new Date().getTime() - start);
+        _log2(f, 'END RENDER', new Date().getTime() - start);
       }
-      console.log('render......', this.content_watch, container);
+      _log2(f, 'render......', this.content_watch, container);
       this.was_modal = modal;
       this.was_popped = false;
       this.very_first = false;
     };
 
-    RenderStrategy$Base.prototype.handleRenderState = function(history, click_index) {
+    RenderStrategy$Base.prototype.handleRenderState = function(history, action) {
       var displayHash, f, model_state, new_hash, _base, _base1;
-      f = 'E:bootstrap.handleRenderState:' + history + ':' + click_index;
+      f = 'E:bootstrap.handleRenderState:' + history + ':' + action;
       _log2(f, {
         vf: this.very_first,
         wp: this.was_popped
@@ -193,7 +194,7 @@
       if (!history) {
         return;
       }
-      displayHash = this.very_first ? '' : 'click-' + click_index;
+      displayHash = this.very_first ? '' : 'action-' + action;
       new_hash = E.getDomCache();
       if (new_hash === false) {
         new_hash = E.getExternalUrl();

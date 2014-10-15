@@ -14,10 +14,10 @@ class LoadStrategy
 		def= new m.Deferred()
 		promise= def.promise
 		for pkg in @appconfs
-			continue if pkg not of E.option.load_dirs
+			continue if pkg not of E.option.loadDirs
 			for type,file_list of E[ 'app$'+ pkg]?.MANIFEST ? {} # Extra, Model: ['Render']
 				for file in file_list
-					url= E.option.load_dirs[ pkg]+ pkg+ '/'+ type+ '/'+ file+ '.js'
+					url= E.option.loadDirs[ pkg]+ pkg+ '/'+ type+ '/'+ file+ '.js'
 					work.push url
 					#_log2 f, 'to do ', url
 
@@ -71,7 +71,7 @@ class LoadStrategy
 					_log2 f, 'THEN-'+ pkg, full_nm, if 'S' is E.type_oau result then (result.slice 0, 40) else result
 					return result if result isnt false # No need to hit network again
 					return compiled if compiled= @preLoaded pkg, type, nm
-					return false if pkg not of E.option.load_dirs
+					return false if pkg not of E.option.loadDirs
 					@D_getFile pkg, full_nm
 
 		promise= promise.then (result) => # False if no file ever found
@@ -89,7 +89,7 @@ class LoadStrategy
 		return promise
 
 	D_getFile: (pkg,nm) -> # Must return a deferred
-		path= E.option.load_dirs[ pkg]+ pkg+ '/'
+		path= E.option.loadDirs[ pkg]+ pkg+ '/'
 		(m.request
 			background: true # Don't want 'm' to redraw the view
 			method: 'GET'

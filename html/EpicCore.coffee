@@ -23,7 +23,7 @@
 #
 # TODO FIST
 #  - Need to to push FIST data back to FIST object
-#  - Would like to put a 'validate' choice in CLICKS: for app.coffee, so Models don't have to
+#  - Would like to put a 'validate' choice in ACTIONS: for app.coffee, so Models don't have to
 #
 # TODO APP.COFFEE
 # A) ROUTES
@@ -60,7 +60,7 @@
 # C) DECIDE IF SAME STEP SHOULD AVOID PUSHING A NEW STATE (VS REPLACE-STATE IF NEEDED)
 #
 # TODO RENDER LOOP
-# Review - has a lot of functions that all go together, from click to finish
+# Review - has a lot of functions that all go together, from action to finish
 #
 # TODO MITHRIL
 # A) Do sample component
@@ -74,26 +74,27 @@
 
 
 app= (window, undef) ->
-	inClick= false
+	inAction= false
 	counter= 0
 	Model= {} # Namespace for others to populate with class implementations of Models
 	Extra= {} # Namespace for others to populate with class implementations that are not Models
 	oModel= {} # Instances of model classes
 	appconfs= [] # Will be an array of the apps user sets in 'run'
-	option= load_dirs: {}
+	option= loadDirs: {}
 		# load: loadstratgy-class-name placed into E.Extra
 		# render: render-class-name placed into E.Extra
-		# option.c1: Function to call if inClick when click called
+		# option.c1: Function to call if inAction when action called
 		# option.m1 view, model if not E.Model[cls]?
 		# App.coffee reader
 		# config.a1 view_name [if view_name not of aModels]
 		# option.a2 view_name, attribute if attribute not of aModels[ view_name]
-		# ClickAction:
-		# option.ca1 action_token, original_path, click_node
-		# option.ca2 action_token, original_path, click_node # "ERROR: Missing '#{click_node.do}' from MACROS"
+		# Action:
+		# option.ca1 action_token, original_path, action_node
+		# option.ca2 action_token, original_path, action_node # "ERROR: Missing '#{action_node.do}' from MACROS"
+	# TODO MAKE THESE SMALL OPTION-FUNCS DO THE VALIDATION, AND DEFINE THEM HERE AS NO-OPS
 	#TODO option[ nm]= (-> _log2 'ERROR: ', arguments) for nm in [ 'c1', 'm1', 'a1', 'a2', 'ca1', 'fg1', 'fg2', 'fg3', 'fb1', 'ff1']
 
-	E= {} #() -> # TODO FIGURE OUT IF ANYTHING INTERESTING GOES HERE
+	E= {}
 	E.nextCounter= -> ++counter
 
 	# O, O (Clone attrs that are not Undefined)
@@ -160,12 +161,12 @@ app= (window, undef) ->
 		o.eventLogin?() for k,o of oModel
 
 	# Caller indicates a logout event, let interested models know
-	E.logout= (click_event, click_data)->
-		if inClick isnt false
-			setTimeout (=> E.logout click_event, click_data), 100
+	E.logout= (action_event, action_data)->
+		if inAction isnt false
+			setTimeout (=> E.logout action_event, action_data), 100
 			return
-		if click_event
-			(click click_event, click_data).then -> finish_logout()
+		if action_event
+			(action action_event, action_data).then -> finish_logout()
 		else finish_logout()
 	finish_logout= ->
 		for k,o of oModel when o.eventLogout?() # True to reset model and state
@@ -187,17 +188,17 @@ app= (window, undef) ->
 			E.oRender= new Extra[ option.render] # Sets mithril's redraw to self
 		return
 
-	# Caller has requested processing a click event w/data
-	click= (action_token,data) ->
-		f= ':click:'+action_token
+	# Caller has requested processing a action event w/data
+	action= (action_token,data) ->
+		f= ':action:'+action_token
 		_log2 f, data
-		option.c1?() if inClick isnt false
-		inClick= action_token
+		option.c1?() if inAction isnt false
+		inAction= action_token
 		m.startComputation()
-		(clickAction action_token, data, E.App().getStepPath()).then (click_result) ->
-			E.App().setIssues click_result[0]
-			E.App().setMessages click_result[1]
-			inClick= false
+		(doAction action_token, data, E.App().getStepPath()).then (action_result) ->
+			E.App().setIssues action_result[0]
+			E.App().setMessages action_result[1]
+			inAction= false
 			modelState= {}
 			modelState[k]= ss for k,o of oModel when o.saveState? and ss= o.saveState()
 			m.endComputation() # Causes a render
@@ -206,15 +207,16 @@ app= (window, undef) ->
 
 	# TODO FIGURE OUT IF RENDER USES THIS FOR THE BACK/FWD BUTTONS OF BROWSER HISTORY
 	setModelState= (s) ->
+		f= ':setModelState'
 		modelState= s if s?
-		#_log2 ':setModelState', s, modelState
+		#_log2 f, s, modelState
 		for inst_nm of oModel
 			oModel[ inst_nm].restoreState? modelState[ inst_nm]
 
 	# The old 'AppConf' class; use app*() functions now
 	aSetting= frames: {}, modals: {}, layout: 'default', go: 'default//'
 	aMacros= {}
-	aClicks= {}
+	aActions= {}
 	aFlows= default: start: 'default', TRACKS: default: start: 'default', STEPS: default: {}
 	aModels= {}
 	aFists= {}
@@ -225,7 +227,7 @@ app= (window, undef) ->
 			app= E[ 'app$'+ nm] ? {}
 			merge aFlows.default.TRACKS.default.STEPS, app.STEPS if app.STEPS
 			merge aFlows.default.TRACKS, app.TRACKS if app.TRACKS
-			hash= SETTINGS: aSetting, MACROS: aMacros, CLICKS: aClicks, FLOWS: aFlows, MODELS: aModels, OPTIONS: option
+			hash= SETTINGS: aSetting, MACROS: aMacros, ACTIONS: aActions, FLOWS: aFlows, MODELS: aModels, OPTIONS: option
 			merge obj, app[ nm] for nm,obj of hash
 		for view_nm, node of aModels when node.fists
 			aFists[ form_nm]= view_nm for form_nm in node.fists
@@ -266,8 +268,8 @@ app= (window, undef) ->
 	appStartT=  (flow)           -> appGetF( flow).start
 	appStartS=  (flow, track)    -> appGetT( flow, track).start
 
-	appFindClick= (path,action_token) ->
-		(appFindNode path[0], path[1], path[2], 'CLICKS', action_token) ?  aClicks[ action_token]
+	appFindAction= (path,action_token) ->
+		(appFindNode path[0], path[1], path[2], 'ACTIONS', action_token) ?  aActions[ action_token]
 	appGetSetting= (setting_name, flow, track, step) ->
 		return aSetting[ setting_name] if not flow # Some settings are not down in the flow
 		( appFindAttr flow, track, (step ? false), setting_name ) ? aSetting[ setting_name]
@@ -297,44 +299,44 @@ app= (window, undef) ->
 					return oM.getTable table_or_ctx if act_if_action is undef # Wanted a vew-table
 					oM.action table_or_ctx, act_if_action, data
 
-	clickAction= (action_token, data, original_path) ->
+	doAction= (action_token, data, original_path) ->
 		d= new m.Deferred()
-		d.resolve _d_clickAction action_token, data, original_path
+		d.resolve _d_doAction action_token, data, original_path
 		d.promise
-	_d_clickAction= (action_token, data, original_path) ->
-		f= ":clickAction(#{action_token})"
+	_d_doAction= (action_token, data, original_path) ->
+		f= ":doAction(#{action_token})"
 		_log2 f, data, original_path
 		master_issue= new Issue 'App'
 		master_message= new Issue 'App'
 		master_data= merge {}, data
-		click_node= appFindClick original_path, action_token
-		_log2 f, click_node
-		if not click_node?
+		action_node= appFindAction original_path, action_token
+		_log2 f, action_node
+		if not action_node?
 			_log2 'WARNING', "No app. entry for action_token (#{action_token}) on path (#{original_path})" #TODO option.ca1
 			return [master_issue, master_message] # No recognized action
 
-		doLeftSide= (click_node)->
-			_log2 f, 'doLeftSide:', {click_node}
+		doLeftSide= (action_node)->
+			_log2 f, 'doLeftSide:', {action_node}
 			# Handle 'go:'
-			if click_node.go?
-				E.App().go click_node.go
+			if action_node.go?
+				E.App().go action_node.go
 			# Process 'pass:' (just a syntax check)
-			nms= switch type_oau click_node.pass
-				when 'A' then click_node.pass
-				when 'S' then click_node.pass.split ','
+			nms= switch type_oau action_node.pass
+				when 'A' then action_node.pass
+				when 'S' then action_node.pass.split ','
 				else []
 			for nm in nms
-				_log2 'WARNING', "Action (#{action_token}) request data is missing param #{nm}", data, click_node, original_path if nm not of data
+				_log2 'WARNING', "Action (#{action_token}) request data is missing param #{nm}", data, action_node, original_path if nm not of data
 			# Process 'set:'
-			master_data[ nm]= val for nm,val of click_node.set
+			master_data[ nm]= val for nm,val of action_node.set
 			# Handle 'do:'
-			if click_node.do?
-				is_macro= not /[.]/.test click_node.do
+			if action_node.do?
+				is_macro= not /[.]/.test action_node.do
 				if is_macro # Handle 'MACRO'
-					if not aMacros[click_node.do]
-						option.ca2? action_token, original_path, click_node
-					return doClickNode aMacros[click_node.do] if is_macro
-				[view_nm,view_act]= click_node.do.split '.'
+					if not aMacros[action_node.do]
+						option.ca2? action_token, original_path, action_node
+					return doActionNode aMacros[action_node.do] if is_macro
+				[view_nm,view_act]= action_node.do.split '.'
 				view_act= view_act ? action_token
 				d= new m.Deferred(); r= {}; i= new E.Issue view_nm, view_act; mg= new E.Issue view_nm ,view_act
 				ctx= {d,r,i,m:mg}
@@ -344,9 +346,9 @@ app= (window, undef) ->
 				master_message.addObj ctx.m
 					# TODO: Return null or false if do was not a macro
 
-		doRightSide= (click_node)->
+		doRightSide= (action_node)->
 			next_node= null
-			for choice in click_node.next ? []
+			for choice in action_node.next ? []
 				(next_node= choice; break) if choice.when is 'default'
 				(next_node= choice; break) if (typeof choice.when) is 'string' and choice.when is (master_data.success ? master_data.ok)
 				matches= true
@@ -354,18 +356,18 @@ app= (window, undef) ->
 					(matches= false; break;) if master_data[k] isnt val
 				(next_node= choice; break) if matches
 			if next_node
-				_log2 'doRightSide:', {next_node}
-				doClickNode next_node
+				_log2 f, 'doRightSide:', {next_node}
+				doActionNode next_node
 			return
 
-		# ClickNode is { do: left_click_node, next: right_click_node }
-		#	execute left_click_node then
-		#	execute right_click_node
-		doClickNode= (click_node)->
-			doLeftSide click_node
-			doRightSide click_node
+		# ActionNode is { do: left_action_node, next: right_action_node }
+		#	execute left_action_node then
+		#	execute right_action_node
+		doActionNode= (action_node)->
+			doLeftSide action_node
+			doRightSide action_node
 
-		doClickNode click_node
+		doActionNode action_node
 
 		[master_issue, master_message]
 
@@ -386,9 +388,9 @@ app= (window, undef) ->
 
 	E[ nm]= obj for nm,obj of {
 		type_oau # TODO SEE IF THIS WORKS FOR PEOPLE TO REPLACE E.G. $.IsArray
-		Model, Extra, option, click, merge, appconfs
+		Model, Extra, option, action, merge, appconfs
 		appGetF, appGetT, appGetS, appStartT, appStartS
-		appFindClick, appGetSetting, appGetVars, appFist
+		appFindAction, appGetSetting, appGetVars, appFist
 		fieldDef, fistDef, issueMap
 		oModel # Just for internal checking / testing
 	}
@@ -479,7 +481,7 @@ class ModelJS
 		E.merge {}, st # clone and return
 	invalidateTables: (tbl_nms,not_tbl_names) -> # Use true for all
 		f= ':ModelJS.invalidateTables~'+ @view_nm
-		#_log2 f, tbl_nms, not_tbl_names
+		_log2 f, tbl_nms, not_tbl_names
 		not_tbl_names?= []
 		tbl_nms= (nm for nm of @Table when not (nm in not_tbl_names)) if tbl_nms is true
 		deleted_tbl_nms= []

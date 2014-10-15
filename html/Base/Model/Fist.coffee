@@ -8,16 +8,15 @@ class Fist extends E.ModelJS
 		# E.fistDef and E.fieldDef contain combined fists info from all pacakges
 		@fist= {} # Hash by fist-name-with-row-number, of hash of field-names, holding e.g. db/html values, issues
 		super view_nm, options
-	action: (ctx,act,p) -> # p.async=true to avoid @invalidateTables() call (avoid recursion from M/View?)
-		f= 'action:'+ act+ '-'+ p.fist+ '/'+ p.field
+	event: (name,act,fistNm,fieldNm,p) ->
+		f= 'event:'+ act+ '-'+ fistNm+ '/'+ fieldNm
 		_log2 f, p
-		{r,i,m}= ctx if ctx
+		BLOWUP() if name isnt 'Fist' # Only handle 'fist' type events
 		# Expect p.fist, optional p.field, optional p.row
-		fist= @_getFist p.fist, p.row
-		field= fist.ht[ p.field] if p.field
-		# Expect built-in actions: F$change
+		fist= @_getFist fistNm, p.row
+		field= fist.ht[ fieldNm] if fieldNm
 		switch act
-			when 'F$keyup', 'F$change' # User has changed a field's value possibly
+			when 'keyup', 'change' # User has changed a field's value possibly
 				# p.val
 				if field.type is 'yesno'
 					if p.val is field.cdata[ 0] # Toggle value
@@ -27,31 +26,40 @@ class Fist extends E.ModelJS
 					had_issue= field.issue
 					field.hval= p.val
 					E.fistVAL field, field.hval
-					invalidate= true if act is 'F$change' or had_issue isnt field.issue
-			when 'F$blur'
+					invalidate= true if act is 'change' or had_issue isnt field.issue
+			when 'blur'
 				was_val= field.hval
+				was_issue= field.issue
 				field.hval= E.fistH2H field, field.hval # Initial cleanup
-				was_issue= E.fistVAL field, field.hval # Validate (sets/clears .issue)
-				invalidate= true if was_val isnt field.hval or was_issue
-			when 'F$focus'
-				if fist.fnm isnt p.field
-					fist.fnm= p.field
-					invalidate= true
-			when 'F$validate' # Controller wants a fist's db values, after whole-form-validation
-				errors= 0
-				for fieldNm, field of fist.ht
-					errors++ if true isnt E.fistVAL field, field.hval
-				if errors
-					invalidate= true
-					r.success= 'FAIL'
-					r.errors= errors
-				else
-					r.success= 'SUCCESS'
-					ans= r[ fist.nm]= {}
-					ans[ nm]= E.fistH2D field for nm,field of fist.db
-			else return super ctx, act, p
+				E.fistVAL field, field.hval # Validate (sets/clears .issue)
+				_log2 f, 'invalidate?', was_val, field.hval, was_issue, field.issue
+				invalidate= true if was_val isnt field.hval or was_issue isnt field.issue
+			when 'focus'
+				if fist.fnm isnt fieldNm
+					fist.fnm= fieldNm
+					#invalidate= true
+			else return super name, act, fistNm, fieldNm, p
 		if invalidate
-			if p.async isnt true then @invalidateTables [ fist.rnm] else delete @Table[ fist.rnm]
+			if p.async isnt true
+			then @invalidateTables [ fist.rnm]
+			else delete @Table[ fist.rnm]
+		return
+	# Controller wants a fist's db values, after whole-form-validation
+	validate: (ctx, fistNm, row) ->
+		{r, i, m}= ctx
+		fist= @_getFist fistNm, row
+		errors= 0
+		for fieldNm, field of fist.ht
+			errors++ if true isnt E.fistVAL field, field.hval
+		if errors
+			invalidate= true
+			r.success= 'FAIL'
+			r.errors= errors
+		else
+			r.success= 'SUCCESS'
+			ans= r[ fist.nm]= {}
+			ans[ nm]= E.fistH2D field for nm,field of fist.db
+		@invalidateTables [ fist.rnm] if invalidate is true
 		return
 	loadTable: (tbl_nm)->
 		# A table, which is a single fist (with some number of fields), is exposed as a row for the fist, and two subtables:

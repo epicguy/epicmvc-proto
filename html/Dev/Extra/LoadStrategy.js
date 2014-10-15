@@ -35,7 +35,7 @@
       _ref = this.appconfs;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         pkg = _ref[_i];
-        if (!(pkg in E.option.load_dirs)) {
+        if (!(pkg in E.option.loadDirs)) {
           continue;
         }
         _ref3 = (_ref1 = (_ref2 = E['app$' + pkg]) != null ? _ref2.MANIFEST : void 0) != null ? _ref1 : {};
@@ -43,7 +43,7 @@
           file_list = _ref3[type];
           for (_j = 0, _len1 = file_list.length; _j < _len1; _j++) {
             file = file_list[_j];
-            url = E.option.load_dirs[pkg] + pkg + '/' + type + '/' + file + '.js';
+            url = E.option.loadDirs[pkg] + pkg + '/' + type + '/' + file + '.js';
             work.push(url);
           }
         }
@@ -123,7 +123,7 @@
           if (compiled = _this.preLoaded(pkg, type, nm)) {
             return compiled;
           }
-          if (!(pkg in E.option.load_dirs)) {
+          if (!(pkg in E.option.loadDirs)) {
             return false;
           }
           return _this.D_getFile(pkg, full_nm);
@@ -154,7 +154,7 @@
 
     LoadStrategy.prototype.D_getFile = function(pkg, nm) {
       var path;
-      path = E.option.load_dirs[pkg] + pkg + '/';
+      path = E.option.loadDirs[pkg] + pkg + '/';
       return (m.request({
         background: true,
         method: 'GET',

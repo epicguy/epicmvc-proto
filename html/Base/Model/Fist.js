@@ -15,20 +15,20 @@
       Fist.__super__.constructor.call(this, view_nm, options);
     }
 
-    Fist.prototype.action = function(ctx, act, p) {
-      var ans, errors, f, field, fieldNm, fist, had_issue, i, invalidate, m, nm, r, was_issue, was_val, _ref, _ref1;
-      f = 'action:' + act + '-' + p.fist + '/' + p.field;
+    Fist.prototype.event = function(name, act, fistNm, fieldNm, p) {
+      var f, field, fist, had_issue, invalidate, was_issue, was_val;
+      f = 'event:' + act + '-' + fistNm + '/' + fieldNm;
       _log2(f, p);
-      if (ctx) {
-        r = ctx.r, i = ctx.i, m = ctx.m;
+      if (name !== 'Fist') {
+        BLOWUP();
       }
-      fist = this._getFist(p.fist, p.row);
-      if (p.field) {
-        field = fist.ht[p.field];
+      fist = this._getFist(fistNm, p.row);
+      if (fieldNm) {
+        field = fist.ht[fieldNm];
       }
       switch (act) {
-        case 'F$keyup':
-        case 'F$change':
+        case 'keyup':
+        case 'change':
           if (field.type === 'yesno') {
             if (p.val === field.cdata[0]) {
               p.val = field.cdata[1];
@@ -40,50 +40,28 @@
             had_issue = field.issue;
             field.hval = p.val;
             E.fistVAL(field, field.hval);
-            if (act === 'F$change' || had_issue !== field.issue) {
+            if (act === 'change' || had_issue !== field.issue) {
               invalidate = true;
             }
           }
           break;
-        case 'F$blur':
+        case 'blur':
           was_val = field.hval;
+          was_issue = field.issue;
           field.hval = E.fistH2H(field, field.hval);
-          was_issue = E.fistVAL(field, field.hval);
-          if (was_val !== field.hval || was_issue) {
+          E.fistVAL(field, field.hval);
+          _log2(f, 'invalidate?', was_val, field.hval, was_issue, field.issue);
+          if (was_val !== field.hval || was_issue !== field.issue) {
             invalidate = true;
           }
           break;
-        case 'F$focus':
-          if (fist.fnm !== p.field) {
-            fist.fnm = p.field;
-            invalidate = true;
-          }
-          break;
-        case 'F$validate':
-          errors = 0;
-          _ref = fist.ht;
-          for (fieldNm in _ref) {
-            field = _ref[fieldNm];
-            if (true !== E.fistVAL(field, field.hval)) {
-              errors++;
-            }
-          }
-          if (errors) {
-            invalidate = true;
-            r.success = 'FAIL';
-            r.errors = errors;
-          } else {
-            r.success = 'SUCCESS';
-            ans = r[fist.nm] = {};
-            _ref1 = fist.db;
-            for (nm in _ref1) {
-              field = _ref1[nm];
-              ans[nm] = E.fistH2D(field);
-            }
+        case 'focus':
+          if (fist.fnm !== fieldNm) {
+            fist.fnm = fieldNm;
           }
           break;
         default:
-          return Fist.__super__.action.call(this, ctx, act, p);
+          return Fist.__super__.event.call(this, name, act, fistNm, fieldNm, p);
       }
       if (invalidate) {
         if (p.async !== true) {
@@ -91,6 +69,36 @@
         } else {
           delete this.Table[fist.rnm];
         }
+      }
+    };
+
+    Fist.prototype.validate = function(ctx, fistNm, row) {
+      var ans, errors, field, fieldNm, fist, i, invalidate, m, nm, r, _ref, _ref1;
+      r = ctx.r, i = ctx.i, m = ctx.m;
+      fist = this._getFist(fistNm, row);
+      errors = 0;
+      _ref = fist.ht;
+      for (fieldNm in _ref) {
+        field = _ref[fieldNm];
+        if (true !== E.fistVAL(field, field.hval)) {
+          errors++;
+        }
+      }
+      if (errors) {
+        invalidate = true;
+        r.success = 'FAIL';
+        r.errors = errors;
+      } else {
+        r.success = 'SUCCESS';
+        ans = r[fist.nm] = {};
+        _ref1 = fist.db;
+        for (nm in _ref1) {
+          field = _ref1[nm];
+          ans[nm] = E.fistH2D(field);
+        }
+      }
+      if (invalidate === true) {
+        this.invalidateTables([fist.rnm]);
       }
     };
 

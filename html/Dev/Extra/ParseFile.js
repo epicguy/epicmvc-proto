@@ -174,7 +174,7 @@
   FindAttrs = function(file_info, str) {
     var attr_obj, attr_split, attrs_need_cleaning, data_nm, debug, empty, eq, event_attrs_shortcuts, f, good, i, nm, parts, quo, start, style_obj, _i, _len, _ref, _ref1, _ref2, _ref3;
     f = ':parse.FindAttrs:';
-    event_attrs_shortcuts = ['data-e-click', 'data-e-change', 'data-e-dblclick', 'data-e-enter', 'data-e-keyup', 'data-e-focus', 'data-e-blur'];
+    event_attrs_shortcuts = ['data-e-click', 'data-e-change', 'data-e-dblclick', 'data-e-enter', 'data-e-keyup', 'data-e-focus', 'data-e-blur', 'data-e-event'];
     str = ' ' + str;
     str = str.replace(/\se-/gm, ' data-e-');
     attr_split = str.trim().split(/([\s="':;])/);
