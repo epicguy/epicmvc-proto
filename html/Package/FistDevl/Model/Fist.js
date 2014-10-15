@@ -115,6 +115,10 @@
     return val != null ? val : 0;
   };
 
+  E.fistH2D$upper = function(field, val) {
+    return (String(val)).toUpperCase();
+  };
+
   Fist = (function(_super) {
 
     __extends(Fist, _super);
@@ -139,10 +143,10 @@
         case 'F$keyup':
         case 'F$change':
           if (field.type === 'yesno') {
-            if (p.val === field.cdata) {
-              p.val = '';
+            if (p.val === field.cdata[0]) {
+              p.val = field.cdata[1];
             } else {
-              p.val = field.cdata;
+              p.val = field.cdata[0];
             }
           }
           if (field.hval !== p.val) {
@@ -173,7 +177,7 @@
           _ref = fist.ht;
           for (fieldNm in _ref) {
             field = _ref[fieldNm];
-            if (E.fistVAL(field, field.hval)) {
+            if (true !== E.fistVAL(field, field.hval)) {
               errors++;
             }
           }
@@ -251,13 +255,20 @@
         name: field.nm
       };
       fl = E.merge(defaults, field);
-      if (fl.type === 'yesno') {
-        fl.yes_val = String((_ref = fl.cdata) != null ? _ref : '1');
-      }
-      _ref1 = fl.type.split(':'), fl.type = _ref1[0], choice_type = _ref1[1];
+      _ref = fl.type.split(':'), fl.type = _ref[0], choice_type = _ref[1];
       fl.id = 'U' + E.nextCounter();
-      fl.value = (_ref2 = field.hval) != null ? _ref2 : fl["default"];
-      fl.selected = fl.type === 'yesno' && fl.value === fl.yes_val;
+      fl.value = (_ref1 = field.hval) != null ? _ref1 : fl["default"];
+      if (fl.type === 'yesno') {
+        if ((_ref2 = fl.cdata) == null) {
+          fl.cdata = ['1', '0'];
+        }
+        fl.yes_val = String(fl.cdata[0]);
+        if (fl.value === fl.yes_val) {
+          fl.selected = true;
+        } else {
+          fl.value = fl.cdata[1];
+        }
+      }
       if (field.issue) {
         fl.issue = field.issue.asTable()[0].issue;
       }

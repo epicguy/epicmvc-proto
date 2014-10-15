@@ -50,6 +50,7 @@ E.fistVAL$test= (field, val) ->
 
 E.fistH2D= (field) -> if field.h2d then E['fistH2D$'+ field.h2d] field, field.hval else field.hval
 E.fistH2D$zero= (field,val) -> val ? 0
+E.fistH2D$upper= (field,val) -> (String val).toUpperCase()
 
 class Fist extends E.ModelJS
 	constructor: (view_nm, options) ->
@@ -68,9 +69,9 @@ class Fist extends E.ModelJS
 			when 'F$keyup', 'F$change' # User has changed a field's value possibly
 				# p.val
 				if field.type is 'yesno'
-					if p.val is field.cdata # Toggle value
-					then p.val= ''
-					else p.val= field.cdata
+					if p.val is field.cdata[ 0] # Toggle value
+					then p.val= field.cdata[ 1]
+					else p.val= field.cdata[ 0]
 				if field.hval isnt p.val # Update our html-value state with el.value
 					had_issue= field.issue
 					field.hval= p.val
@@ -88,7 +89,7 @@ class Fist extends E.ModelJS
 			when 'F$validate' # Controller wants a fist's db values, after whole-form-validation
 				errors= 0
 				for fieldNm, field of fist.ht
-					errors++ if E.fistVAL field, field.hval
+					errors++ if true isnt E.fistVAL field, field.hval
 				if errors
 					invalidate= true
 					r.success= 'FAIL'
@@ -127,11 +128,15 @@ class Fist extends E.ModelJS
 			default: '', width: '', size: '', issue: '', value: '', selected: false, name: field.nm
 		}
 		fl= E.merge defaults, field
-		fl.yes_val=( String (fl.cdata ? '1')) if fl.type is 'yesno'
 		[fl.type, choice_type]= fl.type.split ':'
 		fl.id= 'U'+ E.nextCounter()
 		fl.value= (field.hval) ? fl.default
-		fl.selected= fl.type is 'yesno' and fl.value is fl.yes_val
+		if fl.type is 'yesno'
+			fl.cdata?= ['1','0']
+			fl.yes_val=( String fl.cdata[ 0])
+			if fl.value is fl.yes_val
+				fl.selected= true
+			else fl.value= fl.cdata[ 1] # Must be yes else no value
 		fl.issue= field.issue.asTable()[0].issue if field.issue
 
 		if fl.type is 'radio' or fl.type is 'pulldown'
