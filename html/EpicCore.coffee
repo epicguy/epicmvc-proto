@@ -80,7 +80,7 @@ app= (window, undef) ->
 	Extra= {} # Namespace for others to populate with class implementations that are not Models
 	oModel= {} # Instances of model classes
 	appconfs= [] # Will be an array of the apps user sets in 'run'
-	option= load_dirs: []
+	option= load_dirs: {}
 		# load: loadstratgy-class-name placed into E.Extra
 		# render: render-class-name placed into E.Extra
 		# option.c1: Function to call if inClick when click called

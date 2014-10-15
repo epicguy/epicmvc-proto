@@ -16,7 +16,7 @@
     oModel = {};
     appconfs = [];
     option = {
-      load_dirs: []
+      load_dirs: {}
     };
     E = {};
     E.nextCounter = function() {

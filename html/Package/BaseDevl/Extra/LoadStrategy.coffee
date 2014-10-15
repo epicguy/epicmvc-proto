@@ -6,11 +6,6 @@ class LoadStrategy
 		@clearCache()
 		@cache_local_flag= true # False if we want browser to cache responses
 		@reverse_packages=( @appconfs[ i] for i in [@appconfs.length- 1..0])
-		# Index defined dirs by package: *.html: E.run([],{load_dirs:{Test:'Package/'}})
-		dir_map= {}
-		for {dir,pkgs} in E.option.load_dirs
-			dir_map[ pkg]= dir for pkg in pkgs
-		@dir_map= dir_map
 	clearCache: () -> @cache= {}; @refresh_stamp= (new Date).valueOf() # Like jQuery's no_cache
 	D_loadAsync: () -> # Load up all the Model/Extra code stuff - caller should delay after
 		f= 'Base:E/LoadStragegy.loadAsync'
@@ -19,10 +14,10 @@ class LoadStrategy
 		def= new m.Deferred()
 		promise= def.promise
 		for pkg in @appconfs
-			continue if pkg not of @dir_map
+			continue if pkg not of E.option.load_dirs
 			for type,file_list of E[ 'app$'+ pkg]?.MANIFEST ? {} # Extra, Model: ['Render']
 				for file in file_list
-					url= @dir_map[ pkg]+ pkg+ '/'+ type+ '/'+ file+ '.js'
+					url= E.option.load_dirs[ pkg]+ pkg+ '/'+ type+ '/'+ file+ '.js'
 					work.push url
 					#_log2 f, 'to do ', url
 
@@ -76,7 +71,7 @@ class LoadStrategy
 					_log2 f, 'THEN-'+ pkg, full_nm, if 'S' is E.type_oau result then (result.slice 0, 40) else result
 					return result if result isnt false # No need to hit network again
 					return compiled if compiled= @preLoaded pkg, type, nm
-					return false if pkg not of @dir_map
+					return false if pkg not of E.option.load_dirs
 					@D_getFile pkg, full_nm
 
 		promise= promise.then (result) => # False if no file ever found
@@ -94,7 +89,7 @@ class LoadStrategy
 		return promise
 
 	D_getFile: (pkg,nm) -> # Must return a deferred
-		path= @dir_map[ pkg]+ pkg+ '/'
+		path= E.option.load_dirs[ pkg]+ pkg+ '/'
 		(m.request
 			background: true # Don't want 'm' to redraw the view
 			method: 'GET'
