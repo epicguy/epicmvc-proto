@@ -49,7 +49,7 @@ class RenderStrategy$Base
 		val= target.value
 		_log2 f, 'event', {type, data_action, data_params, val}
 		event_obj.preventDefault()  # Added to keep LOGIN FORM from posting, causing fresh instance to start up
-		event_obj.stopPropagation() # Will this stop a dblclick from marking the text?
+		#TODO event_obj.stopPropagation()
 		data_params.val= val
 		E.Extra[ E.option.data_action] type, data_action, data_params
 		return false; # TODO CONSIDER MAKING SURE WE WANTED TO STOP, OR DO MORE TO ENSURE WE STOP DOING MORE THAN THIS

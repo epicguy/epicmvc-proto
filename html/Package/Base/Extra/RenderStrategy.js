@@ -82,7 +82,6 @@
         val: val
       });
       event_obj.preventDefault();
-      event_obj.stopPropagation();
       data_params.val = val;
       E.Extra[E.option.data_action](type, data_action, data_params);
       return false;
