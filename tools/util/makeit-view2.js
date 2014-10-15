@@ -18,12 +18,12 @@
 
   E = window.E;
 
-  (require(dev_dir + '/Package/BaseDevl/Extra/ParseFile.js'))(window);
+  (require(dev_dir + '/Dev/Extra/ParseFile.js'))(window);
 
   MockLoadStrategy = (function() {
 
     function MockLoadStrategy(dev_dir, pkg_nm) {
-      this.path = dev_dir + '/Package/' + pkg_nm + '/';
+      this.path = dev_dir + '/' + pkg_nm + '/';
     }
 
     MockLoadStrategy.prototype.getLayoNm = function(nm) {

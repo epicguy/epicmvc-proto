@@ -8,15 +8,15 @@ ECHO() {
 
 EpicDir=../html
 # OneEpic=../EpicMvc-One-2.0.0-%MD5_EPICMVC%.js
-OneEpic=$EpicDir/EpicMvc-One-2.0.0-latest-min.js
+OneEpic=$EpicDir/EpicMvc-Base-2.0.0-latest-min.js
 
 cat copyright.js > $OneEpic
 ./makeit DevEpic $OneEpic
 
 PKG=Base
-echo "Building:    Package/$PKG"
-./makeit-pkg $EpicDir/Package/$PKG $OneEpic
-echo "Compressing: Package/$PKG/view"
+echo "Building:    $PKG"
+./makeit-pkg $EpicDir/$PKG $OneEpic
+echo "Compressing: $PKG/view"
 ./makeit-view $EpicDir $EpicDir $PKG >> $OneEpic
 
 #KEY=%MD5_EPICMVC%

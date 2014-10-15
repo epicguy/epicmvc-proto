@@ -3,6 +3,13 @@
 EpicMvc=$1
 MinOut=$2
 
+for FILE in mithril
+do
+  echo -n "$FILE "
+  cat $EpicMvc/${FILE}.js | uglifyjs >> $MinOut
+  echo >> $MinOut
+done
+
 for FILE in EpicCore
 do
   echo -n "$FILE "

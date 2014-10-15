@@ -13,9 +13,9 @@
 </style>
   <script type="text/javascript" src="mithril.js"></script>
   <script type="text/javascript" src="EpicCore.js"></script>
-  <script type="text/javascript" src="Package/Base/app.js"></script>
-  <script type="text/javascript" src="Package/BaseDevl/app.js"></script>
-  <script type="text/javascript" src="Package/BaseDevl/Extra/LoadStrategy.js"></script>
+  <script type="text/javascript" src="Base/app.js"></script>
+  <script type="text/javascript" src="Dev/app.js"></script>
+  <script type="text/javascript" src="Dev/Extra/LoadStrategy.js"></script>
 
 <script type="text/coffeescript">
 E.app$World=
@@ -67,7 +67,7 @@ E.Model.Thing= Thing
 <body id="base-body">
 <script type="text/coffeescript">
 	# If this isnt coffeescript, it runs too soon, such that E.Thing is not defined (E.app$World not yet set)
-	E.run ['Base', 'BaseDevl', 'World'], load_dirs: Base: 'Package/', BaseDevl: 'Package/'
+	E.run ['Base', 'Dev', 'World'], load_dirs: Base: '', Dev: ''
 </script>
   <script type="text/javascript" src="coffee-script.js"> </script>
 </body>
