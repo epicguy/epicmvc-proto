@@ -27,29 +27,54 @@
     };
 
     LoadStrategy.prototype.D_loadAsync = function() {
-      var def, f, file, file_list, next, pkg, promise, type, url, work, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3;
+      var def, el, f, file, file_list, next, pkg, promise, sub, type, url, work, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
       f = 'Dev:E/LoadStragegy.loadAsync';
-      work = [];
-      def = new m.Deferred();
-      promise = def.promise;
       _ref = this.appconfs;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         pkg = _ref[_i];
         if (!(pkg in E.option.loadDirs)) {
           continue;
         }
-        _ref3 = (_ref1 = (_ref2 = E['app$' + pkg]) != null ? _ref2.MANIFEST : void 0) != null ? _ref1 : {};
-        for (type in _ref3) {
-          file_list = _ref3[type];
-          for (_j = 0, _len1 = file_list.length; _j < _len1; _j++) {
-            file = file_list[_j];
-            url = E.option.loadDirs[pkg] + pkg + '/' + type + '/' + file + '.js';
-            work.push(url);
+        _ref2 = (_ref1 = E['manifest$' + pkg]) != null ? _ref1 : {};
+        for (type in _ref2) {
+          file_list = _ref2[type];
+          if (type === 'css') {
+            for (_j = 0, _len1 = file_list.length; _j < _len1; _j++) {
+              file = file_list[_j];
+              url = E.option.loadDirs[pkg] + pkg + '/css/' + file + '.css';
+              el = document.createElement('link');
+              el.setAttribute('rel', 'stylesheet');
+              el.setAttribute('type', 'text/css');
+              el.setAttribute('href', url);
+              document.head.appendChild(el);
+            }
+          }
+        }
+      }
+      work = [];
+      def = new m.Deferred();
+      promise = def.promise;
+      _ref3 = this.appconfs;
+      for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
+        pkg = _ref3[_k];
+        if (!(pkg in E.option.loadDirs)) {
+          continue;
+        }
+        _ref5 = (_ref4 = E['manifest$' + pkg]) != null ? _ref4 : {};
+        for (type in _ref5) {
+          file_list = _ref5[type];
+          if (type !== 'css') {
+            for (_l = 0, _len3 = file_list.length; _l < _len3; _l++) {
+              file = file_list[_l];
+              sub = type === 'root' ? '' : type + '/';
+              url = E.option.loadDirs[pkg] + pkg + '/' + sub + file + '.js';
+              work.push(url);
+              _log2(f, 'to do ', url);
+            }
           }
         }
       }
       next = function(ix) {
-        var el;
         if (ix >= work.length) {
           _log2(f, ix, 'done.');
           def.resolve(null);
@@ -99,7 +124,7 @@
     };
 
     LoadStrategy.prototype.d_get = function(type, nm) {
-      var def, f, full_nm, pkg, promise, uncompiled, _fn, _i, _len, _ref,
+      var def, f, full_nm, full_nm_alt, pkg, promise, type_alt, uncompiled, _fn, _fn1, _i, _j, _len, _len1, _ref, _ref1,
         _this = this;
       f = 'd_get';
       full_nm = type + '/' + nm + '.html';
@@ -132,6 +157,25 @@
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         pkg = _ref[_i];
         _fn(pkg);
+      }
+      type_alt = type === 'Layout' ? 'tmpl' : type.toLowerCase();
+      full_nm_alt = type + '/' + nm + '.' + type_alt + '.html';
+      _ref1 = this.reverse_packages;
+      _fn1 = function(pkg) {
+        return promise = promise.then(function(result) {
+          _log2(f, 'THEN-' + pkg, full_nm, 'S' === E.type_oau(result) ? result.slice(0, 40) : result);
+          if (result !== false) {
+            return result;
+          }
+          if (!(pkg in E.option.loadDirs)) {
+            return false;
+          }
+          return _this.D_getFile(pkg, full_nm_alt);
+        });
+      };
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        pkg = _ref1[_j];
+        _fn1(pkg);
       }
       promise = promise.then(function(result) {
         var parsed;
@@ -186,14 +230,14 @@
       return this.d_get('Part', nm);
     };
 
-    LoadStrategy.prototype.fist = function(grp_nm) {
-      return BROKEN();
-    };
-
     return LoadStrategy;
 
   })();
 
   E.Extra.LoadStrategy$Dev = LoadStrategy;
+
+  E.opt({
+    loader: 'LoadStrategy$Dev'
+  });
 
 }).call(this);

@@ -318,7 +318,7 @@
     nextCounter = function() {
       return ++counter;
     };
-    etags = ['page', 'part', 'if', 'foreach', 'fist', 'defer'];
+    etags = ['page', 'part', 'if', 'if_true', 'if_false', 'foreach', 'fist', 'defer'];
     T_EPIC = 0;
     T_M1 = 1;
     T_M2 = 2;
@@ -338,6 +338,16 @@
     });
     after_script = after_comment.replace(/<\/script>/gm, '\x02').replace(/<script[^\x02]*\x02/gm, '');
     after = after_script;
+    after = after.replace(/<epic:/g, '<e-');
+    after = after.replace(/<\/epic:/g, '</e-');
+    after = after.replace(/<e-page_part/g, '<e-part');
+    after = after.replace(/<e-form_part/g, '<e-fist');
+    after = after.replace(/form="/g, 'fist="');
+    after = after.replace(/\ p:/g, ' e-');
+    after = after.replace(/Tag\/If/g, 'View/If');
+    after = after.replace(/Tag\/Part/g, 'View/Part');
+    after = after.replace(/\ size="/g, ' ?size="');
+    after = after.replace(/data-action=/g, 'e-action=');
     parts = after.split(/<(\/?)([:a-z_0-9-]+)([^>]*)>/);
     pre_count = 0;
     i = 0;

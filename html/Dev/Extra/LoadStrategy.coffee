@@ -10,16 +10,28 @@ class LoadStrategy
 	D_loadAsync: () -> # Load up all the Model/Extra code stuff - caller should delay after
 		f= 'Dev:E/LoadStragegy.loadAsync'
 		# Insert script tags for all MANIFEST entries of each package-app-config file
+		for pkg in @appconfs
+			continue if pkg not of E.option.loadDirs
+			for type,file_list of E[ 'manifest$'+ pkg] ? {} when type is 'css'
+				for file in file_list
+					url= E.option.loadDirs[ pkg]+ pkg+ '/css/'+ file+ '.css'
+					# <link rel="stylesheet" type="text/css" href="
+					el= document.createElement 'link'
+					el.setAttribute 'rel', 'stylesheet'
+					el.setAttribute 'type', 'text/css'
+					el.setAttribute 'href', url
+					document.head.appendChild el
 		work= []
 		def= new m.Deferred()
 		promise= def.promise
 		for pkg in @appconfs
 			continue if pkg not of E.option.loadDirs
-			for type,file_list of E[ 'app$'+ pkg]?.MANIFEST ? {} # Extra, Model: ['Render']
+			for type,file_list of E[ 'manifest$'+ pkg] ? {} when type isnt 'css'
 				for file in file_list
-					url= E.option.loadDirs[ pkg]+ pkg+ '/'+ type+ '/'+ file+ '.js'
+					sub= if type is 'root' then '' else type+ '/'
+					url= E.option.loadDirs[ pkg]+ pkg+ '/'+ sub+ file+ '.js'
 					work.push url
-					#_log2 f, 'to do ', url
+					_log2 f, 'to do ', url
 
 		next= (ix) ->
 			if ix>= work.length
@@ -73,6 +85,16 @@ class LoadStrategy
 					return compiled if compiled= @preLoaded pkg, type, nm
 					return false if pkg not of E.option.loadDirs
 					@D_getFile pkg, full_nm
+		# TODO COMPATABILITY MODE, EH?
+		type_alt= if type is 'Layout' then 'tmpl' else type.toLowerCase()
+		full_nm_alt= type+ '/'+ nm+ '.'+ type_alt+ '.html'
+		for pkg in @reverse_packages
+			do (pkg) =>
+				promise= promise.then (result) =>
+					_log2 f, 'THEN-'+ pkg, full_nm, if 'S' is E.type_oau result then (result.slice 0, 40) else result
+					return result if result isnt false # No need to hit network again
+					return false if pkg not of E.option.loadDirs
+					@D_getFile pkg, full_nm_alt
 
 		promise= promise.then (result) => # False if no file ever found
 			#_log2 f, 'THEN-COMPILE', full_nm, result
@@ -103,8 +125,8 @@ class LoadStrategy
 			#_log2 'AJAX ERROR ' #, error
 			false # Signal to try again
 	d_layout: (nm) -> @d_get 'Layout', nm
-	d_page: (nm) -> @d_get 'Page', nm
-	d_part: (nm) -> @d_get 'Part', nm
-	fist: (grp_nm) -> BROKEN() # TODO NEED TO BE AJAX NOW, ALSO DO ISSUES LOAD E[ 'fist$'+ grp_nm]
+	d_page:   (nm) -> @d_get 'Page', nm
+	d_part:   (nm) -> @d_get 'Part', nm
 
 E.Extra.LoadStrategy$Dev= LoadStrategy
+E.opt loader: 'LoadStrategy$Dev'

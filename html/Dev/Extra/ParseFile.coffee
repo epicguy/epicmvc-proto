@@ -202,7 +202,7 @@ ParseFile= (file_stats, file_contents) ->
 	f= ':Dev.E/ParseFile.ParseFile~'+file_stats
 	counter= 0
 	nextCounter= -> ++counter
-	etags= ['page','part', 'if', 'foreach', 'fist', 'defer']
+	etags= ['page','part', 'if', 'if_true', 'if_false', 'foreach', 'fist', 'defer']
 	T_EPIC= 0
 	T_M1= 1
 	T_M2= 2
@@ -224,6 +224,18 @@ ParseFile= (file_stats, file_contents) ->
 		m.replace /[^\n]+/gm, '' # Preserve newlines
 	after_script= after_comment.replace( /<\/script>/gm, '\x02').replace /<script[^\x02]*\x02/gm, ''
 	after= after_script
+
+	# TODO COMPATABILITY MODE, EH?
+	after= after.replace /<epic:/g, '<e-'
+	after= after.replace /<\/epic:/g, '</e-'
+	after= after.replace /<e-page_part/g, '<e-part'
+	after= after.replace /<e-form_part/g, '<e-fist'
+	after= after.replace /form="/g, 'fist="'
+	after= after.replace /\ p:/g, ' e-'
+	after= after.replace /Tag\/If/g, 'View/If'
+	after= after.replace /Tag\/Part/g, 'View/Part'
+	after= after.replace /\ size="/g, ' ?size="'
+	after= after.replace /data-action=/g, 'e-action='
 
 	# Create array of 4 parts: non-tag-content, leading-slash, tag-name, attrs
 	# End of 'attrs' may have a '/' (or is '/' if leading-slash is '/')
