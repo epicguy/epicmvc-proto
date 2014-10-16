@@ -438,69 +438,9 @@ Mithril = m = new function app(window, undefined) {
 		return prop
 	}
 
-	m.prop = function (store) {
-		if ((isObj(store) || isFn(store)) && store !== null && isFn(store.then)) {
-			return propify(store)
-		}
-
-		return gettersetter(store)
-	}
-
 	var roots = [], modules = [], controllers = [], lastRedrawId = null, lastRedrawCallTime = 0, computePostRedrawHook = null, prevented = false
 	var FRAME_BUDGET = 16 //60 frames per second = 1 call per 16 ms
-	m.module = function(root, module) {
-		var index = roots.indexOf(root)
-		if (index < 0) index = roots.length
-		var isPrevented = false
-		if (controllers[index] && isFn(controllers[index].onunload)) {
-			var event = {
-				preventDefault: function() {isPrevented = true}
-			}
-			controllers[index].onunload(event)
-		}
-		if (!isPrevented) {
-			m.redraw.strategy("all")
-			m.startComputation()
-			roots[index] = root
-			modules[index] = module
-			controllers[index] = new module.controller
-			m.endComputation()
-			return controllers[index]
-		}
-	}
-	m.redraw = function(force) {
-		var cancel = window.cancelAnimationFrame || window.clearTimeout
-		var defer = window.requestAnimationFrame || window.setTimeout
-		//lastRedrawId is a positive number if a second redraw is requested before the next animation frame
-		//lastRedrawID is null if it's the first redraw and not an event handler
-		if (lastRedrawId && force !== true) {
-			//when setTimeout: only reschedule redraw if time between now and previous redraw is bigger than a frame, otherwise keep currently scheduled timeout
-			//when rAF: always reschedule redraw
-			if (new Date - lastRedrawCallTime > FRAME_BUDGET || defer == window.requestAnimationFrame) {
-				if (lastRedrawId > 0) cancel(lastRedrawId)
-				lastRedrawId = defer(redraw, FRAME_BUDGET)
-			}
-		}
-		else {
-			redraw()
-			lastRedrawId = defer(function() {lastRedrawId = null}, FRAME_BUDGET)
-		}
-	}
-	m.redraw.strategy = m.prop()
-	function redraw() {
-		var mode = m.redraw.strategy()
-		for (var i = 0; i < roots.length; i++) {
-			if (controllers[i] && mode != "none") m.render(roots[i], modules[i].view(controllers[i]), mode == "all")
-		}
-		//after rendering within a routed context, we need to scroll back to the top, and fetch the document title for history.pushState
-		if (computePostRedrawHook) {
-			computePostRedrawHook()
-			computePostRedrawHook = null
-		}
-		lastRedrawId = null
-		lastRedrawCallTime = new Date
-		m.redraw.strategy("diff")
-	}
+	m.redraw = function() {}
 
 	var pendingRequests = 0
 	var pendingMax= 0
@@ -517,107 +457,6 @@ Mithril = m = new function app(window, undefined) {
 		 }
 	}
 
-	m.withAttr = function(prop, withAttrCallback) {
-		return function(e) {
-			e = e || event
-			var currentTarget = e.currentTarget || this
-			withAttrCallback(prop in currentTarget ? currentTarget[prop] : currentTarget.getAttribute(prop))
-		}
-	}
-
-	//routing
-	var modes = {pathname: "", hash: "#", search: "?"}
-	var redirect = function() {}, routeParams = {}, currentRoute
-	m.route = function() {
-		if (arguments.length === 0) return currentRoute
-		else if (arguments.length === 3 && isStr(arguments[1])) {
-			var root = arguments[0], defaultRoute = arguments[1], router = arguments[2]
-			redirect = function(source) {
-				var path = currentRoute = normalizeRoute(source)
-				if (!routeByValue(root, router, path)) {
-					m.route(defaultRoute, true)
-				}
-			}
-			var listener = m.route.mode == "hash" ? "onhashchange" : "onpopstate"
-			window[listener] = function() {
-				if (currentRoute != normalizeRoute(window.location[m.route.mode])) {
-					redirect(window.location[m.route.mode])
-				}
-			}
-			computePostRedrawHook = setScroll
-			window[listener]()
-		}
-		else if (arguments[0].addEventListener) {
-			var element = arguments[0]
-			var isInitialized = arguments[1]
-			var context = arguments[2]
-			if (!isInitialized) {
-				context.href = element.getAttribute("href")
-				element.href = window.location.pathname + modes[m.route.mode] + context.href
-				element.removeEventListener("click", routeUnobtrusive)
-				element.addEventListener("click", routeUnobtrusive)
-			}
-		}
-		else if (isStr(arguments[0])) {
-			currentRoute = arguments[0]
-			var querystring = isObj(arguments[1]) ? buildQueryString(arguments[1]) : null
-			if (querystring) currentRoute += (currentRoute.indexOf("?") === -1 ? "?" : "&") + querystring
-
-			var shouldReplaceHistoryEntry = (arguments.length == 3 ? arguments[2] : arguments[1]) === true
-
-			if (window.history.pushState) {
-				computePostRedrawHook = function() {
-					window.history[shouldReplaceHistoryEntry ? "replaceState" : "pushState"](null, window.document.title, modes[m.route.mode] + currentRoute)
-					setScroll()
-				}
-				redirect(modes[m.route.mode] + currentRoute)
-			}
-			else window.location[m.route.mode] = currentRoute
-		}
-	}
-	m.route.param = function(key) {return routeParams[key]}
-	m.route.mode = "search"
-	function normalizeRoute(route) {return route.slice(modes[m.route.mode].length)}
-	function routeByValue(root, router, path) {
-		routeParams = {}
-
-		var queryStart = path.indexOf("?")
-		if (queryStart !== -1) {
-			routeParams = parseQueryString(path.substr(queryStart + 1, path.length))
-			path = path.substr(0, queryStart)
-		}
-
-		for (var route in router) {
-			if (route == path) {
-				m.module(root, router[route])
-				return true
-			}
-
-			var matcher = new RegExp("^" + route.replace(/:[^\/]+?\.{3}/g, "(.*?)").replace(/:[^\/]+/g, "([^\\/]+)") + "\/?$")
-
-			if (matcher.test(path)) {
-				path.replace(matcher, function() {
-					var keys = route.match(/:[^\/]+/g) || []
-					var values = [].slice.call(arguments, 1, -2)
-					for (var i = 0; i < keys.length; i++) routeParams[keys[i].replace(/:|\./g, "")] = decodeURIComponent(values[i])
-					m.module(root, router[route])
-				})
-				return true
-			}
-		}
-	}
-	function routeUnobtrusive(e) {
-		e = e || event
-		if (e.ctrlKey || e.metaKey || e.which == 2) return
-		if (e.preventDefault) e.preventDefault()
-		else e.returnValue = false
-		var currentTarget = e.currentTarget || this
-		m.route(currentTarget[m.route.mode].slice(modes[m.route.mode].length))
-	}
-	function setScroll() {
-		if (m.route.mode != "hash" && window.location.hash) window.location.hash = window.location.hash
-		else window.scrollTo(0, 0)
-	}
 	function buildQueryString(object, prefix) {
 		var str = []
 		for(var prop in object) {
@@ -626,36 +465,12 @@ Mithril = m = new function app(window, undefined) {
 		}
 		return str.join("&")
 	}
-	function parseQueryString(str) {
-		var pairs = str.split("&"), params = {}
-		for (var i = 0; i < pairs.length; i++) {
-			var pair = pairs[i].split("=")
-			params[decodeSpace(pair[0])] = pair[1] ? decodeSpace(pair[1]) : (pair.length === 1 ? true : "")
-		}
-		return params
-	}
-	function decodeSpace(string) {
-		return decodeURIComponent(string.replace(/\+/g, " "))
-	}
 	function reset(root) {
 		var cacheKey = getCellCacheKey(root)
 		clear(root.childNodes, cellCache[cacheKey])
 		cellCache[cacheKey] = undefined
 	}
 
-	m.deferred = function () {
-		var deferred = new Deferred()
-		deferred.promise = propify(deferred.promise)
-		return deferred
-	}
-	function propify(promise) {
-		prop = m.prop()
-		promise.then(prop)
-		prop.then = function(resolve, reject) {
-			return propify(promise.then(resolve, reject))
-		}
-		return prop
-	}
 	//Promiz.mithril.js | Zolmeister | MIT
 	//a modified version of Promiz.js, which does not conform to Promises/A+ for two reasons:
 	//1) `then` callbacks are called synchronously (because setTimeout is too slow, and the setImmediate polyfill is too big
@@ -723,7 +538,7 @@ Mithril = m = new function app(window, undefined) {
 					})
 				}
 				catch (e) {
-					m.deferred.onerror(e)
+					Deferred.onerror(e)
 					promiseValue = e
 					failureCallback()
 				}
@@ -739,7 +554,7 @@ Mithril = m = new function app(window, undefined) {
 				then = promiseValue && promiseValue.then
 			}
 			catch (e) {
-				m.deferred.onerror(e)
+				Deferred.onerror(e)
 				promiseValue = e
 				state = REJECTING
 				return fire()
@@ -761,7 +576,7 @@ Mithril = m = new function app(window, undefined) {
 					}
 				}
 				catch (e) {
-					m.deferred.onerror(e)
+					Deferred.onerror(e)
 					promiseValue = e
 					return finish()
 				}
@@ -780,36 +595,10 @@ Mithril = m = new function app(window, undefined) {
 			})
 		}
 	}
-	m.deferred.onerror = function(e) {
+	Deferred.onerror = function(e) {
 		if (type(e) == "[object Error]" && !e.constructor.toString().match(/ Error/)) throw e
 	}
 
-	m.sync = function(args) {
-		var method = "resolve"
-		function synchronizer(pos, resolved) {
-			return function(value) {
-				results[pos] = value
-				if (!resolved) method = "reject"
-				if (--outstanding == 0) {
-					deferred.promise(results)
-					deferred[method](results)
-				}
-				return value
-			}
-		}
-
-		var deferred = m.deferred()
-		var outstanding = args.length
-		var results = new Array(outstanding)
-		if (args.length > 0) {
-			for (var i = 0; i < args.length; i++) {
-				args[i].then(synchronizer(i, true), synchronizer(i, false))
-			}
-		}
-		else deferred.resolve()
-
-		return deferred.promise
-	}
 	function identity(value) {return value}
 
 	function ajax(options) {
@@ -901,7 +690,7 @@ Mithril = m = new function app(window, undefined) {
 
 	m.request = function(xhrOptions) {
 		if (xhrOptions.background !== true) m.startComputation()
-		var deferred = m.deferred()
+		var deferred = new Deferred()
 		var isJSONP = xhrOptions.dataType && xhrOptions.dataType.toLowerCase() === "jsonp"
 		var serialize = xhrOptions.serialize = isJSONP ? identity : xhrOptions.serialize || JSON.stringify
 		var deserialize = xhrOptions.deserialize = isJSONP ? identity : xhrOptions.deserialize || JSON.parse
@@ -924,7 +713,7 @@ Mithril = m = new function app(window, undefined) {
 				deferred[e.type == "load" ? "resolve" : "reject"](response)
 			}
 			catch (e) {
-				m.deferred.onerror(e)
+				Deferred.onerror(e)
 				deferred.reject(e)
 			}
 			if (xhrOptions.background !== true) m.endComputation()
