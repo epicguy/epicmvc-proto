@@ -6,18 +6,12 @@
 #  - Would like to mark types of lines with possible detail level, which caller can then use to filter at will
 #    - Like fm='issues' ff='make' _log fm, 2, ff, 'whatever', 'and', {stuff} (Module fm, level=2, function-name, messages)
 #
-# TODO FIST
-#  - Would like to put a 'validate' choice in ACTIONS: for app.coffee, so Models don't have to
-#
 # TODO APP.COFFEE
 # A) ROUTES
 #
 # TODO DEPLOY
 # A) Write a new version, which packages our stuff as a bower package
 # B) USING MANIFEST FILE TO BUILD USER'S DEPLOY PACKAGE; ALSO REMOVES LOGS, ETC.
-#
-# TODO JQUERY
-# D) FUTURES (NOT YET USING ANY, BUT NEED TO WITH ASYNC ACTIONS/GETTABLE) Use m.defer
 #
 # TODO EVENTS
 # C) CONSIDER HOW TO INTERACT WITH MITHRIL WHEN USES DOES COMPONENT WITH E.G. ONCHANGE, ONCLICK, ETC.
@@ -30,10 +24,8 @@
 # TODO MITHRIL
 # A) Do sample component
 # B) Integrate fist control fields (select, input, etc.) with correct attributes value vs. defaultValue ?
-# D) Look into how to allow defereds in Model action results
 #
 # TODO MODEL I/F
-# A) CONSDIDER HOW WE CAN MAKE IT ASYNC - LIKE ALLOW FOR DEFEREDS
 # B) CONSDIER HOW TABLE REQUESTS MIGHT BE ASYNC ALSO (MAYBE PARTIAL RENDER, THEN ABORT OR CONSDIER EMPTY UNTIL REQUEST COMPELTE)
 
 
