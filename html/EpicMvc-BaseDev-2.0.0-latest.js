@@ -748,7 +748,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   app = function(window, undef) {
-    var E, Extra, Model, aActions, aFists, aFlows, aMacros, aModels, aSetting, action, appFindAction, appFindAttr, appFindNode, appFist, appGetF, appGetS, appGetSetting, appGetT, appGetVars, appInit, appLoadFormsIf, appModel, appStartS, appStartT, appconfs, counter, doAction, fieldDef, finish_logout, fistDef, fistInit, inAction, issueInit, issueMap, make_model_functions, merge, nm, oModel, obj, option, setModelState, type_oau, _d_doAction, _ref;
+    var E, Extra, Model, aActions, aFists, aFlows, aMacros, aModels, aSetting, action, appFindAction, appFindAttr, appFindNode, appFist, appGetF, appGetS, appGetSetting, appGetT, appGetVars, appInit, appLoadFormsIf, appModel, appStartS, appStartT, appconfs, counter, doAction, fieldDef, finish_logout, fistDef, fistInit, inAction, issueInit, issueMap, make_model_functions, merge, nm, oModel, obj, option, setModelState, type_oau, _d_doAction, _i, _len, _ref, _ref1;
     inAction = false;
     counter = 0;
     Model = {};
@@ -758,15 +758,23 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     option = {
       loadDirs: {}
     };
+    _ref = ['c1', 'a1', 'a2', 'm1', 'ca1', 'ca2', 'ca3'];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      nm = _ref[_i];
+      option[nm] = (function() {});
+    }
     E = {};
     E.nextCounter = function() {
       return ++counter;
+    };
+    E.opt = function(object) {
+      return merge(option, object);
     };
     type_oau = function(obj) {
       return {}.toString.call(obj)[8];
     };
     merge = function() {
-      var atype, depth, dest, dup, f, func, otype, source, sources, stype, utype, _i, _len;
+      var atype, depth, dest, dup, f, func, otype, source, sources, stype, utype, _j, _len1;
       dest = arguments[0], sources = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
       otype = 'O';
       atype = 'A';
@@ -789,12 +797,12 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         return undef;
       };
       func[atype] = function(dest, source) {
-        var ans, f, inx, s, _i, _len;
+        var ans, f, inx, s, _j, _len1;
         f = 'func:A';
         if ((type_oau(source)) !== atype) {
           reutrn(undef);
         }
-        for (inx = _i = 0, _len = source.length; _i < _len; inx = ++_i) {
+        for (inx = _j = 0, _len1 = source.length; _j < _len1; inx = ++_j) {
           s = source[inx];
           ans = dup(dest[inx], s);
           if (ans !== undef) {
@@ -821,7 +829,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         return become;
       };
       func[stype] = function(was, want) {
-        if ((type_oau(want)) in func) {
+        if ((type_oau(want)) !== utype) {
           return want;
         }
         return was;
@@ -837,8 +845,8 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         depth--;
         return r;
       };
-      for (_i = 0, _len = sources.length; _i < _len; _i++) {
-        source = sources[_i];
+      for (_j = 0, _len1 = sources.length; _j < _len1; _j++) {
+        source = sources[_j];
         f = ':merge:source-loop';
         dup(dest, source);
       }
@@ -887,11 +895,13 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     E.run = function(set_appconfs, more_options, init_func) {
       var promise;
       appconfs = set_appconfs;
-      appInit();
       merge(option, more_options);
       E.oLoader = new Extra[option.loader](appconfs);
       promise = E.oLoader.D_loadAsync();
       promise.then(function() {
+        appInit();
+        merge(option, more_options);
+        make_model_functions();
         fistInit();
         issueInit();
         if (typeof init_func === 'function') {
@@ -905,11 +915,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       var f;
       f = ':action:' + action_token;
       _log2(f, data);
-      if (inAction !== false) {
-        if (typeof option.c1 === "function") {
-          option.c1();
-        }
-      }
+      option.c1(inAction);
       inAction = action_token;
       m.startComputation();
       return (doAction(action_token, data, E.App().getStepPath())).then(function(action_result) {
@@ -964,10 +970,10 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     aFists = {};
     appLoadFormsIf = function(config) {};
     appInit = function() {
-      var form_nm, hash, nm, node, obj, view_nm, _i, _j, _len, _len1, _ref, _ref1;
-      for (_i = 0, _len = appconfs.length; _i < _len; _i++) {
-        nm = appconfs[_i];
-        app = (_ref = E['app$' + nm]) != null ? _ref : {};
+      var form_nm, hash, node, obj, view_nm, _j, _k, _len1, _len2, _ref1, _ref2;
+      for (_j = 0, _len1 = appconfs.length; _j < _len1; _j++) {
+        nm = appconfs[_j];
+        app = (_ref1 = E['app$' + nm]) != null ? _ref1 : {};
         if (app.STEPS) {
           merge(aFlows["default"].TRACKS["default"].STEPS, app.STEPS);
         }
@@ -990,53 +996,48 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       for (view_nm in aModels) {
         node = aModels[view_nm];
         if (node.fists) {
-          _ref1 = node.fists;
-          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-            form_nm = _ref1[_j];
+          _ref2 = node.fists;
+          for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
+            form_nm = _ref2[_k];
             aFists[form_nm] = view_nm;
           }
         }
       }
-      make_model_functions();
     };
     appModel = function(view_name, attribute) {
-      if (!(view_name in aModels)) {
-        config.a1(view_name);
-      }
-      if (!(attribute in aModels[view_name])) {
-        option.a2(view_name, attribute);
-      }
+      option.a1(view_name, aModels);
+      option.a2(view_name, aModels, attribute);
       return aModels[view_name][attribute];
     };
     appFist = function(fist_nm) {
       return aFists[fist_nm];
     };
     appFindNode = function(flow, t, s, cat, nm) {
-      var ncat, nf, ns, nt, _ref, _ref1, _ref2, _ref3, _ref4;
+      var ncat, nf, ns, nt, _ref1, _ref2, _ref3, _ref4, _ref5;
       nf = aFlows[flow];
       if (nf) {
-        if (t && ((nt = (_ref = nf.TRACKS) != null ? _ref[t] : void 0) != null)) {
-          if (s && ((ns = (_ref1 = nt.STEPS) != null ? _ref1[s] : void 0) != null)) {
-            if ((ncat = (_ref2 = ns[cat]) != null ? _ref2[nm] : void 0) != null) {
+        if (t && ((nt = (_ref1 = nf.TRACKS) != null ? _ref1[t] : void 0) != null)) {
+          if (s && ((ns = (_ref2 = nt.STEPS) != null ? _ref2[s] : void 0) != null)) {
+            if ((ncat = (_ref3 = ns[cat]) != null ? _ref3[nm] : void 0) != null) {
               return ncat;
             }
           }
-          if ((ncat = (_ref3 = nt[cat]) != null ? _ref3[nm] : void 0) != null) {
+          if ((ncat = (_ref4 = nt[cat]) != null ? _ref4[nm] : void 0) != null) {
             return ncat;
           }
         }
-        if ((ncat = (_ref4 = nf[cat]) != null ? _ref4[nm] : void 0) != null) {
+        if ((ncat = (_ref5 = nf[cat]) != null ? _ref5[nm] : void 0) != null) {
           return ncat;
         }
       }
       return null;
     };
     appFindAttr = function(flow, t, s, attr) {
-      var nattr, nf, ns, nt, _ref, _ref1;
+      var nattr, nf, ns, nt, _ref1, _ref2;
       nf = aFlows[flow];
       if (nf) {
-        if (t && ((nt = (_ref = nf.TRACKS) != null ? _ref[t] : void 0) != null)) {
-          if (s && ((ns = (_ref1 = nt.STEPS) != null ? _ref1[s] : void 0) != null)) {
+        if (t && ((nt = (_ref1 = nf.TRACKS) != null ? _ref1[t] : void 0) != null)) {
+          if (s && ((ns = (_ref2 = nt.STEPS) != null ? _ref2[s] : void 0) != null)) {
             if ((nattr = ns[attr]) != null) {
               return nattr;
             }
@@ -1067,15 +1068,15 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       return appGetT(flow, track).start;
     };
     appFindAction = function(path, action_token) {
-      var _ref;
-      return (_ref = appFindNode(path[0], path[1], path[2], 'ACTIONS', action_token)) != null ? _ref : aActions[action_token];
+      var _ref1;
+      return (_ref1 = appFindNode(path[0], path[1], path[2], 'ACTIONS', action_token)) != null ? _ref1 : aActions[action_token];
     };
     appGetSetting = function(setting_name, flow, track, step) {
-      var _ref;
+      var _ref1;
       if (!flow) {
         return aSetting[setting_name];
       }
-      return (_ref = appFindAttr(flow, track, step != null ? step : false, setting_name)) != null ? _ref : aSetting[setting_name];
+      return (_ref1 = appFindAttr(flow, track, step != null ? step : false, setting_name)) != null ? _ref1 : aSetting[setting_name];
     };
     appGetVars = function(flow, track, step) {
       var f, k, v, vars;
@@ -1100,14 +1101,11 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         model = aModels[view];
         _results.push((function(view, model) {
           return E[view] = function(table_or_ctx, act_if_action, data) {
-            var cls, inst_nm, oM;
+            var inst_nm, oM;
             inst_nm = model.inst;
             if (!(inst_nm in oModel)) {
-              cls = model["class"];
-              if (!(E.Model[cls] != null)) {
-                option.m1(view, model);
-              }
-              oModel[inst_nm] = new E.Model[cls](view, model.options);
+              option.m1(view, model);
+              oModel[inst_nm] = new E.Model[model["class"]](view, model.options);
               if (inst_nm in oModel) {
                 oModel[inst_nm].restoreState(oModel[inst_nm]);
               }
@@ -1140,12 +1138,12 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       master_data = merge({}, data);
       action_node = appFindAction(original_path, action_token);
       _log2(f, action_node);
+      option.ca1(action_token, original_path, action_node);
       if (!(action_node != null)) {
-        _log2('WARNING', "No app. entry for action_token (" + action_token + ") on path (" + original_path + ")");
         return [master_issue, master_message];
       }
       doLeftSide = function(action_node) {
-        var ctx, d, i, is_macro, mg, nm, nms, r, val, view_act, view_nm, _i, _len, _ref, _ref1, _ref2;
+        var ctx, d, i, is_macro, mg, nms, r, val, view_act, view_nm, _ref1, _ref2, _ref3;
         _log2(f, 'doLeftSide:', {
           action_node: action_node
         });
@@ -1162,30 +1160,21 @@ if (typeof define == "function" && define.amd) define(function() {return m})
               return [];
           }
         })();
-        for (_i = 0, _len = nms.length; _i < _len; _i++) {
-          nm = nms[_i];
-          if (!(nm in data)) {
-            _log2('WARNING', "Action (" + action_token + ") request data is missing param " + nm, data, action_node, original_path);
-          }
-        }
-        _ref = action_node.set;
-        for (nm in _ref) {
-          val = _ref[nm];
+        option.ca2(action_token, original_path, nms, data, action_node);
+        _ref1 = action_node.set;
+        for (nm in _ref1) {
+          val = _ref1[nm];
           master_data[nm] = val;
         }
         if (action_node["do"] != null) {
           is_macro = !/[.]/.test(action_node["do"]);
           if (is_macro) {
-            if (!aMacros[action_node["do"]]) {
-              if (typeof option.ca2 === "function") {
-                option.ca2(action_token, original_path, action_node);
-              }
-            }
+            option.ca3(action_token, original_path, action_node, aMacros);
             if (is_macro) {
               return doActionNode(aMacros[action_node["do"]]);
             }
           }
-          _ref1 = action_node["do"].split('.'), view_nm = _ref1[0], view_act = _ref1[1];
+          _ref2 = action_node["do"].split('.'), view_nm = _ref2[0], view_act = _ref2[1];
           view_act = view_act != null ? view_act : action_token;
           d = new m.Deferred();
           r = {};
@@ -1198,9 +1187,9 @@ if (typeof define == "function" && define.amd) define(function() {return m})
             m: mg
           };
           E[view_nm](ctx, view_act, master_data);
-          _ref2 = ctx.r;
-          for (nm in _ref2) {
-            val = _ref2[nm];
+          _ref3 = ctx.r;
+          for (nm in _ref3) {
+            val = _ref3[nm];
             master_data[nm] = val;
           }
           master_issue.addObj(ctx.i);
@@ -1208,23 +1197,24 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         }
       };
       doRightSide = function(action_node) {
-        var choice, k, matches, next_node, val, _i, _len, _ref, _ref1, _ref2, _ref3;
+        var choice, k, matches, next_node, val, _j, _len1, _ref1, _ref2, _ref3, _ref4;
         next_node = null;
-        _ref1 = (_ref = action_node.next) != null ? _ref : [];
-        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-          choice = _ref1[_i];
+        _ref2 = (_ref1 = action_node.next) != null ? _ref1 : [];
+        for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+          choice = _ref2[_j];
+          _log2(f + '-doRightSide', 'choice', choice, master_data);
           if (choice.when === 'default') {
             next_node = choice;
             break;
           }
-          if ((typeof choice.when) === 'string' && choice.when === ((_ref2 = master_data.success) != null ? _ref2 : master_data.ok)) {
+          if ((typeof choice.when) === 'string' && choice.when === ((_ref3 = master_data.success) != null ? _ref3 : master_data.ok)) {
             next_node = choice;
             break;
           }
           matches = true;
-          _ref3 = choice.when;
-          for (k in _ref3) {
-            val = _ref3[k];
+          _ref4 = choice.when;
+          for (k in _ref4) {
+            val = _ref4[k];
             if (master_data[k] !== val) {
               matches = false;
               break;
@@ -1252,10 +1242,10 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     fieldDef = {};
     fistDef = {};
     fistInit = function() {
-      var fist, nm, rec, _i, _len, _ref, _results;
-      for (_i = 0, _len = appconfs.length; _i < _len; _i++) {
-        nm = appconfs[_i];
-        fist = (_ref = E['fist$' + nm]) != null ? _ref : {};
+      var fist, rec, _j, _len1, _ref1, _results;
+      for (_j = 0, _len1 = appconfs.length; _j < _len1; _j++) {
+        nm = appconfs[_j];
+        fist = (_ref1 = E['fist$' + nm]) != null ? _ref1 : {};
         if (fist.FIELDS) {
           merge(fieldDef, fist.FIELDS);
         }
@@ -1276,16 +1266,16 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     };
     issueMap = {};
     issueInit = function() {
-      var issues, nm, _i, _len, _ref, _results;
+      var issues, _j, _len1, _ref1, _results;
       _results = [];
-      for (_i = 0, _len = appconfs.length; _i < _len; _i++) {
-        nm = appconfs[_i];
-        issues = (_ref = E['issue$' + nm]) != null ? _ref : {};
+      for (_j = 0, _len1 = appconfs.length; _j < _len1; _j++) {
+        nm = appconfs[_j];
+        issues = (_ref1 = E['issues$' + nm]) != null ? _ref1 : {};
         _results.push(merge(issueMap, issues));
       }
       return _results;
     };
-    _ref = {
+    _ref1 = {
       type_oau: type_oau,
       Model: Model,
       Extra: Extra,
@@ -1307,8 +1297,8 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       issueMap: issueMap,
       oModel: oModel
     };
-    for (nm in _ref) {
-      obj = _ref[nm];
+    for (nm in _ref1) {
+      obj = _ref1[nm];
       E[nm] = obj;
     }
     return E;
@@ -1562,12 +1552,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
 (function() {
 
   E.app$Base = {
-    MANIFEST: {
-      Extra: ['LoadStrategy', 'RenderStrategy', 'dataAction'],
-      Model: ['App', 'View', 'Fist']
-    },
     OPTIONS: {
-      loader: 'LoadStrategy$Base',
       render: 'RenderStrategy$Base',
       dataAction: 'dataAction$Base'
     },
@@ -1585,6 +1570,18 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         inst: "iBaseFist"
       }
     }
+  };
+
+}).call(this);
+
+/*Base/manifest.coffee*/// Generated by CoffeeScript 1.4.0
+(function() {
+
+  E.manifest$Base = {
+    Extra: ['LoadStrategy', 'RenderStrategy', 'dataAction'],
+    Model: ['App', 'View', 'Fist'],
+    js: [],
+    root: ['app']
   };
 
 }).call(this);
@@ -1700,7 +1697,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       for (nm in _ref) {
         rec = _ref[nm];
         dyn[nm] = rec.dyn;
-        row_num[nm] = rec.row._COUNT;
+        row_num[nm] = rec.count;
       }
       saved_info = E.merge({}, {
         info_foreach: {
@@ -1905,7 +1902,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       clean_attrs = {};
       for (nm in attrs) {
         val = attrs[nm];
-        if (nm[0] !== '-') {
+        if (nm[0] !== '?') {
           clean_attrs[nm] = val;
         } else {
           if (val) {
@@ -2146,18 +2143,19 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     };
 
     View$Base.prototype.T_fist = function(attrs, content_f) {
-      var f, model, rh_alias, table, tbl, _base, _ref, _ref1, _ref2;
+      var f, model, rh_alias, table, tbl, _ref, _ref1, _ref2, _ref3;
       f = 'T_fist';
       _log2(f, attrs, content_f);
       model = (_ref = E.fistDef[attrs.fist].event) != null ? _ref : 'Fist';
       table = attrs.fist + (attrs.row != null ? ':' + attrs.row : '');
       _ref1 = this._accessModelTable(model + '/' + table, attrs.alias), tbl = _ref1[0], rh_alias = _ref1[1];
       this.info_foreach[rh_alias].row = tbl[0];
+      this.info_foreach[rh_alias].count = 0;
       if (content_f) {
         return this.handleIt(content_f);
       } else {
         if ((_ref2 = attrs.part) == null) {
-          attrs.part = typeof (_base = E.fistDef[attrs.fist]).part === "function" ? _base.part('fist_default') : void 0;
+          attrs.part = (_ref3 = E.fistDef[attrs.fist].part) != null ? _ref3 : 'fist_default';
         }
         return this.T_part(attrs);
       }
@@ -2729,11 +2727,6 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       return def.promise;
     };
 
-    LoadStrategy$Base.prototype.fist = function(grp_nm) {
-      BROKEN();
-      return E['fist$' + grp_nm];
-    };
-
     LoadStrategy$Base.prototype.d_layout = function(nm) {
       return this.getArtifact(nm, 'Layout');
     };
@@ -2751,6 +2744,10 @@ if (typeof define == "function" && define.amd) define(function() {return m})
   })();
 
   E.Extra.LoadStrategy$Base = LoadStrategy$Base;
+
+  E.opt({
+    loader: 'LoadStrategy$Base'
+  });
 
 }).call(this);
 
@@ -2989,22 +2986,72 @@ Layout: {
 
 /*Dev/app.coffee*/// Generated by CoffeeScript 1.4.0
 (function() {
+  var err, warn;
+
+  warn = function(str, o) {
+    return console.warn("WARNING", str, o != null ? o : '');
+  };
+
+  err = function(str, o) {
+    console.error("ERROR", str, o != null ? o : '');
+    throw new Error("ERROR: " + str);
+  };
 
   window.EpicMvc.app$Dev = {
-    MANIFEST: {
-      Model: ['ModelJS', 'Devl', 'View'],
-      Extra: ['ParseFile']
+    OPTIONS: {
+      c1: function(inAction) {
+        if (inAction !== false) {
+          return warn("IN CLICK");
+        }
+      },
+      a1: function(view_name, aModels) {
+        if (view_name in aModels) {
+          return;
+        }
+        return err("Could not find model (" + view_name + ") in namespace E.Model", aModels);
+      },
+      a2: function(view_name, aModels, attribute) {
+        if (attribute in aModels[view_name]) {
+          return;
+        }
+        return err("Could not find model (" + view_name + ") in namespace E.Model", aModels);
+      },
+      m1: function(view, model) {
+        if (model["class"] in E.Model) {
+          return;
+        }
+        return err("Processing view (" + view + "), model-class (" + model["class"] + ") not in namespace E.Model", model);
+      },
+      ca1: function(action_token, original_path, action_node) {
+        if (action_node != null) {
+          return;
+        }
+        return warn("No app. entry for action_token (" + action_token + ") on path (" + original_path + ")");
+      },
+      ca2: function(action_token, original_path, nms, data, action_node) {
+        var nm, _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = nms.length; _i < _len; _i++) {
+          nm = nms[_i];
+          if (!(nm in data)) {
+            _results.push(warn("Missing param (" + nm + ") for action (" + action_token + "), Path: " + original_path, {
+              data: data,
+              action_node: action_node
+            }));
+          }
+        }
+        return _results;
+      },
+      ca3: function(action_token, original_path, action_node, aMacros) {
+        if (action_node["do"] in aMacros) {
+          return;
+        }
+        return err("Missing (" + action_node["do"] + ") from MACROS; Action: (" + action_token + "), Path: (" + original_path + ")");
+      }
     },
     SETTINGS: {
       frames: {
         MMM_Dev: 'bdevl'
-      }
-    },
-    OPTIONS: {
-      loader: 'LoadStrategy$Dev',
-      ca2: function(action_token, original_path, action_node) {
-        _log2("ERROR: There is a problem with this action_node:", action_node);
-        throw new Error("ERROR: Missing '" + action_node["do"] + "' from MACROS; Action: " + action_token + ", Path: " + original_path);
       }
     },
     MODELS: {
@@ -3054,6 +3101,18 @@ Layout: {
         "do": 'Devl.table_row_set'
       }
     }
+  };
+
+}).call(this);
+
+/*Dev/manifest.coffee*/// Generated by CoffeeScript 1.4.0
+(function() {
+
+  E.manifest$Dev = {
+    Model: ['ModelJS', 'Devl', 'View'],
+    Extra: ['ParseFile'],
+    js: [],
+    root: ['app']
   };
 
 }).call(this);
@@ -4047,7 +4106,7 @@ Layout: {
     nextCounter = function() {
       return ++counter;
     };
-    etags = ['page', 'part', 'if', 'foreach', 'fist', 'defer'];
+    etags = ['page', 'part', 'if', 'if_true', 'if_false', 'foreach', 'fist', 'defer'];
     T_EPIC = 0;
     T_M1 = 1;
     T_M2 = 2;
@@ -4067,6 +4126,16 @@ Layout: {
     });
     after_script = after_comment.replace(/<\/script>/gm, '\x02').replace(/<script[^\x02]*\x02/gm, '');
     after = after_script;
+    after = after.replace(/<epic:/g, '<e-');
+    after = after.replace(/<\/epic:/g, '</e-');
+    after = after.replace(/<e-page_part/g, '<e-part');
+    after = after.replace(/<e-form_part/g, '<e-fist');
+    after = after.replace(/form="/g, 'fist="');
+    after = after.replace(/\ p:/g, ' e-');
+    after = after.replace(/Tag\/If/g, 'View/If');
+    after = after.replace(/Tag\/Part/g, 'View/Part');
+    after = after.replace(/\ size="/g, ' ?size="');
+    after = after.replace(/data-action=/g, 'e-action=');
     parts = after.split(/<(\/?)([:a-z_0-9-]+)([^>]*)>/);
     pre_count = 0;
     i = 0;
@@ -4294,29 +4363,54 @@ Layout: {
     };
 
     LoadStrategy.prototype.D_loadAsync = function() {
-      var def, f, file, file_list, next, pkg, promise, type, url, work, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3;
+      var def, el, f, file, file_list, next, pkg, promise, sub, type, url, work, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
       f = 'Dev:E/LoadStragegy.loadAsync';
-      work = [];
-      def = new m.Deferred();
-      promise = def.promise;
       _ref = this.appconfs;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         pkg = _ref[_i];
         if (!(pkg in E.option.loadDirs)) {
           continue;
         }
-        _ref3 = (_ref1 = (_ref2 = E['app$' + pkg]) != null ? _ref2.MANIFEST : void 0) != null ? _ref1 : {};
-        for (type in _ref3) {
-          file_list = _ref3[type];
-          for (_j = 0, _len1 = file_list.length; _j < _len1; _j++) {
-            file = file_list[_j];
-            url = E.option.loadDirs[pkg] + pkg + '/' + type + '/' + file + '.js';
-            work.push(url);
+        _ref2 = (_ref1 = E['manifest$' + pkg]) != null ? _ref1 : {};
+        for (type in _ref2) {
+          file_list = _ref2[type];
+          if (type === 'css') {
+            for (_j = 0, _len1 = file_list.length; _j < _len1; _j++) {
+              file = file_list[_j];
+              url = E.option.loadDirs[pkg] + pkg + '/css/' + file + '.css';
+              el = document.createElement('link');
+              el.setAttribute('rel', 'stylesheet');
+              el.setAttribute('type', 'text/css');
+              el.setAttribute('href', url);
+              document.head.appendChild(el);
+            }
+          }
+        }
+      }
+      work = [];
+      def = new m.Deferred();
+      promise = def.promise;
+      _ref3 = this.appconfs;
+      for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
+        pkg = _ref3[_k];
+        if (!(pkg in E.option.loadDirs)) {
+          continue;
+        }
+        _ref5 = (_ref4 = E['manifest$' + pkg]) != null ? _ref4 : {};
+        for (type in _ref5) {
+          file_list = _ref5[type];
+          if (type !== 'css') {
+            for (_l = 0, _len3 = file_list.length; _l < _len3; _l++) {
+              file = file_list[_l];
+              sub = type === 'root' ? '' : type + '/';
+              url = E.option.loadDirs[pkg] + pkg + '/' + sub + file + '.js';
+              work.push(url);
+              _log2(f, 'to do ', url);
+            }
           }
         }
       }
       next = function(ix) {
-        var el;
         if (ix >= work.length) {
           _log2(f, ix, 'done.');
           def.resolve(null);
@@ -4366,7 +4460,7 @@ Layout: {
     };
 
     LoadStrategy.prototype.d_get = function(type, nm) {
-      var def, f, full_nm, pkg, promise, uncompiled, _fn, _i, _len, _ref,
+      var def, f, full_nm, full_nm_alt, pkg, promise, type_alt, uncompiled, _fn, _fn1, _i, _j, _len, _len1, _ref, _ref1,
         _this = this;
       f = 'd_get';
       full_nm = type + '/' + nm + '.html';
@@ -4399,6 +4493,25 @@ Layout: {
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         pkg = _ref[_i];
         _fn(pkg);
+      }
+      type_alt = type === 'Layout' ? 'tmpl' : type.toLowerCase();
+      full_nm_alt = type + '/' + nm + '.' + type_alt + '.html';
+      _ref1 = this.reverse_packages;
+      _fn1 = function(pkg) {
+        return promise = promise.then(function(result) {
+          _log2(f, 'THEN-' + pkg, full_nm, 'S' === E.type_oau(result) ? result.slice(0, 40) : result);
+          if (result !== false) {
+            return result;
+          }
+          if (!(pkg in E.option.loadDirs)) {
+            return false;
+          }
+          return _this.D_getFile(pkg, full_nm_alt);
+        });
+      };
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        pkg = _ref1[_j];
+        _fn1(pkg);
       }
       promise = promise.then(function(result) {
         var parsed;
@@ -4453,15 +4566,15 @@ Layout: {
       return this.d_get('Part', nm);
     };
 
-    LoadStrategy.prototype.fist = function(grp_nm) {
-      return BROKEN();
-    };
-
     return LoadStrategy;
 
   })();
 
   E.Extra.LoadStrategy$Dev = LoadStrategy;
+
+  E.opt({
+    loader: 'LoadStrategy$Dev'
+  });
 
 }).call(this);
 
