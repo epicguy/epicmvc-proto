@@ -1,71 +1,35 @@
 'use strict'
 # Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 #
-# TODO CHANGES AFFECTING OTHERS USE OF THE API
-# A) TRY TO DEFINE A SMALL NAMESPACE, LIKE 'E' AND PUT ALMOST EVERYTHING UNDER THAT VS. EpicMvc
-# B) LINK_ACTION/FORM_ACTION IS GONE
-# C) VARGET3 NO LONGER TAKES A DOT IN # MAPING (I.E. &A/b#.checked; - REMOVE THE DOT)
-# D) Pageflow IS NOW App
-# E) Model classes go into E.Model
-#
-# TODO Define the new namespace I/F to the world: (under window.E)
-# E( "model's-view-name") - equivilent to getInstance( "model's-view--name")
-# E( "model", "action", {data}) - replaces app.coffee's call: "model/action" ...
-# E.merge (replacement for jQuery.extend, to avoid jquery dependancy)
-#
 #
 # TODO LOGGING
-#  - Would like to have all logging removed when minimizing stuff
-#    - Might use _log and \tf= as a pattern to remove from source
 #  - Would like to mark types of lines with possible detail level, which caller can then use to filter at will
 #    - Like fm='issues' ff='make' _log fm, 2, ff, 'whatever', 'and', {stuff} (Module fm, level=2, function-name, messages)
-#  - NOW USES GLOBAL _logX FUNCTIONS, USER MUST DEFINE IN E.G. index_dev.html (SHOULD BE REMOVE IN MIN VERSION)
 #
 # TODO FIST
-#  - Need to to push FIST data back to FIST object
 #  - Would like to put a 'validate' choice in ACTIONS: for app.coffee, so Models don't have to
 #
 # TODO APP.COFFEE
 # A) ROUTES
-# B) USE FUNCTIONS NOW VS. call:
-#
-# TODO LOAD STRATEGY (IN BaseDevl)
-# A) ALLOW INLINE SCRIPT TAG TO DEFINE A TEMPLATE, FOR EASIER SMALL DEMO EXAMPLES
-# B) POSSIBLE MANIFEST FILE PULLED IN index_dev THAT LISTS USER'S MODELs,EXTRAs,ETC. THAT CAN LOAD/RELOAD AND FOR DEPLOY
 #
 # TODO DEPLOY
 # A) Write a new version, which packages our stuff as a bower package
-#  - Would like full single file modules and min versions w/o logging, One each of: EpicCore, Base, BaseDevl
-#  - index.html would have to add each of these; they can be in bower_components, or right out of github?
 # B) USING MANIFEST FILE TO BUILD USER'S DEPLOY PACKAGE; ALSO REMOVES LOGS, ETC.
 #
 # TODO JQUERY
-# A) REMOVE DEPENCANCY ON EXTEND (MAKE AVAILABLE IN NAMESPACE FOR OTHERS?
-# B) AJAX: USE MITHRIL m.request ?
-# C) EVENTS: LOOK AT MITHRIL'S CODE TO SIMULATE SAME, OR EXPONSE HIS FOR USE IN OURS?
 # D) FUTURES (NOT YET USING ANY, BUT NEED TO WITH ASYNC ACTIONS/GETTABLE) Use m.defer
 #
-# TODO PARSE
-# A) HAVE P: ALLOWED AGAIN, AND MAP TO DATA-P-; ENSURE DATA-ACTION HANDLER READS IT FOR 'DATA'
-#
 # TODO EVENTS
-# A) ADD THE LOGIC FOR DATA-ACTION TO OUR NAMESPACE THAT PEOPLE CAN USE AS LKE DEFAULT FUNCTION, AND MAYBE ADD A HOOK (INACTIVITY TIMER)
-# B) HAVE TI HANDLE READING ATTRIBUTE FROM ELEMENT (LIKE VAL()) SO CALLER DOES NOT KNOW ABOUT THE DOM
 # C) CONSIDER HOW TO INTERACT WITH MITHRIL WHEN USES DOES COMPONENT WITH E.G. ONCHANGE, ONCLICK, ETC.
-# D) DO THIS WITHOUT JQUERY
 #
 # TODO HISTORY (IN RENDER STRATEGY)
 # A) CONSIDER IF APP.COFFEE HAS A ROLE HERE
 # B) DECIDE IF MODALS SHOULD GO INTO HISTORY, AND IF NOT, WHAT WILL BACK BUTTON DO JUST THEN (WHILE IN IT)
 # C) DECIDE IF SAME STEP SHOULD AVOID PUSHING A NEW STATE (VS REPLACE-STATE IF NEEDED)
 #
-# TODO RENDER LOOP
-# Review - has a lot of functions that all go together, from action to finish
-#
 # TODO MITHRIL
 # A) Do sample component
 # B) Integrate fist control fields (select, input, etc.) with correct attributes value vs. defaultValue ?
-# C) Use it's functions to avoid JQUERY dependancies
 # D) Look into how to allow defereds in Model action results
 #
 # TODO MODEL I/F
@@ -199,7 +163,8 @@ app= (window, undef) ->
 		option.c1 inAction # if inAction isnt false #%#
 		inAction= action_token
 		m.startComputation()
-		(doAction action_token, data, E.App().getStepPath()).then (action_result) ->
+		doAction action_token, data, E.App().getStepPath(), (action_result) ->
+			_log2 f, 'cb:', {action_result}
 			E.App().setIssues action_result[0]
 			E.App().setMessages action_result[1]
 			inAction= false
@@ -300,12 +265,12 @@ app= (window, undef) ->
 					return oM.getTable table_or_ctx if act_if_action is undef # Wanted a vew-table
 					oM.action table_or_ctx, act_if_action, data
 
-	doAction= (action_token, data, original_path) ->
-		d= new m.Deferred()
-		d.resolve _d_doAction action_token, data, original_path
-		d.promise
+	doAction= (action_token, data, original_path, cb) ->
+		ans= _d_doAction action_token, data, original_path
+		if ans?.then? then ans.then cb else cb ans
+		return
 	_d_doAction= (action_token, data, original_path) ->
-		f= ":doAction(#{action_token})"
+		f= ":_d_doAction(#{action_token})"
 		_log2 f, data, original_path
 		master_issue= new Issue 'App'
 		master_message= new Issue 'App'
@@ -316,8 +281,8 @@ app= (window, undef) ->
 		option.ca1 action_token, original_path, action_node #if not action_node? #%#
 		return [master_issue, master_message] if not action_node? # No recognized action
 
-		doLeftSide= (action_node)->
-			_log2 f, 'doLeftSide:', {action_node}
+		d_doLeftSide= (action_node)->
+			_log2 f, 'd_doLeftSide:', {action_node}
 			# Handle 'go:'
 			if action_node.go?
 				E.App().go action_node.go
@@ -335,21 +300,24 @@ app= (window, undef) ->
 				is_macro= not /[.]/.test action_node.do
 				if is_macro # Handle 'MACRO'
 					option.ca3 action_token, original_path, action_node, aMacros #if not aMacros[action_node.do] #%#
-					return doActionNode aMacros[action_node.do] if is_macro
+					return d_doActionNode aMacros[action_node.do]
 				[view_nm,view_act]= action_node.do.split '.'
 				view_act= view_act ? action_token
 				d= new m.Deferred(); r= {}; i= new E.Issue view_nm, view_act; mg= new E.Issue view_nm ,view_act
 				ctx= {d,r,i,m:mg}
-				E[ view_nm] ctx, view_act, master_data
-				master_data[ nm]= val for nm,val of ctx.r # We just polute the one object
-				master_issue.addObj ctx.i
-				master_message.addObj ctx.m
-					# TODO: Return null or false if do was not a macro
+				ans= E[ view_nm] ctx, view_act, master_data # TODO: Process d_cb
+				d_cb= ()->
+					_log2 f, 'd_doLeftSide: d_cb:', {ctx}
+					master_data[ nm]= val for nm,val of ctx.r # We just polute the one object
+					master_issue.addObj ctx.i
+					master_message.addObj ctx.m
+				_log2 f, 'd_doLeftSide: after model called:', {ans}
+				return if ans?.then? then ans.then d_cb else d_cb ans
 
-		doRightSide= (action_node)->
+		d_doRightSide= (action_node)->
 			next_node= null
 			for choice in action_node.next ? []
-				_log2 f+ '-doRightSide', 'choice', choice, master_data
+				_log2 f+ '-d_doRightSide', 'choice', choice, master_data
 				(next_node= choice; break) if choice.when is 'default'
 				(next_node= choice; break) if (typeof choice.when) is 'string' and choice.when is (master_data.success ? master_data.ok)
 				matches= true
@@ -357,18 +325,22 @@ app= (window, undef) ->
 					(matches= false; break;) if master_data[k] isnt val
 				(next_node= choice; break) if matches
 			if next_node
-				_log2 f, 'doRightSide:', {next_node}
-				doActionNode next_node
+				_log2 f, 'd_doRightSide:', {next_node}
+				return d_doActionNode next_node
 			return
 
 		# ActionNode is { do: left_action_node, next: right_action_node }
 		#	execute left_action_node then
 		#	execute right_action_node
-		doActionNode= (action_node)->
-			doLeftSide action_node
-			doRightSide action_node
-		doActionNode action_node
-		[master_issue, master_message]
+		d_doActionNode= (action_node)->
+			ans= d_doLeftSide action_node
+			d_rsCb= ()-> d_doRightSide action_node
+			if ans?.then? then ans.then d_rsCb else d_rsCb ans
+
+		ans= d_doActionNode action_node
+		done= ()->
+			[master_issue, master_message]
+		if ans?.then? then ans.then done else done ans
 
 	fieldDef= {}
 	fistDef= {}
