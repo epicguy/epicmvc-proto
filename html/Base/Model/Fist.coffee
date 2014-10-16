@@ -25,7 +25,8 @@ class Fist extends E.ModelJS
 				if field.hval isnt p.val # Update our html-value state with el.value
 					had_issue= field.issue
 					field.hval= p.val
-					E.fistVAL field, field.hval
+					tmp_val= E.fistH2H field, field.hval # Initial cleanup
+					E.fistVAL field, tmp_val
 					invalidate= true if act is 'change' or had_issue isnt field.issue
 			when 'blur'
 				was_val= field.hval
@@ -45,7 +46,7 @@ class Fist extends E.ModelJS
 			else delete @Table[ fist.rnm]
 		return
 	# Controller wants a fist's db values, after whole-form-validation
-	validate: (ctx, fistNm, row) ->
+	fistValidate: (ctx, fistNm, row) ->
 		{r, i, m}= ctx
 		fist= @_getFist fistNm, row
 		errors= 0

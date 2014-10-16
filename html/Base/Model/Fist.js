@@ -16,7 +16,7 @@
     }
 
     Fist.prototype.event = function(name, act, fistNm, fieldNm, p) {
-      var f, field, fist, had_issue, invalidate, was_issue, was_val;
+      var f, field, fist, had_issue, invalidate, tmp_val, was_issue, was_val;
       f = 'event:' + act + '-' + fistNm + '/' + fieldNm;
       _log2(f, p);
       if (name !== 'Fist') {
@@ -39,7 +39,8 @@
           if (field.hval !== p.val) {
             had_issue = field.issue;
             field.hval = p.val;
-            E.fistVAL(field, field.hval);
+            tmp_val = E.fistH2H(field, field.hval);
+            E.fistVAL(field, tmp_val);
             if (act === 'change' || had_issue !== field.issue) {
               invalidate = true;
             }
@@ -72,7 +73,7 @@
       }
     };
 
-    Fist.prototype.validate = function(ctx, fistNm, row) {
+    Fist.prototype.fistValidate = function(ctx, fistNm, row) {
       var ans, errors, field, fieldNm, fist, i, invalidate, m, nm, r, _ref, _ref1;
       r = ctx.r, i = ctx.i, m = ctx.m;
       fist = this._getFist(fistNm, row);
