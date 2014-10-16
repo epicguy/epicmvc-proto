@@ -1,2 +1,1 @@
-E.app$Proto=
-	MANIFEST: Extra: ['Fist', 'GlobalDrag']
+E.app$Proto= {}

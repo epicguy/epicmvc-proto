@@ -1,9 +1,5 @@
 E.app$Base=
-	MANIFEST: #%#
-		Extra: ['LoadStrategy', 'RenderStrategy', 'dataAction'] #%#
-		Model: ['App', 'View', 'Fist'] #%#
 	OPTIONS:
-		loader: 'LoadStrategy$Base'
 		render: 'RenderStrategy$Base'
 		dataAction: 'dataAction$Base'
 	MODELS:
