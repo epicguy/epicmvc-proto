@@ -17,22 +17,26 @@
     }
 
     ModelJS.prototype.action = function(ctx, act, parms) {
-      throw new Error("Model (" + this.view_nm + ").action() needs (" + act + ")");
+      throw new Error("Model (" + this.view_nm + ").action() didn't know action (" + act + ")");
     };
 
     ModelJS.prototype.loadTable = function(tbl_nm) {
       if (tbl_nm in this.Table) {
         return;
       }
-      throw new Error("Model (" + this.view_nm + ").loadTable() needs (" + tbl_nm + ")");
+      throw new Error("Model (" + this.view_nm + ").loadTable() didn't know table-name (" + tbl_nm + ")");
     };
 
-    ModelJS.prototype.fistLoadData = function(oFist) {
-      throw new Error("Model (" + this.view_nm + ").fistLoadData() needs (" + (oFist.getFistNm()) + ")");
+    ModelJS.prototype.fistValidate = function(ctx, fistNm, row) {
+      throw new Error("Model (" + this.view_nm + ").fistValidate() didn't know fist (" + fistNm + ")");
     };
 
-    ModelJS.prototype.fistGetFieldChoices = function(oFist, field) {
-      throw new Error("Model (" + this.view_nm + ").fistGetFieldChoices() needs (" + (oFist.getFistNm()) + ":" + field + ")");
+    ModelJS.prototype.fistGetValues = function(fistNm, row) {
+      throw new Error("Model (" + this.view_nm + ").fistGetValues() didn't know fist (" + fistNm + ")");
+    };
+
+    ModelJS.prototype.fistGetChoices = function(fistNm, fieldNm, row) {
+      throw new Error("Model (" + this.view_nm + ").fistGetChoices() did't know fist:field (" + fistNm + ":" + fieldNm + ")");
     };
 
     return ModelJS;
