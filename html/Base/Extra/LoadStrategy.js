@@ -40,11 +40,6 @@
       return def.promise;
     };
 
-    LoadStrategy$Base.prototype.fist = function(grp_nm) {
-      BROKEN();
-      return E['fist$' + grp_nm];
-    };
-
     LoadStrategy$Base.prototype.d_layout = function(nm) {
       return this.getArtifact(nm, 'Layout');
     };
@@ -62,5 +57,9 @@
   })();
 
   E.Extra.LoadStrategy$Base = LoadStrategy$Base;
+
+  E.opt({
+    loader: 'LoadStrategy$Base'
+  });
 
 }).call(this);

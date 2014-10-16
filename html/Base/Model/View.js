@@ -109,7 +109,7 @@
       for (nm in _ref) {
         rec = _ref[nm];
         dyn[nm] = rec.dyn;
-        row_num[nm] = rec.row._COUNT;
+        row_num[nm] = rec.count;
       }
       saved_info = E.merge({}, {
         info_foreach: {
@@ -314,7 +314,7 @@
       clean_attrs = {};
       for (nm in attrs) {
         val = attrs[nm];
-        if (nm[0] !== '-') {
+        if (nm[0] !== '?') {
           clean_attrs[nm] = val;
         } else {
           if (val) {
@@ -555,18 +555,19 @@
     };
 
     View$Base.prototype.T_fist = function(attrs, content_f) {
-      var f, model, rh_alias, table, tbl, _base, _ref, _ref1, _ref2;
+      var f, model, rh_alias, table, tbl, _ref, _ref1, _ref2, _ref3;
       f = 'T_fist';
       _log2(f, attrs, content_f);
       model = (_ref = E.fistDef[attrs.fist].event) != null ? _ref : 'Fist';
       table = attrs.fist + (attrs.row != null ? ':' + attrs.row : '');
       _ref1 = this._accessModelTable(model + '/' + table, attrs.alias), tbl = _ref1[0], rh_alias = _ref1[1];
       this.info_foreach[rh_alias].row = tbl[0];
+      this.info_foreach[rh_alias].count = 0;
       if (content_f) {
         return this.handleIt(content_f);
       } else {
         if ((_ref2 = attrs.part) == null) {
-          attrs.part = typeof (_base = E.fistDef[attrs.fist]).part === "function" ? _base.part('fist_default') : void 0;
+          attrs.part = (_ref3 = E.fistDef[attrs.fist].part) != null ? _ref3 : 'fist_default';
         }
         return this.T_part(attrs);
       }

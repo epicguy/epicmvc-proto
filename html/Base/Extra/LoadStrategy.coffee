@@ -15,9 +15,6 @@ class LoadStrategy$Base
 		def= new m.Deferred()
 		def.resolve()
 		def.promise
-	fist: (grp_nm) ->
-		BROKEN()
-		E['fist$'+ grp_nm]
 	d_layout: (nm) ->
 		@getArtifact nm, 'Layout'
 	d_page: (nm) ->
@@ -26,3 +23,4 @@ class LoadStrategy$Base
 		@getArtifact nm, 'Part'
 
 E.Extra.LoadStrategy$Base= LoadStrategy$Base
+E.opt loader: 'LoadStrategy$Base'

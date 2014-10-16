@@ -54,7 +54,7 @@ class View$Base extends E.ModelJS
 	saveInfo: () ->
 		f= 'saveInfo'
 		dyn= {}; row_num= {}
-		( dyn[ nm]= rec.dyn; row_num[ nm]= rec.row._COUNT) for nm,rec of @info_foreach
+		( dyn[ nm]= rec.dyn; row_num[ nm]= rec.count) for nm,rec of @info_foreach
 		saved_info= E.merge {}, info_foreach: {dyn,row_num}, info_parts: @info_parts
 		#_log2 f, saved_info
 		saved_info
@@ -167,7 +167,7 @@ class View$Base extends E.ModelJS
 		f= 'weed'
 		clean_attrs= {}
 		for nm,val of attrs
-			if nm[ 0] isnt '-'
+			if nm[ 0] isnt '?'
 				clean_attrs[ nm]= val
 			else
 				clean_attrs[ nm.slice 1]= val if val
@@ -328,10 +328,11 @@ class View$Base extends E.ModelJS
 		table= attrs.fist+ if attrs.row? then ':'+ attrs.row else ''
 		[tbl, rh_alias]= @_accessModelTable model+ '/'+ table, attrs.alias
 		@info_foreach[ rh_alias].row= tbl[ 0]
+		@info_foreach[ rh_alias].count= 0 # For save info
 		if content_f # TODO EXPERIMENTAL - HTML FORM COULD GO RIGHT BETWEEN THE TAGS
 			@handleIt content_f
 		else
-			attrs.part?= E.fistDef[ attrs.fist].part? 'fist_default'
+			attrs.part?= E.fistDef[ attrs.fist].part ? 'fist_default'
 			@T_part attrs
 
 E.Model.View$Base= View$Base # Public API
