@@ -8,7 +8,7 @@
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   app = function(window, undef) {
-    var E, Extra, Model, aActions, aFists, aFlows, aMacros, aModels, aSetting, action, appFindAction, appFindAttr, appFindNode, appFist, appGetF, appGetS, appGetSetting, appGetT, appGetVars, appInit, appLoadFormsIf, appModel, appStartS, appStartT, appconfs, counter, doAction, fieldDef, finish_logout, fistDef, fistInit, inAction, issueInit, issueMap, make_model_functions, merge, nm, oModel, obj, option, setModelState, type_oau, _d_doAction, _ref;
+    var E, Extra, Model, aActions, aFists, aFlows, aMacros, aModels, aSetting, action, appFindAction, appFindAttr, appFindNode, appFist, appGetF, appGetS, appGetSetting, appGetT, appGetVars, appInit, appLoadFormsIf, appModel, appStartS, appStartT, appconfs, counter, doAction, fieldDef, finish_logout, fistDef, fistInit, inAction, issueInit, issueMap, make_model_functions, merge, nm, oModel, obj, option, setModelState, type_oau, _d_doAction, _i, _len, _ref, _ref1;
     inAction = false;
     counter = 0;
     Model = {};
@@ -18,15 +18,23 @@
     option = {
       loadDirs: {}
     };
+    _ref = ['c1', 'a1', 'a2', 'm1', 'ca1', 'ca2', 'ca3'];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      nm = _ref[_i];
+      option[nm] = (function() {});
+    }
     E = {};
     E.nextCounter = function() {
       return ++counter;
+    };
+    E.opt = function(object) {
+      return merge(option, object);
     };
     type_oau = function(obj) {
       return {}.toString.call(obj)[8];
     };
     merge = function() {
-      var atype, depth, dest, dup, f, func, otype, source, sources, stype, utype, _i, _len;
+      var atype, depth, dest, dup, f, func, otype, source, sources, stype, utype, _j, _len1;
       dest = arguments[0], sources = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
       otype = 'O';
       atype = 'A';
@@ -49,12 +57,12 @@
         return undef;
       };
       func[atype] = function(dest, source) {
-        var ans, f, inx, s, _i, _len;
+        var ans, f, inx, s, _j, _len1;
         f = 'func:A';
         if ((type_oau(source)) !== atype) {
           reutrn(undef);
         }
-        for (inx = _i = 0, _len = source.length; _i < _len; inx = ++_i) {
+        for (inx = _j = 0, _len1 = source.length; _j < _len1; inx = ++_j) {
           s = source[inx];
           ans = dup(dest[inx], s);
           if (ans !== undef) {
@@ -81,7 +89,7 @@
         return become;
       };
       func[stype] = function(was, want) {
-        if ((type_oau(want)) in func) {
+        if ((type_oau(want)) !== utype) {
           return want;
         }
         return was;
@@ -97,8 +105,8 @@
         depth--;
         return r;
       };
-      for (_i = 0, _len = sources.length; _i < _len; _i++) {
-        source = sources[_i];
+      for (_j = 0, _len1 = sources.length; _j < _len1; _j++) {
+        source = sources[_j];
         f = ':merge:source-loop';
         dup(dest, source);
       }
@@ -147,11 +155,13 @@
     E.run = function(set_appconfs, more_options, init_func) {
       var promise;
       appconfs = set_appconfs;
-      appInit();
       merge(option, more_options);
       E.oLoader = new Extra[option.loader](appconfs);
       promise = E.oLoader.D_loadAsync();
       promise.then(function() {
+        appInit();
+        merge(option, more_options);
+        make_model_functions();
         fistInit();
         issueInit();
         if (typeof init_func === 'function') {
@@ -165,11 +175,7 @@
       var f;
       f = ':action:' + action_token;
       _log2(f, data);
-      if (inAction !== false) {
-        if (typeof option.c1 === "function") {
-          option.c1();
-        }
-      }
+      option.c1(inAction);
       inAction = action_token;
       m.startComputation();
       return (doAction(action_token, data, E.App().getStepPath())).then(function(action_result) {
@@ -224,10 +230,10 @@
     aFists = {};
     appLoadFormsIf = function(config) {};
     appInit = function() {
-      var form_nm, hash, nm, node, obj, view_nm, _i, _j, _len, _len1, _ref, _ref1;
-      for (_i = 0, _len = appconfs.length; _i < _len; _i++) {
-        nm = appconfs[_i];
-        app = (_ref = E['app$' + nm]) != null ? _ref : {};
+      var form_nm, hash, node, obj, view_nm, _j, _k, _len1, _len2, _ref1, _ref2;
+      for (_j = 0, _len1 = appconfs.length; _j < _len1; _j++) {
+        nm = appconfs[_j];
+        app = (_ref1 = E['app$' + nm]) != null ? _ref1 : {};
         if (app.STEPS) {
           merge(aFlows["default"].TRACKS["default"].STEPS, app.STEPS);
         }
@@ -250,53 +256,48 @@
       for (view_nm in aModels) {
         node = aModels[view_nm];
         if (node.fists) {
-          _ref1 = node.fists;
-          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-            form_nm = _ref1[_j];
+          _ref2 = node.fists;
+          for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
+            form_nm = _ref2[_k];
             aFists[form_nm] = view_nm;
           }
         }
       }
-      make_model_functions();
     };
     appModel = function(view_name, attribute) {
-      if (!(view_name in aModels)) {
-        config.a1(view_name);
-      }
-      if (!(attribute in aModels[view_name])) {
-        option.a2(view_name, attribute);
-      }
+      option.a1(view_name, aModels);
+      option.a2(view_name, aModels, attribute);
       return aModels[view_name][attribute];
     };
     appFist = function(fist_nm) {
       return aFists[fist_nm];
     };
     appFindNode = function(flow, t, s, cat, nm) {
-      var ncat, nf, ns, nt, _ref, _ref1, _ref2, _ref3, _ref4;
+      var ncat, nf, ns, nt, _ref1, _ref2, _ref3, _ref4, _ref5;
       nf = aFlows[flow];
       if (nf) {
-        if (t && ((nt = (_ref = nf.TRACKS) != null ? _ref[t] : void 0) != null)) {
-          if (s && ((ns = (_ref1 = nt.STEPS) != null ? _ref1[s] : void 0) != null)) {
-            if ((ncat = (_ref2 = ns[cat]) != null ? _ref2[nm] : void 0) != null) {
+        if (t && ((nt = (_ref1 = nf.TRACKS) != null ? _ref1[t] : void 0) != null)) {
+          if (s && ((ns = (_ref2 = nt.STEPS) != null ? _ref2[s] : void 0) != null)) {
+            if ((ncat = (_ref3 = ns[cat]) != null ? _ref3[nm] : void 0) != null) {
               return ncat;
             }
           }
-          if ((ncat = (_ref3 = nt[cat]) != null ? _ref3[nm] : void 0) != null) {
+          if ((ncat = (_ref4 = nt[cat]) != null ? _ref4[nm] : void 0) != null) {
             return ncat;
           }
         }
-        if ((ncat = (_ref4 = nf[cat]) != null ? _ref4[nm] : void 0) != null) {
+        if ((ncat = (_ref5 = nf[cat]) != null ? _ref5[nm] : void 0) != null) {
           return ncat;
         }
       }
       return null;
     };
     appFindAttr = function(flow, t, s, attr) {
-      var nattr, nf, ns, nt, _ref, _ref1;
+      var nattr, nf, ns, nt, _ref1, _ref2;
       nf = aFlows[flow];
       if (nf) {
-        if (t && ((nt = (_ref = nf.TRACKS) != null ? _ref[t] : void 0) != null)) {
-          if (s && ((ns = (_ref1 = nt.STEPS) != null ? _ref1[s] : void 0) != null)) {
+        if (t && ((nt = (_ref1 = nf.TRACKS) != null ? _ref1[t] : void 0) != null)) {
+          if (s && ((ns = (_ref2 = nt.STEPS) != null ? _ref2[s] : void 0) != null)) {
             if ((nattr = ns[attr]) != null) {
               return nattr;
             }
@@ -327,15 +328,15 @@
       return appGetT(flow, track).start;
     };
     appFindAction = function(path, action_token) {
-      var _ref;
-      return (_ref = appFindNode(path[0], path[1], path[2], 'ACTIONS', action_token)) != null ? _ref : aActions[action_token];
+      var _ref1;
+      return (_ref1 = appFindNode(path[0], path[1], path[2], 'ACTIONS', action_token)) != null ? _ref1 : aActions[action_token];
     };
     appGetSetting = function(setting_name, flow, track, step) {
-      var _ref;
+      var _ref1;
       if (!flow) {
         return aSetting[setting_name];
       }
-      return (_ref = appFindAttr(flow, track, step != null ? step : false, setting_name)) != null ? _ref : aSetting[setting_name];
+      return (_ref1 = appFindAttr(flow, track, step != null ? step : false, setting_name)) != null ? _ref1 : aSetting[setting_name];
     };
     appGetVars = function(flow, track, step) {
       var f, k, v, vars;
@@ -360,14 +361,11 @@
         model = aModels[view];
         _results.push((function(view, model) {
           return E[view] = function(table_or_ctx, act_if_action, data) {
-            var cls, inst_nm, oM;
+            var inst_nm, oM;
             inst_nm = model.inst;
             if (!(inst_nm in oModel)) {
-              cls = model["class"];
-              if (!(E.Model[cls] != null)) {
-                option.m1(view, model);
-              }
-              oModel[inst_nm] = new E.Model[cls](view, model.options);
+              option.m1(view, model);
+              oModel[inst_nm] = new E.Model[model["class"]](view, model.options);
               if (inst_nm in oModel) {
                 oModel[inst_nm].restoreState(oModel[inst_nm]);
               }
@@ -400,12 +398,12 @@
       master_data = merge({}, data);
       action_node = appFindAction(original_path, action_token);
       _log2(f, action_node);
+      option.ca1(action_token, original_path, action_node);
       if (!(action_node != null)) {
-        _log2('WARNING', "No app. entry for action_token (" + action_token + ") on path (" + original_path + ")");
         return [master_issue, master_message];
       }
       doLeftSide = function(action_node) {
-        var ctx, d, i, is_macro, mg, nm, nms, r, val, view_act, view_nm, _i, _len, _ref, _ref1, _ref2;
+        var ctx, d, i, is_macro, mg, nms, r, val, view_act, view_nm, _ref1, _ref2, _ref3;
         _log2(f, 'doLeftSide:', {
           action_node: action_node
         });
@@ -422,30 +420,21 @@
               return [];
           }
         })();
-        for (_i = 0, _len = nms.length; _i < _len; _i++) {
-          nm = nms[_i];
-          if (!(nm in data)) {
-            _log2('WARNING', "Action (" + action_token + ") request data is missing param " + nm, data, action_node, original_path);
-          }
-        }
-        _ref = action_node.set;
-        for (nm in _ref) {
-          val = _ref[nm];
+        option.ca2(action_token, original_path, nms, data, action_node);
+        _ref1 = action_node.set;
+        for (nm in _ref1) {
+          val = _ref1[nm];
           master_data[nm] = val;
         }
         if (action_node["do"] != null) {
           is_macro = !/[.]/.test(action_node["do"]);
           if (is_macro) {
-            if (!aMacros[action_node["do"]]) {
-              if (typeof option.ca2 === "function") {
-                option.ca2(action_token, original_path, action_node);
-              }
-            }
+            option.ca3(action_token, original_path, action_node, aMacros);
             if (is_macro) {
               return doActionNode(aMacros[action_node["do"]]);
             }
           }
-          _ref1 = action_node["do"].split('.'), view_nm = _ref1[0], view_act = _ref1[1];
+          _ref2 = action_node["do"].split('.'), view_nm = _ref2[0], view_act = _ref2[1];
           view_act = view_act != null ? view_act : action_token;
           d = new m.Deferred();
           r = {};
@@ -458,9 +447,9 @@
             m: mg
           };
           E[view_nm](ctx, view_act, master_data);
-          _ref2 = ctx.r;
-          for (nm in _ref2) {
-            val = _ref2[nm];
+          _ref3 = ctx.r;
+          for (nm in _ref3) {
+            val = _ref3[nm];
             master_data[nm] = val;
           }
           master_issue.addObj(ctx.i);
@@ -468,23 +457,24 @@
         }
       };
       doRightSide = function(action_node) {
-        var choice, k, matches, next_node, val, _i, _len, _ref, _ref1, _ref2, _ref3;
+        var choice, k, matches, next_node, val, _j, _len1, _ref1, _ref2, _ref3, _ref4;
         next_node = null;
-        _ref1 = (_ref = action_node.next) != null ? _ref : [];
-        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-          choice = _ref1[_i];
+        _ref2 = (_ref1 = action_node.next) != null ? _ref1 : [];
+        for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+          choice = _ref2[_j];
+          _log2(f + '-doRightSide', 'choice', choice, master_data);
           if (choice.when === 'default') {
             next_node = choice;
             break;
           }
-          if ((typeof choice.when) === 'string' && choice.when === ((_ref2 = master_data.success) != null ? _ref2 : master_data.ok)) {
+          if ((typeof choice.when) === 'string' && choice.when === ((_ref3 = master_data.success) != null ? _ref3 : master_data.ok)) {
             next_node = choice;
             break;
           }
           matches = true;
-          _ref3 = choice.when;
-          for (k in _ref3) {
-            val = _ref3[k];
+          _ref4 = choice.when;
+          for (k in _ref4) {
+            val = _ref4[k];
             if (master_data[k] !== val) {
               matches = false;
               break;
@@ -512,10 +502,10 @@
     fieldDef = {};
     fistDef = {};
     fistInit = function() {
-      var fist, nm, rec, _i, _len, _ref, _results;
-      for (_i = 0, _len = appconfs.length; _i < _len; _i++) {
-        nm = appconfs[_i];
-        fist = (_ref = E['fist$' + nm]) != null ? _ref : {};
+      var fist, rec, _j, _len1, _ref1, _results;
+      for (_j = 0, _len1 = appconfs.length; _j < _len1; _j++) {
+        nm = appconfs[_j];
+        fist = (_ref1 = E['fist$' + nm]) != null ? _ref1 : {};
         if (fist.FIELDS) {
           merge(fieldDef, fist.FIELDS);
         }
@@ -536,16 +526,16 @@
     };
     issueMap = {};
     issueInit = function() {
-      var issues, nm, _i, _len, _ref, _results;
+      var issues, _j, _len1, _ref1, _results;
       _results = [];
-      for (_i = 0, _len = appconfs.length; _i < _len; _i++) {
-        nm = appconfs[_i];
-        issues = (_ref = E['issue$' + nm]) != null ? _ref : {};
+      for (_j = 0, _len1 = appconfs.length; _j < _len1; _j++) {
+        nm = appconfs[_j];
+        issues = (_ref1 = E['issues$' + nm]) != null ? _ref1 : {};
         _results.push(merge(issueMap, issues));
       }
       return _results;
     };
-    _ref = {
+    _ref1 = {
       type_oau: type_oau,
       Model: Model,
       Extra: Extra,
@@ -567,8 +557,8 @@
       issueMap: issueMap,
       oModel: oModel
     };
-    for (nm in _ref) {
-      obj = _ref[nm];
+    for (nm in _ref1) {
+      obj = _ref1[nm];
       E[nm] = obj;
     }
     return E;

@@ -83,19 +83,21 @@ app= (window, undef) ->
 	option= loadDirs: {}
 		# load: loadstratgy-class-name placed into E.Extra
 		# render: render-class-name placed into E.Extra
-		# option.c1: Function to call if inAction when action called
-		# option.m1 view, model if not E.Model[cls]?
-		# App.coffee reader
-		# config.a1 view_name [if view_name not of aModels]
-		# option.a2 view_name, attribute if attribute not of aModels[ view_name]
-		# Action:
-		# option.ca1 action_token, original_path, action_node
-		# option.ca2 action_token, original_path, action_node # "ERROR: Missing '#{action_node.do}' from MACROS"
-	# TODO MAKE THESE SMALL OPTION-FUNCS DO THE VALIDATION, AND DEFINE THEM HERE AS NO-OPS
-	#TODO option[ nm]= (-> _log2 'ERROR: ', arguments) for nm in [ 'c1', 'm1', 'a1', 'a2', 'ca1', 'fg1', 'fg2', 'fg3', 'fb1', 'ff1']
+
+		# option.c1 inAction # if inAction isnt false
+		# option.a1 view_name, aModels #if view_name not of aModels
+		# option.a2 view_name, aModels, attribute #if attribute not of aModels[ view_name]
+		# option.m1 view, model #if not E.Model[ model.class]?
+		# option.ca1 action_token, original_path, action_node #if not action_node?
+		# option.ca2 action_token, original_path, nm, data, action_node
+		# option.ca3 action_token, original_path, action_node, aMacros #if not aMacros[action_node.do]
+
+	# Define these small validation functions as no-ops; Dev pkg can do the 'real' work
+	option[ nm]= (->) for nm in [ 'c1', 'a1', 'a2', 'm1', 'ca1', 'ca2', 'ca3'] #%#
 
 	E= {}
 	E.nextCounter= -> ++counter
+	E.opt= (object) -> merge option, object
 
 	# O, O (Clone attrs that are not Undefined)
 	# A, A (Clone position by postion) # TODO DOES THIS MAKES SENSE, TO REPLACE POSTION FOR POSTION IN THE ARRAY?
@@ -138,7 +140,7 @@ app= (window, undef) ->
 			#_log2 f+ depth, 'after', {become}
 			become
 		func[ stype]= (was,want) -> # Copy if source isnt o/a/U
-			return want if (type_oau want) of func
+			return want if (type_oau want) isnt utype #TODO of func
 			return was # May be undef, which works
 		dup= (dest, source) ->
 			depth++
@@ -176,11 +178,13 @@ app= (window, undef) ->
 	# Accept caller's request to start up an EpicMvc application
 	E.run= (set_appconfs, more_options, init_func) ->
 		appconfs= set_appconfs
-		appInit()
-		merge option, more_options
+		merge option, more_options # Has loadDirs, needed for loader
 		E.oLoader= new Extra[ option.loader] appconfs
 		promise= E.oLoader.D_loadAsync()
 		promise.then ->
+			appInit()
+			merge option, more_options # Re-merge if apps overwrite them
+			make_model_functions()
 			fistInit()
 			issueInit()
 			init_func() if typeof init_func is 'function'
@@ -192,7 +196,7 @@ app= (window, undef) ->
 	action= (action_token,data) ->
 		f= ':action:'+action_token
 		_log2 f, data
-		option.c1?() if inAction isnt false
+		option.c1 inAction # if inAction isnt false #%#
 		inAction= action_token
 		m.startComputation()
 		(doAction action_token, data, E.App().getStepPath()).then (action_result) ->
@@ -203,7 +207,6 @@ app= (window, undef) ->
 			modelState[k]= ss for k,o of oModel when o.saveState? and ss= o.saveState()
 			m.endComputation() # Causes a render
 		#TODO HANDLE ERROR CASES
-
 
 	# TODO FIGURE OUT IF RENDER USES THIS FOR THE BACK/FWD BUTTONS OF BROWSER HISTORY
 	setModelState= (s) ->
@@ -231,13 +234,12 @@ app= (window, undef) ->
 			merge obj, app[ nm] for nm,obj of hash
 		for view_nm, node of aModels when node.fists
 			aFists[ form_nm]= view_nm for form_nm in node.fists
-		make_model_functions()
 		return
 
 	# MODELS map functions
 	appModel= (view_name,attribute) ->
-		config.a1 view_name if view_name not of aModels
-		option.a2 view_name, attribute if attribute not of aModels[ view_name]
+		option.a1 view_name, aModels #if view_name not of aModels #%#
+		option.a2 view_name, aModels, attribute #if attribute not of aModels[ view_name] #%#
 		aModels[ view_name][ attribute]
 	appFist= (fist_nm) ->
 		aFists[ fist_nm]
@@ -290,9 +292,8 @@ app= (window, undef) ->
 					# First, get instance into oModel cache
 					inst_nm= model.inst
 					if inst_nm not of oModel
-						cls= model.class
-						option.m1 view, model if not E.Model[cls]?
-						oModel[ inst_nm]= new E.Model[ cls] view, model.options
+						option.m1 view, model #if not E.Model[ model.class]? #%#
+						oModel[ inst_nm]= new E.Model[ model.class] view, model.options
 						oModel[ inst_nm].restoreState oModel[inst_nm] if inst_nm of oModel
 					oM= oModel[ inst_nm]
 					return oM if table_or_ctx is undef # Wanted an instance
@@ -311,9 +312,9 @@ app= (window, undef) ->
 		master_data= merge {}, data
 		action_node= appFindAction original_path, action_token
 		_log2 f, action_node
-		if not action_node?
-			_log2 'WARNING', "No app. entry for action_token (#{action_token}) on path (#{original_path})" #TODO option.ca1
-			return [master_issue, master_message] # No recognized action
+		# WARNING: "No app. entry for action_token (#{action_token}) on path (#{original_path})"
+		option.ca1 action_token, original_path, action_node #if not action_node? #%#
+		return [master_issue, master_message] if not action_node? # No recognized action
 
 		doLeftSide= (action_node)->
 			_log2 f, 'doLeftSide:', {action_node}
@@ -325,16 +326,15 @@ app= (window, undef) ->
 				when 'A' then action_node.pass
 				when 'S' then action_node.pass.split ','
 				else []
-			for nm in nms
-				_log2 'WARNING', "Action (#{action_token}) request data is missing param #{nm}", data, action_node, original_path if nm not of data
+			# WARNING: "Action (#{action_token}) request data is missing param #{nm}"
+			option.ca2 action_token, original_path, nms, data, action_node #%#
 			# Process 'set:'
 			master_data[ nm]= val for nm,val of action_node.set
 			# Handle 'do:'
 			if action_node.do?
 				is_macro= not /[.]/.test action_node.do
 				if is_macro # Handle 'MACRO'
-					if not aMacros[action_node.do]
-						option.ca2? action_token, original_path, action_node
+					option.ca3 action_token, original_path, action_node, aMacros #if not aMacros[action_node.do] #%#
 					return doActionNode aMacros[action_node.do] if is_macro
 				[view_nm,view_act]= action_node.do.split '.'
 				view_act= view_act ? action_token
@@ -349,6 +349,7 @@ app= (window, undef) ->
 		doRightSide= (action_node)->
 			next_node= null
 			for choice in action_node.next ? []
+				_log2 f+ '-doRightSide', 'choice', choice, master_data
 				(next_node= choice; break) if choice.when is 'default'
 				(next_node= choice; break) if (typeof choice.when) is 'string' and choice.when is (master_data.success ? master_data.ok)
 				matches= true
@@ -366,9 +367,7 @@ app= (window, undef) ->
 		doActionNode= (action_node)->
 			doLeftSide action_node
 			doRightSide action_node
-
 		doActionNode action_node
-
 		[master_issue, master_message]
 
 	fieldDef= {}
@@ -383,7 +382,7 @@ app= (window, undef) ->
 	issueMap= {}
 	issueInit= ()->
 		for nm in appconfs
-			issues= E[ 'issue$'+ nm] ? {}
+			issues= E[ 'issues$'+ nm] ? {}
 			merge issueMap, issues
 
 	E[ nm]= obj for nm,obj of {
@@ -494,7 +493,7 @@ w.EpicMvc= w.E= new app w
 w.E[ nm]= klass for nm,klass of {Issue, ModelJS}
 # TODO NOTE This was needed, so EpicMvc-One has _log2 available as e.g. app.js's load
 w._log2= ->
-w._log2= Function.prototype.bind.call console.log, console #%# will be removed before uglify #	f= '
+w._log2= Function.prototype.bind.call console.log, console #%#
 
-if typeof module isnt "undefined" and module isnt null then module.exports = w.E
-if typeof define is "function" and define.amd then define () -> w.E
+if typeof module isnt "undefined" and module isnt null then module.exports = w.E #%#
+if typeof define is "function" and define.amd then define () -> w.E #%#
