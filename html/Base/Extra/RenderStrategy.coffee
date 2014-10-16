@@ -48,11 +48,11 @@ class RenderStrategy$Base
 			data_params[ nm]= attrs[ ix].value
 		val= target.value
 		_log2 f, 'event', {type, data_action, data_params, val}
-		event_obj.preventDefault()  # Added to keep LOGIN FORM from posting, causing fresh instance to start up
-		#TODO event_obj.stopPropagation()
 		data_params.val= val
-		E.Extra[ E.option.dataAction] type, data_action, data_params
-		return false; # TODO CONSIDER MAKING SURE WE WANTED TO STOP, OR DO MORE TO ENSURE WE STOP DOING MORE THAN THIS
+		prevent= E.Extra[ E.option.dataAction] type, data_action, data_params
+		event_obj.preventDefault() if prevent  # Added to keep LOGIN FORM from posting to fresh URL
+		#TODO event_obj.stopPropagation()
+		return false; # TODO
 	init: ->
 		interesting= ['click', 'change', 'dblclick', 'keyup', 'blur', 'focus']
 		document.body.addEventListener event_name, @handleEvent, true for event_name in interesting

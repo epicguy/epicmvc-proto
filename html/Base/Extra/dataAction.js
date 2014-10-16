@@ -4,14 +4,14 @@
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   dataAction = function(type, data_action, data_params) {
-    var action_specs, do_action, f, group, interesting, item, one_spec, spec_action, spec_type, _base, _i, _len, _ref, _results;
+    var action_specs, do_action, f, group, interesting, item, one_spec, prevent, spec_action, spec_type, _base, _i, _len, _ref;
     f = 'Base:E/dataAction:on[data-e-action]' + type;
     if (typeof (_base = E.option).activity === "function") {
       _base.activity(type);
     }
     action_specs = data_action.split(',');
     do_action = true;
-    _results = [];
+    prevent = false;
     for (_i = 0, _len = action_specs.length; _i < _len; _i++) {
       one_spec = action_specs[_i];
       _ref = one_spec.split(':'), spec_type = _ref[0], spec_action = _ref[1], group = _ref[2], item = _ref[3], interesting = _ref[4];
@@ -23,17 +23,18 @@
         E.event(spec_action, type, group, item, interesting, data_params);
       }
       if (do_action && spec_type === type) {
+        if (spec_type === 'click') {
+          prevent = true;
+        }
         do_action = false;
-        _results.push((function(spec_action) {
+        (function(spec_action) {
           return setTimeout((function() {
             return E.action(spec_action, data_params);
           }), 5);
-        })(spec_action));
-      } else {
-        _results.push(void 0);
+        })(spec_action);
       }
     }
-    return _results;
+    return prevent;
   };
 
   E.Extra.dataAction$Base = dataAction;

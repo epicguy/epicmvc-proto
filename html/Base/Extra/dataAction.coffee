@@ -1,8 +1,10 @@
+# Return true to preventDefault
 dataAction= (type, data_action, data_params) ->
 	f= 'Base:E/dataAction:on[data-e-action]'+ type
 	E.option.activity? type
 	action_specs= data_action.split ','
 	do_action= true
+	prevent= false
 	for one_spec in action_specs
 		[spec_type, spec_action, group, item, interesting]= one_spec.split ':'
 		(spec_action= spec_type; spec_type= 'click') if not spec_action
@@ -10,8 +12,10 @@ dataAction= (type, data_action, data_params) ->
 		if spec_type is 'event' # Any event will get passed to caller
 			E.event spec_action, type, group, item, interesting, data_params
 		if do_action and spec_type is type # The event-type (click/dblclick/etc.) matches user's spec
+			prevent= true if spec_type is 'click' # TODO
 			do_action= false
 			do( spec_action) -> setTimeout (-> E.action spec_action, data_params), 5
+	return prevent
 
 E.Extra.dataAction$Base= dataAction
 
