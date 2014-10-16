@@ -20,7 +20,7 @@
 <script type="text/coffeescript">
 E.app$World=
 	MODELS: Thing: class:'Thing', inst:'world_thing'
-	CLICKS: toggle: do: 'Thing.toggle'
+	ACTIONS: toggle: do: 'Thing.toggle'
 
 class Thing extends window.E.ModelJS
 	constructor: ( view_nm, options) ->

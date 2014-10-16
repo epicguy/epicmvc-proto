@@ -439,69 +439,9 @@ Mithril = m = new function app(window, undefined) {
 		return prop
 	}
 
-	m.prop = function (store) {
-		if ((isObj(store) || isFn(store)) && store !== null && isFn(store.then)) {
-			return propify(store)
-		}
-
-		return gettersetter(store)
-	}
-
 	var roots = [], modules = [], controllers = [], lastRedrawId = null, lastRedrawCallTime = 0, computePostRedrawHook = null, prevented = false
 	var FRAME_BUDGET = 16 //60 frames per second = 1 call per 16 ms
-	m.module = function(root, module) {
-		var index = roots.indexOf(root)
-		if (index < 0) index = roots.length
-		var isPrevented = false
-		if (controllers[index] && isFn(controllers[index].onunload)) {
-			var event = {
-				preventDefault: function() {isPrevented = true}
-			}
-			controllers[index].onunload(event)
-		}
-		if (!isPrevented) {
-			m.redraw.strategy("all")
-			m.startComputation()
-			roots[index] = root
-			modules[index] = module
-			controllers[index] = new module.controller
-			m.endComputation()
-			return controllers[index]
-		}
-	}
-	m.redraw = function(force) {
-		var cancel = window.cancelAnimationFrame || window.clearTimeout
-		var defer = window.requestAnimationFrame || window.setTimeout
-		//lastRedrawId is a positive number if a second redraw is requested before the next animation frame
-		//lastRedrawID is null if it's the first redraw and not an event handler
-		if (lastRedrawId && force !== true) {
-			//when setTimeout: only reschedule redraw if time between now and previous redraw is bigger than a frame, otherwise keep currently scheduled timeout
-			//when rAF: always reschedule redraw
-			if (new Date - lastRedrawCallTime > FRAME_BUDGET || defer == window.requestAnimationFrame) {
-				if (lastRedrawId > 0) cancel(lastRedrawId)
-				lastRedrawId = defer(redraw, FRAME_BUDGET)
-			}
-		}
-		else {
-			redraw()
-			lastRedrawId = defer(function() {lastRedrawId = null}, FRAME_BUDGET)
-		}
-	}
-	m.redraw.strategy = m.prop()
-	function redraw() {
-		var mode = m.redraw.strategy()
-		for (var i = 0; i < roots.length; i++) {
-			if (controllers[i] && mode != "none") m.render(roots[i], modules[i].view(controllers[i]), mode == "all")
-		}
-		//after rendering within a routed context, we need to scroll back to the top, and fetch the document title for history.pushState
-		if (computePostRedrawHook) {
-			computePostRedrawHook()
-			computePostRedrawHook = null
-		}
-		lastRedrawId = null
-		lastRedrawCallTime = new Date
-		m.redraw.strategy("diff")
-	}
+	m.redraw = function() {}
 
 	var pendingRequests = 0
 	var pendingMax= 0
@@ -518,107 +458,6 @@ Mithril = m = new function app(window, undefined) {
 		 }
 	}
 
-	m.withAttr = function(prop, withAttrCallback) {
-		return function(e) {
-			e = e || event
-			var currentTarget = e.currentTarget || this
-			withAttrCallback(prop in currentTarget ? currentTarget[prop] : currentTarget.getAttribute(prop))
-		}
-	}
-
-	//routing
-	var modes = {pathname: "", hash: "#", search: "?"}
-	var redirect = function() {}, routeParams = {}, currentRoute
-	m.route = function() {
-		if (arguments.length === 0) return currentRoute
-		else if (arguments.length === 3 && isStr(arguments[1])) {
-			var root = arguments[0], defaultRoute = arguments[1], router = arguments[2]
-			redirect = function(source) {
-				var path = currentRoute = normalizeRoute(source)
-				if (!routeByValue(root, router, path)) {
-					m.route(defaultRoute, true)
-				}
-			}
-			var listener = m.route.mode == "hash" ? "onhashchange" : "onpopstate"
-			window[listener] = function() {
-				if (currentRoute != normalizeRoute(window.location[m.route.mode])) {
-					redirect(window.location[m.route.mode])
-				}
-			}
-			computePostRedrawHook = setScroll
-			window[listener]()
-		}
-		else if (arguments[0].addEventListener) {
-			var element = arguments[0]
-			var isInitialized = arguments[1]
-			var context = arguments[2]
-			if (!isInitialized) {
-				context.href = element.getAttribute("href")
-				element.href = window.location.pathname + modes[m.route.mode] + context.href
-				element.removeEventListener("click", routeUnobtrusive)
-				element.addEventListener("click", routeUnobtrusive)
-			}
-		}
-		else if (isStr(arguments[0])) {
-			currentRoute = arguments[0]
-			var querystring = isObj(arguments[1]) ? buildQueryString(arguments[1]) : null
-			if (querystring) currentRoute += (currentRoute.indexOf("?") === -1 ? "?" : "&") + querystring
-
-			var shouldReplaceHistoryEntry = (arguments.length == 3 ? arguments[2] : arguments[1]) === true
-
-			if (window.history.pushState) {
-				computePostRedrawHook = function() {
-					window.history[shouldReplaceHistoryEntry ? "replaceState" : "pushState"](null, window.document.title, modes[m.route.mode] + currentRoute)
-					setScroll()
-				}
-				redirect(modes[m.route.mode] + currentRoute)
-			}
-			else window.location[m.route.mode] = currentRoute
-		}
-	}
-	m.route.param = function(key) {return routeParams[key]}
-	m.route.mode = "search"
-	function normalizeRoute(route) {return route.slice(modes[m.route.mode].length)}
-	function routeByValue(root, router, path) {
-		routeParams = {}
-
-		var queryStart = path.indexOf("?")
-		if (queryStart !== -1) {
-			routeParams = parseQueryString(path.substr(queryStart + 1, path.length))
-			path = path.substr(0, queryStart)
-		}
-
-		for (var route in router) {
-			if (route == path) {
-				m.module(root, router[route])
-				return true
-			}
-
-			var matcher = new RegExp("^" + route.replace(/:[^\/]+?\.{3}/g, "(.*?)").replace(/:[^\/]+/g, "([^\\/]+)") + "\/?$")
-
-			if (matcher.test(path)) {
-				path.replace(matcher, function() {
-					var keys = route.match(/:[^\/]+/g) || []
-					var values = [].slice.call(arguments, 1, -2)
-					for (var i = 0; i < keys.length; i++) routeParams[keys[i].replace(/:|\./g, "")] = decodeURIComponent(values[i])
-					m.module(root, router[route])
-				})
-				return true
-			}
-		}
-	}
-	function routeUnobtrusive(e) {
-		e = e || event
-		if (e.ctrlKey || e.metaKey || e.which == 2) return
-		if (e.preventDefault) e.preventDefault()
-		else e.returnValue = false
-		var currentTarget = e.currentTarget || this
-		m.route(currentTarget[m.route.mode].slice(modes[m.route.mode].length))
-	}
-	function setScroll() {
-		if (m.route.mode != "hash" && window.location.hash) window.location.hash = window.location.hash
-		else window.scrollTo(0, 0)
-	}
 	function buildQueryString(object, prefix) {
 		var str = []
 		for(var prop in object) {
@@ -627,36 +466,12 @@ Mithril = m = new function app(window, undefined) {
 		}
 		return str.join("&")
 	}
-	function parseQueryString(str) {
-		var pairs = str.split("&"), params = {}
-		for (var i = 0; i < pairs.length; i++) {
-			var pair = pairs[i].split("=")
-			params[decodeSpace(pair[0])] = pair[1] ? decodeSpace(pair[1]) : (pair.length === 1 ? true : "")
-		}
-		return params
-	}
-	function decodeSpace(string) {
-		return decodeURIComponent(string.replace(/\+/g, " "))
-	}
 	function reset(root) {
 		var cacheKey = getCellCacheKey(root)
 		clear(root.childNodes, cellCache[cacheKey])
 		cellCache[cacheKey] = undefined
 	}
 
-	m.deferred = function () {
-		var deferred = new Deferred()
-		deferred.promise = propify(deferred.promise)
-		return deferred
-	}
-	function propify(promise) {
-		prop = m.prop()
-		promise.then(prop)
-		prop.then = function(resolve, reject) {
-			return propify(promise.then(resolve, reject))
-		}
-		return prop
-	}
 	//Promiz.mithril.js | Zolmeister | MIT
 	//a modified version of Promiz.js, which does not conform to Promises/A+ for two reasons:
 	//1) `then` callbacks are called synchronously (because setTimeout is too slow, and the setImmediate polyfill is too big
@@ -724,7 +539,7 @@ Mithril = m = new function app(window, undefined) {
 					})
 				}
 				catch (e) {
-					m.deferred.onerror(e)
+					Deferred.onerror(e)
 					promiseValue = e
 					failureCallback()
 				}
@@ -740,7 +555,7 @@ Mithril = m = new function app(window, undefined) {
 				then = promiseValue && promiseValue.then
 			}
 			catch (e) {
-				m.deferred.onerror(e)
+				Deferred.onerror(e)
 				promiseValue = e
 				state = REJECTING
 				return fire()
@@ -762,7 +577,7 @@ Mithril = m = new function app(window, undefined) {
 					}
 				}
 				catch (e) {
-					m.deferred.onerror(e)
+					Deferred.onerror(e)
 					promiseValue = e
 					return finish()
 				}
@@ -781,36 +596,10 @@ Mithril = m = new function app(window, undefined) {
 			})
 		}
 	}
-	m.deferred.onerror = function(e) {
+	Deferred.onerror = function(e) {
 		if (type(e) == "[object Error]" && !e.constructor.toString().match(/ Error/)) throw e
 	}
 
-	m.sync = function(args) {
-		var method = "resolve"
-		function synchronizer(pos, resolved) {
-			return function(value) {
-				results[pos] = value
-				if (!resolved) method = "reject"
-				if (--outstanding == 0) {
-					deferred.promise(results)
-					deferred[method](results)
-				}
-				return value
-			}
-		}
-
-		var deferred = m.deferred()
-		var outstanding = args.length
-		var results = new Array(outstanding)
-		if (args.length > 0) {
-			for (var i = 0; i < args.length; i++) {
-				args[i].then(synchronizer(i, true), synchronizer(i, false))
-			}
-		}
-		else deferred.resolve()
-
-		return deferred.promise
-	}
 	function identity(value) {return value}
 
 	function ajax(options) {
@@ -902,7 +691,7 @@ Mithril = m = new function app(window, undefined) {
 
 	m.request = function(xhrOptions) {
 		if (xhrOptions.background !== true) m.startComputation()
-		var deferred = m.deferred()
+		var deferred = new Deferred()
 		var isJSONP = xhrOptions.dataType && xhrOptions.dataType.toLowerCase() === "jsonp"
 		var serialize = xhrOptions.serialize = isJSONP ? identity : xhrOptions.serialize || JSON.stringify
 		var deserialize = xhrOptions.deserialize = isJSONP ? identity : xhrOptions.deserialize || JSON.parse
@@ -925,7 +714,7 @@ Mithril = m = new function app(window, undefined) {
 				deferred[e.type == "load" ? "resolve" : "reject"](response)
 			}
 			catch (e) {
-				m.deferred.onerror(e)
+				Deferred.onerror(e)
 				deferred.reject(e)
 			}
 			if (xhrOptions.background !== true) m.endComputation()
@@ -959,15 +748,15 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   app = function(window, undef) {
-    var E, Extra, Model, aClicks, aFists, aFlows, aMacros, aModels, aSetting, appFindAttr, appFindClick, appFindNode, appFist, appGetF, appGetS, appGetSetting, appGetT, appGetVars, appInit, appLoadFormsIf, appModel, appStartS, appStartT, appconfs, click, clickAction, counter, fieldDef, finish_logout, fistDef, fistInit, inClick, issueInit, issueMap, make_model_functions, merge, nm, oModel, obj, option, setModelState, type_oau, _d_clickAction, _ref;
-    inClick = false;
+    var E, Extra, Model, aActions, aFists, aFlows, aMacros, aModels, aSetting, action, appFindAction, appFindAttr, appFindNode, appFist, appGetF, appGetS, appGetSetting, appGetT, appGetVars, appInit, appLoadFormsIf, appModel, appStartS, appStartT, appconfs, counter, doAction, fieldDef, finish_logout, fistDef, fistInit, inAction, issueInit, issueMap, make_model_functions, merge, nm, oModel, obj, option, setModelState, type_oau, _d_doAction, _ref;
+    inAction = false;
     counter = 0;
     Model = {};
     Extra = {};
     oModel = {};
     appconfs = [];
     option = {
-      load_dirs: {}
+      loadDirs: {}
     };
     E = {};
     E.nextCounter = function() {
@@ -1066,16 +855,16 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       }
       return _results;
     };
-    E.logout = function(click_event, click_data) {
+    E.logout = function(action_event, action_data) {
       var _this = this;
-      if (inClick !== false) {
+      if (inAction !== false) {
         setTimeout((function() {
-          return E.logout(click_event, click_data);
+          return E.logout(action_event, action_data);
         }), 100);
         return;
       }
-      if (click_event) {
-        return (click(click_event, click_data)).then(function() {
+      if (action_event) {
+        return (action(action_event, action_data)).then(function() {
           return finish_logout();
         });
       } else {
@@ -1112,22 +901,22 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         return E.oRender = new Extra[option.render];
       });
     };
-    click = function(action_token, data) {
+    action = function(action_token, data) {
       var f;
-      f = ':click:' + action_token;
+      f = ':action:' + action_token;
       _log2(f, data);
-      if (inClick !== false) {
+      if (inAction !== false) {
         if (typeof option.c1 === "function") {
           option.c1();
         }
       }
-      inClick = action_token;
+      inAction = action_token;
       m.startComputation();
-      return (clickAction(action_token, data, E.App().getStepPath())).then(function(click_result) {
+      return (doAction(action_token, data, E.App().getStepPath())).then(function(action_result) {
         var k, modelState, o, ss;
-        E.App().setIssues(click_result[0]);
-        E.App().setMessages(click_result[1]);
-        inClick = false;
+        E.App().setIssues(action_result[0]);
+        E.App().setMessages(action_result[1]);
+        inAction = false;
         modelState = {};
         for (k in oModel) {
           o = oModel[k];
@@ -1139,7 +928,8 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       });
     };
     setModelState = function(s) {
-      var inst_nm, modelState, _base, _results;
+      var f, inst_nm, modelState, _base, _results;
+      f = ':setModelState';
       if (s != null) {
         modelState = s;
       }
@@ -1156,7 +946,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       go: 'default//'
     };
     aMacros = {};
-    aClicks = {};
+    aActions = {};
     aFlows = {
       "default": {
         start: 'default',
@@ -1187,7 +977,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         hash = {
           SETTINGS: aSetting,
           MACROS: aMacros,
-          CLICKS: aClicks,
+          ACTIONS: aActions,
           FLOWS: aFlows,
           MODELS: aModels,
           OPTIONS: option
@@ -1276,9 +1066,9 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     appStartS = function(flow, track) {
       return appGetT(flow, track).start;
     };
-    appFindClick = function(path, action_token) {
+    appFindAction = function(path, action_token) {
       var _ref;
-      return (_ref = appFindNode(path[0], path[1], path[2], 'CLICKS', action_token)) != null ? _ref : aClicks[action_token];
+      return (_ref = appFindNode(path[0], path[1], path[2], 'ACTIONS', action_token)) != null ? _ref : aActions[action_token];
     };
     appGetSetting = function(setting_name, flow, track, step) {
       var _ref;
@@ -1335,39 +1125,39 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       }
       return _results;
     };
-    clickAction = function(action_token, data, original_path) {
+    doAction = function(action_token, data, original_path) {
       var d;
       d = new m.Deferred();
-      d.resolve(_d_clickAction(action_token, data, original_path));
+      d.resolve(_d_doAction(action_token, data, original_path));
       return d.promise;
     };
-    _d_clickAction = function(action_token, data, original_path) {
-      var click_node, doClickNode, doLeftSide, doRightSide, f, master_data, master_issue, master_message;
-      f = ":clickAction(" + action_token + ")";
+    _d_doAction = function(action_token, data, original_path) {
+      var action_node, doActionNode, doLeftSide, doRightSide, f, master_data, master_issue, master_message;
+      f = ":doAction(" + action_token + ")";
       _log2(f, data, original_path);
       master_issue = new Issue('App');
       master_message = new Issue('App');
       master_data = merge({}, data);
-      click_node = appFindClick(original_path, action_token);
-      _log2(f, click_node);
-      if (!(click_node != null)) {
+      action_node = appFindAction(original_path, action_token);
+      _log2(f, action_node);
+      if (!(action_node != null)) {
         _log2('WARNING', "No app. entry for action_token (" + action_token + ") on path (" + original_path + ")");
         return [master_issue, master_message];
       }
-      doLeftSide = function(click_node) {
+      doLeftSide = function(action_node) {
         var ctx, d, i, is_macro, mg, nm, nms, r, val, view_act, view_nm, _i, _len, _ref, _ref1, _ref2;
         _log2(f, 'doLeftSide:', {
-          click_node: click_node
+          action_node: action_node
         });
-        if (click_node.go != null) {
-          E.App().go(click_node.go);
+        if (action_node.go != null) {
+          E.App().go(action_node.go);
         }
         nms = (function() {
-          switch (type_oau(click_node.pass)) {
+          switch (type_oau(action_node.pass)) {
             case 'A':
-              return click_node.pass;
+              return action_node.pass;
             case 'S':
-              return click_node.pass.split(',');
+              return action_node.pass.split(',');
             default:
               return [];
           }
@@ -1375,27 +1165,27 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         for (_i = 0, _len = nms.length; _i < _len; _i++) {
           nm = nms[_i];
           if (!(nm in data)) {
-            _log2('WARNING', "Action (" + action_token + ") request data is missing param " + nm, data, click_node, original_path);
+            _log2('WARNING', "Action (" + action_token + ") request data is missing param " + nm, data, action_node, original_path);
           }
         }
-        _ref = click_node.set;
+        _ref = action_node.set;
         for (nm in _ref) {
           val = _ref[nm];
           master_data[nm] = val;
         }
-        if (click_node["do"] != null) {
-          is_macro = !/[.]/.test(click_node["do"]);
+        if (action_node["do"] != null) {
+          is_macro = !/[.]/.test(action_node["do"]);
           if (is_macro) {
-            if (!aMacros[click_node["do"]]) {
+            if (!aMacros[action_node["do"]]) {
               if (typeof option.ca2 === "function") {
-                option.ca2(action_token, original_path, click_node);
+                option.ca2(action_token, original_path, action_node);
               }
             }
             if (is_macro) {
-              return doClickNode(aMacros[click_node["do"]]);
+              return doActionNode(aMacros[action_node["do"]]);
             }
           }
-          _ref1 = click_node["do"].split('.'), view_nm = _ref1[0], view_act = _ref1[1];
+          _ref1 = action_node["do"].split('.'), view_nm = _ref1[0], view_act = _ref1[1];
           view_act = view_act != null ? view_act : action_token;
           d = new m.Deferred();
           r = {};
@@ -1417,10 +1207,10 @@ if (typeof define == "function" && define.amd) define(function() {return m})
           return master_message.addObj(ctx.m);
         }
       };
-      doRightSide = function(click_node) {
+      doRightSide = function(action_node) {
         var choice, k, matches, next_node, val, _i, _len, _ref, _ref1, _ref2, _ref3;
         next_node = null;
-        _ref1 = (_ref = click_node.next) != null ? _ref : [];
+        _ref1 = (_ref = action_node.next) != null ? _ref : [];
         for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
           choice = _ref1[_i];
           if (choice.when === 'default') {
@@ -1446,17 +1236,17 @@ if (typeof define == "function" && define.amd) define(function() {return m})
           }
         }
         if (next_node) {
-          _log2('doRightSide:', {
+          _log2(f, 'doRightSide:', {
             next_node: next_node
           });
-          doClickNode(next_node);
+          doActionNode(next_node);
         }
       };
-      doClickNode = function(click_node) {
-        doLeftSide(click_node);
-        return doRightSide(click_node);
+      doActionNode = function(action_node) {
+        doLeftSide(action_node);
+        return doRightSide(action_node);
       };
-      doClickNode(click_node);
+      doActionNode(action_node);
       return [master_issue, master_message];
     };
     fieldDef = {};
@@ -1500,7 +1290,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       Model: Model,
       Extra: Extra,
       option: option,
-      click: click,
+      action: action,
       merge: merge,
       appconfs: appconfs,
       appGetF: appGetF,
@@ -1508,7 +1298,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       appGetS: appGetS,
       appStartT: appStartT,
       appStartS: appStartS,
-      appFindClick: appFindClick,
+      appFindAction: appFindAction,
       appGetSetting: appGetSetting,
       appGetVars: appGetVars,
       appFist: appFist,
@@ -1708,6 +1498,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     ModelJS.prototype.invalidateTables = function(tbl_nms, not_tbl_names) {
       var deleted_tbl_nms, f, nm, _i, _len;
       f = ':ModelJS.invalidateTables~' + this.view_nm;
+      _log2(f, tbl_nms, not_tbl_names);
       if (not_tbl_names == null) {
         not_tbl_names = [];
       }
@@ -1778,7 +1569,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     OPTIONS: {
       loader: 'LoadStrategy$Base',
       render: 'RenderStrategy$Base',
-      data_action: 'dataAction$Base'
+      dataAction: 'dataAction$Base'
     },
     MODELS: {
       App: {
@@ -1792,24 +1583,6 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       Fist: {
         "class": "Fist$Base",
         inst: "iBaseFist"
-      }
-    },
-    CLICKS: {
-      F$change: {
-        pass: "fist",
-        "do": 'Fist.F$change'
-      },
-      F$keyup: {
-        pass: "fist",
-        "do": 'Fist.F$keyup'
-      },
-      F$focus: {
-        pass: "fist",
-        "do": 'Fist.F$focus'
-      },
-      F$blur: {
-        pass: "fist",
-        "do": 'Fist.F$blur'
       }
     }
   };
@@ -1980,25 +1753,13 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     };
 
     View$Base.prototype.getTable = function(nm) {
-      var f, field, row, _i, _len, _ref;
+      var f;
       f = 'Base:M/View.getTable:' + nm;
       switch (nm) {
-        case 'Control':
-        case 'Form':
-          return this.fist_table[nm];
         case 'If':
           return [this.info_if_nms];
         case 'Part':
           return this.info_parts.slice(-1);
-        case 'Field':
-          row = {};
-          _ref = this.fist_table.Control;
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            field = _ref[_i];
-            row[field.name] = [field];
-          }
-          _log2(f, row);
-          return [row];
         default:
           return [];
       }
@@ -2385,20 +2146,13 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     };
 
     View$Base.prototype.T_fist = function(attrs, content_f) {
-      var f, rh_alias, tbl, _base, _ref, _ref1, _ref2;
+      var f, model, rh_alias, table, tbl, _base, _ref, _ref1, _ref2;
       f = 'T_fist';
       _log2(f, attrs, content_f);
-      if (!attrs.using) {
-        _ref = this._accessModelTable('Fist/' + attrs.fist, attrs.alias), tbl = _ref[0], rh_alias = _ref[1];
-        this.info_foreach[rh_alias].row = tbl[0];
-      } else {
-        BROKEN();
-        this._accessModelTable('Fist/' + attrs.fist);
-        if ((_ref1 = attrs.alias) == null) {
-          attrs.alias = attrs.using;
-        }
-        this._accessModelTable(attrs.fist + '/' + attrs.using, attrs.alias);
-      }
+      model = (_ref = E.fistDef[attrs.fist].event) != null ? _ref : 'Fist';
+      table = attrs.fist + (attrs.row != null ? ':' + attrs.row : '');
+      _ref1 = this._accessModelTable(model + '/' + table, attrs.alias), tbl = _ref1[0], rh_alias = _ref1[1];
+      this.info_foreach[rh_alias].row = tbl[0];
       if (content_f) {
         return this.handleIt(content_f);
       } else {
@@ -2434,20 +2188,20 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       Fist.__super__.constructor.call(this, view_nm, options);
     }
 
-    Fist.prototype.action = function(ctx, act, p) {
-      var ans, errors, f, field, fieldNm, fist, had_issue, i, invalidate, m, nm, r, was_issue, was_val, _ref, _ref1;
-      f = 'action:' + act + '-' + p.fist + '/' + p.field;
+    Fist.prototype.event = function(name, act, fistNm, fieldNm, p) {
+      var f, field, fist, had_issue, invalidate, tmp_val, was_issue, was_val;
+      f = 'event:' + act + '-' + fistNm + '/' + fieldNm;
       _log2(f, p);
-      if (ctx) {
-        r = ctx.r, i = ctx.i, m = ctx.m;
+      if (name !== 'Fist') {
+        BLOWUP();
       }
-      fist = this._getFist(p.fist, p.row);
-      if (p.field) {
-        field = fist.ht[p.field];
+      fist = this._getFist(fistNm, p.row);
+      if (fieldNm) {
+        field = fist.ht[fieldNm];
       }
       switch (act) {
-        case 'F$keyup':
-        case 'F$change':
+        case 'keyup':
+        case 'change':
           if (field.type === 'yesno') {
             if (p.val === field.cdata[0]) {
               p.val = field.cdata[1];
@@ -2458,51 +2212,30 @@ if (typeof define == "function" && define.amd) define(function() {return m})
           if (field.hval !== p.val) {
             had_issue = field.issue;
             field.hval = p.val;
-            E.fistVAL(field, field.hval);
-            if (act === 'F$change' || had_issue !== field.issue) {
+            tmp_val = E.fistH2H(field, field.hval);
+            E.fistVAL(field, tmp_val);
+            if (act === 'change' || had_issue !== field.issue) {
               invalidate = true;
             }
           }
           break;
-        case 'F$blur':
+        case 'blur':
           was_val = field.hval;
+          was_issue = field.issue;
           field.hval = E.fistH2H(field, field.hval);
-          was_issue = E.fistVAL(field, field.hval);
-          if (was_val !== field.hval || was_issue) {
+          E.fistVAL(field, field.hval);
+          _log2(f, 'invalidate?', was_val, field.hval, was_issue, field.issue);
+          if (was_val !== field.hval || was_issue !== field.issue) {
             invalidate = true;
           }
           break;
-        case 'F$focus':
-          if (fist.fnm !== p.field) {
-            fist.fnm = p.field;
-            invalidate = true;
-          }
-          break;
-        case 'F$validate':
-          errors = 0;
-          _ref = fist.ht;
-          for (fieldNm in _ref) {
-            field = _ref[fieldNm];
-            if (true !== E.fistVAL(field, field.hval)) {
-              errors++;
-            }
-          }
-          if (errors) {
-            invalidate = true;
-            r.success = 'FAIL';
-            r.errors = errors;
-          } else {
-            r.success = 'SUCCESS';
-            ans = r[fist.nm] = {};
-            _ref1 = fist.db;
-            for (nm in _ref1) {
-              field = _ref1[nm];
-              ans[nm] = E.fistH2D(field);
-            }
+        case 'focus':
+          if (fist.fnm !== fieldNm) {
+            fist.fnm = fieldNm;
           }
           break;
         default:
-          return Fist.__super__.action.call(this, ctx, act, p);
+          return Fist.__super__.event.call(this, name, act, fistNm, fieldNm, p);
       }
       if (invalidate) {
         if (p.async !== true) {
@@ -2510,6 +2243,36 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         } else {
           delete this.Table[fist.rnm];
         }
+      }
+    };
+
+    Fist.prototype.fistValidate = function(ctx, fistNm, row) {
+      var ans, errors, field, fieldNm, fist, i, invalidate, m, nm, r, _ref, _ref1;
+      r = ctx.r, i = ctx.i, m = ctx.m;
+      fist = this._getFist(fistNm, row);
+      errors = 0;
+      _ref = fist.ht;
+      for (fieldNm in _ref) {
+        field = _ref[fieldNm];
+        if (true !== E.fistVAL(field, field.hval)) {
+          errors++;
+        }
+      }
+      if (errors) {
+        invalidate = true;
+        r.success = 'FAIL';
+        r.errors = errors;
+      } else {
+        r.success = 'SUCCESS';
+        ans = r[fist.nm] = {};
+        _ref1 = fist.db;
+        for (nm in _ref1) {
+          field = _ref1[nm];
+          ans[nm] = E.fistH2D(field);
+        }
+      }
+      if (invalidate === true) {
+        this.invalidateTables([fist.rnm]);
       }
     };
 
@@ -2869,38 +2632,58 @@ if (typeof define == "function" && define.amd) define(function() {return m})
 
 /*Base/Extra/dataAction.coffee*/// Generated by CoffeeScript 1.4.0
 (function() {
-  var dataAction;
+  var dataAction,
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   dataAction = function(type, data_action, data_params) {
-    var action_specs, f, one_spec, spec_action, spec_type, _base, _i, _len, _ref, _results;
-    f = 'Base:E/dataAction:on[data-action]' + type;
+    var action_specs, do_action, f, group, interesting, item, one_spec, prevent, spec_action, spec_type, _base, _i, _len, _ref;
+    f = 'Base:E/dataAction:on[data-e-action]' + type;
     if (typeof (_base = E.option).activity === "function") {
       _base.activity(type);
     }
     action_specs = data_action.split(',');
-    _results = [];
+    do_action = true;
+    prevent = false;
     for (_i = 0, _len = action_specs.length; _i < _len; _i++) {
       one_spec = action_specs[_i];
-      _ref = one_spec.split(':'), spec_type = _ref[0], spec_action = _ref[1];
+      _ref = one_spec.split(':'), spec_type = _ref[0], spec_action = _ref[1], group = _ref[2], item = _ref[3], interesting = _ref[4];
       if (!spec_action) {
         spec_action = spec_type;
         spec_type = 'click';
       }
-      if (spec_type === type) {
+      if (spec_type === 'event') {
+        E.event(spec_action, type, group, item, interesting, data_params);
+      }
+      if (do_action && spec_type === type) {
+        if (spec_type === 'click') {
+          prevent = true;
+        }
+        do_action = false;
         (function(spec_action) {
           return setTimeout((function() {
-            return E.click(spec_action, data_params);
+            return E.action(spec_action, data_params);
           }), 5);
         })(spec_action);
-        break;
-      } else {
-        _results.push(void 0);
       }
     }
-    return _results;
+    return prevent;
   };
 
   E.Extra.dataAction$Base = dataAction;
+
+  E.event = function(name, type, group, item, interesting, params) {
+    var event_names, _ref;
+    if (interesting !== 'all') {
+      event_names = interesting.split('-');
+      if (__indexOf.call(event_names, type) < 0) {
+        return;
+      }
+    }
+    if (name === 'Fist') {
+      name = (_ref = E.fistDef[group].event) != null ? _ref : name;
+    }
+    return E[name]().event(name, type, group, item, params);
+  };
 
 }).call(this);
 
@@ -3013,7 +2796,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     }
 
     RenderStrategy$Base.prototype.handleEvent = function(event_obj) {
-      var attrs, data_action, data_params, f, ix, nm, target, type, val, _i, _ref;
+      var attrs, data_action, data_params, f, ix, nm, prevent, target, type, val, _i, _ref;
       f = 'on[data-e-action]';
       if (event_obj == null) {
         event_obj = window.event;
@@ -3054,9 +2837,11 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         data_params: data_params,
         val: val
       });
-      event_obj.preventDefault();
       data_params.val = val;
-      E.Extra[E.option.data_action](type, data_action, data_params);
+      prevent = E.Extra[E.option.dataAction](type, data_action, data_params);
+      if (prevent) {
+        event_obj.preventDefault();
+      }
       return false;
     };
 
@@ -3110,7 +2895,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       }
       this.was_popped = true;
       if (this.very_first) {
-        E.click('browser_hash', {
+        E.action('browser_hash', {
           hash: location.hash.substr(1)
         });
       } else {
@@ -3136,8 +2921,9 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       });
     };
 
-    RenderStrategy$Base.prototype.render = function(content, history, click_index, modal) {
-      var container, start;
+    RenderStrategy$Base.prototype.render = function(content, history, action, modal) {
+      var container, f, start;
+      f = 'render';
       if (this.was_modal) {
         BROKEN();
         m.render(document.getElementById(this.modalId), m());
@@ -3146,19 +2932,19 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         BROKEN();
         m.render((container = document.getElementById(this.modalId)), this.modalView(content));
       } else {
-        _log2('START RENDER', start = new Date().getTime());
+        _log2(f, 'START RENDER', start = new Date().getTime());
         m.render((container = document.getElementById(this.baseId)), m('div', {}, content));
-        _log2('END RENDER', new Date().getTime() - start);
+        _log2(f, 'END RENDER', new Date().getTime() - start);
       }
-      console.log('render......', this.content_watch, container);
+      _log2(f, 'render......', this.content_watch, container);
       this.was_modal = modal;
       this.was_popped = false;
       this.very_first = false;
     };
 
-    RenderStrategy$Base.prototype.handleRenderState = function(history, click_index) {
+    RenderStrategy$Base.prototype.handleRenderState = function(history, action) {
       var displayHash, f, model_state, new_hash, _base, _base1;
-      f = 'E:bootstrap.handleRenderState:' + history + ':' + click_index;
+      f = 'E:bootstrap.handleRenderState:' + history + ':' + action;
       _log2(f, {
         vf: this.very_first,
         wp: this.was_popped
@@ -3166,7 +2952,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       if (!history) {
         return;
       }
-      displayHash = this.very_first ? '' : 'click-' + click_index;
+      displayHash = this.very_first ? '' : 'action-' + action;
       new_hash = E.getDomCache();
       if (new_hash === false) {
         new_hash = E.getExternalUrl();
@@ -3216,9 +3002,9 @@ Layout: {
     },
     OPTIONS: {
       loader: 'LoadStrategy$Dev',
-      ca2: function(action_token, original_path, click_node) {
-        _log2("ERROR: There is a problem with this click_node:", click_node);
-        throw new Error("ERROR: Missing '" + click_node["do"] + "' from MACROS; Action: " + action_token + ", Path: " + original_path);
+      ca2: function(action_token, original_path, action_node) {
+        _log2("ERROR: There is a problem with this action_node:", action_node);
+        throw new Error("ERROR: Missing '" + action_node["do"] + "' from MACROS; Action: " + action_token + ", Path: " + original_path);
       }
     },
     MODELS: {
@@ -3231,7 +3017,7 @@ Layout: {
         inst: "iDev_View"
       }
     },
-    CLICKS: {
+    ACTIONS: {
       dbg_toggle: {
         "do": 'Devl.toggle',
         pass: 'what'
@@ -3911,22 +3697,26 @@ Layout: {
     }
 
     ModelJS.prototype.action = function(ctx, act, parms) {
-      throw new Error("Model (" + this.view_nm + ").action() needs (" + act + ")");
+      throw new Error("Model (" + this.view_nm + ").action() didn't know action (" + act + ")");
     };
 
     ModelJS.prototype.loadTable = function(tbl_nm) {
       if (tbl_nm in this.Table) {
         return;
       }
-      throw new Error("Model (" + this.view_nm + ").loadTable() needs (" + tbl_nm + ")");
+      throw new Error("Model (" + this.view_nm + ").loadTable() didn't know table-name (" + tbl_nm + ")");
     };
 
-    ModelJS.prototype.fistLoadData = function(oFist) {
-      throw new Error("Model (" + this.view_nm + ").fistLoadData() needs (" + (oFist.getFistNm()) + ")");
+    ModelJS.prototype.fistValidate = function(ctx, fistNm, row) {
+      throw new Error("Model (" + this.view_nm + ").fistValidate() didn't know fist (" + fistNm + ")");
     };
 
-    ModelJS.prototype.fistGetFieldChoices = function(oFist, field) {
-      throw new Error("Model (" + this.view_nm + ").fistGetFieldChoices() needs (" + (oFist.getFistNm()) + ":" + field + ")");
+    ModelJS.prototype.fistGetValues = function(fistNm, row) {
+      throw new Error("Model (" + this.view_nm + ").fistGetValues() didn't know fist (" + fistNm + ")");
+    };
+
+    ModelJS.prototype.fistGetChoices = function(fistNm, fieldNm, row) {
+      throw new Error("Model (" + this.view_nm + ").fistGetChoices() did't know fist:field (" + fistNm + ":" + fieldNm + ")");
     };
 
     return ModelJS;
@@ -4113,7 +3903,7 @@ Layout: {
   FindAttrs = function(file_info, str) {
     var attr_obj, attr_split, attrs_need_cleaning, data_nm, debug, empty, eq, event_attrs_shortcuts, f, good, i, nm, parts, quo, start, style_obj, _i, _len, _ref, _ref1, _ref2, _ref3;
     f = ':parse.FindAttrs:';
-    event_attrs_shortcuts = ['data-e-click', 'data-e-change', 'data-e-dblclick', 'data-e-enter', 'data-e-keyup', 'data-e-focus', 'data-e-blur'];
+    event_attrs_shortcuts = ['data-e-click', 'data-e-change', 'data-e-dblclick', 'data-e-enter', 'data-e-keyup', 'data-e-focus', 'data-e-blur', 'data-e-event'];
     str = ' ' + str;
     str = str.replace(/\se-/gm, ' data-e-');
     attr_split = str.trim().split(/([\s="':;])/);
@@ -4512,7 +4302,7 @@ Layout: {
       _ref = this.appconfs;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         pkg = _ref[_i];
-        if (!(pkg in E.option.load_dirs)) {
+        if (!(pkg in E.option.loadDirs)) {
           continue;
         }
         _ref3 = (_ref1 = (_ref2 = E['app$' + pkg]) != null ? _ref2.MANIFEST : void 0) != null ? _ref1 : {};
@@ -4520,7 +4310,7 @@ Layout: {
           file_list = _ref3[type];
           for (_j = 0, _len1 = file_list.length; _j < _len1; _j++) {
             file = file_list[_j];
-            url = E.option.load_dirs[pkg] + pkg + '/' + type + '/' + file + '.js';
+            url = E.option.loadDirs[pkg] + pkg + '/' + type + '/' + file + '.js';
             work.push(url);
           }
         }
@@ -4600,7 +4390,7 @@ Layout: {
           if (compiled = _this.preLoaded(pkg, type, nm)) {
             return compiled;
           }
-          if (!(pkg in E.option.load_dirs)) {
+          if (!(pkg in E.option.loadDirs)) {
             return false;
           }
           return _this.D_getFile(pkg, full_nm);
@@ -4631,7 +4421,7 @@ Layout: {
 
     LoadStrategy.prototype.D_getFile = function(pkg, nm) {
       var path;
-      path = E.option.load_dirs[pkg] + pkg + '/';
+      path = E.option.loadDirs[pkg] + pkg + '/';
       return (m.request({
         background: true,
         method: 'GET',
