@@ -162,25 +162,13 @@
     };
 
     View$Base.prototype.getTable = function(nm) {
-      var f, field, row, _i, _len, _ref;
+      var f;
       f = 'Base:M/View.getTable:' + nm;
       switch (nm) {
-        case 'Control':
-        case 'Form':
-          return this.fist_table[nm];
         case 'If':
           return [this.info_if_nms];
         case 'Part':
           return this.info_parts.slice(-1);
-        case 'Field':
-          row = {};
-          _ref = this.fist_table.Control;
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            field = _ref[_i];
-            row[field.name] = [field];
-          }
-          _log2(f, row);
-          return [row];
         default:
           return [];
       }
@@ -567,20 +555,13 @@
     };
 
     View$Base.prototype.T_fist = function(attrs, content_f) {
-      var f, rh_alias, tbl, _base, _ref, _ref1, _ref2;
+      var f, model, rh_alias, table, tbl, _base, _ref, _ref1, _ref2;
       f = 'T_fist';
       _log2(f, attrs, content_f);
-      if (!attrs.using) {
-        _ref = this._accessModelTable('Fist/' + attrs.fist, attrs.alias), tbl = _ref[0], rh_alias = _ref[1];
-        this.info_foreach[rh_alias].row = tbl[0];
-      } else {
-        BROKEN();
-        this._accessModelTable('Fist/' + attrs.fist);
-        if ((_ref1 = attrs.alias) == null) {
-          attrs.alias = attrs.using;
-        }
-        this._accessModelTable(attrs.fist + '/' + attrs.using, attrs.alias);
-      }
+      model = (_ref = E.fistDef[attrs.fist].event) != null ? _ref : 'Fist';
+      table = attrs.fist + (attrs.row != null ? ':' + attrs.row : '');
+      _ref1 = this._accessModelTable(model + '/' + table, attrs.alias), tbl = _ref1[0], rh_alias = _ref1[1];
+      this.info_foreach[rh_alias].row = tbl[0];
       if (content_f) {
         return this.handleIt(content_f);
       } else {

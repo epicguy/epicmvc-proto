@@ -89,15 +89,8 @@ class View$Base extends E.ModelJS
 		f= 'Base:M/View.getTable:'+ nm
 		#_log2 f, @info_parts if nm is 'Part'
 		switch nm
-			when 'Control', 'Form' then @fist_table[nm]
 			when 'If' then [@info_if_nms]
 			when 'Part' then @info_parts.slice -1
-			when 'Field'
-				row= {}
-				for field in @fist_table.Control
-					row[field.name]= [field]
-				_log2 f, row
-				[row]
 			else []
 	invalidateTables: (view_nm, tbl_nms, deleted_tbl_nms) ->
 		return unless @did_run and deleted_tbl_nms.length
@@ -331,15 +324,11 @@ class View$Base extends E.ModelJS
 	T_fist: (attrs, content_f) -> # Could have children, or a part=, or default to fist_default, (or E.fistDef[nm].part ?)
 		f= 'T_fist'
 		_log2 f, attrs, content_f
-		if not attrs.using
-			[tbl, rh_alias]= @_accessModelTable 'Fist/'+ attrs.fist, attrs.alias
-			@info_foreach[rh_alias].row= tbl[ 0]
-		else
-			BROKEN() # TODO NEED TO DO THE .row LIKE THE ABOVE LINE
-			@_accessModelTable 'Fist/'+ attrs.fist
-			attrs.alias?= attrs.using
-			@_accessModelTable attrs.fist+ '/'+ attrs.using, attrs.alias
-		if content_f
+		model= E.fistDef[ attrs.fist].event ? 'Fist'
+		table= attrs.fist+ if attrs.row? then ':'+ attrs.row else ''
+		[tbl, rh_alias]= @_accessModelTable model+ '/'+ table, attrs.alias
+		@info_foreach[ rh_alias].row= tbl[ 0]
+		if content_f # TODO EXPERIMENTAL - HTML FORM COULD GO RIGHT BETWEEN THE TAGS
 			@handleIt content_f
 		else
 			attrs.part?= E.fistDef[ attrs.fist].part? 'fist_default'
