@@ -47,17 +47,17 @@ class Fist extends E.ModelJS
 		return
 	# Controller wants a fist's db values, after whole-form-validation
 	fistValidate: (ctx, fistNm, row) ->
-		{r, i, m}= ctx
+		r= ctx
 		fist= @_getFist fistNm, row
 		errors= 0
 		for fieldNm, field of fist.ht
 			errors++ if true isnt E.fistVAL field, field.hval
 		if errors
 			invalidate= true
-			r.success= 'FAIL'
-			r.errors= errors
+			r.fist$success= 'FAIL'
+			r.fist$errors= errors
 		else
-			r.success= 'SUCCESS'
+			r.fist$success= 'SUCCESS'
 			ans= r[ fist.nm]= {}
 			ans[ nm]= E.fistH2D field for nm,field of fist.db
 		@invalidateTables [ fist.rnm] if invalidate is true
@@ -137,7 +137,7 @@ class Fist extends E.ModelJS
 			when 'custom'
 				E[ E.appFist fist.nm]().fistGetChoices fist.nm, field.nm, fist.row
 			else BROKEN()
-		
+
 E.fistH2H= (field,val) ->
 	val= E.fistH2H$pre val # Master pre-filter
 	val= E['fistH2H$'+ str] val for str in (field.h2h?.split /[:,]/) ? []

@@ -55,9 +55,10 @@ app= (window, undef) ->
 		# option.ca1 action_token, original_path, action_node #if not action_node?
 		# option.ca2 action_token, original_path, nm, data, action_node
 		# option.ca3 action_token, original_path, action_node, aMacros #if not aMacros[action_node.do]
+		# option.ca4 action_token, original_path, action_node if not action_node.fists[0] of E.fistDef
 
 	# Define these small validation functions as no-ops; Dev pkg can do the 'real' work
-	option[ nm]= (->) for nm in [ 'c1', 'a1', 'a2', 'm1', 'ca1', 'ca2', 'ca3'] #%#
+	option[ nm]= (->) for nm in [ 'c1', 'a1', 'a2', 'm1', 'ca1', 'ca2', 'ca3', 'ca4'] #%#
 
 	E= {}
 	E.nextCounter= -> ++counter
@@ -276,7 +277,7 @@ app= (window, undef) ->
 		master_message= new Issue 'App'
 		master_data= merge {}, data
 		action_node= appFindAction original_path, action_token
-		_log2 f, action_node
+		_log2 f, 'got node:', action_node
 		# WARNING: "No app. entry for action_token (#{action_token}) on path (#{original_path})"
 		option.ca1 action_token, original_path, action_node #if not action_node? #%#
 		return [master_issue, master_message] if not action_node? # No recognized action
@@ -286,6 +287,16 @@ app= (window, undef) ->
 			# Handle 'go:'
 			if action_node.go?
 				E.App().go action_node.go
+			# Process 'fists:[]'
+			if action_node.fists?.length
+				option.ca4 action_token, original_path, action_node
+				fist= action_node.fists[0]
+				fist_model= E.fistDef[ fist].event ? 'Fist'
+				_log2 f, 'd_doLeftSide:', {fist, fist_model, master_data}
+				E[fist_model]().fistValidate r= {}, fist, master_data.row
+				_log2 f, 'd_doLeftSide:', {r}
+				E.merge master_data, r
+				return unless r.fist$success is 'SUCCESS'
 			# Process 'pass:' (just a syntax check)
 			nms= switch type_oau action_node.pass
 				when 'A' then action_node.pass

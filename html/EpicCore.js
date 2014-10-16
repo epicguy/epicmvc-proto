@@ -17,7 +17,7 @@ app = function(window, undef) {
   option = {
     loadDirs: {}
   };
-  _ref = ['c1', 'a1', 'a2', 'm1', 'ca1', 'ca2', 'ca3'];
+  _ref = ['c1', 'a1', 'a2', 'm1', 'ca1', 'ca2', 'ca3', 'ca4'];
   for (_i = 0, _len = _ref.length; _i < _len; _i++) {
     nm = _ref[_i];
     option[nm] = (function() {});
@@ -402,18 +402,36 @@ app = function(window, undef) {
     master_message = new Issue('App');
     master_data = merge({}, data);
     action_node = appFindAction(original_path, action_token);
-    _log2(f, action_node);
+    _log2(f, 'got node:', action_node);
     option.ca1(action_token, original_path, action_node);
     if (!(action_node != null)) {
       return [master_issue, master_message];
     }
     d_doLeftSide = function(action_node) {
-      var ans, ctx, d, d_cb, i, is_macro, mg, nms, r, val, view_act, view_nm, _ref1, _ref2;
+      var ans, ctx, d, d_cb, fist, fist_model, i, is_macro, mg, nms, r, val, view_act, view_nm, _ref1, _ref2, _ref3, _ref4;
       _log2(f, 'd_doLeftSide:', {
         action_node: action_node
       });
       if (action_node.go != null) {
         E.App().go(action_node.go);
+      }
+      if ((_ref1 = action_node.fists) != null ? _ref1.length : void 0) {
+        option.ca4(action_token, original_path, action_node);
+        fist = action_node.fists[0];
+        fist_model = (_ref2 = E.fistDef[fist].event) != null ? _ref2 : 'Fist';
+        _log2(f, 'd_doLeftSide:', {
+          fist: fist,
+          fist_model: fist_model,
+          master_data: master_data
+        });
+        E[fist_model]().fistValidate(r = {}, fist, master_data.row);
+        _log2(f, 'd_doLeftSide:', {
+          r: r
+        });
+        E.merge(master_data, r);
+        if (r.fist$success !== 'SUCCESS') {
+          return;
+        }
       }
       nms = (function() {
         switch (type_oau(action_node.pass)) {
@@ -426,9 +444,9 @@ app = function(window, undef) {
         }
       })();
       option.ca2(action_token, original_path, nms, data, action_node);
-      _ref1 = action_node.set;
-      for (nm in _ref1) {
-        val = _ref1[nm];
+      _ref3 = action_node.set;
+      for (nm in _ref3) {
+        val = _ref3[nm];
         master_data[nm] = val;
       }
       if (action_node["do"] != null) {
@@ -437,7 +455,7 @@ app = function(window, undef) {
           option.ca3(action_token, original_path, action_node, aMacros);
           return d_doActionNode(aMacros[action_node["do"]]);
         }
-        _ref2 = action_node["do"].split('.'), view_nm = _ref2[0], view_act = _ref2[1];
+        _ref4 = action_node["do"].split('.'), view_nm = _ref4[0], view_act = _ref4[1];
         view_act = view_act != null ? view_act : action_token;
         d = new m.Deferred();
         r = {};
@@ -451,13 +469,13 @@ app = function(window, undef) {
         };
         ans = E[view_nm](ctx, view_act, master_data);
         d_cb = function() {
-          var _ref3;
+          var _ref5;
           _log2(f, 'd_doLeftSide: d_cb:', {
             ctx: ctx
           });
-          _ref3 = ctx.r;
-          for (nm in _ref3) {
-            val = _ref3[nm];
+          _ref5 = ctx.r;
+          for (nm in _ref5) {
+            val = _ref5[nm];
             master_data[nm] = val;
           }
           master_issue.addObj(ctx.i);

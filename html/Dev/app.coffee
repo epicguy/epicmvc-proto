@@ -38,6 +38,11 @@ window.EpicMvc.app$Dev=
 			return if action_node.do of aMacros
 			err "Missing (#{action_node.do}) from MACROS; Action: (#{action_token}), Path: (#{original_path})"
 
+		# option.ca4 action_token, original_path, action_node if not action_node.fists[0] of E.fistDef
+		ca4: (action_token, original_path, action_node) ->
+			return if action_node.fists[0] of E.fistDef
+			err "Unknown Fist Definition: (#{action_node.fists[0]}); Action: (#{action_token}), Path: (#{original_path})", {action_node}
+
 	SETTINGS:
 		frames: MMM_Dev: 'bdevl'
 	MODELS:
