@@ -51,7 +51,7 @@ class RenderStrategy$Base
 		data_params.val= val
 		# TODO COMPATABILITY MODE, EH?
 		old_params= target.getAttribute 'data-params'
-		data_params[ nm]= rec for nm,rec of old_params if old_params
+		data_params[ nm]= rec for nm,rec of JSON.parse old_params if old_params
 
 		prevent= E.Extra[ E.option.dataAction] type, data_action, data_params
 		event_obj.preventDefault() if prevent  # Added to keep LOGIN FORM from posting to fresh URL
