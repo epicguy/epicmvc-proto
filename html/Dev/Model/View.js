@@ -123,7 +123,7 @@
       } catch (e) {
         _log2('##### Error in form-part', (_ref = oPt.attrs.part) != null ? _ref : 'fist_default', e, e.stack);
         this._Error('form', this._TagText(oPt, true), e);
-        return this._Err('tag', oPt, e);
+        return this._Err('tag', 'fist', attrs, e);
       }
       try {
         inside = '';
@@ -140,7 +140,7 @@
         }
         _log2('##### Error in form-part', (_ref2 = oPt.attrs.part) != null ? _ref2 : 'fist_default', e, e.stack);
         this._Error('form_part', this._TagText(oPt, true), e);
-        return this._Err('tag', oPt, e);
+        return this._Err('tag', 'fist', attrs, e);
       }
     };
 
@@ -212,10 +212,7 @@
           tag: 'page',
           attrs: attrs
         }, true), e);
-        return this._Err('page', {
-          tag: 'page',
-          attrs: attrs
-        }, e);
+        return this._Err('page', 'page', attrs, e);
       }
     };
 
@@ -277,14 +274,14 @@
           throw e;
         }
         this._Error('if', this._TagText(oPt, true), e);
-        return this._Err('tag', oPt, e);
+        return this._Err('tag', 'if', attrs, e);
       }
     };
 
-    View.prototype.xT_foreach = function(oPt) {
-      var at_table, cols, inside, lh, nm, oMd, rh, tbl, _ref;
+    View.prototype.T_foreach = function(attrs, children) {
+      var at_table, cols, inside, lh, nm, oMd, result, rh, tbl, _ref;
       try {
-        at_table = this.viewExe.handleIt(oPt.attrs.table);
+        at_table = attrs.table;
         _ref = at_table.split('/'), lh = _ref[0], rh = _ref[1];
         if (lh in this.info_foreach) {
           if (!(rh in this.info_foreach[lh].row)) {
@@ -292,11 +289,12 @@
           }
           tbl = this.info_foreach[lh].row[rh];
         } else {
-          oMd = this.Epic.getInstance(lh);
+          oMd = E[lh]();
           tbl = oMd.getTable(rh);
         }
         if (this.Opts().tag !== true || this.in_defer) {
-          return View.__super__.xT_foreach.call(this, oPt);
+          result = View.__super__.T_foreach.call(this, attrs, children);
+          return result;
         }
         if (tbl != null ? tbl.length : void 0) {
           inside = 'len:' + tbl.length;
@@ -312,12 +310,10 @@
         } else {
           inside = 'empty';
         }
-        return this._Div('tag', oPt, inside, View.__super__.xT_foreach.call(this, oPt));
+        TODO();
+        return this._Div('tag', attrs, inside, View.__super__.T_foreach.call(this, attrs, children));
       } catch (e) {
-        if (this.Epic.isSecurityError(e)) {
-          throw e;
-        }
-        return this._Err('tag', oPt, e);
+        return this._Err('tag', 'foreach', attrs, e);
       }
     };
 
@@ -325,28 +321,27 @@
       return JSON.stringify(this.Epic.getViewTable(oPt.attrs.table));
     };
 
-    View.prototype._TagText = function(oPt, asError) {
-      var attrs, key, letter, page, type, val, _ref, _ref1;
+    View.prototype._TagText = function(tag, attrs, asError) {
+      var attrs_array, key, letter, page, type, val, _ref;
       _ref = this.getLetTypPag(), letter = _ref[0], type = _ref[1], page = _ref[2];
-      attrs = [];
-      _ref1 = oPt.attrs;
-      for (key in _ref1) {
-        val = _ref1[key];
-        attrs.push("" + key + "=\"" + val + "\"");
+      attrs_array = [];
+      for (key in attrs) {
+        val = attrs[key];
+        attrs_array.push("" + key + "=\"" + val + "\"");
       }
-      return "<e-" + oPt.tag + " " + (attrs.join(' ')) + ">";
+      return "<e-" + tag + " " + (attrs_array.join(' ')) + ">";
     };
 
-    View.prototype._Div = function(type, oPt, inside, after) {
+    View.prototype._Div = function(type, attrs, inside, after) {
       if (after == null) {
         after = '';
       }
-      return "<div class=\"dbg-" + type + "-box\">" + (this._TagText(oPt)) + inside + "</div>" + after;
+      return "<div class=\"dbg-" + type + "-box\">" + (this._TagText(attrs)) + inside + "</div>" + after;
     };
 
-    View.prototype._Err = function(type, oPt, e) {
+    View.prototype._Err = function(type, tag, attrs, e) {
       var stack, title;
-      _log2('### _Err type/oPt/e', type, oPt, {
+      _log2('### _Err type/tag/attrs/e', type, tag, attrs, {
         e: e,
         m: e.message,
         s: e.stack
@@ -359,7 +354,7 @@
           className: "dbg-" + type + "-error-box"
         },
         children: [
-          this._TagText(oPt, true), m('br'), m('dir', {
+          this._TagText(tag, attrs, true), m('br'), m('dir', {
             className: "dbg-" + type + "-error-msg",
             title: title
           }, e.message), stack

@@ -66,7 +66,7 @@ class View extends E.Model.View$Base
 		catch e
 			_log2 '##### Error in form-part', oPt.attrs.part ? 'fist_default', e, e.stack
 			@_Error 'form',( @_TagText oPt, true), e
-			return @_Err 'tag', oPt, e
+			return @_Err 'tag', 'fist', attrs, e
 		try
 			inside= ''
 			return @_Div 'tag', oPt, inside, super oPt if @Opts().form is true
@@ -76,7 +76,7 @@ class View extends E.Model.View$Base
 			throw e if @Epic.isSecurityError e
 			_log2 '##### Error in form-part', oPt.attrs.part ? 'fist_default', e, e.stack
 			@_Error 'form_part',( @_TagText oPt, true), e
-			@_Err 'tag', oPt, e
+			@_Err 'tag', 'fist', attrs, e
 
 	T_part: (attrs) ->
 		try
@@ -110,7 +110,7 @@ class View extends E.Model.View$Base
 			#_log2 '##### Error in ', type, page, e, e.stack
 			_log2 '##### Error in T_page', attrs, e
 			@_Error 'page',( @_TagText {tag:'page',attrs}, true), e
-			@_Err 'page', {tag:'page',attrs}, e
+			@_Err 'page', 'page', attrs, e
 			#return """<pre>&lt;epic:page page:#{@bd_page}&gt;<br>#{e}<br>#{e.stack}</pre>"""
 
 	v3: (view_nm, tbl_nm, col_nm, format_spec, custom_spec, give_error) ->
@@ -156,55 +156,53 @@ class View extends E.Model.View$Base
 		catch e
 			throw e if @Epic.isSecurityError e
 			@_Error 'if',( @_TagText oPt, true), e
-			@_Err 'tag', oPt, e
-	xT_foreach: (oPt) ->
+			@_Err 'tag', 'if', attrs, e
+	T_foreach: (attrs,children) ->
 		try
 			# Pre-check attributes
-			at_table= @viewExe.handleIt oPt.attrs.table
+			at_table= attrs.table
 			[lh, rh]= at_table.split '/' # Left/right halfs
 			# If left exists, it's nested as table/sub-table else assume model/table
 			if lh of @info_foreach
 				throw new Error "Sub-table missing: (#{rh}) in foreach table='#{lh}/#{rh}' (dyn:#{@info_foreach[lh].dyn.join ','}" if rh not of @info_foreach[lh].row
 				tbl= @info_foreach[lh].row[rh]
 			else
-				oMd= @Epic.getInstance lh
+				oMd= E[ lh]()
 				tbl= oMd.getTable rh
-			#return '' if tbl.length is 0 # No rows means no output
-			#rh_alias= rh # User may alias the tbl name, for e.g. reusable include-parts
-			#rh_alias= @viewExe.handleIt oPt.attrs.alias if 'alias' of oPt.attrs
-
-			return super oPt if @Opts().tag isnt true or @in_defer
+			if @Opts().tag isnt true or @in_defer
+				result= super attrs, children
+				return result
 
 			if tbl?.length
 				inside= 'len:'+tbl.length
 				cols=( nm for nm of tbl[0 ])
 				inside+= "<span title=\"#{cols.join ', '}\">Cols:#{cols.length}<span>"
 			else inside='empty'
+			TODO() # NEED HTML TO BE VIRUTAL OBJECT, NOT ACTUAL <TAG> STUFF
 
-			@_Div 'tag', oPt, inside, super oPt
+			@_Div 'tag', attrs, inside, super attrs, children
 		catch e
-			throw e if @Epic.isSecurityError e
-			@_Err 'tag', oPt, e
+			@_Err 'tag', 'foreach', attrs, e
 	xT_explain: (oPt) ->
 		JSON.stringify @Epic.getViewTable oPt.attrs.table
 
-	_TagText: (oPt,asError) ->
+	_TagText: (tag, attrs,asError) ->
 		[letter,type,page]= @getLetTypPag()
-		attrs= []
-		for key,val of oPt.attrs
-			attrs.push "#{key}=\"#{val}\""
-		"<e-#{oPt.tag} #{attrs.join ' '}>"
-	_Div:( type, oPt, inside, after) ->
+		attrs_array= []
+		for key,val of attrs
+			attrs_array.push "#{key}=\"#{val}\""
+		"<e-#{tag} #{attrs_array.join ' '}>"
+	_Div:( type, attrs, inside, after) ->
 		after?= ''
-		"""<div class="dbg-#{type}-box">#{@_TagText oPt}#{inside}</div>#{after}"""
-	_Err:( type, oPt, e) ->
-		_log2 '### _Err type/oPt/e', type, oPt, e: e, m: e.message, s: e.stack
+		"""<div class="dbg-#{type}-box">#{@_TagText attrs}#{inside}</div>#{after}"""
+	_Err:( type, tag, attrs, e) ->
+		_log2 '### _Err type/tag/attrs/e', type, tag, attrs, e: e, m: e.message, s: e.stack
 		stack= if @Opts().stack then "<pre>\n#{e.stack}</pre>" else ''
 		title= (e.stack.split '\n')[1]
 		tag: 'div'
 		attrs: {className:"dbg-#{type}-error-box"}
 		children: [
-			(@_TagText oPt, true), (m 'br'), (m 'dir', {className:"dbg-#{type}-error-msg", title:title}, e.message), stack
+			(@_TagText tag, attrs, true), (m 'br'), (m 'dir', {className:"dbg-#{type}-error-msg", title:title}, e.message), stack
 		]
 
 E.Model.View$Dev= View # Public API
