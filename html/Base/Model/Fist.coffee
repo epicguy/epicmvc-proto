@@ -119,15 +119,16 @@ class Fist extends E.ModelJS
 		rnm= p_fist+ if p_row then ':'+ p_row else ''
 		if rnm not of @fist
 			fist= @fist[ rnm]= {rnm, nm: p_fist, row: p_row, ht: {}, db: {}, st: 'new', sp: E.fistDef[ p_fist]}
+			E.option.fi1 fist # Guard e.g. E[ E.appFist fistNm]()
 			for fieldNm in fist.sp.FIELDS
 				field= E.merge {}, E.fieldDef[ fieldNm], nm: fieldNm, fistNm: p_fist, row: p_row
+				E.option.fi2 field # Verify h2h, d2h, h2d, validate exist in namespace
 				fist.ht[ fieldNm]= fist.db[ field.db_nm]= field # Alias by db_nm
 		else fist= @fist[ rnm]
 		if fist.st is 'new'
-			db_value_hash= E[ E.appFist p_fist]().fistGetValues p_fist, p_row
-			for nm,val of db_value_hash
-				field= fist.db[ nm]
-				field.hval= E.fistD2H field, val
+			db_value_hash= (E[ E.appFist p_fist]().fistGetValues p_fist, p_row) ? {}
+			for nm,field of fist.db
+				field.hval= E.fistD2H field, db_value_hash[nm]
 			fist.st= 'loaded'
 		return fist
 	_getChoices: (type, fist, field) ->
@@ -144,16 +145,17 @@ class Fist extends E.ModelJS
 			else BROKEN()
 
 E.fistH2H= (field,val) ->
-	val= E.fistH2H$pre val # Master pre-filter
-	val= E['fistH2H$'+ str] val for str in (field.h2h?.split /[:,]/) ? []
+	val= E.fistH2H$pre field,val # Master pre-filter
+	val= E['fistH2H$'+ str] field,val for str in (field.h2h?.split /[:,]/) ? []
 	val
-E.fistH2H$pre= (val) -> val # Users can change to e.g. val.replace /[<>]/g, ''
-E.fistH2D= (field) -> if field.h2d then E['fistH2D$'+ field.h2d] field, field.hval else field.hval
-E.fistD2H= (field,val) -> if field.d2h then E['fistD2H$'+ field.d2h] field, val else val
+E.fistH2H$pre= (field,val) -> val # Users can change to e.g. val.replace /[<>]/g, ''
+E.fistH2D= (field,val) -> if field.h2d then E['fistH2D$'+ field.h2d] field, val else val
+E.fistD2H= (field,val) -> if field.d2h then E['fistD2H$'+ field.d2h] field, val else val ? ''
 E.fistVAL= (field,val) ->
 	delete field.issue
 	check= true # Assume all is good
 	# Either check if empty, or check for valid value
+	E.option.fi3 field, val # Warn if not val?
 	if val.length is 0
 		if field.req is true # Value is empty, but required
 			check= if field.req_text

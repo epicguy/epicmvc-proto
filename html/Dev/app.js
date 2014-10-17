@@ -69,6 +69,44 @@
         return err("Unknown Fist for '" + what + ":' " + action_node[what] + "); Action: (" + action_token + "), Path: (" + original_path + ")", {
           action_node: action_node
         });
+      },
+      fi1: function(fist) {
+        var fistNm, model;
+        fistNm = fist.nm;
+        model = E.appFist(fistNm);
+        if (!(model != null)) {
+          return err("FIST is missing: app.js requires MODELS: <model-name>: fists:[...,'" + fistNm + "']", {
+            fist: fist
+          });
+        }
+      },
+      fi2: function(field) {
+        var attr, filt, _i, _len, _ref, _results;
+        _ref = ['h2h', 'd2h', 'h2d', 'validate'];
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          attr = _ref[_i];
+          if (!(attr in field)) {
+            continue;
+          }
+          filt = 'fist' + (attr === 'validate' ? 'VAL' : attr.toUpperCase()) + '$' + field[attr];
+          if (!(filt in E)) {
+            _results.push(err("Missing Fist Filter (E." + filt + ") in FIELD (" + field.fieldNm + ") for FIST (" + field.fistNm + ")", {
+              field: field
+            }));
+          } else {
+            _results.push(void 0);
+          }
+        }
+        return _results;
+      },
+      fi3: function(field, val) {
+        if (val != null) {
+          return;
+        }
+        return warn("FIST field value is undefined in FIELD (" + field.fieldNm + ") for FIST (" + field.fistNm + ")", {
+          field: field
+        });
       }
     },
     SETTINGS: {

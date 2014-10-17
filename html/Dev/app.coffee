@@ -43,6 +43,25 @@ window.EpicMvc.app$Dev=
 			return if action_node[ what] of E.fistDef
 			err "Unknown Fist for '#{what}:' #{action_node[ what]}); Action: (#{action_token}), Path: (#{original_path})", {action_node}
 
+		# E.option.fi1 fist # Guard e.g. E[ E.appFist fistNm]()
+		fi1: (fist)->
+			fistNm= fist.nm
+			model= E.appFist fistNm
+			if not model?
+				err "FIST is missing: app.js requires MODELS: <model-name>: fists:[...,'#{fistNm}']", {fist}
+
+		# E.option.fi2 field # Verify h2h, d2h, h2d, validate exist in namespace
+		fi2: (field)->
+			for attr in ['h2h','d2h','h2d','validate'] when attr of field
+				filt= 'fist'+ (if attr is 'validate' then 'VAL' else attr.toUpperCase())+'$'+field[attr]
+				if filt not of E
+					err "Missing Fist Filter (E.#{filt}) in FIELD (#{field.fieldNm}) for FIST (#{field.fistNm})", {field}
+
+		# E.option.fi3 field, val # Warn if not val?
+		fi3: (field, val)->
+			return if val?
+			warn "FIST field value is undefined in FIELD (#{field.fieldNm}) for FIST (#{field.fistNm})", {field}
+
 	SETTINGS:
 		frames: MMM_Dev: 'bdevl'
 	MODELS:

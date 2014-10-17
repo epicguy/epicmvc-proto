@@ -191,7 +191,7 @@
     };
 
     Fist.prototype._getFist = function(p_fist, p_row) {
-      var db_value_hash, field, fieldNm, fist, nm, rnm, val, _i, _len, _ref;
+      var db_value_hash, field, fieldNm, fist, nm, rnm, _i, _len, _ref, _ref1, _ref2;
       rnm = p_fist + (p_row ? ':' + p_row : '');
       if (!(rnm in this.fist)) {
         fist = this.fist[rnm] = {
@@ -203,6 +203,7 @@
           st: 'new',
           sp: E.fistDef[p_fist]
         };
+        E.option.fi1(fist);
         _ref = fist.sp.FIELDS;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           fieldNm = _ref[_i];
@@ -211,17 +212,18 @@
             fistNm: p_fist,
             row: p_row
           });
+          E.option.fi2(field);
           fist.ht[fieldNm] = fist.db[field.db_nm] = field;
         }
       } else {
         fist = this.fist[rnm];
       }
       if (fist.st === 'new') {
-        db_value_hash = E[E.appFist(p_fist)]().fistGetValues(p_fist, p_row);
-        for (nm in db_value_hash) {
-          val = db_value_hash[nm];
-          field = fist.db[nm];
-          field.hval = E.fistD2H(field, val);
+        db_value_hash = (_ref1 = E[E.appFist(p_fist)]().fistGetValues(p_fist, p_row)) != null ? _ref1 : {};
+        _ref2 = fist.db;
+        for (nm in _ref2) {
+          field = _ref2[nm];
+          field.hval = E.fistD2H(field, db_value_hash[nm]);
         }
         fist.st = 'loaded';
       }
@@ -261,24 +263,24 @@
 
   E.fistH2H = function(field, val) {
     var str, _i, _len, _ref, _ref1, _ref2;
-    val = E.fistH2H$pre(val);
+    val = E.fistH2H$pre(field, val);
     _ref2 = (_ref = (_ref1 = field.h2h) != null ? _ref1.split(/[:,]/) : void 0) != null ? _ref : [];
     for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
       str = _ref2[_i];
-      val = E['fistH2H$' + str](val);
+      val = E['fistH2H$' + str](field, val);
     }
     return val;
   };
 
-  E.fistH2H$pre = function(val) {
+  E.fistH2H$pre = function(field, val) {
     return val;
   };
 
-  E.fistH2D = function(field) {
+  E.fistH2D = function(field, val) {
     if (field.h2d) {
-      return E['fistH2D$' + field.h2d](field, field.hval);
+      return E['fistH2D$' + field.h2d](field, val);
     } else {
-      return field.hval;
+      return val;
     }
   };
 
@@ -286,7 +288,7 @@
     if (field.d2h) {
       return E['fistD2H$' + field.d2h](field, val);
     } else {
-      return val;
+      return val != null ? val : '';
     }
   };
 
@@ -294,6 +296,7 @@
     var check, token, _ref, _ref1, _ref2;
     delete field.issue;
     check = true;
+    E.option.fi3(field, val);
     if (val.length === 0) {
       if (field.req === true) {
         check = field.req_text ? ['FIELD_EMPTY_TEXT', field.nm, (_ref = field.label) != null ? _ref : field.nm, field.req_text] : ['FIELD_EMPTY', field.nm, (_ref1 = field.label) != null ? _ref1 : field.nm];

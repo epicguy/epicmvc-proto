@@ -18,7 +18,7 @@
     option = {
       loadDirs: {}
     };
-    _ref = ['c1', 'a1', 'a2', 'm1', 'ca1', 'ca2', 'ca3', 'ca4'];
+    _ref = ['c1', 'a1', 'a2', 'm1', 'ca1', 'ca2', 'ca3', 'ca4', 'fi1', 'fi2', 'fi3'];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       nm = _ref[_i];
       option[nm] = (function() {});

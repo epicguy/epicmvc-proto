@@ -317,6 +317,14 @@
       }
     };
 
+    View.prototype.T_fist = function(attrs, children) {
+      try {
+        return View.__super__.T_fist.call(this, attrs, children);
+      } catch (e) {
+        return this._Err('tag', 'fist', attrs, e);
+      }
+    };
+
     View.prototype.xT_explain = function(oPt) {
       return JSON.stringify(this.Epic.getViewTable(oPt.attrs.table));
     };

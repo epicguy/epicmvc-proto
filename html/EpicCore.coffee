@@ -50,7 +50,7 @@ app= (window, undef) ->
 		# option.ca4 action_token, original_path, action_node if not action_node.fist of E.fistDef
 
 	# Define these small validation functions as no-ops; Dev pkg can do the 'real' work
-	option[ nm]= (->) for nm in [ 'c1', 'a1', 'a2', 'm1', 'ca1', 'ca2', 'ca3', 'ca4'] #%#
+	option[ nm]= (->) for nm in [ 'c1', 'a1', 'a2', 'm1', 'ca1', 'ca2', 'ca3', 'ca4', 'fi1', 'fi2', 'fi3'] #%#
 
 	E= {}
 	E.nextCounter= -> ++counter

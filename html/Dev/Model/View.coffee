@@ -183,6 +183,11 @@ class View extends E.Model.View$Base
 			@_Div 'tag', attrs, inside, super attrs, children
 		catch e
 			@_Err 'tag', 'foreach', attrs, e
+	T_fist: (attrs,children) ->
+		try
+			super attrs, children
+		catch e
+			@_Err 'tag', 'fist', attrs, e
 	xT_explain: (oPt) ->
 		JSON.stringify @Epic.getViewTable oPt.attrs.table
 
