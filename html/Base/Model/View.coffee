@@ -63,23 +63,24 @@ class View$Base extends E.ModelJS
 		#_log2 f, 'saved_info', saved_info
 		@resetInfo()
 		for nm,rec of saved_info.info_foreach.dyn
-			#_log2 f, 'info_foreach nm=', nm, rec
 			[dyn_m, dyn_t, dyn_list_orig]= rec
+			_log2 f, nm, 'loop top', dyn_list_orig.length, {dyn_m,dyn_t}
 			dyn_list= []
 			oM= E[ dyn_m]()
 			for t_set in dyn_list_orig
-				_log2 f, nm, 't_set', t_set
+				#_log2 f, nm, 't_set', t_set[ 0], t_set[ 1]
 				[rh, rh_alias]= t_set
 				dyn_list.push t_set
 				if rh_alias not of @info_foreach
-					_log2 f, nm, 'rh_alias', rh_alias
+					#_log2 f, nm, 'rh_alias not in info_foreach, load', rh_alias
 					if dyn_list.length is 1 # Get table from model, else nested
 						tbl= oM.getTable rh
 					else
 						tbl= prev_row[ rh]
 					row_num= saved_info.info_foreach.row_num[ rh_alias]
 					row= E.merge {}, tbl[ row_num]
-					@info_foreach[ rh_alias]= dyn: [dyn_m, dyn_t, dyn_list], row: row
+					#_log2 f, nm, 'got row', rh_alias, {row_num, row}
+					@info_foreach[ rh_alias]= dyn: [dyn_m, dyn_t, dyn_list], row: row, count: row_num
 					prev_row= row
 				else prev_row= @info_foreach[ rh_alias].row
 

@@ -130,15 +130,17 @@
       for (nm in _ref) {
         rec = _ref[nm];
         dyn_m = rec[0], dyn_t = rec[1], dyn_list_orig = rec[2];
+        _log2(f, nm, 'loop top', dyn_list_orig.length, {
+          dyn_m: dyn_m,
+          dyn_t: dyn_t
+        });
         dyn_list = [];
         oM = E[dyn_m]();
         for (_i = 0, _len = dyn_list_orig.length; _i < _len; _i++) {
           t_set = dyn_list_orig[_i];
-          _log2(f, nm, 't_set', t_set);
           rh = t_set[0], rh_alias = t_set[1];
           dyn_list.push(t_set);
           if (!(rh_alias in this.info_foreach)) {
-            _log2(f, nm, 'rh_alias', rh_alias);
             if (dyn_list.length === 1) {
               tbl = oM.getTable(rh);
             } else {
@@ -148,7 +150,8 @@
             row = E.merge({}, tbl[row_num]);
             this.info_foreach[rh_alias] = {
               dyn: [dyn_m, dyn_t, dyn_list],
-              row: row
+              row: row,
+              count: row_num
             };
             prev_row = row;
           } else {
