@@ -18,6 +18,10 @@
       Fist: {
         "class": "Fist$Base",
         inst: "iBaseFist"
+      },
+      Tab: {
+        "class": "Tab$Base",
+        inst: "iBaseTab"
       }
     }
   };

@@ -27,7 +27,7 @@ _log2= ->
 camelCase= (input) -> input.toLowerCase().replace /-(.)/g, (match, group1) -> group1.toUpperCase()
 
 # Make an Object into a string of Javascript i.e. {a:'stuff',b:'other'} (Smaller than JSON)
-mkNm= (nm) -> if nm.match /^[a-zA-Z_]$/ then nm else sq nm
+mkNm= (nm) -> if nm.match /^[a-zA-Z_]*$/ then nm else sq nm
 mkObj= (obj) -> '{'+ ((mkNm nm)+ ':'+ val for nm,val of obj).join()+ '}'
 
 # Single quote a string
@@ -67,7 +67,7 @@ findStyles= (file_info, parts) -> # Hash of styles w/EpicVars expressions if nee
 		[good, start, i, nm, str]= findStyleVal i, parts
 		break if good is false # EOF
 		if good isnt true
-			_log2 'STYLE-ERROR - parse:', {file_info, parts, good, start, i, nm, str}
+			console.error 'STYLE-ERROR - parse:', {file_info, parts, good, start, i, nm, str}
 			continue
 		styles[ nm]=( findVars str).join '+'
 	styles
@@ -123,13 +123,14 @@ FindAttrs= (file_info, str)->
 	attrs_need_cleaning= false # If an attr nm has leading dash, flag to clean from list if value is empty/false/undef/null (m2)
 	attr_split.pop() if empty is '/'
 	attr_obj= {}
+	attr_obj.className= []
 	i= 0
 	debug= false # TODO DEBUG
 	while i< attr_split.length
 		[good, start, i, nm, eq, quo, parts]= FindAttrVal i, attr_split
 		break if good is false # EOF
 		if good isnt true
-			_log2 'ERROR - parse:', {file_info, good, start, i, nm, eq, quo, parts, str}
+			console.error 'ERROR - parse:', {file_info, good, start, i, nm, eq, quo, parts, str}
 			continue
 		if nm in event_attrs_shortcuts
 			debug= true # TODO DEBUG
@@ -148,9 +149,30 @@ FindAttrs= (file_info, str)->
 			style_obj= findStyles file_info, parts
 			attr_obj[ nm]= mkObj style_obj
 			continue
+		# before: <li e-tab="Home:news">
+		# after:  <li class="&Tab/Home/news#?active;" data-e-action="event:Tab:Home:news:click">
+		if nm is 'data-e-tab'
+			[grp,pane]= (parts.join '').split ':'
+			attr_obj.className.push "&Tab/#{grp}/#{pane}#?active;"
+			# attr_obj['data-e-event']= "event:Tab:#{grp}:#{pane}:click"
+			attr_obj['data-e-action']?= []
+			attr_obj['data-e-action'].push "event:Tab:#{grp}:#{pane}:click"
+			continue
+		# before: <div e-tab-pane="Home:news">
+		# after:  <div class="&Tab/Home/news#?active;">
+		if nm is 'data-e-tab-pane'
+			[grp,pane]= (parts.join '').split ':'
+			attr_obj.className.push "&Tab/#{grp}/#{pane}#?active;"
+			continue
+		if nm is 'className'
+			attr_obj.className.push parts.join ''
+			continue
 		attrs_need_cleaning= true if nm[ 0] is '?'
 		#_log2 f, 'nm,fl', nm, attrs_need_cleaning
 		attr_obj[ nm]=( findVars parts.join '').join '+'
+	if attr_obj.className.length
+		attr_obj.className=( findVars attr_obj.className.join ' ').join '+'
+	else delete attr_obj.className
 	for data_nm in ['data-e-action']
 		attr_obj[data_nm]=( findVars attr_obj[data_nm].join()).join '+' if attr_obj[data_nm]
 	_log2 f, 'bottom', str, attr_obj if debug
@@ -164,7 +186,7 @@ entities= (text)->
 	text= text.replace /&([a-z]+);/gm, (m, p1) -> if p1 of dom_entity_map then dom_entity_map[ p1] else '&'+ p1+ 'BROKEN;'
 # Parse out varGet2/3's from a textual string - return list of expressions
 findVars= (text) ->
-	# TODO CONSIDER USING [^&;] AND THEN ERROR IF LAST CHAR IS NOT THE ';' (was missing obviously)
+	# TODO CONSIDER USING [^&;] AND THEN console.error IF LAST CHAR IS NOT THE ';' (was missing obviously)
 	parts= text.split /&([a-zA-Z0-9_]+\/[^;]{1,60});?/gm
 	results= [] # ['text',func,'text'...]
 	if parts.length== 1
@@ -176,7 +198,7 @@ findVars= (text) ->
 		args= parts[ i+ 1].split '/'
 		last= args.length- 1
 		if last isnt 1 and last isnt 2
-			_log2 'ERROR VarGet:', parts[ i+ 1]
+			console.error 'ERROR VarGet:', parts[ i+ 1]
 			continue
 		[ args[last], hash_part, custom_hash_part]= args[last].split '#'
 		ans= if last is 1
@@ -195,7 +217,7 @@ findVars= (text) ->
 	return results # Return as array of expressions
 
 doError= (file_stats, text) ->
-	console.log 'ERROR', file_stats, text
+	console.error 'ERROR', file_stats, text
 	#alert "#{file_stats}, #{text}"
 	throw Error text
 ParseFile= (file_stats, file_contents) ->
@@ -211,13 +233,31 @@ ParseFile= (file_stats, file_contents) ->
 	stats= text: 0, dom: 0, epic: 0, defer: 0
 	dom_pre_tags= [ 'pre', 'code']
 	dom_nms= [
-		'style'
-		'div', 'a', 'span', 'ol', 'ul', 'li', 'p', 'b', 'i', 'dl', 'dd', 'dt', 'u'
-		'form', 'fieldset', 'label', 'legend', 'button', 'input', 'textarea', 'select', 'option'
-		'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'col', 'colgroup'
-		'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hgroup'
-		'img', 'br', 'hr', 'header', 'footer', 'section', 'nav'
-		'code', 'mark', 'pre', 'blockquote', 'address', 'kbd', 'var', 'samp'
+		# 'html','head','title','base','link','meta','style' # Document
+		# 'script','noscript','template' # Scripting
+
+		'section','header','nav','article','aside','footer' # Sections
+		'h1','h2','h3','h4','h5','h6','address','main','hgroup'
+
+		'div','p','hr','pre','blockquote','ol','ul','li','dl' # Grouping
+		'dt','dd','figure','figcaption'
+
+		'a','em','strong','small','s','cite','q','dfn','abbr' # Text Level Semantics
+		'data','time','code','var','samp', 'kbd','sub','sup'
+		'i','b','u','mark','ruby','rt','rp','bdi','bdo','span'
+		'br','wbr','ins','del'
+
+		'img','iframe','embed','oject','param','video','audio' # Embeded Content
+		'source','track','canvas','map','area','svg','math'
+
+		'table','tbody','thead','tfoot','tr','td','th' # Tabluar Data
+		'caption','colgroup','col'
+
+		'form','fieldset','legend','label','input','button' # Forms
+		'select','datalist','optgroup','option','textarea'
+		'keygen','output','progress','meter'
+
+		'details','summary','menuitem','menu' # Interactive Elements
 	]
 	dom_close= [ 'img', 'br', 'input', 'hr' ]
 	after_comment= file_contents.replace( /-->/gm, '\x02').replace /<!--[^\x02]*\x02/gm, (m) ->

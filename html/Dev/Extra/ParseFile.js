@@ -16,7 +16,7 @@
   };
 
   mkNm = function(nm) {
-    if (nm.match(/^[a-zA-Z_]$/)) {
+    if (nm.match(/^[a-zA-Z_]*$/)) {
       return nm;
     } else {
       return sq(nm);
@@ -91,7 +91,7 @@
         break;
       }
       if (good !== true) {
-        _log2('STYLE-ERROR - parse:', {
+        console.error('STYLE-ERROR - parse:', {
           file_info: file_info,
           parts: parts,
           good: good,
@@ -172,7 +172,7 @@
   };
 
   FindAttrs = function(file_info, str) {
-    var attr_obj, attr_split, attrs_need_cleaning, data_nm, debug, empty, eq, event_attrs_shortcuts, f, good, i, nm, parts, quo, start, style_obj, _i, _len, _ref, _ref1, _ref2, _ref3;
+    var attr_obj, attr_split, attrs_need_cleaning, data_nm, debug, empty, eq, event_attrs_shortcuts, f, good, grp, i, nm, pane, parts, quo, start, style_obj, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
     f = ':parse.FindAttrs:';
     event_attrs_shortcuts = ['data-e-click', 'data-e-change', 'data-e-dblclick', 'data-e-enter', 'data-e-keyup', 'data-e-focus', 'data-e-blur', 'data-e-event'];
     str = ' ' + str;
@@ -184,6 +184,7 @@
       attr_split.pop();
     }
     attr_obj = {};
+    attr_obj.className = [];
     i = 0;
     debug = false;
     while (i < attr_split.length) {
@@ -192,7 +193,7 @@
         break;
       }
       if (good !== true) {
-        _log2('ERROR - parse:', {
+        console.error('ERROR - parse:', {
           file_info: file_info,
           good: good,
           start: start,
@@ -230,14 +231,37 @@
         attr_obj[nm] = mkObj(style_obj);
         continue;
       }
+      if (nm === 'data-e-tab') {
+        _ref3 = (parts.join('')).split(':'), grp = _ref3[0], pane = _ref3[1];
+        attr_obj.className.push("&Tab/" + grp + "/" + pane + "#?active;");
+        if ((_ref4 = attr_obj['data-e-action']) == null) {
+          attr_obj['data-e-action'] = [];
+        }
+        attr_obj['data-e-action'].push("event:Tab:" + grp + ":" + pane + ":click");
+        continue;
+      }
+      if (nm === 'data-e-tab-pane') {
+        _ref5 = (parts.join('')).split(':'), grp = _ref5[0], pane = _ref5[1];
+        attr_obj.className.push("&Tab/" + grp + "/" + pane + "#?active;");
+        continue;
+      }
+      if (nm === 'className') {
+        attr_obj.className.push(parts.join(''));
+        continue;
+      }
       if (nm[0] === '?') {
         attrs_need_cleaning = true;
       }
       attr_obj[nm] = (findVars(parts.join(''))).join('+');
     }
-    _ref3 = ['data-e-action'];
-    for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
-      data_nm = _ref3[_i];
+    if (attr_obj.className.length) {
+      attr_obj.className = (findVars(attr_obj.className.join(' '))).join('+');
+    } else {
+      delete attr_obj.className;
+    }
+    _ref6 = ['data-e-action'];
+    for (_i = 0, _len = _ref6.length; _i < _len; _i++) {
+      data_nm = _ref6[_i];
       if (attr_obj[data_nm]) {
         attr_obj[data_nm] = (findVars(attr_obj[data_nm].join())).join('+');
       }
@@ -284,7 +308,7 @@
       args = parts[i + 1].split('/');
       last = args.length - 1;
       if (last !== 1 && last !== 2) {
-        _log2('ERROR VarGet:', parts[i + 1]);
+        console.error('ERROR VarGet:', parts[i + 1]);
         continue;
       }
       _ref = args[last].split('#'), args[last] = _ref[0], hash_part = _ref[1], custom_hash_part = _ref[2];
@@ -307,7 +331,7 @@
   };
 
   doError = function(file_stats, text) {
-    console.log('ERROR', file_stats, text);
+    console.error('ERROR', file_stats, text);
     throw Error(text);
   };
 
@@ -331,7 +355,7 @@
       defer: 0
     };
     dom_pre_tags = ['pre', 'code'];
-    dom_nms = ['style', 'div', 'a', 'span', 'ol', 'ul', 'li', 'p', 'b', 'i', 'dl', 'dd', 'dt', 'u', 'form', 'fieldset', 'label', 'legend', 'button', 'input', 'textarea', 'select', 'option', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'col', 'colgroup', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hgroup', 'img', 'br', 'hr', 'header', 'footer', 'section', 'nav', 'code', 'mark', 'pre', 'blockquote', 'address', 'kbd', 'var', 'samp'];
+    dom_nms = ['section', 'header', 'nav', 'article', 'aside', 'footer', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'address', 'main', 'hgroup', 'div', 'p', 'hr', 'pre', 'blockquote', 'ol', 'ul', 'li', 'dl', 'dt', 'dd', 'figure', 'figcaption', 'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr', 'ins', 'del', 'img', 'iframe', 'embed', 'oject', 'param', 'video', 'audio', 'source', 'track', 'canvas', 'map', 'area', 'svg', 'math', 'table', 'tbody', 'thead', 'tfoot', 'tr', 'td', 'th', 'caption', 'colgroup', 'col', 'form', 'fieldset', 'legend', 'label', 'input', 'button', 'select', 'datalist', 'optgroup', 'option', 'textarea', 'keygen', 'output', 'progress', 'meter', 'details', 'summary', 'menuitem', 'menu'];
     dom_close = ['img', 'br', 'input', 'hr'];
     after_comment = file_contents.replace(/-->/gm, '\x02').replace(/<!--[^\x02]*\x02/gm, function(m) {
       return m.replace(/[^\n]+/gm, '');
