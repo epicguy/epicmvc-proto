@@ -40,7 +40,7 @@
     }
 
     RenderStrategy$Base.prototype.handleEvent = function(event_obj) {
-      var attrs, data_action, data_params, f, ix, nm, prevent, target, type, val, _i, _ref;
+      var attrs, data_action, data_params, f, ix, nm, old_params, prevent, rec, target, type, val, _i, _ref;
       f = 'on[data-e-action]';
       if (event_obj == null) {
         event_obj = window.event;
@@ -82,6 +82,13 @@
         val: val
       });
       data_params.val = val;
+      old_params = target.getAttribute('data-params');
+      if (old_params) {
+        for (nm in old_params) {
+          rec = old_params[nm];
+          data_params[nm] = rec;
+        }
+      }
       prevent = E.Extra[E.option.dataAction](type, data_action, data_params);
       if (prevent) {
         event_obj.preventDefault();

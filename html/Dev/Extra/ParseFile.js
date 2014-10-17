@@ -343,11 +343,12 @@
     after = after.replace(/<e-page_part/g, '<e-part');
     after = after.replace(/<e-form_part/g, '<e-fist');
     after = after.replace(/form="/g, 'fist="');
-    after = after.replace(/\ p:/g, ' e-');
+    after = after.replace(/\sp:/g, ' e-');
     after = after.replace(/Tag\/If/g, 'View/If');
     after = after.replace(/Tag\/Part/g, 'View/Part');
     after = after.replace(/\ size="/g, ' ?size="');
     after = after.replace(/data-action=/g, 'e-action=');
+    after = after.replace(/Pageflow\//g, 'App/');
     parts = after.split(/<(\/?)([:a-z_0-9-]+)([^>]*)>/);
     pre_count = 0;
     i = 0;

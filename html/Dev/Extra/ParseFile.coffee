@@ -231,11 +231,12 @@ ParseFile= (file_stats, file_contents) ->
 	after= after.replace /<e-page_part/g, '<e-part'
 	after= after.replace /<e-form_part/g, '<e-fist'
 	after= after.replace /form="/g, 'fist="'
-	after= after.replace /\ p:/g, ' e-'
+	after= after.replace /\sp:/g, ' e-'
 	after= after.replace /Tag\/If/g, 'View/If'
 	after= after.replace /Tag\/Part/g, 'View/Part'
 	after= after.replace /\ size="/g, ' ?size="'
 	after= after.replace /data-action=/g, 'e-action='
+	after= after.replace /Pageflow\//g, 'App/'
 
 	# Create array of 4 parts: non-tag-content, leading-slash, tag-name, attrs
 	# End of 'attrs' may have a '/' (or is '/' if leading-slash is '/')
