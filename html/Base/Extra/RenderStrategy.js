@@ -40,7 +40,7 @@
     }
 
     RenderStrategy$Base.prototype.handleEvent = function(event_obj) {
-      var attrs, data_action, data_params, f, ix, nm, old_params, prevent, rec, target, type, val, _i, _ref;
+      var attrs, data_action, data_params, f, ix, nm, old_params, prevent, rec, target, type, val, _i, _ref, _ref1;
       f = 'on[data-e-action]';
       if (event_obj == null) {
         event_obj = window.event;
@@ -84,8 +84,9 @@
       data_params.val = val;
       old_params = target.getAttribute('data-params');
       if (old_params) {
-        for (nm in old_params) {
-          rec = old_params[nm];
+        _ref1 = JSON.parse(old_params);
+        for (nm in _ref1) {
+          rec = _ref1[nm];
           data_params[nm] = rec;
         }
       }
