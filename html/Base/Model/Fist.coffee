@@ -8,6 +8,7 @@ class Fist extends E.ModelJS
 		# E.fistDef and E.fieldDef contain combined fists info from all pacakges
 		@fist= {} # Hash by fist-name-with-row-number, of hash of field-names, holding e.g. db/html values, issues
 		super view_nm, options
+	eventLogout: -> true # To be safe with data, as the default, blow us away
 	event: (name,act,fistNm,fieldNm,p) ->
 		f= 'event:'+ act+ '-'+ fistNm+ '/'+ fieldNm
 		_log2 f, p
@@ -45,6 +46,10 @@ class Fist extends E.ModelJS
 			then @invalidateTables [ fist.rnm]
 			else delete @Table[ fist.rnm]
 		return
+	# Controller wants a fist's fields/errors cleared
+	fistClear: (fistNm, row) ->
+		rnm= fistNm+ if row then ':'+ row else ''
+		delete @fist[ rnm] # May be a little heavy handed
 	# Controller wants a fist's db values, after whole-form-validation
 	fistValidate: (ctx, fistNm, row) ->
 		r= ctx
@@ -81,7 +86,7 @@ class Fist extends E.ModelJS
 		@Table[ tbl_nm]=[ {Field: [Field], Control, any_req}]
 	_makeField: (fist,field,ix,row)->
 		f= '_makeField'
-		_log2 f, {fist, field, ix}
+		#_log2 f, {fist, field, ix}
 		# TODO FIX E-IF SO WE DON'T NEED 'yes' else '' ANYMORE!
 		defaults= {
 			is_first: ix is 0, focus: fist.fnm is field.nm, yes_val: 'X'
