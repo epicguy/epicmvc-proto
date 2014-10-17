@@ -47,7 +47,7 @@ app= (window, undef) ->
 		# option.ca1 action_token, original_path, action_node #if not action_node?
 		# option.ca2 action_token, original_path, nm, data, action_node
 		# option.ca3 action_token, original_path, action_node, aMacros #if not aMacros[action_node.do]
-		# option.ca4 action_token, original_path, action_node if not action_node.fists[0] of E.fistDef
+		# option.ca4 action_token, original_path, action_node if not action_node.fist of E.fistDef
 
 	# Define these small validation functions as no-ops; Dev pkg can do the 'real' work
 	option[ nm]= (->) for nm in [ 'c1', 'a1', 'a2', 'm1', 'ca1', 'ca2', 'ca3', 'ca4'] #%#
@@ -279,16 +279,20 @@ app= (window, undef) ->
 			# Handle 'go:'
 			if action_node.go?
 				E.App().go action_node.go
-			# Process 'fists:[]'
-			if action_node.fists?.length
-				option.ca4 action_token, original_path, action_node
-				fist= action_node.fists[0]
+			# Process 'fist:' or 'clear:'
+			for what in ['fist','clear'] # TODO CONSIDER HANDLING clear: AS A doRightSide ACTIVITY, SO AFER do: PROCESING
+				continue if what not of action_node
+				option.ca4 action_token, original_path, action_node, what
+				fist= action_node[ what]
 				fist_model= E.fistDef[ fist].event ? 'Fist'
-				_log2 f, 'd_doLeftSide:', {fist, fist_model, master_data}
-				E[fist_model]().fistValidate r= {}, fist, master_data.row
-				_log2 f, 'd_doLeftSide:', {r}
-				E.merge master_data, r
-				return unless r.fist$success is 'SUCCESS'
+				_log2 f, 'd_doLeftSide:', {what, fist, fist_model, master_data}
+				if what is 'clear'
+					E[fist_model]().fistClear fist, master_data.row
+				else
+					E[fist_model]().fistValidate r= {}, fist, master_data.row
+					_log2 f, 'd_doLeftSide:', {what,r}
+					E.merge master_data, r
+					return unless r.fist$success is 'SUCCESS'
 			# Process 'pass:' (just a syntax check)
 			nms= switch type_oau action_node.pass
 				when 'A' then action_node.pass
