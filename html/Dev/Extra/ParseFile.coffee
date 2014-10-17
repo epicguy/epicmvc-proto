@@ -233,8 +233,10 @@ ParseFile= (file_stats, file_contents) ->
 	stats= text: 0, dom: 0, epic: 0, defer: 0
 	dom_pre_tags= [ 'pre', 'code']
 	dom_nms= [
-		# 'html','head','title','base','link','meta','style' # Document
+		# 'html','head','title','base','link','meta'	 # Document
 		# 'script','noscript','template' # Scripting
+
+		'style'
 
 		'section','header','nav','article','aside','footer' # Sections
 		'h1','h2','h3','h4','h5','h6','address','main','hgroup'
