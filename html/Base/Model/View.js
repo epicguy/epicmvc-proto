@@ -346,6 +346,10 @@
               return ans.then(function(result) {
                 out[ix] = result;
                 return _this.nest_dn(who);
+              }, function(err) {
+                console.error('kids', err);
+                out[ix] = err.message;
+                return _this.nest_dn(who);
               });
             })(ix);
           } else {
@@ -433,6 +437,10 @@
         result = _this.piece_handle(view, attrs, obj, is_part);
         _this.nest_dn(who + view);
         return result;
+      }, function(err) {
+        console.error('D_piece', err);
+        _this.nest_dn(who + view);
+        throw err;
       });
       return d_result;
     };

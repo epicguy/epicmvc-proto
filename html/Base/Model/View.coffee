@@ -190,6 +190,9 @@ class View$Base extends E.ModelJS
 					do (ix) => ans.then (result) =>
 						#_log2 f, 'THEN', result
 						out[ ix]= result; @nest_dn who
+					, (err)=>
+						console.error 'kids', err
+						out[ ix]= err.message; @nest_dn who
 				else
 					out[ ix]= ans
 			else out.push kid
@@ -250,6 +253,10 @@ class View$Base extends E.ModelJS
 			result= @piece_handle view, attrs, obj, is_part
 			@nest_dn who+ view
 			return result
+		, (err)=>
+			console.error 'D_piece', err
+			@nest_dn who+ view
+			throw err
 		d_result
 
 	T_defer: ( attrs, content) -> # TODO IMPLEMENT DEFER LOGIC ATTRS?
