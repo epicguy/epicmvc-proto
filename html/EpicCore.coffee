@@ -35,6 +35,7 @@ app= (window, undef) ->
 	Model= {} # Namespace for others to populate with class implementations of Models
 	Extra= {} # Namespace for others to populate with class implementations that are not Models
 	oModel= {} # Instances of model classes
+	modelState= {}
 	appconfs= [] # Will be an array of the apps user sets in 'run'
 	option= loadDirs: {}
 		# load: loadstratgy-class-name placed into E.Extra
@@ -44,13 +45,19 @@ app= (window, undef) ->
 		# option.a1 view_name, aModels #if view_name not of aModels
 		# option.a2 view_name, aModels, attribute #if attribute not of aModels[ view_name]
 		# option.m1 view, model #if not E.Model[ model.class]?
+		# option.m2-6 Issues with user's Model implementation
 		# option.ca1 action_token, original_path, action_node #if not action_node?
 		# option.ca2 action_token, original_path, nm, data, action_node
 		# option.ca3 action_token, original_path, action_node, aMacros #if not aMacros[action_node.do]
 		# option.ca4 action_token, original_path, action_node if not action_node.fist of E.fistDef
+		# option.v1 val, spec # Fell into default arm of v3-spec
+		# option.w1 wistNm # check wistNm of E.wistDef
 
 	# Define these small validation functions as no-ops; Dev pkg can do the 'real' work
-	option[ nm]= (->) for nm in [ 'c1', 'a1', 'a2', 'm1', 'ca1', 'ca2', 'ca3', 'ca4', 'fi1', 'fi2', 'fi3'] #%#
+	option[ nm]= (->) for nm in [ #%#
+		'c1', 'a1', 'a2', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6' #%#
+		'ca1', 'ca2', 'ca3', 'ca4', 'fi1', 'fi2', 'fi3', 'v1', 'w1' #%#
+	] #%#
 
 	E= {}
 	E.nextCounter= -> ++counter
@@ -143,28 +150,12 @@ app= (window, undef) ->
 			merge option, more_options # Re-merge if apps overwrite them
 			make_model_functions()
 			fistInit()
+			wistInit()
 			issueInit()
 			init_func() if typeof init_func is 'function'
 			E.App().go aSetting.go
 			E.oRender= new Extra[ option.render] # Sets mithril's redraw to self
 		return
-
-	# Caller has requested processing a action event w/data
-	action= (action_token,data) ->
-		f= ':action:'+action_token
-		_log2 f, data
-		option.c1 inAction # if inAction isnt false #%#
-		inAction= action_token
-		m.startComputation()
-		doAction action_token, data, E.App().getStepPath(), (action_result) ->
-			_log2 f, 'cb:', {action_result}
-			E.App().setIssues action_result[0]
-			E.App().setMessages action_result[1]
-			inAction= false
-			modelState= {}
-			modelState[k]= ss for k,o of oModel when o.saveState? and ss= o.saveState()
-			m.endComputation() # Causes a render
-		#TODO HANDLE ERROR CASES
 
 	# TODO FIGURE OUT IF RENDER USES THIS FOR THE BACK/FWD BUTTONS OF BROWSER HISTORY
 	setModelState= (s) ->
@@ -258,13 +249,36 @@ app= (window, undef) ->
 					return oM.getTable table_or_ctx if act_if_action is undef # Wanted a vew-table
 					oM.action table_or_ctx, act_if_action, data
 
-	doAction= (action_token, data, original_path, cb) ->
-		ans= _d_doAction action_token, data, original_path
-		if ans?.then? then ans.then cb else cb ans
+	# Caller has requested processing a action event w/data
+	action= (action_token,data) ->
+		f= ':action:'+action_token
+		_log2 f, data
+		option.c1 inAction # if inAction isnt false #%#
+		inAction= action_token
+		m.startComputation()
+		final= () ->
+			m.endComputation() # Causes a render
+		more= (action_result) ->
+			_log2 f, 'cb:', action_result[ 0], action_result[ 1]
+			E.App().setIssues action_result[ 0]
+			E.App().setMessages action_result[ 1]
+			inAction= false
+			modelState= {}
+			modelState[k]= ss for k,o of oModel when o.saveState? and ss= o.saveState()
+			#final() # Must be called to avoid halting all rendering, but not until promise finishes
+		try
+			ans= _d_doAction action_token, data, E.App().getStepPath()
+		finally
+			if ans?.then?
+			then (ans.then more).then final, final # Call final for better or for worse, in sickness or in health
+			else
+				# If _d_doAction fails, ans is likely undefined, and so 'more' will likely fail
+				try more ans finally final()
 		return
+
 	_d_doAction= (action_token, data, original_path) ->
 		f= ":_d_doAction(#{action_token})"
-		_log2 f, data, original_path
+		#_log2 f, data, original_path
 		master_issue= new Issue 'App'
 		master_message= new Issue 'App'
 		master_data= merge {}, data
@@ -275,7 +289,7 @@ app= (window, undef) ->
 		return [master_issue, master_message] if not action_node? # No recognized action
 
 		d_doLeftSide= (action_node)->
-			_log2 f, 'd_doLeftSide:', {action_node}
+			#_log2 f, 'd_doLeftSide:', {action_node}
 			# Handle 'go:'
 			if action_node.go?
 				E.App().go action_node.go
@@ -285,12 +299,12 @@ app= (window, undef) ->
 				option.ca4 action_token, original_path, action_node, what
 				fist= action_node[ what]
 				fist_model= E.fistDef[ fist].event ? 'Fist'
-				_log2 f, 'd_doLeftSide:', {what, fist, fist_model, master_data}
+				#_log2 f, 'd_doLeftSide:', {what, fist, fist_model, master_data}
 				if what is 'clear'
 					E[fist_model]().fistClear fist, master_data.row
 				else
 					E[fist_model]().fistValidate r= {}, fist, master_data.row
-					_log2 f, 'd_doLeftSide:', {what,r}
+					#_log2 f, 'd_doLeftSide:', {what,r}
 					E.merge master_data, r
 					return unless r.fist$success is 'SUCCESS'
 			# Process 'pass:' (just a syntax check)
@@ -314,17 +328,17 @@ app= (window, undef) ->
 				ctx= {d,r,i,m:mg}
 				ans= E[ view_nm] ctx, view_act, master_data # TODO: Process d_cb
 				d_cb= ()->
-					_log2 f, 'd_doLeftSide: d_cb:', {ctx}
+					#_log2 f, 'd_doLeftSide: d_cb:', {ctx}
 					master_data[ nm]= val for nm,val of ctx.r # We just polute the one object
 					master_issue.addObj ctx.i
 					master_message.addObj ctx.m
-				_log2 f, 'd_doLeftSide: after model called:', {ans}
+				_log2 f, 'd_doLeftSide: after model called:', {view_nm,view_act,master_data,ans,r:ctx.r}
 				return if ans?.then? then ans.then d_cb else d_cb ans
 
 		d_doRightSide= (action_node)->
 			next_node= null
 			for choice in action_node.next ? []
-				_log2 f+ '-d_doRightSide', 'choice', choice, master_data
+				#_log2 f+ '-d_doRightSide', 'choice', choice, master_data
 				(next_node= choice; break) if choice.when is 'default'
 				(next_node= choice; break) if (typeof choice.when) is 'string' and choice.when is (master_data.success ? master_data.ok)
 				matches= true
@@ -332,7 +346,7 @@ app= (window, undef) ->
 					(matches= false; break;) if master_data[k] isnt val
 				(next_node= choice; break) if matches
 			if next_node
-				_log2 f, 'd_doRightSide:', {next_node}
+				#_log2 f, 'd_doRightSide:', {next_node}
 				return d_doActionNode next_node
 			return
 
@@ -347,7 +361,9 @@ app= (window, undef) ->
 		ans= d_doActionNode action_node
 		done= ()->
 			[master_issue, master_message]
-		if ans?.then? then ans.then done else done ans
+		err= (err) ->
+			BLOWUP() # TODO DO THE END COMPUTAION _ HOPE THAT THIS RESTORES DRAWING ABILITY
+		if ans?.then? then ans.then done, err else done ans
 
 	fieldDef= {}
 	fistDef= {}
@@ -363,13 +379,18 @@ app= (window, undef) ->
 		for nm in appconfs
 			issues= E[ 'issues$'+ nm] ? {}
 			merge issueMap, issues
+	wistDef= {}
+	wistInit= ()->
+		for nm in appconfs
+			wists= E[ 'wist$'+ nm] ? {}
+			merge wistDef, wists
 
 	E[ nm]= obj for nm,obj of {
 		type_oau # TODO SEE IF THIS WORKS FOR PEOPLE TO REPLACE E.G. $.IsArray
 		Model, Extra, option, action, merge, appconfs
 		appGetF, appGetT, appGetS, appStartT, appStartS
 		appFindAction, appGetSetting, appGetVars, appFist
-		fieldDef, fistDef, issueMap
+		fieldDef, fistDef, issueMap, wistDef
 		oModel # Just for internal checking / testing
 	}
 	return E
@@ -465,7 +486,13 @@ class ModelJS
 		deleted_tbl_nms= []
 		(deleted_tbl_nms.push nm; delete @Table[nm]) for nm in tbl_nms when nm of @Table
 		E.View().invalidateTables @view_nm, tbl_nms, deleted_tbl_nms
-
+	# These methods are for development support, when a Model isn't complete
+	# Invoked when user does e.g. 'else super <params>'
+	action: (ctx,act,parms) ->              E.option.m2 @view_nm, act,params #%#
+	loadTable: (tbl_nm) ->                  E.option.m3 @view_nm, tbl_nm # if tbl_nm not of @Table #%#
+	fistValidate: (ctx,fistNm,row) ->       E.option.m4 @view_nm, fistNm, row #%#
+	fistGetValues: (fistNm,row) ->          E.option.m5 @view_nm, fistNm, row #%#
+	fistGetChoices: (fistNm,fieldNm,row) -> E.option.m6 @view_nm, fistNm, fieldNm, row #%#
 
 w= if typeof window isnt "undefined" then window else {}
 w.EpicMvc= w.E= new app w

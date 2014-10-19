@@ -8,17 +8,18 @@
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   app = function(window, undef) {
-    var E, Extra, Model, aActions, aFists, aFlows, aMacros, aModels, aSetting, action, appFindAction, appFindAttr, appFindNode, appFist, appGetF, appGetS, appGetSetting, appGetT, appGetVars, appInit, appLoadFormsIf, appModel, appStartS, appStartT, appconfs, counter, doAction, fieldDef, finish_logout, fistDef, fistInit, inAction, issueInit, issueMap, make_model_functions, merge, nm, oModel, obj, option, setModelState, type_oau, _d_doAction, _i, _len, _ref, _ref1;
+    var E, Extra, Model, aActions, aFists, aFlows, aMacros, aModels, aSetting, action, appFindAction, appFindAttr, appFindNode, appFist, appGetF, appGetS, appGetSetting, appGetT, appGetVars, appInit, appLoadFormsIf, appModel, appStartS, appStartT, appconfs, counter, fieldDef, finish_logout, fistDef, fistInit, inAction, issueInit, issueMap, make_model_functions, merge, modelState, nm, oModel, obj, option, setModelState, type_oau, wistDef, wistInit, _d_doAction, _i, _len, _ref, _ref1;
     inAction = false;
     counter = 0;
     Model = {};
     Extra = {};
     oModel = {};
+    modelState = {};
     appconfs = [];
     option = {
       loadDirs: {}
     };
-    _ref = ['c1', 'a1', 'a2', 'm1', 'ca1', 'ca2', 'ca3', 'ca4', 'fi1', 'fi2', 'fi3'];
+    _ref = ['c1', 'a1', 'a2', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6', 'ca1', 'ca2', 'ca3', 'ca4', 'fi1', 'fi2', 'fi3', 'v1', 'w1'];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       nm = _ref[_i];
       option[nm] = (function() {});
@@ -163,6 +164,7 @@
         merge(option, more_options);
         make_model_functions();
         fistInit();
+        wistInit();
         issueInit();
         if (typeof init_func === 'function') {
           init_func();
@@ -171,33 +173,8 @@
         return E.oRender = new Extra[option.render];
       });
     };
-    action = function(action_token, data) {
-      var f;
-      f = ':action:' + action_token;
-      _log2(f, data);
-      option.c1(inAction);
-      inAction = action_token;
-      m.startComputation();
-      return doAction(action_token, data, E.App().getStepPath(), function(action_result) {
-        var k, modelState, o, ss;
-        _log2(f, 'cb:', {
-          action_result: action_result
-        });
-        E.App().setIssues(action_result[0]);
-        E.App().setMessages(action_result[1]);
-        inAction = false;
-        modelState = {};
-        for (k in oModel) {
-          o = oModel[k];
-          if ((o.saveState != null) && (ss = o.saveState())) {
-            modelState[k] = ss;
-          }
-        }
-        return m.endComputation();
-      });
-    };
     setModelState = function(s) {
-      var f, inst_nm, modelState, _base, _results;
+      var f, inst_nm, _base, _results;
       f = ':setModelState';
       if (s != null) {
         modelState = s;
@@ -386,19 +363,49 @@
       }
       return _results;
     };
-    doAction = function(action_token, data, original_path, cb) {
-      var ans;
-      ans = _d_doAction(action_token, data, original_path);
-      if ((ans != null ? ans.then : void 0) != null) {
-        ans.then(cb);
-      } else {
-        cb(ans);
+    action = function(action_token, data) {
+      var ans, f, final, more;
+      f = ':action:' + action_token;
+      _log2(f, data);
+      option.c1(inAction);
+      inAction = action_token;
+      m.startComputation();
+      final = function() {
+        return m.endComputation();
+      };
+      more = function(action_result) {
+        var k, o, ss, _results;
+        _log2(f, 'cb:', action_result[0], action_result[1]);
+        E.App().setIssues(action_result[0]);
+        E.App().setMessages(action_result[1]);
+        inAction = false;
+        modelState = {};
+        _results = [];
+        for (k in oModel) {
+          o = oModel[k];
+          if ((o.saveState != null) && (ss = o.saveState())) {
+            _results.push(modelState[k] = ss);
+          }
+        }
+        return _results;
+      };
+      try {
+        ans = _d_doAction(action_token, data, E.App().getStepPath());
+      } finally {
+        if ((ans != null ? ans.then : void 0) != null) {
+          (ans.then(more)).then(final, final);
+        } else {
+          try {
+            more(ans);
+          } finally {
+            final();
+          }
+        }
       }
     };
     _d_doAction = function(action_token, data, original_path) {
-      var action_node, ans, d_doActionNode, d_doLeftSide, d_doRightSide, done, f, master_data, master_issue, master_message;
+      var action_node, ans, d_doActionNode, d_doLeftSide, d_doRightSide, done, err, f, master_data, master_issue, master_message;
       f = ":_d_doAction(" + action_token + ")";
-      _log2(f, data, original_path);
       master_issue = new Issue('App');
       master_message = new Issue('App');
       master_data = merge({}, data);
@@ -410,9 +417,6 @@
       }
       d_doLeftSide = function(action_node) {
         var ans, ctx, d, d_cb, fist, fist_model, i, is_macro, mg, nms, r, val, view_act, view_nm, what, _j, _len1, _ref1, _ref2, _ref3, _ref4;
-        _log2(f, 'd_doLeftSide:', {
-          action_node: action_node
-        });
         if (action_node.go != null) {
           E.App().go(action_node.go);
         }
@@ -425,20 +429,10 @@
           option.ca4(action_token, original_path, action_node, what);
           fist = action_node[what];
           fist_model = (_ref2 = E.fistDef[fist].event) != null ? _ref2 : 'Fist';
-          _log2(f, 'd_doLeftSide:', {
-            what: what,
-            fist: fist,
-            fist_model: fist_model,
-            master_data: master_data
-          });
           if (what === 'clear') {
             E[fist_model]().fistClear(fist, master_data.row);
           } else {
             E[fist_model]().fistValidate(r = {}, fist, master_data.row);
-            _log2(f, 'd_doLeftSide:', {
-              what: what,
-              r: r
-            });
             E.merge(master_data, r);
             if (r.fist$success !== 'SUCCESS') {
               return;
@@ -482,9 +476,6 @@
           ans = E[view_nm](ctx, view_act, master_data);
           d_cb = function() {
             var _ref5;
-            _log2(f, 'd_doLeftSide: d_cb:', {
-              ctx: ctx
-            });
             _ref5 = ctx.r;
             for (nm in _ref5) {
               val = _ref5[nm];
@@ -494,7 +485,11 @@
             return master_message.addObj(ctx.m);
           };
           _log2(f, 'd_doLeftSide: after model called:', {
-            ans: ans
+            view_nm: view_nm,
+            view_act: view_act,
+            master_data: master_data,
+            ans: ans,
+            r: ctx.r
           });
           if ((ans != null ? ans.then : void 0) != null) {
             return ans.then(d_cb);
@@ -509,7 +504,6 @@
         _ref2 = (_ref1 = action_node.next) != null ? _ref1 : [];
         for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
           choice = _ref2[_j];
-          _log2(f + '-d_doRightSide', 'choice', choice, master_data);
           if (choice.when === 'default') {
             next_node = choice;
             break;
@@ -533,9 +527,6 @@
           }
         }
         if (next_node) {
-          _log2(f, 'd_doRightSide:', {
-            next_node: next_node
-          });
           return d_doActionNode(next_node);
         }
       };
@@ -555,8 +546,11 @@
       done = function() {
         return [master_issue, master_message];
       };
+      err = function(err) {
+        return BLOWUP();
+      };
       if ((ans != null ? ans.then : void 0) != null) {
-        return ans.then(done);
+        return ans.then(done, err);
       } else {
         return done(ans);
       }
@@ -597,6 +591,17 @@
       }
       return _results;
     };
+    wistDef = {};
+    wistInit = function() {
+      var wists, _j, _len1, _ref1, _results;
+      _results = [];
+      for (_j = 0, _len1 = appconfs.length; _j < _len1; _j++) {
+        nm = appconfs[_j];
+        wists = (_ref1 = E['wist$' + nm]) != null ? _ref1 : {};
+        _results.push(merge(wistDef, wists));
+      }
+      return _results;
+    };
     _ref1 = {
       type_oau: type_oau,
       Model: Model,
@@ -617,6 +622,7 @@
       fieldDef: fieldDef,
       fistDef: fistDef,
       issueMap: issueMap,
+      wistDef: wistDef,
       oModel: oModel
     };
     for (nm in _ref1) {
@@ -835,6 +841,26 @@
         }
       }
       return E.View().invalidateTables(this.view_nm, tbl_nms, deleted_tbl_nms);
+    };
+
+    ModelJS.prototype.action = function(ctx, act, parms) {
+      return E.option.m2(this.view_nm, act, params);
+    };
+
+    ModelJS.prototype.loadTable = function(tbl_nm) {
+      return E.option.m3(this.view_nm, tbl_nm);
+    };
+
+    ModelJS.prototype.fistValidate = function(ctx, fistNm, row) {
+      return E.option.m4(this.view_nm, fistNm, row);
+    };
+
+    ModelJS.prototype.fistGetValues = function(fistNm, row) {
+      return E.option.m5(this.view_nm, fistNm, row);
+    };
+
+    ModelJS.prototype.fistGetChoices = function(fistNm, fieldNm, row) {
+      return E.option.m6(this.view_nm, fistNm, fieldNm, row);
     };
 
     return ModelJS;
