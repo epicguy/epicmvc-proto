@@ -2,39 +2,39 @@
 (function() {
   'use strict';
 
-  E.fistH2H$pre = function(val) {
+  E.fistH2H$pre = function(field, val) {
     return val.replace(/[<>]/g, '');
   };
 
-  E.fistH2H$trim = function(val) {
+  E.fistH2H$trim = function(field, val) {
     return (String(val)).trim();
   };
 
-  E.fistH2H$lower = function(val) {
+  E.fistH2H$lower = function(field, val) {
     return (String(val)).toLowerCase();
   };
 
-  E.fistH2H$upper = function(val) {
+  E.fistH2H$upper = function(field, val) {
     return (String(val)).toUpperCase();
   };
 
-  E.fistH2H$zero = function(val) {
+  E.fistH2H$zero = function(field, val) {
     return val != null ? val : 0;
   };
 
-  E.fistH2H$null = function(val) {
+  E.fistH2H$null = function(field, val) {
     return val != null ? val : null;
   };
 
-  E.fistH2H$empty = function(val) {
+  E.fistH2H$empty = function(field, val) {
     return val != null ? val : '';
   };
 
-  E.fistH2H$digits = function(val) {
+  E.fistH2H$digits = function(field, val) {
     return val.replace(/[^0-9]/g, '');
   };
 
-  E.fistH2H$chars = function(val) {
+  E.fistH2H$chars = function(field, val) {
     return val.replace(/[^a-z]/ig, '');
   };
 
