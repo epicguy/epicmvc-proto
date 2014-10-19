@@ -447,10 +447,12 @@ Mithril = m = new function app(window, undefined) {
 	var pendingMax= 0
 	var pendingGuardRequest= 0
 	m.startComputation = function(guard) {
+		//try { throw new Error( 'startComputation')} catch ( e) { console.error( e.message, (e.stack.split('\n'))[2])}
 		if (guard && pendingRequests=== pendingGuardRequest) pendingGuardRequest++;
 		pendingMax= Math.max( pendingMax, ++pendingRequests);
 	}
 	m.endComputation = function() {
+		//try { throw new Error( 'endComputation')} catch ( e) { console.error( e.message, (e.stack.split('\n'))[2])}
 		pendingRequests = Math.max(pendingRequests - 1, 0);
 		if (pendingRequests=== 0) {
 			if( pendingMax> pendingGuardRequest) m.redraw();
@@ -748,17 +750,18 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   app = function(window, undef) {
-    var E, Extra, Model, aActions, aFists, aFlows, aMacros, aModels, aSetting, action, appFindAction, appFindAttr, appFindNode, appFist, appGetF, appGetS, appGetSetting, appGetT, appGetVars, appInit, appLoadFormsIf, appModel, appStartS, appStartT, appconfs, counter, doAction, fieldDef, finish_logout, fistDef, fistInit, inAction, issueInit, issueMap, make_model_functions, merge, nm, oModel, obj, option, setModelState, type_oau, _d_doAction, _i, _len, _ref, _ref1;
+    var E, Extra, Model, aActions, aFists, aFlows, aMacros, aModels, aSetting, action, appFindAction, appFindAttr, appFindNode, appFist, appGetF, appGetS, appGetSetting, appGetT, appGetVars, appInit, appLoadFormsIf, appModel, appStartS, appStartT, appconfs, counter, fieldDef, finish_logout, fistDef, fistInit, inAction, issueInit, issueMap, make_model_functions, merge, modelState, nm, oModel, obj, option, setModelState, type_oau, wistDef, wistInit, _d_doAction, _i, _len, _ref, _ref1;
     inAction = false;
     counter = 0;
     Model = {};
     Extra = {};
     oModel = {};
+    modelState = {};
     appconfs = [];
     option = {
       loadDirs: {}
     };
-    _ref = ['c1', 'a1', 'a2', 'm1', 'ca1', 'ca2', 'ca3'];
+    _ref = ['c1', 'a1', 'a2', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6', 'ca1', 'ca2', 'ca3', 'ca4', 'fi1', 'fi2', 'fi3', 'v1', 'w1'];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       nm = _ref[_i];
       option[nm] = (function() {});
@@ -903,6 +906,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         merge(option, more_options);
         make_model_functions();
         fistInit();
+        wistInit();
         issueInit();
         if (typeof init_func === 'function') {
           init_func();
@@ -911,30 +915,8 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         return E.oRender = new Extra[option.render];
       });
     };
-    action = function(action_token, data) {
-      var f;
-      f = ':action:' + action_token;
-      _log2(f, data);
-      option.c1(inAction);
-      inAction = action_token;
-      m.startComputation();
-      return (doAction(action_token, data, E.App().getStepPath())).then(function(action_result) {
-        var k, modelState, o, ss;
-        E.App().setIssues(action_result[0]);
-        E.App().setMessages(action_result[1]);
-        inAction = false;
-        modelState = {};
-        for (k in oModel) {
-          o = oModel[k];
-          if ((o.saveState != null) && (ss = o.saveState())) {
-            modelState[k] = ss;
-          }
-        }
-        return m.endComputation();
-      });
-    };
     setModelState = function(s) {
-      var f, inst_nm, modelState, _base, _results;
+      var f, inst_nm, _base, _results;
       f = ':setModelState';
       if (s != null) {
         modelState = s;
@@ -1123,32 +1105,81 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       }
       return _results;
     };
-    doAction = function(action_token, data, original_path) {
-      var d;
-      d = new m.Deferred();
-      d.resolve(_d_doAction(action_token, data, original_path));
-      return d.promise;
+    action = function(action_token, data) {
+      var ans, f, final, more;
+      f = ':action:' + action_token;
+      _log2(f, data);
+      option.c1(inAction);
+      inAction = action_token;
+      m.startComputation();
+      final = function() {
+        return m.endComputation();
+      };
+      more = function(action_result) {
+        var k, o, ss, _results;
+        _log2(f, 'cb:', action_result[0], action_result[1]);
+        E.App().setIssues(action_result[0]);
+        E.App().setMessages(action_result[1]);
+        inAction = false;
+        modelState = {};
+        _results = [];
+        for (k in oModel) {
+          o = oModel[k];
+          if ((o.saveState != null) && (ss = o.saveState())) {
+            _results.push(modelState[k] = ss);
+          }
+        }
+        return _results;
+      };
+      try {
+        ans = _d_doAction(action_token, data, E.App().getStepPath());
+      } finally {
+        if ((ans != null ? ans.then : void 0) != null) {
+          (ans.then(more)).then(final, final);
+        } else {
+          try {
+            more(ans);
+          } finally {
+            final();
+          }
+        }
+      }
     };
     _d_doAction = function(action_token, data, original_path) {
-      var action_node, doActionNode, doLeftSide, doRightSide, f, master_data, master_issue, master_message;
-      f = ":doAction(" + action_token + ")";
-      _log2(f, data, original_path);
+      var action_node, ans, d_doActionNode, d_doLeftSide, d_doRightSide, done, err, f, master_data, master_issue, master_message;
+      f = ":_d_doAction(" + action_token + ")";
       master_issue = new Issue('App');
       master_message = new Issue('App');
       master_data = merge({}, data);
       action_node = appFindAction(original_path, action_token);
-      _log2(f, action_node);
+      _log2(f, 'got node:', action_node);
       option.ca1(action_token, original_path, action_node);
       if (!(action_node != null)) {
         return [master_issue, master_message];
       }
-      doLeftSide = function(action_node) {
-        var ctx, d, i, is_macro, mg, nms, r, val, view_act, view_nm, _ref1, _ref2, _ref3;
-        _log2(f, 'doLeftSide:', {
-          action_node: action_node
-        });
+      d_doLeftSide = function(action_node) {
+        var ans, ctx, d, d_cb, fist, fist_model, i, is_macro, mg, nms, r, val, view_act, view_nm, what, _j, _len1, _ref1, _ref2, _ref3, _ref4;
         if (action_node.go != null) {
           E.App().go(action_node.go);
+        }
+        _ref1 = ['fist', 'clear'];
+        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+          what = _ref1[_j];
+          if (!(what in action_node)) {
+            continue;
+          }
+          option.ca4(action_token, original_path, action_node, what);
+          fist = action_node[what];
+          fist_model = (_ref2 = E.fistDef[fist].event) != null ? _ref2 : 'Fist';
+          if (what === 'clear') {
+            E[fist_model]().fistClear(fist, master_data.row);
+          } else {
+            E[fist_model]().fistValidate(r = {}, fist, master_data.row);
+            E.merge(master_data, r);
+            if (r.fist$success !== 'SUCCESS') {
+              return;
+            }
+          }
         }
         nms = (function() {
           switch (type_oau(action_node.pass)) {
@@ -1161,20 +1192,18 @@ if (typeof define == "function" && define.amd) define(function() {return m})
           }
         })();
         option.ca2(action_token, original_path, nms, data, action_node);
-        _ref1 = action_node.set;
-        for (nm in _ref1) {
-          val = _ref1[nm];
+        _ref3 = action_node.set;
+        for (nm in _ref3) {
+          val = _ref3[nm];
           master_data[nm] = val;
         }
         if (action_node["do"] != null) {
           is_macro = !/[.]/.test(action_node["do"]);
           if (is_macro) {
             option.ca3(action_token, original_path, action_node, aMacros);
-            if (is_macro) {
-              return doActionNode(aMacros[action_node["do"]]);
-            }
+            return d_doActionNode(aMacros[action_node["do"]]);
           }
-          _ref2 = action_node["do"].split('.'), view_nm = _ref2[0], view_act = _ref2[1];
+          _ref4 = action_node["do"].split('.'), view_nm = _ref4[0], view_act = _ref4[1];
           view_act = view_act != null ? view_act : action_token;
           d = new m.Deferred();
           r = {};
@@ -1186,23 +1215,37 @@ if (typeof define == "function" && define.amd) define(function() {return m})
             i: i,
             m: mg
           };
-          E[view_nm](ctx, view_act, master_data);
-          _ref3 = ctx.r;
-          for (nm in _ref3) {
-            val = _ref3[nm];
-            master_data[nm] = val;
+          ans = E[view_nm](ctx, view_act, master_data);
+          d_cb = function() {
+            var _ref5;
+            _ref5 = ctx.r;
+            for (nm in _ref5) {
+              val = _ref5[nm];
+              master_data[nm] = val;
+            }
+            master_issue.addObj(ctx.i);
+            return master_message.addObj(ctx.m);
+          };
+          _log2(f, 'd_doLeftSide: after model called:', {
+            view_nm: view_nm,
+            view_act: view_act,
+            master_data: master_data,
+            ans: ans,
+            r: ctx.r
+          });
+          if ((ans != null ? ans.then : void 0) != null) {
+            return ans.then(d_cb);
+          } else {
+            return d_cb(ans);
           }
-          master_issue.addObj(ctx.i);
-          return master_message.addObj(ctx.m);
         }
       };
-      doRightSide = function(action_node) {
+      d_doRightSide = function(action_node) {
         var choice, k, matches, next_node, val, _j, _len1, _ref1, _ref2, _ref3, _ref4;
         next_node = null;
         _ref2 = (_ref1 = action_node.next) != null ? _ref1 : [];
         for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
           choice = _ref2[_j];
-          _log2(f + '-doRightSide', 'choice', choice, master_data);
           if (choice.when === 'default') {
             next_node = choice;
             break;
@@ -1226,18 +1269,33 @@ if (typeof define == "function" && define.amd) define(function() {return m})
           }
         }
         if (next_node) {
-          _log2(f, 'doRightSide:', {
-            next_node: next_node
-          });
-          doActionNode(next_node);
+          return d_doActionNode(next_node);
         }
       };
-      doActionNode = function(action_node) {
-        doLeftSide(action_node);
-        return doRightSide(action_node);
+      d_doActionNode = function(action_node) {
+        var ans, d_rsCb;
+        ans = d_doLeftSide(action_node);
+        d_rsCb = function() {
+          return d_doRightSide(action_node);
+        };
+        if ((ans != null ? ans.then : void 0) != null) {
+          return ans.then(d_rsCb);
+        } else {
+          return d_rsCb(ans);
+        }
       };
-      doActionNode(action_node);
-      return [master_issue, master_message];
+      ans = d_doActionNode(action_node);
+      done = function() {
+        return [master_issue, master_message];
+      };
+      err = function(err) {
+        return BLOWUP();
+      };
+      if ((ans != null ? ans.then : void 0) != null) {
+        return ans.then(done, err);
+      } else {
+        return done(ans);
+      }
     };
     fieldDef = {};
     fistDef = {};
@@ -1275,6 +1333,17 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       }
       return _results;
     };
+    wistDef = {};
+    wistInit = function() {
+      var wists, _j, _len1, _ref1, _results;
+      _results = [];
+      for (_j = 0, _len1 = appconfs.length; _j < _len1; _j++) {
+        nm = appconfs[_j];
+        wists = (_ref1 = E['wist$' + nm]) != null ? _ref1 : {};
+        _results.push(merge(wistDef, wists));
+      }
+      return _results;
+    };
     _ref1 = {
       type_oau: type_oau,
       Model: Model,
@@ -1295,6 +1364,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       fieldDef: fieldDef,
       fistDef: fistDef,
       issueMap: issueMap,
+      wistDef: wistDef,
       oModel: oModel
     };
     for (nm in _ref1) {
@@ -1515,6 +1585,26 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       return E.View().invalidateTables(this.view_nm, tbl_nms, deleted_tbl_nms);
     };
 
+    ModelJS.prototype.action = function(ctx, act, parms) {
+      return E.option.m2(this.view_nm, act, params);
+    };
+
+    ModelJS.prototype.loadTable = function(tbl_nm) {
+      return E.option.m3(this.view_nm, tbl_nm);
+    };
+
+    ModelJS.prototype.fistValidate = function(ctx, fistNm, row) {
+      return E.option.m4(this.view_nm, fistNm, row);
+    };
+
+    ModelJS.prototype.fistGetValues = function(fistNm, row) {
+      return E.option.m5(this.view_nm, fistNm, row);
+    };
+
+    ModelJS.prototype.fistGetChoices = function(fistNm, fieldNm, row) {
+      return E.option.m6(this.view_nm, fistNm, fieldNm, row);
+    };
+
     return ModelJS;
 
   })();
@@ -1568,6 +1658,14 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       Fist: {
         "class": "Fist$Base",
         inst: "iBaseFist"
+      },
+      Tab: {
+        "class": "Tab$Base",
+        inst: "iBaseTab"
+      },
+      Wist: {
+        "class": "Wist$Base",
+        inst: "iBaseWist"
       }
     }
   };
@@ -1579,7 +1677,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
 
   E.manifest$Base = {
     Extra: ['LoadStrategy', 'RenderStrategy', 'dataAction'],
-    Model: ['App', 'View', 'Fist'],
+    Model: ['App', 'View', 'Fist', 'Wist', 'Tab'],
     js: [],
     root: ['app']
   };
@@ -1654,6 +1752,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     View$Base.prototype.nest_dn = function(who) {
       var f;
       f = 'nest_dn:' + who;
+      _log2(f, this.defer_it_cnt);
       if (this.defer_it_cnt > 0) {
         this.defer_it_cnt--;
       }
@@ -1722,11 +1821,9 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         oM = E[dyn_m]();
         for (_i = 0, _len = dyn_list_orig.length; _i < _len; _i++) {
           t_set = dyn_list_orig[_i];
-          _log2(f, nm, 't_set', t_set);
           rh = t_set[0], rh_alias = t_set[1];
           dyn_list.push(t_set);
           if (!(rh_alias in this.info_foreach)) {
-            _log2(f, nm, 'rh_alias', rh_alias);
             if (dyn_list.length === 1) {
               tbl = oM.getTable(rh);
             } else {
@@ -1736,15 +1833,15 @@ if (typeof define == "function" && define.amd) define(function() {return m})
             row = E.merge({}, tbl[row_num]);
             this.info_foreach[rh_alias] = {
               dyn: [dyn_m, dyn_t, dyn_list],
-              row: row
+              row: row,
+              count: row_num
             };
             prev_row = row;
           } else {
             prev_row = this.info_foreach[rh_alias].row;
           }
         }
-        info_parts = E.merge([], saved_info.info_parts);
-        _results.push(_log2(f, 'info_parts', this.info_parts));
+        _results.push(info_parts = E.merge([], saved_info.info_parts));
       }
       return _results;
     };
@@ -1860,8 +1957,6 @@ if (typeof define == "function" && define.amd) define(function() {return m})
           return window.bytesToSize(Number(val));
         case 'uriencode':
           return encodeURIComponent(val);
-        case 'esc':
-          return window.EpicMvc.escape_html(val);
         case 'quo':
           return ((val.replace(/\\/g, '\\\\')).replace(/'/g, '\\\'')).replace(/"/g, '\\"');
         case '1':
@@ -1876,7 +1971,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
             _ref = spec.slice(1).split('?'), left = _ref[0], right = _ref[1];
             return (val ? left : right != null ? right : '').replace(new RegExp('[%]', 'g'), val);
           } else {
-            return val;
+            return E.option.v1(val, spec);
           }
       }
     };
@@ -1910,7 +2005,6 @@ if (typeof define == "function" && define.amd) define(function() {return m})
           }
         }
       }
-      _log2(f, clean_attrs);
       return clean_attrs;
     };
 
@@ -1930,6 +2024,10 @@ if (typeof define == "function" && define.amd) define(function() {return m})
             (function(ix) {
               return ans.then(function(result) {
                 out[ix] = result;
+                return _this.nest_dn(who);
+              }, function(err) {
+                console.error('kids', err);
+                out[ix] = err.message;
                 return _this.nest_dn(who);
               });
             })(ix);
@@ -1962,10 +2060,10 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       f = 'T_page';
       if (this.frame_inx < this.frames.length) {
         d_load = E.oLoader.d_layout(name = this.frames[this.frame_inx++]);
-        view = (this.frame_inx < this.frames.length ? 'frame' : 'layout') + '/' + name;
+        view = (this.frame_inx < this.frames.length ? 'Frame' : 'Layout') + '/' + name;
       } else {
         d_load = E.oLoader.d_page(name = this.page_name);
-        view = 'page/' + name;
+        view = 'Page/' + name;
       }
       return this.piece_handle(view, attrs != null ? attrs : {}, d_load);
     };
@@ -1975,7 +2073,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       view = attrs.part;
       f = 'T_part:' + view;
       d_load = E.oLoader.d_part(view);
-      return this.piece_handle(view, attrs, d_load, true);
+      return this.piece_handle('Part/' + view, attrs, d_load, true);
     };
 
     View$Base.prototype.piece_handle = function(view, attrs, obj, is_part) {
@@ -1986,6 +2084,9 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       }
       _log2(f, view);
       content = obj.content, can_componentize = obj.can_componentize;
+      if (obj === false) {
+        _log2(f, 'AFTER ASSIGN', view, obj);
+      }
       this.info_parts.push(this.loadPartAttrs(attrs));
       this.info_defer.push([]);
       content = this.handleIt(content);
@@ -2011,13 +2112,21 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       d_result = d_load.then(function(obj) {
         var result;
         _log2(f, 'THEN', obj);
-        if (obj != null ? obj.then : void 0) {
-          BLOWUP();
+        try {
+          if (obj != null ? obj.then : void 0) {
+            BLOWUP();
+          }
+          _this.restoreInfo(saved_info);
+          result = _this.piece_handle(view, attrs, obj, is_part);
+          return result;
+        } finally {
+          _this.nest_dn(who + view);
         }
-        _this.restoreInfo(saved_info);
-        result = _this.piece_handle(view, attrs, obj, is_part);
-        _this.nest_dn(who + view);
-        return result;
+      }, function(err) {
+        console.error('D_piece', err);
+        _this.nest_dn(who + view + ' IN-ERROR');
+        return _this._Err('tag', 'page/part', attrs, err);
+        throw err;
       });
       return d_result;
     };
@@ -2143,22 +2252,34 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     };
 
     View$Base.prototype.T_fist = function(attrs, content_f) {
-      var f, model, rh_alias, table, tbl, _ref, _ref1, _ref2, _ref3;
+      var ans, f, fist, masterAlias, model, rh_1, rh_2, rh_alias, subTable, table, tbl, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
       f = 'T_fist';
       _log2(f, attrs, content_f);
-      model = (_ref = E.fistDef[attrs.fist].event) != null ? _ref : 'Fist';
+      fist = E.fistDef[attrs.fist];
+      model = (_ref = fist.event) != null ? _ref : 'Fist';
       table = attrs.fist + (attrs.row != null ? ':' + attrs.row : '');
-      _ref1 = this._accessModelTable(model + '/' + table, attrs.alias), tbl = _ref1[0], rh_alias = _ref1[1];
+      subTable = (_ref1 = attrs.via) != null ? _ref1 : fist.via;
+      masterAlias = !(subTable != null) ? attrs.alias : void 0;
+      _ref2 = this._accessModelTable(model + '/' + table, masterAlias), tbl = _ref2[0], rh_alias = _ref2[1];
+      _log2(f, 'tbl,rh_alias (master)', tbl, rh_alias);
       this.info_foreach[rh_alias].row = tbl[0];
       this.info_foreach[rh_alias].count = 0;
-      if (content_f) {
-        return this.handleIt(content_f);
-      } else {
-        if ((_ref2 = attrs.part) == null) {
-          attrs.part = (_ref3 = E.fistDef[attrs.fist].part) != null ? _ref3 : 'fist_default';
-        }
-        return this.T_part(attrs);
+      rh_1 = rh_alias;
+      if (subTable != null) {
+        _ref3 = this._accessModelTable(table + '/' + subTable, attrs.alias), tbl = _ref3[0], rh_alias = _ref3[1];
+        _log2(f, 'tbl,rh_alias (subTable)', tbl, rh_alias);
+        this.info_foreach[rh_alias].row = tbl[0];
+        this.info_foreach[rh_alias].count = 0;
+        rh_2 = rh_alias;
       }
+      ans = content_f ? this.handleIt(content_f) : ((_ref4 = attrs.part) != null ? _ref4 : attrs.part = (_ref5 = fist.part) != null ? _ref5 : 'fist_default', this.T_part(attrs));
+      if (rh_2) {
+        delete this.info_foreach[rh_2];
+      }
+      if (rh_1) {
+        delete this.info_foreach[rh_1];
+      }
+      return ans;
     };
 
     return View$Base;
@@ -2185,6 +2306,10 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       this.fist = {};
       Fist.__super__.constructor.call(this, view_nm, options);
     }
+
+    Fist.prototype.eventLogout = function() {
+      return true;
+    };
 
     Fist.prototype.event = function(name, act, fistNm, fieldNm, p) {
       var f, field, fist, had_issue, invalidate, tmp_val, was_issue, was_val;
@@ -2244,9 +2369,17 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       }
     };
 
+    Fist.prototype.fistClear = function(fistNm, row) {
+      var rnm;
+      rnm = fistNm + (row ? ':' + row : '');
+      return delete this.fist[rnm];
+    };
+
     Fist.prototype.fistValidate = function(ctx, fistNm, row) {
-      var ans, errors, field, fieldNm, fist, i, invalidate, m, nm, r, _ref, _ref1;
-      r = ctx.r, i = ctx.i, m = ctx.m;
+      var ans, errors, f, field, fieldNm, fist, invalidate, nm, r, _ref, _ref1;
+      f = 'fistValidate:' + fistNm + (row != null ? ':' + row : '');
+      _log2(f);
+      r = ctx;
       fist = this._getFist(fistNm, row);
       errors = 0;
       _ref = fist.ht;
@@ -2258,17 +2391,18 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       }
       if (errors) {
         invalidate = true;
-        r.success = 'FAIL';
-        r.errors = errors;
+        r.fist$success = 'FAIL';
+        r.fist$errors = errors;
       } else {
-        r.success = 'SUCCESS';
+        r.fist$success = 'SUCCESS';
         ans = r[fist.nm] = {};
         _ref1 = fist.db;
         for (nm in _ref1) {
           field = _ref1[nm];
-          ans[nm] = E.fistH2D(field);
+          ans[nm] = E.fistH2D(field, field.hval);
         }
       }
+      _log2(f, 'result', r, ans);
       if (invalidate === true) {
         this.invalidateTables([fist.rnm]);
       }
@@ -2304,11 +2438,6 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     Fist.prototype._makeField = function(fist, field, ix, row) {
       var choice_type, choices, defaults, f, fl, rows, s, _i, _ref, _ref1, _ref2, _ref3;
       f = '_makeField';
-      _log2(f, {
-        fist: fist,
-        field: field,
-        ix: ix
-      });
       defaults = {
         is_first: ix === 0,
         focus: fist.fnm === field.nm,
@@ -2357,7 +2486,8 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     };
 
     Fist.prototype._getFist = function(p_fist, p_row) {
-      var db_value_hash, field, fieldNm, fist, nm, rnm, val, _i, _len, _ref;
+      var db_value_hash, f, field, fieldNm, fist, nm, rnm, _i, _len, _ref, _ref1, _ref2;
+      f = '_getFist:' + p_fist + (p_row != null ? ':' + p_row : '');
       rnm = p_fist + (p_row ? ':' + p_row : '');
       if (!(rnm in this.fist)) {
         fist = this.fist[rnm] = {
@@ -2369,6 +2499,8 @@ if (typeof define == "function" && define.amd) define(function() {return m})
           st: 'new',
           sp: E.fistDef[p_fist]
         };
+        _log2(f, 'new fist', fist);
+        E.option.fi1(fist);
         _ref = fist.sp.FIELDS;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           fieldNm = _ref[_i];
@@ -2377,17 +2509,28 @@ if (typeof define == "function" && define.amd) define(function() {return m})
             fistNm: p_fist,
             row: p_row
           });
+          field.h2h = (function() {
+            switch (E.type_oau(field.h2h)) {
+              case 'S':
+                return field.h2h.split(/[:,]/);
+              case 'A':
+                return field.h2h;
+              default:
+                return [];
+            }
+          })();
+          E.option.fi2(field);
           fist.ht[fieldNm] = fist.db[field.db_nm] = field;
         }
       } else {
         fist = this.fist[rnm];
       }
       if (fist.st === 'new') {
-        db_value_hash = E[E.appFist(p_fist)]().fistGetValues(p_fist, p_row);
-        for (nm in db_value_hash) {
-          val = db_value_hash[nm];
-          field = fist.db[nm];
-          field.hval = E.fistD2H(field, val);
+        db_value_hash = (_ref1 = E[E.appFist(p_fist)]().fistGetValues(p_fist, p_row)) != null ? _ref1 : {};
+        _ref2 = fist.db;
+        for (nm in _ref2) {
+          field = _ref2[nm];
+          field.hval = E.fistD2H(field, db_value_hash[nm]);
         }
         fist.st = 'loaded';
       }
@@ -2395,29 +2538,42 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     };
 
     Fist.prototype._getChoices = function(type, fist, field) {
-      var final_obj, rec, _i, _len, _ref;
+      var opt_col, options, rec, row, val_col, values, wistNm, _i, _j, _len, _len1, _ref, _ref1, _ref2;
+      options = [];
+      values = [];
       switch (type) {
         case 'array':
-          final_obj = {
-            options: [],
-            values: []
-          };
           _ref = field.cdata;
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             rec = _ref[_i];
             if (typeof rec === 'object') {
-              final_obj.options.push(String(rec[1]));
-              final_obj.values.push(String(rec[0]));
+              options.push(String(rec[1]));
+              values.push(String(rec[0]));
             } else {
-              final_obj.options.push(String(rec));
-              final_obj.values.push(String(rec));
+              options.push(String(rec));
+              values.push(String(rec));
             }
           }
-          return final_obj;
+          return {
+            options: options,
+            values: values
+          };
+        case 'wist':
+          _ref1 = field.cdata.split(':'), wistNm = _ref1[0], val_col = _ref1[1], opt_col = _ref1[2];
+          _ref2 = E.Wist(wistNm);
+          for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+            row = _ref2[_j];
+            options.push(row[opt_col]);
+            values.push(row[val_col]);
+          }
+          return {
+            options: options,
+            values: values
+          };
         case 'custom':
           return E[E.appFist(fist.nm)]().fistGetChoices(fist.nm, field.nm, fist.row);
         default:
-          return BROKEN();
+          return E.option.fi4(type, fist, field);
       }
     };
 
@@ -2426,25 +2582,25 @@ if (typeof define == "function" && define.amd) define(function() {return m})
   })(E.ModelJS);
 
   E.fistH2H = function(field, val) {
-    var str, _i, _len, _ref, _ref1, _ref2;
-    val = E.fistH2H$pre(val);
-    _ref2 = (_ref = (_ref1 = field.h2h) != null ? _ref1.split(/[:,]/) : void 0) != null ? _ref : [];
-    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
-      str = _ref2[_i];
-      val = E['fistH2H$' + str](val);
+    var str, _i, _len, _ref;
+    val = E.fistH2H$pre(field, val);
+    _ref = field.h2h;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      str = _ref[_i];
+      val = E['fistH2H$' + str](field, val);
     }
     return val;
   };
 
-  E.fistH2H$pre = function(val) {
+  E.fistH2H$pre = function(field, val) {
     return val;
   };
 
-  E.fistH2D = function(field) {
+  E.fistH2D = function(field, val) {
     if (field.h2d) {
-      return E['fistH2D$' + field.h2d](field, field.hval);
+      return E['fistH2D$' + field.h2d](field, val);
     } else {
-      return field.hval;
+      return val;
     }
   };
 
@@ -2452,7 +2608,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     if (field.d2h) {
       return E['fistD2H$' + field.d2h](field, val);
     } else {
-      return val;
+      return val != null ? val : '';
     }
   };
 
@@ -2460,6 +2616,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     var check, token, _ref, _ref1, _ref2;
     delete field.issue;
     check = true;
+    E.option.fi3(field, val);
     if (val.length === 0) {
       if (field.req === true) {
         check = field.req_text ? ['FIELD_EMPTY_TEXT', field.nm, (_ref = field.label) != null ? _ref : field.nm, field.req_text] : ['FIELD_EMPTY', field.nm, (_ref1 = field.label) != null ? _ref1 : field.nm];
@@ -2487,6 +2644,133 @@ if (typeof define == "function" && define.amd) define(function() {return m})
 
 }).call(this);
 
+/*Base/Model/Wist.coffee*/// Generated by CoffeeScript 1.4.0
+(function() {
+  var Wist,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Wist = (function(_super) {
+
+    __extends(Wist, _super);
+
+    function Wist(view_nm, options) {
+      Wist.__super__.constructor.call(this, view_nm, options);
+      this.wist = {};
+    }
+
+    Wist.prototype.loadTable = function(tbl_nm) {
+      var f;
+      f = "Wist:loadTable:" + tbl_nm;
+      _log2(f);
+      return this.Table[tbl_nm] = (this._getWist(tbl_nm)).table;
+    };
+
+    Wist.prototype._getWist = function(wistNm) {
+      var hash, nm, rec, table;
+      if (!(wistNm in this.wist)) {
+        E.option.w1(wistNm);
+        hash = E.wistDef[wistNm];
+        table = [];
+        for (nm in hash) {
+          rec = hash[nm];
+          rec.token = String(nm);
+          table.push(rec);
+        }
+        this.wist[wistNm] = {
+          hash: hash,
+          table: table
+        };
+      }
+      return this.wist[wistNm];
+    };
+
+    return Wist;
+
+  })(E.ModelJS);
+
+  E.Model.Wist$Base = Wist;
+
+}).call(this);
+
+/*Base/Model/Tab.coffee*/// Generated by CoffeeScript 1.4.0
+(function() {
+  var Tab,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  Tab = (function(_super) {
+
+    __extends(Tab, _super);
+
+    function Tab(view_nm, options) {
+      Tab.__super__.constructor.call(this, view_nm, options);
+      this.tabs = options != null ? options : {};
+    }
+
+    Tab.prototype.event = function(name, type, groupNm, itemNm, data) {
+      var changed, f, group;
+      f = 'event';
+      _log2(f, {
+        name: name,
+        type: type,
+        groupNm: groupNm,
+        itemNm: itemNm,
+        data: data
+      });
+      group = this._getTab(groupNm, itemNm);
+      changed = this._setTab(group, itemNm);
+      if (changed) {
+        return this.invalidateTables([groupNm]);
+      }
+    };
+
+    Tab.prototype.action = function(ctx, act, p) {
+      switch (act) {
+        case 'toggle':
+          return this.event('Tab', 'click', p.group, p.item, p);
+      }
+    };
+
+    Tab.prototype.loadTable = function(tbl_nm) {
+      var group;
+      group = this._getTab(tbl_nm);
+      return this.Table[tbl_nm] = [group];
+    };
+
+    Tab.prototype._getTab = function(groupNm, itemNm) {
+      var _base, _base1, _ref, _ref1;
+      if ((_ref = (_base = this.tabs)[groupNm]) == null) {
+        _base[groupNm] = {};
+      }
+      if (itemNm != null) {
+        if ((_ref1 = (_base1 = this.tabs[groupNm])[itemNm]) == null) {
+          _base1[itemNm] = false;
+        }
+      }
+      return this.tabs[groupNm];
+    };
+
+    Tab.prototype._setTab = function(group, itemNm) {
+      var nm;
+      if (group[itemNm] === true) {
+        return false;
+      }
+      for (nm in group) {
+        group[nm] = false;
+      }
+      group[itemNm] = true;
+      return true;
+    };
+
+    return Tab;
+
+  })(E.ModelJS);
+
+  E.Model.Tab$Base = Tab;
+
+}).call(this);
+
 /*Base/Model/App.coffee*/// Generated by CoffeeScript 1.4.0
 (function() {
   'use strict';
@@ -2507,10 +2791,15 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         s: null,
         sp: []
       };
+      App$Base.__super__.constructor.call(this, view_nm, options, ss);
+      this.clear();
+    }
+
+    App$Base.prototype.clear = function() {
       this.issues = new E.Issue(this.view_nm);
       this.messages = new E.Issue(this.view_nm);
-      App$Base.__super__.constructor.call(this, view_nm, options, ss);
-    }
+      return this.invalidateTables(['Issue', 'Message']);
+    };
 
     App$Base.prototype.goTo = function(flow, t, s) {
       var f, was, _ref;
@@ -2527,10 +2816,6 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       this.f = flow;
       this.t = t;
       this.s = s;
-      _log2(f, {
-        was: was,
-        is: "" + this.f + "/" + this.t + "/" + this.s
-      });
       if (was !== ("" + this.f + "/" + this.t + "/" + this.s)) {
         return this.invalidateTables(['V']);
       }
@@ -2540,7 +2825,6 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       var f, ix, q, v, _i, _len, _ref, _ref1;
       f = 'go';
       q = path.split('/');
-      _log2(f, 'before', q, this.f, this.t, this.s);
       _ref = [this.f, this.t, this.s];
       for (ix = _i = 0, _len = _ref.length; _i < _len; ix = ++_i) {
         v = _ref[ix];
@@ -2550,7 +2834,6 @@ if (typeof define == "function" && define.amd) define(function() {return m})
           break;
         }
       }
-      _log2(f, 'after', q, this.f, this.t, this.s);
       return this.goTo(q[0], q[1], q[2]);
     };
 
@@ -2581,9 +2864,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         case 'add_issue':
           return i.add(p.type, p.msgs);
         case 'clear':
-          this.issues = new E.Issue(this.view_nm);
-          this.messages = new E.Issue(this.view_nm);
-          return this.invalidateTables(['Issue', 'Message']);
+          return this.clear();
         default:
           return App$Base.__super__.action.call(this, ctx, act, p);
       }
@@ -2786,14 +3067,14 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         return _this.onPopState(true);
       }), 0);
       window.onpopstate = this.onPopState;
-      this.redraw_guard = false;
+      this.redraw_guard = 0;
       m.redraw = this.m_redraw;
       this.init();
       true;
     }
 
     RenderStrategy$Base.prototype.handleEvent = function(event_obj) {
-      var attrs, data_action, data_params, f, ix, nm, prevent, target, type, val, _i, _ref;
+      var attrs, data_action, data_params, f, ix, nm, old_params, prevent, rec, target, type, val, _i, _ref, _ref1;
       f = 'on[data-e-action]';
       if (event_obj == null) {
         event_obj = window.event;
@@ -2835,6 +3116,14 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         val: val
       });
       data_params.val = val;
+      old_params = target.getAttribute('data-params');
+      if (old_params) {
+        _ref1 = JSON.parse(old_params);
+        for (nm in _ref1) {
+          rec = _ref1[nm];
+          data_params[nm] = rec;
+        }
+      }
       prevent = E.Extra[E.option.dataAction](type, data_action, data_params);
       if (prevent) {
         event_obj.preventDefault();
@@ -2907,14 +3196,22 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       var f,
         _this = this;
       f = 'm_redraw';
-      if (this.redraw_guard !== false) {
-        _log2(f, 'GUARD REDRAW');
+      this.redraw_guard++;
+      if (this.redraw_guard !== 1) {
+        _log2(f, 'GUARD REDRAW', this.redraw_guard);
         return;
       }
-      this.redraw_guard = true;
       return E.View().run().then(function(content) {
-        _this.render(content, 'TODO', 'TODO', false);
-        return _this.redraw_guard = false;
+        _this.redraw_guard--;
+        if (_this.redraw_guard !== 0) {
+          _this.redraw_guard = 0;
+          setTimeout((function() {
+            return _this.m_redraw();
+          }), 16);
+        }
+        return _this.render(content, 'TODO', 'TODO', false);
+      }).then(null, function(err) {
+        return console.error('RenderStrategy$Base m_redraw', err);
       });
     };
 
@@ -2999,6 +3296,8 @@ Layout: {
 
   window.EpicMvc.app$Dev = {
     OPTIONS: {
+      warn: warn,
+      err: err,
       c1: function(inAction) {
         if (inAction !== false) {
           return warn("IN CLICK");
@@ -3008,45 +3307,122 @@ Layout: {
         if (view_name in aModels) {
           return;
         }
-        return err("Could not find model (" + view_name + ") in namespace E.Model", aModels);
+        err("Could not find model (" + view_name + ") in namespace E.Model", aModels);
       },
       a2: function(view_name, aModels, attribute) {
         if (attribute in aModels[view_name]) {
           return;
         }
-        return err("Could not find model (" + view_name + ") in namespace E.Model", aModels);
+        err("Could not find model (" + view_name + ") in namespace E.Model", aModels);
       },
       m1: function(view, model) {
         if (model["class"] in E.Model) {
           return;
         }
-        return err("Processing view (" + view + "), model-class (" + model["class"] + ") not in namespace E.Model", model);
+        err("Processing view (" + view + "), model-class (" + model["class"] + ") not in namespace E.Model", model);
+      },
+      m2: function(view_nm, act, parms) {
+        err("Model (" + view_nm + ").action() didn't know action (" + act + ")");
+      },
+      m3: function(view_nm, tbl_nm, table) {
+        if (tbl_nm in table) {
+          return;
+        }
+        err("Model (" + view_nm + ").loadTable() didn't know table-name (" + tbl_nm + ")");
+      },
+      m4: function(view_nm, fistNm, row) {
+        err("Model (" + view_nm + ").fistValidate() didn't know FIST (" + fistNm + ")");
+      },
+      m5: function(view_nm, fistNm, row) {
+        err("Model (" + view_nm + ").fistGetValues() didn't know FIST (" + fistNm + ")");
+      },
+      m6: function(view_nm, fistNm, fieldNm, row) {
+        err("Model (" + view_nm + ").fistGetChoices() did't know FIST-FIELD (" + fistNm + "-" + fieldNm + ")");
       },
       ca1: function(action_token, original_path, action_node) {
         if (action_node != null) {
           return;
         }
-        return warn("No app. entry for action_token (" + action_token + ") on path (" + original_path + ")");
+        warn("No app. entry for action_token (" + action_token + ") on path (" + original_path + ")");
       },
       ca2: function(action_token, original_path, nms, data, action_node) {
-        var nm, _i, _len, _results;
-        _results = [];
+        var nm, _i, _len;
         for (_i = 0, _len = nms.length; _i < _len; _i++) {
           nm = nms[_i];
           if (!(nm in data)) {
-            _results.push(warn("Missing param (" + nm + ") for action (" + action_token + "), Path: " + original_path, {
+            warn("Missing param (" + nm + ") for action (" + action_token + "), Path: " + original_path, {
               data: data,
               action_node: action_node
-            }));
+            });
           }
         }
-        return _results;
       },
       ca3: function(action_token, original_path, action_node, aMacros) {
         if (action_node["do"] in aMacros) {
           return;
         }
-        return err("Missing (" + action_node["do"] + ") from MACROS; Action: (" + action_token + "), Path: (" + original_path + ")");
+        err("Missing (" + action_node["do"] + ") from MACROS; Action: (" + action_token + "), Path: (" + original_path + ")");
+      },
+      ca4: function(action_token, original_path, action_node, what) {
+        if (action_node[what] in E.fistDef) {
+          return;
+        }
+        err("Unknown Fist for '" + what + ":' " + action_node[what] + "); Action: (" + action_token + "), Path: (" + original_path + ")", {
+          action_node: action_node
+        });
+      },
+      fi1: function(fist) {
+        var fistNm, model;
+        fistNm = fist.nm;
+        model = E.appFist(fistNm);
+        if (!(model != null)) {
+          err("FIST is missing: app.js requires MODELS: <model-name>: fists:[...,'" + fistNm + "']", {
+            fist: fist
+          });
+        }
+      },
+      fi2: function(field) {
+        var attr, filt, filtList, filtNm, type, _i, _j, _len, _len1, _ref;
+        _ref = ['h2h', 'd2h', 'h2d', 'validate'];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          attr = _ref[_i];
+          if (!(attr in field)) {
+            continue;
+          }
+          type = attr === 'validate' ? 'VAL' : attr.toUpperCase();
+          filtList = attr === 'h2h' ? field[attr] : [field[attr]];
+          for (_j = 0, _len1 = filtList.length; _j < _len1; _j++) {
+            filtNm = filtList[_j];
+            if (filtNm && !((filt = 'fist' + type + '$' + filtNm) in E)) {
+              err("Missing Fist Filter (E." + filt + ") in FIELD (" + field.fieldNm + ") for FIST (" + field.fistNm + ")", {
+                field: field
+              });
+            }
+          }
+        }
+      },
+      fi3: function(field, val) {
+        if (val != null) {
+          return;
+        }
+        warn("FIST field value is undefined in FIELD (" + field.fieldNm + ") for FIST (" + field.fistNm + ")", {
+          field: field
+        });
+      },
+      fi4: function(type, fist, field) {
+        err("Unknown pulldown/radio option (" + type + ") in FIELD " + field.fieldNm + " for FIST " + field.fistNm + ".", {
+          field: field
+        });
+      },
+      v1: function(val, spec) {
+        err("Unknown variable specification/filter (#" + spec + ")");
+        return val != null ? val : '';
+      },
+      w1: function(wistNm) {
+        if (wistNm in E.wistDef) {
+          return;
+        }
+        err("Unknown Wist (" + wistNm + ").");
       }
     },
     SETTINGS: {
@@ -3109,7 +3485,7 @@ Layout: {
 (function() {
 
   E.manifest$Dev = {
-    Model: ['ModelJS', 'Devl', 'View'],
+    Model: ['Devl', 'View'],
     Extra: ['ParseFile'],
     js: [],
     root: ['app']
@@ -3137,6 +3513,7 @@ Layout: {
       this.errors_cache = {
         _COUNT: 0
       };
+      this.warn_cache = {};
       this.in_defer = false;
       return View.__super__.run.call(this);
     };
@@ -3156,7 +3533,7 @@ Layout: {
         if (this.errors_cache._COUNT < 5) {
           _log2('### _Error type/key/e', type, key, e);
           msg = ((("" + key + "\n\n" + e.message).replace(/&lt;/g, '<')).replace(/&gt;/g, '>')).replace(/&amp;/g, '&');
-          prefix = type === 'varGet2' || type === 'varGet3' ? 'Variable reference' : 'Tag';
+          prefix = type === 'v2' || type === 'v3' ? 'Variable reference' : 'Tag';
           return _log2("ERROR", "" + prefix + " error (" + type + "):\n\n" + msg);
         }
       }
@@ -3208,20 +3585,38 @@ Layout: {
       return View.__super__.xgetTable.call(this, nm);
     };
 
-    View.prototype._accessModelTable = function(at_table, alias) {
-      var err, lh, rh, row, _ref;
+    View.prototype.my_accessModelTable = function(at_table, alias) {
+      var err, lh, nm, rh, row, row_info, row_typ, _ref;
       _ref = at_table.split('/'), lh = _ref[0], rh = _ref[1];
       if (lh in this.info_foreach) {
         row = this.info_foreach[lh].row;
         if (!(rh in row)) {
-          _log2('ERROR', err = "No such sub-table (" + rh + ") in (" + lh + ") row=", row);
+          row_info = (function() {
+            switch (row_typ = E.type_oau(row)) {
+              case 'O':
+                row_info = ((function() {
+                  var _results;
+                  _results = [];
+                  for (nm in row) {
+                    _results.push(nm);
+                  }
+                  return _results;
+                })()).join();
+                if ('fieldNm' in row) {
+                  return row_info += ' fieldNm:' + row.fieldNm;
+                }
+                break;
+              default:
+                return row_info = "Not a hash (" + row_typ + ")";
+            }
+          })();
+          err = "No such sub-table (" + rh + ") in (" + lh + ") (row=" + row_info + ") (dyn:" + (this.info_foreach[lh].dyn.join(',')) + ")";
           throw new Error(err);
         }
       } else if (!(lh in E)) {
-        _log2('ERROR', err = "No such Model (" + lh + ") for model/table (" + lh + "/" + rh + ")");
+        err = "No such Model (" + lh + ") for model/table (" + lh + "/" + rh + ")";
         throw new Error(err);
       }
-      return View.__super__._accessModelTable.call(this, at_table, alias);
     };
 
     View.prototype.xT_fist = function(oPt) {
@@ -3242,7 +3637,7 @@ Layout: {
       } catch (e) {
         _log2('##### Error in form-part', (_ref = oPt.attrs.part) != null ? _ref : 'fist_default', e, e.stack);
         this._Error('form', this._TagText(oPt, true), e);
-        return this._Err('tag', oPt, e);
+        return this._Err('tag', 'fist', attrs, e);
       }
       try {
         inside = '';
@@ -3259,7 +3654,7 @@ Layout: {
         }
         _log2('##### Error in form-part', (_ref2 = oPt.attrs.part) != null ? _ref2 : 'fist_default', e, e.stack);
         this._Error('form_part', this._TagText(oPt, true), e);
-        return this._Err('tag', oPt, e);
+        return this._Err('tag', 'fist', attrs, e);
       }
     };
 
@@ -3331,10 +3726,7 @@ Layout: {
           tag: 'page',
           attrs: attrs
         }, true), e);
-        return this._Err('page', {
-          tag: 'page',
-          attrs: attrs
-        }, e);
+        return this._Err('page', 'page', attrs, e);
       }
     };
 
@@ -3342,43 +3734,48 @@ Layout: {
       var key, t_custom_spec, t_format_spec, val;
       try {
         val = View.__super__.v3.call(this, view_nm, tbl_nm, col_nm, format_spec, custom_spec);
-        t_format_spec = format_spec || custom_spec ? '#' + format_spec : '';
-        t_custom_spec = custom_spec ? '#' + custom_spec : '';
         if (val === void 0) {
-          throw new Error("Column/spec does not exist (" + view_nm + "/" + tbl_nm + "/" + col_nm + t_format_spec + t_custom_spec + ").");
+          t_format_spec = format_spec || custom_spec ? '#' + format_spec : '';
+          t_custom_spec = custom_spec ? '#' + custom_spec : '';
+          key = '&' + view_nm + '/' + tbl_nm + '/' + col_nm + t_format_spec + t_custom_spec + ';';
+          if (!this.warn_cache[key]) {
+            E.option.warn('v3', "Undefined result: (" + key + ").");
+            this.warn_cache[key] = true;
+          }
         }
       } catch (e) {
         t_format_spec = format_spec || custom_spec ? '#' + format_spec : '';
         t_custom_spec = custom_spec ? '#' + custom_spec : '';
-        key = '&amp;' + view_nm + '/' + tbl_nm + '/' + col_nm + t_format_spec + t_custom_spec + ';';
-        _log2('##### Error in varGet3 key=', key, e);
-        this._Error('varGet3', key, e);
+        key = '&' + view_nm + '/' + tbl_nm + '/' + col_nm + t_format_spec + t_custom_spec + ';';
+        _log2('##### Error in v3 key=', key, e);
+        this._Error('v3', key, e);
         throw e;
       }
       return val;
     };
 
-    View.prototype.xv2 = function(tbl_nm, col_nm, format_spec, custom_spec, sub_nm, give_error) {
+    View.prototype.v2 = function(tbl_nm, col_nm, format_spec, custom_spec, sub_nm, give_error) {
       var key, t_custom_spec, t_format_spec, val;
+      if (!(tbl_nm in this.info_foreach)) {
+        t_format_spec = format_spec || custom_spec ? '#' + format_spec : '';
+        t_custom_spec = custom_spec ? '#' + custom_spec : '';
+        key = '&' + tbl_nm + '/' + col_nm + t_format_spec + t_custom_spec + ';';
+        throw new Error("No such Table (" + tbl_nm + ") evaluating " + key);
+      }
       try {
-        val = View.__super__.xv2.call(this, tbl_nm, col_nm, format_spec, custom_spec, sub_nm);
+        val = View.__super__.v2.call(this, tbl_nm, col_nm, format_spec, custom_spec, sub_nm);
       } catch (e) {
-        if (this.Epic.isSecurityError(e || give_error)) {
-          throw e;
-        }
-        _log2('##### varGet2', "&" + tbl_nm + "/" + col_nm + ";", e, e.stack);
-        val = "&amp;" + tbl_nm + "/" + col_nm + ";[" + e.message + "] <pre>" + e.stack + "</pre>";
+        _log2('##### v2', "&" + tbl_nm + "/" + col_nm + ";", e, e.stack);
+        val = "&" + tbl_nm + "/" + col_nm + ";[" + e.message + "] <pre>" + e.stack + "</pre>";
       }
       if (val === void 0) {
         t_format_spec = format_spec || custom_spec ? '#' + format_spec : '';
         t_custom_spec = custom_spec ? '#' + custom_spec : '';
-        key = '&amp;' + tbl_nm + '/' + col_nm + t_format_spec + t_custom_spec + ';';
-        _log2('##### Error in varGet2 key=', key, 'undefined');
-        this._Error('varGet2', key, {
-          message: 'is undefined',
-          stack: "\n"
-        });
-        val = "&amp;" + tbl_nm + "/" + col_nm + ";";
+        key = '&' + tbl_nm + '/' + col_nm + t_format_spec + t_custom_spec + ';';
+        if (!this.warn_cache[key]) {
+          E.option.warn('v2', "Undefined result: (" + key + ").");
+          this.warn_cache[key] = true;
+        }
       }
       return val;
     };
@@ -3396,47 +3793,40 @@ Layout: {
           throw e;
         }
         this._Error('if', this._TagText(oPt, true), e);
-        return this._Err('tag', oPt, e);
+        return this._Err('tag', 'if', attrs, e);
       }
     };
 
-    View.prototype.xT_foreach = function(oPt) {
-      var at_table, cols, inside, lh, nm, oMd, rh, tbl, _ref;
+    View.prototype.T_foreach = function(attrs, children) {
+      var inside;
       try {
-        at_table = this.viewExe.handleIt(oPt.attrs.table);
-        _ref = at_table.split('/'), lh = _ref[0], rh = _ref[1];
-        if (lh in this.info_foreach) {
-          if (!(rh in this.info_foreach[lh].row)) {
-            throw new Error("Sub-table missing: (" + rh + ") in foreach table='" + lh + "/" + rh + "' (dyn:" + (this.info_foreach[lh].dyn.join(',')));
-          }
-          tbl = this.info_foreach[lh].row[rh];
-        } else {
-          oMd = this.Epic.getInstance(lh);
-          tbl = oMd.getTable(rh);
+        if (!(attrs.table != null)) {
+          throw new Error('Missing table="<model>/<table>"');
         }
+        this.my_accessModelTable(attrs.table);
         if (this.Opts().tag !== true || this.in_defer) {
-          return View.__super__.xT_foreach.call(this, oPt);
+          return View.__super__.T_foreach.call(this, attrs, children);
         }
-        if (tbl != null ? tbl.length : void 0) {
-          inside = 'len:' + tbl.length;
-          cols = (function() {
-            var _results;
-            _results = [];
-            for (nm in tbl[0]) {
-              _results.push(nm);
-            }
-            return _results;
-          })();
-          inside += "<span title=\"" + (cols.join(', ')) + "\">Cols:" + cols.length + "<span>";
-        } else {
-          inside = 'empty';
-        }
-        return this._Div('tag', oPt, inside, View.__super__.xT_foreach.call(this, oPt));
+        /*
+        			if tbl?.length
+        				inside= ['len:'+tbl.length]
+        				cols=( nm for nm of tbl[0 ])
+        				inside.push m 'span', title: "#{cols.join ', '} Cols:#{cols.length}"
+        			else inside='empty'
+        */
+
+        inside = '';
+        return this._Div('tag', attrs, inside, View.__super__.T_foreach.call(this, attrs, children));
       } catch (e) {
-        if (this.Epic.isSecurityError(e)) {
-          throw e;
-        }
-        return this._Err('tag', oPt, e);
+        return this._Err('tag', 'foreach', attrs, e);
+      }
+    };
+
+    View.prototype.T_fist = function(attrs, children) {
+      try {
+        return View.__super__.T_fist.call(this, attrs, children);
+      } catch (e) {
+        return this._Err('tag', 'fist', attrs, e);
       }
     };
 
@@ -3444,43 +3834,46 @@ Layout: {
       return JSON.stringify(this.Epic.getViewTable(oPt.attrs.table));
     };
 
-    View.prototype._TagText = function(oPt, asError) {
-      var attrs, key, letter, page, type, val, _ref, _ref1;
+    View.prototype._TagText = function(tag, attrs, asError) {
+      var attrs_array, key, letter, page, type, val, _ref;
       _ref = this.getLetTypPag(), letter = _ref[0], type = _ref[1], page = _ref[2];
-      attrs = [];
-      _ref1 = oPt.attrs;
-      for (key in _ref1) {
-        val = _ref1[key];
-        attrs.push("" + key + "=\"" + val + "\"");
+      attrs_array = [];
+      for (key in attrs) {
+        val = attrs[key];
+        attrs_array.push("" + key + "=\"" + val + "\"");
       }
-      return "<e-" + oPt.tag + " " + (attrs.join(' ')) + ">";
+      return "<e-" + tag + " " + (attrs_array.join(' ')) + ">";
     };
 
-    View.prototype._Div = function(type, oPt, inside, after) {
+    View.prototype._Div = function(type, attrs, inside, after) {
       if (after == null) {
         after = '';
       }
-      return "<div class=\"dbg-" + type + "-box\">" + (this._TagText(oPt)) + inside + "</div>" + after;
+      return [
+        m('div', {
+          className: "dbg-" + type + "-box"
+        }, "" + (this._TagText(attrs)) + inside), after
+      ];
     };
 
-    View.prototype._Err = function(type, oPt, e) {
+    View.prototype._Err = function(type, tag, attrs, e) {
       var stack, title;
-      _log2('### _Err type/oPt/e', type, oPt, {
+      _log2('### _Err type/tag/attrs/e', type, tag, attrs, {
         e: e,
         m: e.message,
         s: e.stack
-      });
-      stack = this.Opts().stack ? "<pre>\n" + e.stack + "</pre>" : '';
+      }, (e.stack.split('\n'))[1]);
       title = (e.stack.split('\n'))[1];
+      stack = this.Opts().stack ? m('pre', {}, "\n" + e.stack) : title;
       return {
         tag: 'div',
         attrs: {
-          className: "dbg-" + type + "-error-box"
+          className: "dbg-" + type + "-error-box clearLeft"
         },
         children: [
-          this._TagText(oPt, true), m('br'), m('dir', {
+          this._TagText(tag, attrs, true), m('br'), m('div', {
             className: "dbg-" + type + "-error-msg",
-            title: title
+            title: e.stack
           }, e.message), stack
         ]
       };
@@ -3737,55 +4130,6 @@ Layout: {
 
 }).call(this);
 
-/*Dev/Model/ModelJS.coffee*/// Generated by CoffeeScript 1.4.0
-(function() {
-  'use strict';
-
-  var CoreModelJS, ModelJS,
-    __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-  CoreModelJS = E.ModelJS;
-
-  ModelJS = (function(_super) {
-
-    __extends(ModelJS, _super);
-
-    function ModelJS() {
-      return ModelJS.__super__.constructor.apply(this, arguments);
-    }
-
-    ModelJS.prototype.action = function(ctx, act, parms) {
-      throw new Error("Model (" + this.view_nm + ").action() didn't know action (" + act + ")");
-    };
-
-    ModelJS.prototype.loadTable = function(tbl_nm) {
-      if (tbl_nm in this.Table) {
-        return;
-      }
-      throw new Error("Model (" + this.view_nm + ").loadTable() didn't know table-name (" + tbl_nm + ")");
-    };
-
-    ModelJS.prototype.fistValidate = function(ctx, fistNm, row) {
-      throw new Error("Model (" + this.view_nm + ").fistValidate() didn't know fist (" + fistNm + ")");
-    };
-
-    ModelJS.prototype.fistGetValues = function(fistNm, row) {
-      throw new Error("Model (" + this.view_nm + ").fistGetValues() didn't know fist (" + fistNm + ")");
-    };
-
-    ModelJS.prototype.fistGetChoices = function(fistNm, fieldNm, row) {
-      throw new Error("Model (" + this.view_nm + ").fistGetChoices() did't know fist:field (" + fistNm + ":" + fieldNm + ")");
-    };
-
-    return ModelJS;
-
-  })(CoreModelJS);
-
-  E.ModelJS = ModelJS;
-
-}).call(this);
-
 /*Dev/Extra/ParseFile.coffee*/// Generated by CoffeeScript 1.4.0
 (function() {
   'use strict';
@@ -3804,7 +4148,7 @@ Layout: {
   };
 
   mkNm = function(nm) {
-    if (nm.match(/^[a-zA-Z_]$/)) {
+    if (nm.match(/^[a-zA-Z_]*$/)) {
       return nm;
     } else {
       return sq(nm);
@@ -3879,7 +4223,7 @@ Layout: {
         break;
       }
       if (good !== true) {
-        _log2('STYLE-ERROR - parse:', {
+        console.error('STYLE-ERROR - parse:', {
           file_info: file_info,
           parts: parts,
           good: good,
@@ -3960,7 +4304,7 @@ Layout: {
   };
 
   FindAttrs = function(file_info, str) {
-    var attr_obj, attr_split, attrs_need_cleaning, data_nm, debug, empty, eq, event_attrs_shortcuts, f, good, i, nm, parts, quo, start, style_obj, _i, _len, _ref, _ref1, _ref2, _ref3;
+    var attr_obj, attr_split, attrs_need_cleaning, data_nm, debug, empty, eq, event_attrs_shortcuts, f, good, grp, i, nm, pane, parts, quo, start, style_obj, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
     f = ':parse.FindAttrs:';
     event_attrs_shortcuts = ['data-e-click', 'data-e-change', 'data-e-dblclick', 'data-e-enter', 'data-e-keyup', 'data-e-focus', 'data-e-blur', 'data-e-event'];
     str = ' ' + str;
@@ -3972,6 +4316,7 @@ Layout: {
       attr_split.pop();
     }
     attr_obj = {};
+    attr_obj.className = [];
     i = 0;
     debug = false;
     while (i < attr_split.length) {
@@ -3980,7 +4325,7 @@ Layout: {
         break;
       }
       if (good !== true) {
-        _log2('ERROR - parse:', {
+        console.error('ERROR - parse:', {
           file_info: file_info,
           good: good,
           start: start,
@@ -4018,20 +4363,40 @@ Layout: {
         attr_obj[nm] = mkObj(style_obj);
         continue;
       }
+      if (nm === 'data-e-tab') {
+        _ref3 = (parts.join('')).split(':'), grp = _ref3[0], pane = _ref3[1];
+        attr_obj.className.push("&Tab/" + grp + "/" + pane + "#?active;");
+        if ((_ref4 = attr_obj['data-e-action']) == null) {
+          attr_obj['data-e-action'] = [];
+        }
+        attr_obj['data-e-action'].push("event:Tab:" + grp + ":" + pane + ":click");
+        continue;
+      }
+      if (nm === 'data-e-tab-pane') {
+        _ref5 = (parts.join('')).split(':'), grp = _ref5[0], pane = _ref5[1];
+        attr_obj.className.push("&Tab/" + grp + "/" + pane + "#?active;");
+        continue;
+      }
+      if (nm === 'className') {
+        attr_obj.className.push(parts.join(''));
+        continue;
+      }
       if (nm[0] === '?') {
         attrs_need_cleaning = true;
       }
       attr_obj[nm] = (findVars(parts.join(''))).join('+');
     }
-    _ref3 = ['data-e-action'];
-    for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
-      data_nm = _ref3[_i];
+    if (attr_obj.className.length) {
+      attr_obj.className = (findVars(attr_obj.className.join(' '))).join('+');
+    } else {
+      delete attr_obj.className;
+    }
+    _ref6 = ['data-e-action'];
+    for (_i = 0, _len = _ref6.length; _i < _len; _i++) {
+      data_nm = _ref6[_i];
       if (attr_obj[data_nm]) {
         attr_obj[data_nm] = (findVars(attr_obj[data_nm].join())).join('+');
       }
-    }
-    if (debug) {
-      _log2(f, 'bottom', str, attr_obj);
     }
     return [mkObj(attr_obj), empty, attrs_need_cleaning];
   };
@@ -4072,7 +4437,7 @@ Layout: {
       args = parts[i + 1].split('/');
       last = args.length - 1;
       if (last !== 1 && last !== 2) {
-        _log2('ERROR VarGet:', parts[i + 1]);
+        console.error('ERROR VarGet:', parts[i + 1]);
         continue;
       }
       _ref = args[last].split('#'), args[last] = _ref[0], hash_part = _ref[1], custom_hash_part = _ref[2];
@@ -4095,8 +4460,8 @@ Layout: {
   };
 
   doError = function(file_stats, text) {
-    console.log('ERROR', file_stats, text);
-    throw Error(text);
+    console.error('ERROR', file_stats, text);
+    throw Error(text + ' in ' + file_stats);
   };
 
   ParseFile = function(file_stats, file_contents) {
@@ -4119,7 +4484,7 @@ Layout: {
       defer: 0
     };
     dom_pre_tags = ['pre', 'code'];
-    dom_nms = ['style', 'div', 'a', 'span', 'ol', 'ul', 'li', 'p', 'b', 'i', 'dl', 'dd', 'dt', 'u', 'form', 'fieldset', 'label', 'legend', 'button', 'input', 'textarea', 'select', 'option', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'col', 'colgroup', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hgroup', 'img', 'br', 'hr', 'header', 'footer', 'section', 'nav', 'code', 'mark', 'pre', 'blockquote', 'address', 'kbd', 'var', 'samp'];
+    dom_nms = ['style', 'section', 'header', 'nav', 'article', 'aside', 'footer', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'address', 'main', 'hgroup', 'div', 'p', 'hr', 'pre', 'blockquote', 'ol', 'ul', 'li', 'dl', 'dt', 'dd', 'figure', 'figcaption', 'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr', 'ins', 'del', 'img', 'iframe', 'embed', 'oject', 'param', 'video', 'audio', 'source', 'track', 'canvas', 'map', 'area', 'svg', 'math', 'table', 'tbody', 'thead', 'tfoot', 'tr', 'td', 'th', 'caption', 'colgroup', 'col', 'form', 'fieldset', 'legend', 'label', 'input', 'button', 'select', 'datalist', 'optgroup', 'option', 'textarea', 'keygen', 'output', 'progress', 'meter', 'details', 'summary', 'menuitem', 'menu'];
     dom_close = ['img', 'br', 'input', 'hr'];
     after_comment = file_contents.replace(/-->/gm, '\x02').replace(/<!--[^\x02]*\x02/gm, function(m) {
       return m.replace(/[^\n]+/gm, '');
@@ -4131,11 +4496,12 @@ Layout: {
     after = after.replace(/<e-page_part/g, '<e-part');
     after = after.replace(/<e-form_part/g, '<e-fist');
     after = after.replace(/form="/g, 'fist="');
-    after = after.replace(/\ p:/g, ' e-');
+    after = after.replace(/\sp:/g, ' e-');
     after = after.replace(/Tag\/If/g, 'View/If');
     after = after.replace(/Tag\/Part/g, 'View/Part');
     after = after.replace(/\ size="/g, ' ?size="');
     after = after.replace(/data-action=/g, 'e-action=');
+    after = after.replace(/Pageflow\//g, 'App/');
     parts = after.split(/<(\/?)([:a-z_0-9-]+)([^>]*)>/);
     pre_count = 0;
     i = 0;
@@ -4312,7 +4678,6 @@ Layout: {
       return stuff;
     };
     content = 'return ' + doChildren(children);
-    _log2(f, 'final', content);
     return {
       content: content,
       defer: stats.defer,
@@ -4405,7 +4770,6 @@ Layout: {
               sub = type === 'root' ? '' : type + '/';
               url = E.option.loadDirs[pkg] + pkg + '/' + sub + file + '.js';
               work.push(url);
-              _log2(f, 'to do ', url);
             }
           }
         }
@@ -4433,7 +4797,6 @@ Layout: {
       var el, f, id;
       f = 'inline';
       el = document.getElementById(id = 'view-' + type + '-' + nm);
-      _log2(f, 'inline el=', id, el);
       if (el) {
         return el.innerHTML;
       }
@@ -4443,9 +4806,7 @@ Layout: {
     LoadStrategy.prototype.preLoaded = function(pkg, type, nm) {
       var f, r, _ref, _ref1;
       f = 'preLoaded';
-      _log2(f, 'looking for ', pkg, type, nm);
       r = (_ref = E['view$' + pkg]) != null ? (_ref1 = _ref[type]) != null ? _ref1[nm] : void 0 : void 0;
-      _log2(f, 'found', ((r != null ? r.preloaded : void 0) ? 'PRELOADED' : 'broken'), r);
       return r;
     };
 
@@ -4460,7 +4821,7 @@ Layout: {
     };
 
     LoadStrategy.prototype.d_get = function(type, nm) {
-      var def, f, full_nm, full_nm_alt, pkg, promise, type_alt, uncompiled, _fn, _fn1, _i, _j, _len, _len1, _ref, _ref1,
+      var def, f, full_nm, full_nm_alt, pkg, promise, type_alt, uncompiled, _fn, _i, _j, _len, _len1, _ref, _ref1,
         _this = this;
       f = 'd_get';
       full_nm = type + '/' + nm + '.html';
@@ -4473,11 +4834,29 @@ Layout: {
       def = new m.Deferred();
       def.resolve(false);
       promise = def.promise;
+      type_alt = type === 'Layout' ? 'tmpl' : type.toLowerCase();
+      full_nm_alt = type + '/' + nm + '.' + type_alt + '.html';
       _ref = this.reverse_packages;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        pkg = _ref[_i];
+        if ((pkg !== 'Base' && pkg !== 'Dev' && pkg !== 'Proto') && type !== 'Layout') {
+          (function(pkg) {
+            return promise = promise.then(function(result) {
+              if (result !== false) {
+                return result;
+              }
+              if (!(pkg in E.option.loadDirs)) {
+                return false;
+              }
+              return _this.D_getFile(pkg, full_nm_alt);
+            });
+          })(pkg);
+        }
+      }
+      _ref1 = this.reverse_packages;
       _fn = function(pkg) {
         return promise = promise.then(function(result) {
           var compiled;
-          _log2(f, 'THEN-' + pkg, full_nm, 'S' === E.type_oau(result) ? result.slice(0, 40) : result);
           if (result !== false) {
             return result;
           }
@@ -4490,28 +4869,9 @@ Layout: {
           return _this.D_getFile(pkg, full_nm);
         });
       };
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        pkg = _ref[_i];
-        _fn(pkg);
-      }
-      type_alt = type === 'Layout' ? 'tmpl' : type.toLowerCase();
-      full_nm_alt = type + '/' + nm + '.' + type_alt + '.html';
-      _ref1 = this.reverse_packages;
-      _fn1 = function(pkg) {
-        return promise = promise.then(function(result) {
-          _log2(f, 'THEN-' + pkg, full_nm, 'S' === E.type_oau(result) ? result.slice(0, 40) : result);
-          if (result !== false) {
-            return result;
-          }
-          if (!(pkg in E.option.loadDirs)) {
-            return false;
-          }
-          return _this.D_getFile(pkg, full_nm_alt);
-        });
-      };
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
         pkg = _ref1[_j];
-        _fn1(pkg);
+        _fn(pkg);
       }
       promise = promise.then(function(result) {
         var parsed;
@@ -4521,14 +4881,17 @@ Layout: {
           }
           parsed = _this.compile(full_nm, result);
         } else {
-          _log2('ERROR', 'NO FILE FOUND! ' + type + ' - ' + nm);
+          throw new Error("Unable to locate View file (" + full_nm + ").");
+          console.error('ERROR', 'NO FILE FOUND! ', full_nm);
           parsed = false;
         }
+        _this.cache[full_nm] = parsed;
         return parsed;
       });
       promise.then(null, function(error) {
         throw error;
       });
+      this.cache[full_nm] = promise;
       return promise;
     };
 
@@ -4581,7 +4944,7 @@ Layout: {
 E.view$Dev={
 Layout: {
 "BaseDevl":{preloaded:1,can_componentize:false,defer:0,content:function(){return oE.kids([{tag:'h5',attrs:{},children:['I\'m an \'outer\' template']},['page',{}]])}},
-"bdevl":{preloaded:1,can_componentize:false,defer:0,content:function(){return oE.kids([{tag:'style',attrs:{},children:m.trust(' .dbg-part { border: solid 8px #888; }\n.dbg-tag-error-box { border: solid 2px #C44; font-weight: bold;}\n.dbg-tag-error-msg { color: red; }\n.dbg-tag-box { border: solid 2px #44C; }\n.dbg-part-box { font-size: .5em;\n -webkit-box-shadow: 10px 10px 5px #888;\n padding: 5px 5px 5px 15px;\n width: 10px;\n height: 10px;\n z-index: 99999;\n}\n.red { color: red; }\n.btn-group { background-color: #CCC; border-radius: 6px; }\n.dbg-toolbar .btn { padding: 6px 2px; }\n.dbg-toolbar:hover {\n top: -7px;\n}\n.dbg-toolbar {\n overflow-y: hidden;\n top: -46px;\n transition-property: top;\n transition-duration: .5s; ')},{tag:'div',attrs:{'className':'dbg-toolbar','style':{'position':'fixed','zIndex':'9999','backgroundColor':'#484848','fontSize':'10px','padding':'10px 10px 0 10px','right':'0'}},children:[{tag:'div',attrs:{'className':'btn-toolbar'},children:[{tag:'div',attrs:{'className':'btn-group'},children:[{tag:'a',attrs:{'data-e-action':'click:dbg_refresh','data-e-what':'file','className':'btn btn-mini'},children:[{tag:'span',attrs:{'className':'glyphicon glyphicon-repeat'},children:[]}]},{tag:'a',attrs:{'data-e-action':'click:dbg_toggle','data-e-what':'file','className':'btn btn-mini'},children:[{tag:'span',attrs:{'className':'glyphicon glyphicon-file '+oE.v3('Devl','Opts','file','?red')},children:[]}]},{tag:'a',attrs:{'data-e-action':'click:dbg_toggle','data-e-what':'tag','className':'btn btn-mini'},children:[{tag:'span',attrs:{'className':'glyphicon glyphicon-chevron-left '+oE.v3('Devl','Opts','tag','?red')},children:[]}]},{tag:'a',attrs:{'data-e-action':'click:dbg_toggle','data-e-what':'tag2','className':'btn btn-mini'},children:[{tag:'span',attrs:{'className':'glyphicon glyphicon-chevron-right '+oE.v3('Devl','Opts','tag2','?red')},children:[]}]},{tag:'a',attrs:{'data-e-action':'click:dbg_toggle','data-e-what':'form','className':'btn btn-mini'},children:[{tag:'span',attrs:{'className':'glyphicon glyphicon-edit '+oE.v3('Devl','Opts','form','?red')},children:[]}]},{tag:'a',attrs:{'data-e-action':'click:dbg_toggle','data-e-what':'model','className':'btn btn-mini'},children:[{tag:'span',attrs:{'className':'glyphicon glyphicon-list-alt '+oE.v3('Devl','Opts','model','?red')},children:[]}]}]}]},{tag:'div',attrs:{'style':{'textAlign':'center','color':'#FFF','letterSpacing':'5px','fontSize':'10px','height':'18px','paddingLeft':'4px','marginTop':'-3px'}},children:['EPIC']}]},['if',{'set':oE.v3('Devl','Opts','model')},function(){return [{tag:'table',attrs:{'width':'100%'},children:[{tag:'tr',attrs:{},children:[{tag:'td',attrs:{'width':'20%','style':{'backgroundColor':'#90C0FF','verticalAlign':'top','paddingTop':'75px','paddingBottom':'20px'}},children:oE.kids([['part',{'part':'dbg_model','dynamic':'div'}]])},{tag:'td',attrs:{'width':'100%','style':{'verticalAlign':'top','position':'relative'}},children:oE.kids([['page',{}]])}]}]}]}],['if',{'not_set':oE.v3('Devl','Opts','model')},function(){return oE.kids([['page',{}]])}]])}}}, Page: {
+"bdevl":{preloaded:1,can_componentize:false,defer:0,content:function(){return oE.kids([{tag:'style',attrs:{},children:m.trust(' .dbg-part { border: solid 8px #888; }\n.dbg-tag-error-box { border: solid 2px #C44; font-weight: bold;}\n.dbg-tag-error-msg { color: red; }\n.dbg-tag-box { border: solid 2px #44C; }\n.dbg-part-box { font-size: .5em;\n -webkit-box-shadow: 10px 10px 5px #888;\n padding: 5px 5px 5px 15px;\n width: 10px;\n height: 10px;\n z-index: 99999;\n}\n.red { color: red; }\n.btn-group { background-color: #CCC; border-radius: 6px; }\n.dbg-toolbar .btn { padding: 6px 2px; }\n.dbg-toolbar:hover {\n top: -7px;\n}\n.dbg-toolbar {\n overflow-y: hidden;\n top: -46px;\n transition-property: top;\n transition-duration: .5s; ')},{tag:'div',attrs:{className:'dbg-toolbar',style:{position:'fixed',zIndex:'9999',backgroundColor:'#484848',fontSize:'10px',padding:'10px 10px 0 10px',right:'0'}},children:[{tag:'div',attrs:{className:'btn-toolbar'},children:[{tag:'div',attrs:{className:'btn-group'},children:[{tag:'a',attrs:{className:'btn btn-mini','data-e-action':'click:dbg_refresh','data-e-what':'file'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-repeat'},children:[]}]},{tag:'a',attrs:{className:'btn btn-mini','data-e-action':'click:dbg_toggle','data-e-what':'file'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-file '+oE.v3('Devl','Opts','file','?red')},children:[]}]},{tag:'a',attrs:{className:'btn btn-mini','data-e-action':'click:dbg_toggle','data-e-what':'tag'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-chevron-left '+oE.v3('Devl','Opts','tag','?red')},children:[]}]},{tag:'a',attrs:{className:'btn btn-mini','data-e-action':'click:dbg_toggle','data-e-what':'tag2'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-chevron-right '+oE.v3('Devl','Opts','tag2','?red')},children:[]}]},{tag:'a',attrs:{className:'btn btn-mini','data-e-action':'click:dbg_toggle','data-e-what':'form'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-edit '+oE.v3('Devl','Opts','form','?red')},children:[]}]},{tag:'a',attrs:{className:'btn btn-mini','data-e-action':'click:dbg_toggle','data-e-what':'model'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-list-alt '+oE.v3('Devl','Opts','model','?red')},children:[]}]}]}]},{tag:'div',attrs:{style:{textAlign:'center',color:'#FFF',letterSpacing:'5px',fontSize:'10px',height:'18px',paddingLeft:'4px',marginTop:'-3px'}},children:['EPIC']}]},['if',{set:oE.v3('Devl','Opts','model')},function(){return [{tag:'table',attrs:{width:'100%'},children:[{tag:'tr',attrs:{},children:[{tag:'td',attrs:{width:'20%',style:{backgroundColor:'#90C0FF',verticalAlign:'top',paddingTop:'75px',paddingBottom:'20px'}},children:oE.kids([['part',{part:'dbg_model',dynamic:'div'}]])},{tag:'td',attrs:{width:'100%',style:{verticalAlign:'top',position:'relative'}},children:oE.kids([['page',{}]])}]}]}]}],['if',{not_set:oE.v3('Devl','Opts','model')},function(){return oE.kids([['page',{}]])}]])}}}, Page: {
 }, Part: {
-"dbg_model":{preloaded:1,can_componentize:false,defer:0,content:function(){return [{tag:'style',attrs:{},children:m.trust(' ul.dbg-model.nav, ul.dbg-model.nav ul { margin-bottom: 0; border: 0; }\nul.dbg-model.nav li a, ul.dbg-model.nav ul li a { padding: 0; border: 0; }\nul.dbg-model.nav ul li a { padding-left: 15px; } ')},{tag:'ul',attrs:{'className':'dbg-model nav nav-tabs nav-stacked'},children:oE.kids([['foreach',{'table':'Devl/Model'},function(){return [{tag:'li',attrs:{},children:oE.kids([{tag:'a',attrs:{'data-e-action':'click:dbg_open_model','data-e-name':oE.v2('Model','name')},children:[' ['+oE.v2('Model','tables')+'] '+oE.v2('Model','name')+' ('+oE.v2('Model','inst')+') ']},['if',{'set':oE.v2('Model','is_open')},function(){return [{tag:'ul',attrs:{'className':'nav nav-tabs nav-stacked'},children:oE.kids([['foreach',{'table':'Model/Table'},function(){return [{tag:'li',attrs:{},children:oE.kids([{tag:'a',attrs:{'data-e-action':'click:dbg_open_table','data-e-name':oE.v2('Table','name')},children:[{tag:'span',attrs:{'title':oE.v2('Table','cols')},children:['['+oE.v2('Table','rows')+'] '+oE.v2('Table','name')]}]},['if',{'set':oE.v2('Table','is_open')},function(){return [{tag:'table',attrs:{'border':'1','style':{'fontSize':'8pt','lineHeight':'1'}},children:[{tag:'tbody',attrs:{},children:oE.kids([{tag:'tr',attrs:{},children:[{tag:'th',attrs:{},children:oE.kids([['if',{'set':oE.v2('Table','by_col')},function(){return [{tag:'a',attrs:{'data-e-action':'click:dbg_table_by_row'},children:[' Row ']}]}],['if',{'not_set':oE.v2('Table','by_col')},function(){return oE.kids([' Column ',['if',{'set':oE.v2('Table','is_sub')},function(){return [{tag:'a',attrs:{'data-e-action':'click:dbg_close_subtable','style':{'padding':'0'}},children:['^']}]}]])}]])},{tag:'th',attrs:{},children:['T']},{tag:'th',attrs:{},children:oE.kids([['if',{'val':oE.v2('Table','rows'),'eq':'1'},function(){return [' Value ']}],['if',{'val':oE.v2('Table','rows'),'ne':'1'},function(){return oE.kids([['if',{'set':oE.v2('Table','by_col')},function(){return ['   '+oE.v2('Table','curr_col')+'&nbsp;&nbsp; ']}],['if',{'not_set':oE.v2('Table','by_col')},function(){return [{tag:'a',attrs:{'data-e-action':'click:dbg_table_left'},children:['<']},'   Value (row '+oE.v2('Table','row_cnt')+')&nbsp;&nbsp; ',{tag:'a',attrs:{'data-e-action':'click:dbg_table_right'},children:['>']}]}]])}]])}]},['if',{'not_set':oE.v2('Table','by_col')},function(){return oE.kids([['foreach',{'table':'Table/Cols'},function(){return [{tag:'tr',attrs:{},children:oE.kids([{tag:'th',attrs:{},children:oE.kids([['if',{'val':oE.v2('Table','rows'),'eq':'1'},function(){return [' '+oE.v2('Cols','col')+' ']}],['if',{'val':oE.v2('Table','rows'),'ne':'1'},function(){return [{tag:'a',attrs:{'data-e-action':'click:dbg_table_col_set','data-e-col':oE.v2('Cols','col')},children:[oE.v2('Cols','col')]}]}]])},['if',{'set':oE.v2('Cols','val')},function(){return [{tag:'td',attrs:{'style':{'color':'green'}},children:[oE.v2('Cols','type','1')]}]}],['if',{'not_set':oE.v2('Cols','val')},function(){return [{tag:'td',attrs:{'style':{'color':'red'}},children:[oE.v2('Cols','type','1')]}]}],{tag:'td',attrs:{'title':oE.v2('Cols','type')},children:oE.kids([['if',{'val':oE.v2('Cols','type'),'eq':'object'},function(){return oE.kids([['if',{'not_set':oE.v2('Cols','len')},function(){return [' Table [ empty ]']}],['if',{'set':oE.v2('Cols','len')},function(){return oE.kids([{tag:'a',attrs:{'data-e-action':'click:dbg_open_subtable','data-e-name':oE.v2('Cols','col'),'style':{'padding':'0'}},children:['Table']},' ['+oE.v2('Cols','len')+' row',['if',{'val':oE.v2('Cols','len'),'ne':'1'},function(){return ['s']}],'] '])}]])}],['if',{'val':oE.v2('Cols','type'),'ne':'object'},function(){return [' '+oE.v2('Cols','val')+' ']}]])}])}]}]])}],['if',{'set':oE.v2('Table','by_col')},function(){return oE.kids([['foreach',{'table':'Table/Rows'},function(){return [{tag:'tr',attrs:{},children:oE.kids([{tag:'th',attrs:{},children:[oE.v2('Rows','row')]},['if',{'set':oE.v2('Rows','val')},function(){return [{tag:'td',attrs:{'style':{'color':'green'}},children:[oE.v2('Rows','type','1')]}]}],['if',{'not_set':oE.v2('Rows','val')},function(){return [{tag:'td',attrs:{'style':{'color':'red'}},children:[oE.v2('Rows','type','1')]}]}],{tag:'td',attrs:{'title':oE.v2('Rows','type')},children:oE.kids([['if',{'val':oE.v2('Rows','type'),'eq':'object'},function(){return oE.kids(['Table [ ',['if',{'set':oE.v2('Rows','len')},function(){return oE.kids([oE.v2('Rows','len')+' row',['if',{'val':oE.v2('Rows','len'),'ne':'1'},function(){return ['s']}]])}],['if',{'not_set':oE.v2('Rows','len')},function(){return ['empty']}],' ]'])}],['if',{'val':oE.v2('Rows','type'),'ne':'object'},function(){return [' '+oE.v2('Rows','val')+' ']}]])}])}]}]])}]])}]}]}]])}]}]])}]}]])}]}]])}]}}}};
+"dbg_model":{preloaded:1,can_componentize:false,defer:0,content:function(){return [{tag:'style',attrs:{},children:m.trust(' ul.dbg-model.nav, ul.dbg-model.nav ul { margin-bottom: 0; border: 0; }\nul.dbg-model.nav li a, ul.dbg-model.nav ul li a { padding: 0; border: 0; }\nul.dbg-model.nav ul li a { padding-left: 15px; } ')},{tag:'ul',attrs:{className:'dbg-model nav nav-tabs nav-stacked'},children:oE.kids([['foreach',{table:'Devl/Model'},function(){return [{tag:'li',attrs:{},children:oE.kids([{tag:'a',attrs:{'data-e-action':'click:dbg_open_model','data-e-name':oE.v2('Model','name')},children:[' ['+oE.v2('Model','tables')+'] '+oE.v2('Model','name')+' ('+oE.v2('Model','inst')+') ']},['if',{set:oE.v2('Model','is_open')},function(){return [{tag:'ul',attrs:{className:'nav nav-tabs nav-stacked'},children:oE.kids([['foreach',{table:'Model/Table'},function(){return [{tag:'li',attrs:{},children:oE.kids([{tag:'a',attrs:{'data-e-action':'click:dbg_open_table','data-e-name':oE.v2('Table','name')},children:[{tag:'span',attrs:{title:oE.v2('Table','cols')},children:['['+oE.v2('Table','rows')+'] '+oE.v2('Table','name')]}]},['if',{set:oE.v2('Table','is_open')},function(){return [{tag:'table',attrs:{border:'1',style:{fontSize:'8pt',lineHeight:'1'}},children:[{tag:'tbody',attrs:{},children:oE.kids([{tag:'tr',attrs:{},children:[{tag:'th',attrs:{},children:oE.kids([['if',{set:oE.v2('Table','by_col')},function(){return [{tag:'a',attrs:{'data-e-action':'click:dbg_table_by_row'},children:[' Row ']}]}],['if',{not_set:oE.v2('Table','by_col')},function(){return oE.kids([' Column ',['if',{set:oE.v2('Table','is_sub')},function(){return [{tag:'a',attrs:{'data-e-action':'click:dbg_close_subtable',style:{padding:'0'}},children:['^']}]}]])}]])},{tag:'th',attrs:{},children:['T']},{tag:'th',attrs:{},children:oE.kids([['if',{val:oE.v2('Table','rows'),eq:'1'},function(){return [' Value ']}],['if',{val:oE.v2('Table','rows'),ne:'1'},function(){return oE.kids([['if',{set:oE.v2('Table','by_col')},function(){return ['   '+oE.v2('Table','curr_col')+'&nbsp;&nbsp; ']}],['if',{not_set:oE.v2('Table','by_col')},function(){return [{tag:'a',attrs:{'data-e-action':'click:dbg_table_left'},children:['<']},'   Value (row '+oE.v2('Table','row_cnt')+')&nbsp;&nbsp; ',{tag:'a',attrs:{'data-e-action':'click:dbg_table_right'},children:['>']}]}]])}]])}]},['if',{not_set:oE.v2('Table','by_col')},function(){return oE.kids([['foreach',{table:'Table/Cols'},function(){return [{tag:'tr',attrs:{},children:oE.kids([{tag:'th',attrs:{},children:oE.kids([['if',{val:oE.v2('Table','rows'),eq:'1'},function(){return [' '+oE.v2('Cols','col')+' ']}],['if',{val:oE.v2('Table','rows'),ne:'1'},function(){return [{tag:'a',attrs:{'data-e-action':'click:dbg_table_col_set','data-e-col':oE.v2('Cols','col')},children:[oE.v2('Cols','col')]}]}]])},['if',{set:oE.v2('Cols','val')},function(){return [{tag:'td',attrs:{style:{color:'green'}},children:[oE.v2('Cols','type','1')]}]}],['if',{not_set:oE.v2('Cols','val')},function(){return [{tag:'td',attrs:{style:{color:'red'}},children:[oE.v2('Cols','type','1')]}]}],{tag:'td',attrs:{title:oE.v2('Cols','type')},children:oE.kids([['if',{val:oE.v2('Cols','type'),eq:'object'},function(){return oE.kids([['if',{not_set:oE.v2('Cols','len')},function(){return [' Table [ empty ]']}],['if',{set:oE.v2('Cols','len')},function(){return oE.kids([{tag:'a',attrs:{'data-e-action':'click:dbg_open_subtable','data-e-name':oE.v2('Cols','col'),style:{padding:'0'}},children:['Table']},' ['+oE.v2('Cols','len')+' row',['if',{val:oE.v2('Cols','len'),ne:'1'},function(){return ['s']}],'] '])}]])}],['if',{val:oE.v2('Cols','type'),ne:'object'},function(){return [' '+oE.v2('Cols','val')+' ']}]])}])}]}]])}],['if',{set:oE.v2('Table','by_col')},function(){return oE.kids([['foreach',{table:'Table/Rows'},function(){return [{tag:'tr',attrs:{},children:oE.kids([{tag:'th',attrs:{},children:[oE.v2('Rows','row')]},['if',{set:oE.v2('Rows','val')},function(){return [{tag:'td',attrs:{style:{color:'green'}},children:[oE.v2('Rows','type','1')]}]}],['if',{not_set:oE.v2('Rows','val')},function(){return [{tag:'td',attrs:{style:{color:'red'}},children:[oE.v2('Rows','type','1')]}]}],{tag:'td',attrs:{title:oE.v2('Rows','type')},children:oE.kids([['if',{val:oE.v2('Rows','type'),eq:'object'},function(){return oE.kids(['Table [ ',['if',{set:oE.v2('Rows','len')},function(){return oE.kids([oE.v2('Rows','len')+' row',['if',{val:oE.v2('Rows','len'),ne:'1'},function(){return ['s']}]])}],['if',{not_set:oE.v2('Rows','len')},function(){return ['empty']}],' ]'])}],['if',{val:oE.v2('Rows','type'),ne:'object'},function(){return [' '+oE.v2('Rows','val')+' ']}]])}])}]}]])}]])}]}]}]])}]}]])}]}]])}]}]])}]}}}};
 
