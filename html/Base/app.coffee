@@ -7,4 +7,5 @@ E.app$Base=
 		View: class: "View$Base", inst: "iBaseView"
 		Fist: class: "Fist$Base", inst: "iBaseFist"
 		Tab:  class: "Tab$Base",  inst: "iBaseTab"
+		Wist: class: "Wist$Base", inst: "iBaseWist"
 

@@ -22,6 +22,10 @@
       Tab: {
         "class": "Tab$Base",
         inst: "iBaseTab"
+      },
+      Wist: {
+        "class": "Wist$Base",
+        inst: "iBaseWist"
       }
     }
   };
