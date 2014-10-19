@@ -5,6 +5,7 @@
 class View extends E.Model.View$Base
 	run: ->
 		@errors_cache= _COUNT: 0
+		@warn_cache= {}
 		@in_defer= false
 		super()
 	Opts: -> E.Devl('Opts')[0]
@@ -19,7 +20,7 @@ class View extends E.Model.View$Base
 					.replace /&lt;/g, '<')
 					.replace /&gt;/g, '>')
 					.replace /&amp;/g, '&'
-				prefix= if type is 'varGet2' or type is 'varGet3' then 'Variable reference' else 'Tag'
+				prefix= if type is 'v2' or type is 'v3' then 'Variable reference' else 'Tag'
 				#alert "#{prefix} error (#{type}):\n\n#{msg}" #TODO CHROME BUG NOT SHOWING POPUP
 				_log2 "ERROR", "#{prefix} error (#{type}):\n\n#{msg}" #TODO CHROME BUG NOT SHOWING POPUP
 	invalidateTables: (view_nm, tbl_list, deleted_tbl_nms) ->
@@ -44,18 +45,25 @@ class View extends E.Model.View$Base
 """
 					@fist_table.Debug= true
 		super nm
-	_accessModelTable: (at_table, alias) ->
+	my_accessModelTable: (at_table, alias) ->
 		[lh, rh]= at_table.split '/'
 		if lh of @info_foreach
 			row= @info_foreach[ lh].row
 			if rh not of row
-				_log2 'ERROR', err= "No such sub-table (#{rh}) in (#{lh}) row=", row
+				row_info= switch row_typ= E.type_oau row
+					when 'O' # Should be hashes object
+						row_info=( nm for nm of row).join()
+						row_info+= ' fieldNm:'+ row.fieldNm if 'fieldNm' of row
+					else row_info= "Not a hash (#{row_typ})"
+				err= "No such sub-table (#{rh}) in (#{lh}) (row=#{row_info}) (dyn:#{@info_foreach[lh].dyn.join ','})"
+				#_log2 'ERROR', err
 				throw new Error err
 		else if lh not of E
-			_log2 'ERROR', err= "No such Model (#{lh}) for model/table (#{lh}/#{rh})"
+			err= "No such Model (#{lh}) for model/table (#{lh}/#{rh})"
+			#_log2 'ERROR', err
 			throw new Error err
-		return super at_table, alias
-	xT_fist: (oPt) ->
+		#return super at_table, alias
+	xT_fist: (oPt) -> # TODO REWROTE THIS BELOW WITH JAMIE, BUT MAY WANT TO BORROW FROM HERE SOME MORE
 		try
 			throw Error "Missing 'form' attribute" if not oPt.attrs.form
 			g= @Epic.getGroupNm()
@@ -116,33 +124,41 @@ class View extends E.Model.View$Base
 	v3: (view_nm, tbl_nm, col_nm, format_spec, custom_spec, give_error) ->
 		try
 			val= super view_nm, tbl_nm, col_nm, format_spec, custom_spec
-			t_format_spec= if format_spec or custom_spec then '#'+ format_spec else ''
-			t_custom_spec= if custom_spec then '#'+ custom_spec else ''
-			if val is undefined then throw new Error "Column/spec does not exist (#{view_nm}/#{tbl_nm}/#{col_nm}#{t_format_spec}#{t_custom_spec})."
+			if val is undefined
+				t_format_spec= if format_spec or custom_spec then '#'+ format_spec else ''
+				t_custom_spec= if custom_spec then '#'+ custom_spec else ''
+				key= '&'+ view_nm+ '/'+ tbl_nm+ '/'+ col_nm+ t_format_spec+ t_custom_spec+ ';'
+				if not @warn_cache[ key]
+					E.option.warn 'v3', "Undefined result: (#{key})."
+					@warn_cache[ key]= true
 		catch e
 			t_format_spec= if format_spec or custom_spec then '#'+ format_spec else ''
 			t_custom_spec= if custom_spec then '#'+ custom_spec else ''
-			key= '&amp;'+ view_nm+ '/'+ tbl_nm+ '/'+ col_nm+ t_format_spec+ t_custom_spec+ ';'
-			_log2 '##### Error in varGet3 key=', key, e
-			@_Error 'varGet3', key, e
+			key= '&'+ view_nm+ '/'+ tbl_nm+ '/'+ col_nm+ t_format_spec+ t_custom_spec+ ';'
+			_log2 '##### Error in v3 key=', key, e
+			@_Error 'v3', key, e
 			throw e
-		#"<span title='&amp;#{view_nm}/#{tbl_nm}/#{col_nm}#{t_format_spec}#{t_custom_spec};'>#{val}</span>"
+		#"<span title='&#{view_nm}/#{tbl_nm}/#{col_nm}#{t_format_spec}#{t_custom_spec};'>#{val}</span>"
 		val
-	xv2: (tbl_nm, col_nm, format_spec, custom_spec, sub_nm, give_error) ->
+	v2: (tbl_nm, col_nm, format_spec, custom_spec, sub_nm, give_error) ->
+		if tbl_nm not of @info_foreach
+			t_format_spec= if format_spec or custom_spec then '#'+ format_spec else ''
+			t_custom_spec= if custom_spec then '#'+ custom_spec else ''
+			key= '&'+ tbl_nm+ '/'+ col_nm+ t_format_spec+ t_custom_spec+ ';' # TODO sub_nm?
+			throw new Error "No such Table (#{tbl_nm}) evaluating #{key}"
 		try
 			val= super tbl_nm, col_nm, format_spec, custom_spec, sub_nm
 		catch e
-			throw e if @Epic.isSecurityError e or give_error
-			_log2 '##### varGet2', "&#{tbl_nm}/#{col_nm};", e, e.stack
-			val= "&amp;#{tbl_nm}/#{col_nm};[#{e.message}] <pre>#{e.stack}</pre>" # Give back a visual of what is in the HTML
+			_log2 '##### v2', "&#{tbl_nm}/#{col_nm};", e, e.stack
+			val= "&#{tbl_nm}/#{col_nm};[#{e.message}] <pre>#{e.stack}</pre>" # Give back a visual of what is in the HTML
 		if val is undefined
 			t_format_spec= if format_spec or custom_spec then '#'+ format_spec else ''
 			t_custom_spec= if custom_spec then '#'+ custom_spec else ''
-			key= '&amp;'+ tbl_nm+ '/'+ col_nm+ t_format_spec+ t_custom_spec+ ';' # TODO sub_nm?
-			_log2 '##### Error in varGet2 key=', key, 'undefined'
-			@_Error 'varGet2', key, message: 'is undefined', stack: "\n"
-			val= "&amp;#{tbl_nm}/#{col_nm};" # Give back a visual of what is in the HTML
-		#"<span title='&amp;#{tbl_nm}/#{col_nm}#{t_format_spec}#{t_custom_spec};'>#{val}</span>"
+			key= '&'+ tbl_nm+ '/'+ col_nm+ t_format_spec+ t_custom_spec+ ';' # TODO sub_nm?
+			if not @warn_cache[ key]
+				E.option.warn 'v2', "Undefined result: (#{key})."
+				@warn_cache[ key]= true
+		#"<span title='&#{tbl_nm}/#{col_nm}#{t_format_spec}#{t_custom_spec};'>#{val}</span>"
 		val
 	xT_if: (oPt) ->
 		try
@@ -159,27 +175,18 @@ class View extends E.Model.View$Base
 			@_Err 'tag', 'if', attrs, e
 	T_foreach: (attrs,children) ->
 		try
-			# Pre-check attributes
-			at_table= attrs.table
-			[lh, rh]= at_table.split '/' # Left/right halfs
-			# If left exists, it's nested as table/sub-table else assume model/table
-			if lh of @info_foreach
-				throw new Error "Sub-table missing: (#{rh}) in foreach table='#{lh}/#{rh}' (dyn:#{@info_foreach[lh].dyn.join ','}" if rh not of @info_foreach[lh].row
-				tbl= @info_foreach[lh].row[rh]
-			else
-				oMd= E[ lh]()
-				tbl= oMd.getTable rh
-			if @Opts().tag isnt true or @in_defer
-				result= super attrs, children
-				return result
+			throw new Error 'Missing table="<model>/<table>"' if not attrs.table?
+			@my_accessModelTable attrs.table
+			return super attrs, children if @Opts().tag isnt true or @in_defer
 
+			###
 			if tbl?.length
-				inside= 'len:'+tbl.length
+				inside= ['len:'+tbl.length]
 				cols=( nm for nm of tbl[0 ])
-				inside+= "<span title=\"#{cols.join ', '}\">Cols:#{cols.length}<span>"
+				inside.push m 'span', title: "#{cols.join ', '} Cols:#{cols.length}"
 			else inside='empty'
-			TODO() # NEED HTML TO BE VIRUTAL OBJECT, NOT ACTUAL <TAG> STUFF
-
+			###
+			inside='' # TODO MAYBE PUT BACK TABLE DETAILS CODE ABOVE
 			@_Div 'tag', attrs, inside, super attrs, children
 		catch e
 			@_Err 'tag', 'foreach', attrs, e
@@ -199,15 +206,15 @@ class View extends E.Model.View$Base
 		"<e-#{tag} #{attrs_array.join ' '}>"
 	_Div:( type, attrs, inside, after) ->
 		after?= ''
-		"""<div class="dbg-#{type}-box">#{@_TagText attrs}#{inside}</div>#{after}"""
+		[( m 'div', {className: "dbg-#{type}-box"}, "#{@_TagText attrs}#{inside}"), after]
 	_Err:( type, tag, attrs, e) ->
-		_log2 '### _Err type/tag/attrs/e', type, tag, attrs, e: e, m: e.message, s: e.stack
-		stack= if @Opts().stack then "<pre>\n#{e.stack}</pre>" else ''
+		_log2 '### _Err type/tag/attrs/e', type, tag, attrs, e: e, m: e.message, s: e.stack, (e.stack.split '\n')[1]
 		title= (e.stack.split '\n')[1]
+		stack= if @Opts().stack then (m 'pre',{},"\n#{e.stack}") else title
 		tag: 'div'
-		attrs: {className:"dbg-#{type}-error-box"}
+		attrs: {className:"dbg-#{type}-error-box clearLeft"}
 		children: [
-			(@_TagText tag, attrs, true), (m 'br'), (m 'dir', {className:"dbg-#{type}-error-msg", title:title}, e.message), stack
+			(@_TagText tag, attrs, true), (m 'br'), (m 'div', {className:"dbg-#{type}-error-msg", title:e.stack}, e.message), stack
 		]
 
 E.Model.View$Dev= View # Public API

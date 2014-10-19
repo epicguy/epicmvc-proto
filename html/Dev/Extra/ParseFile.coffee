@@ -175,7 +175,7 @@ FindAttrs= (file_info, str)->
 	else delete attr_obj.className
 	for data_nm in ['data-e-action']
 		attr_obj[data_nm]=( findVars attr_obj[data_nm].join()).join '+' if attr_obj[data_nm]
-	_log2 f, 'bottom', str, attr_obj if debug
+	#_log2 f, 'bottom', str, attr_obj if debug
 	# A string of JavaScript code representing an object, and empty (as '' or '/')
 	[ (mkObj attr_obj), empty, attrs_need_cleaning]
 
@@ -219,7 +219,7 @@ findVars= (text) ->
 doError= (file_stats, text) ->
 	console.error 'ERROR', file_stats, text
 	#alert "#{file_stats}, #{text}"
-	throw Error text
+	throw Error text+ ' in '+ file_stats
 ParseFile= (file_stats, file_contents) ->
 	f= ':Dev.E/ParseFile.ParseFile~'+file_stats
 	counter= 0
@@ -400,7 +400,7 @@ ParseFile= (file_stats, file_contents) ->
 			stuff= '' if child_array.length is 0
 		stuff
 	content= 'return '+ doChildren children
-	_log2 f, 'final', content
+	#_log2 f, 'final', content
 	return  content: content, defer: stats.defer, can_componentize: children.length is 1 and stats.epic is 0
 
 # Public API

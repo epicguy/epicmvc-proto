@@ -2,7 +2,7 @@
 (function() {
 
   E.manifest$Dev = {
-    Model: ['ModelJS', 'Devl', 'View'],
+    Model: ['Devl', 'View'],
     Extra: ['ParseFile'],
     js: [],
     root: ['app']

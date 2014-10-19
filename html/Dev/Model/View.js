@@ -18,6 +18,7 @@
       this.errors_cache = {
         _COUNT: 0
       };
+      this.warn_cache = {};
       this.in_defer = false;
       return View.__super__.run.call(this);
     };
@@ -37,7 +38,7 @@
         if (this.errors_cache._COUNT < 5) {
           _log2('### _Error type/key/e', type, key, e);
           msg = ((("" + key + "\n\n" + e.message).replace(/&lt;/g, '<')).replace(/&gt;/g, '>')).replace(/&amp;/g, '&');
-          prefix = type === 'varGet2' || type === 'varGet3' ? 'Variable reference' : 'Tag';
+          prefix = type === 'v2' || type === 'v3' ? 'Variable reference' : 'Tag';
           return _log2("ERROR", "" + prefix + " error (" + type + "):\n\n" + msg);
         }
       }
@@ -89,20 +90,38 @@
       return View.__super__.xgetTable.call(this, nm);
     };
 
-    View.prototype._accessModelTable = function(at_table, alias) {
-      var err, lh, rh, row, _ref;
+    View.prototype.my_accessModelTable = function(at_table, alias) {
+      var err, lh, nm, rh, row, row_info, row_typ, _ref;
       _ref = at_table.split('/'), lh = _ref[0], rh = _ref[1];
       if (lh in this.info_foreach) {
         row = this.info_foreach[lh].row;
         if (!(rh in row)) {
-          _log2('ERROR', err = "No such sub-table (" + rh + ") in (" + lh + ") row=", row);
+          row_info = (function() {
+            switch (row_typ = E.type_oau(row)) {
+              case 'O':
+                row_info = ((function() {
+                  var _results;
+                  _results = [];
+                  for (nm in row) {
+                    _results.push(nm);
+                  }
+                  return _results;
+                })()).join();
+                if ('fieldNm' in row) {
+                  return row_info += ' fieldNm:' + row.fieldNm;
+                }
+                break;
+              default:
+                return row_info = "Not a hash (" + row_typ + ")";
+            }
+          })();
+          err = "No such sub-table (" + rh + ") in (" + lh + ") (row=" + row_info + ") (dyn:" + (this.info_foreach[lh].dyn.join(',')) + ")";
           throw new Error(err);
         }
       } else if (!(lh in E)) {
-        _log2('ERROR', err = "No such Model (" + lh + ") for model/table (" + lh + "/" + rh + ")");
+        err = "No such Model (" + lh + ") for model/table (" + lh + "/" + rh + ")";
         throw new Error(err);
       }
-      return View.__super__._accessModelTable.call(this, at_table, alias);
     };
 
     View.prototype.xT_fist = function(oPt) {
@@ -220,43 +239,48 @@
       var key, t_custom_spec, t_format_spec, val;
       try {
         val = View.__super__.v3.call(this, view_nm, tbl_nm, col_nm, format_spec, custom_spec);
-        t_format_spec = format_spec || custom_spec ? '#' + format_spec : '';
-        t_custom_spec = custom_spec ? '#' + custom_spec : '';
         if (val === void 0) {
-          throw new Error("Column/spec does not exist (" + view_nm + "/" + tbl_nm + "/" + col_nm + t_format_spec + t_custom_spec + ").");
+          t_format_spec = format_spec || custom_spec ? '#' + format_spec : '';
+          t_custom_spec = custom_spec ? '#' + custom_spec : '';
+          key = '&' + view_nm + '/' + tbl_nm + '/' + col_nm + t_format_spec + t_custom_spec + ';';
+          if (!this.warn_cache[key]) {
+            E.option.warn('v3', "Undefined result: (" + key + ").");
+            this.warn_cache[key] = true;
+          }
         }
       } catch (e) {
         t_format_spec = format_spec || custom_spec ? '#' + format_spec : '';
         t_custom_spec = custom_spec ? '#' + custom_spec : '';
-        key = '&amp;' + view_nm + '/' + tbl_nm + '/' + col_nm + t_format_spec + t_custom_spec + ';';
-        _log2('##### Error in varGet3 key=', key, e);
-        this._Error('varGet3', key, e);
+        key = '&' + view_nm + '/' + tbl_nm + '/' + col_nm + t_format_spec + t_custom_spec + ';';
+        _log2('##### Error in v3 key=', key, e);
+        this._Error('v3', key, e);
         throw e;
       }
       return val;
     };
 
-    View.prototype.xv2 = function(tbl_nm, col_nm, format_spec, custom_spec, sub_nm, give_error) {
+    View.prototype.v2 = function(tbl_nm, col_nm, format_spec, custom_spec, sub_nm, give_error) {
       var key, t_custom_spec, t_format_spec, val;
+      if (!(tbl_nm in this.info_foreach)) {
+        t_format_spec = format_spec || custom_spec ? '#' + format_spec : '';
+        t_custom_spec = custom_spec ? '#' + custom_spec : '';
+        key = '&' + tbl_nm + '/' + col_nm + t_format_spec + t_custom_spec + ';';
+        throw new Error("No such Table (" + tbl_nm + ") evaluating " + key);
+      }
       try {
-        val = View.__super__.xv2.call(this, tbl_nm, col_nm, format_spec, custom_spec, sub_nm);
+        val = View.__super__.v2.call(this, tbl_nm, col_nm, format_spec, custom_spec, sub_nm);
       } catch (e) {
-        if (this.Epic.isSecurityError(e || give_error)) {
-          throw e;
-        }
-        _log2('##### varGet2', "&" + tbl_nm + "/" + col_nm + ";", e, e.stack);
-        val = "&amp;" + tbl_nm + "/" + col_nm + ";[" + e.message + "] <pre>" + e.stack + "</pre>";
+        _log2('##### v2', "&" + tbl_nm + "/" + col_nm + ";", e, e.stack);
+        val = "&" + tbl_nm + "/" + col_nm + ";[" + e.message + "] <pre>" + e.stack + "</pre>";
       }
       if (val === void 0) {
         t_format_spec = format_spec || custom_spec ? '#' + format_spec : '';
         t_custom_spec = custom_spec ? '#' + custom_spec : '';
-        key = '&amp;' + tbl_nm + '/' + col_nm + t_format_spec + t_custom_spec + ';';
-        _log2('##### Error in varGet2 key=', key, 'undefined');
-        this._Error('varGet2', key, {
-          message: 'is undefined',
-          stack: "\n"
-        });
-        val = "&amp;" + tbl_nm + "/" + col_nm + ";";
+        key = '&' + tbl_nm + '/' + col_nm + t_format_spec + t_custom_spec + ';';
+        if (!this.warn_cache[key]) {
+          E.option.warn('v2', "Undefined result: (" + key + ").");
+          this.warn_cache[key] = true;
+        }
       }
       return val;
     };
@@ -279,38 +303,24 @@
     };
 
     View.prototype.T_foreach = function(attrs, children) {
-      var at_table, cols, inside, lh, nm, oMd, result, rh, tbl, _ref;
+      var inside;
       try {
-        at_table = attrs.table;
-        _ref = at_table.split('/'), lh = _ref[0], rh = _ref[1];
-        if (lh in this.info_foreach) {
-          if (!(rh in this.info_foreach[lh].row)) {
-            throw new Error("Sub-table missing: (" + rh + ") in foreach table='" + lh + "/" + rh + "' (dyn:" + (this.info_foreach[lh].dyn.join(',')));
-          }
-          tbl = this.info_foreach[lh].row[rh];
-        } else {
-          oMd = E[lh]();
-          tbl = oMd.getTable(rh);
+        if (!(attrs.table != null)) {
+          throw new Error('Missing table="<model>/<table>"');
         }
+        this.my_accessModelTable(attrs.table);
         if (this.Opts().tag !== true || this.in_defer) {
-          result = View.__super__.T_foreach.call(this, attrs, children);
-          return result;
+          return View.__super__.T_foreach.call(this, attrs, children);
         }
-        if (tbl != null ? tbl.length : void 0) {
-          inside = 'len:' + tbl.length;
-          cols = (function() {
-            var _results;
-            _results = [];
-            for (nm in tbl[0]) {
-              _results.push(nm);
-            }
-            return _results;
-          })();
-          inside += "<span title=\"" + (cols.join(', ')) + "\">Cols:" + cols.length + "<span>";
-        } else {
-          inside = 'empty';
-        }
-        TODO();
+        /*
+        			if tbl?.length
+        				inside= ['len:'+tbl.length]
+        				cols=( nm for nm of tbl[0 ])
+        				inside.push m 'span', title: "#{cols.join ', '} Cols:#{cols.length}"
+        			else inside='empty'
+        */
+
+        inside = '';
         return this._Div('tag', attrs, inside, View.__super__.T_foreach.call(this, attrs, children));
       } catch (e) {
         return this._Err('tag', 'foreach', attrs, e);
@@ -344,7 +354,11 @@
       if (after == null) {
         after = '';
       }
-      return "<div class=\"dbg-" + type + "-box\">" + (this._TagText(attrs)) + inside + "</div>" + after;
+      return [
+        m('div', {
+          className: "dbg-" + type + "-box"
+        }, "" + (this._TagText(attrs)) + inside), after
+      ];
     };
 
     View.prototype._Err = function(type, tag, attrs, e) {
@@ -353,18 +367,18 @@
         e: e,
         m: e.message,
         s: e.stack
-      });
-      stack = this.Opts().stack ? "<pre>\n" + e.stack + "</pre>" : '';
+      }, (e.stack.split('\n'))[1]);
       title = (e.stack.split('\n'))[1];
+      stack = this.Opts().stack ? m('pre', {}, "\n" + e.stack) : title;
       return {
         tag: 'div',
         attrs: {
-          className: "dbg-" + type + "-error-box"
+          className: "dbg-" + type + "-error-box clearLeft"
         },
         children: [
-          this._TagText(tag, attrs, true), m('br'), m('dir', {
+          this._TagText(tag, attrs, true), m('br'), m('div', {
             className: "dbg-" + type + "-error-msg",
-            title: title
+            title: e.stack
           }, e.message), stack
         ]
       };

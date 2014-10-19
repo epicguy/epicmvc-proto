@@ -13,6 +13,8 @@
 
   window.EpicMvc.app$Dev = {
     OPTIONS: {
+      warn: warn,
+      err: err,
       c1: function(inAction) {
         if (inAction !== false) {
           return warn("IN CLICK");
@@ -22,51 +24,67 @@
         if (view_name in aModels) {
           return;
         }
-        return err("Could not find model (" + view_name + ") in namespace E.Model", aModels);
+        err("Could not find model (" + view_name + ") in namespace E.Model", aModels);
       },
       a2: function(view_name, aModels, attribute) {
         if (attribute in aModels[view_name]) {
           return;
         }
-        return err("Could not find model (" + view_name + ") in namespace E.Model", aModels);
+        err("Could not find model (" + view_name + ") in namespace E.Model", aModels);
       },
       m1: function(view, model) {
         if (model["class"] in E.Model) {
           return;
         }
-        return err("Processing view (" + view + "), model-class (" + model["class"] + ") not in namespace E.Model", model);
+        err("Processing view (" + view + "), model-class (" + model["class"] + ") not in namespace E.Model", model);
+      },
+      m2: function(view_nm, act, parms) {
+        err("Model (" + view_nm + ").action() didn't know action (" + act + ")");
+      },
+      m3: function(view_nm, tbl_nm, table) {
+        if (tbl_nm in table) {
+          return;
+        }
+        err("Model (" + view_nm + ").loadTable() didn't know table-name (" + tbl_nm + ")");
+      },
+      m4: function(view_nm, fistNm, row) {
+        err("Model (" + view_nm + ").fistValidate() didn't know FIST (" + fistNm + ")");
+      },
+      m5: function(view_nm, fistNm, row) {
+        err("Model (" + view_nm + ").fistGetValues() didn't know FIST (" + fistNm + ")");
+      },
+      m6: function(view_nm, fistNm, fieldNm, row) {
+        err("Model (" + view_nm + ").fistGetChoices() did't know FIST-FIELD (" + fistNm + "-" + fieldNm + ")");
       },
       ca1: function(action_token, original_path, action_node) {
         if (action_node != null) {
           return;
         }
-        return warn("No app. entry for action_token (" + action_token + ") on path (" + original_path + ")");
+        warn("No app. entry for action_token (" + action_token + ") on path (" + original_path + ")");
       },
       ca2: function(action_token, original_path, nms, data, action_node) {
-        var nm, _i, _len, _results;
-        _results = [];
+        var nm, _i, _len;
         for (_i = 0, _len = nms.length; _i < _len; _i++) {
           nm = nms[_i];
           if (!(nm in data)) {
-            _results.push(warn("Missing param (" + nm + ") for action (" + action_token + "), Path: " + original_path, {
+            warn("Missing param (" + nm + ") for action (" + action_token + "), Path: " + original_path, {
               data: data,
               action_node: action_node
-            }));
+            });
           }
         }
-        return _results;
       },
       ca3: function(action_token, original_path, action_node, aMacros) {
         if (action_node["do"] in aMacros) {
           return;
         }
-        return err("Missing (" + action_node["do"] + ") from MACROS; Action: (" + action_token + "), Path: (" + original_path + ")");
+        err("Missing (" + action_node["do"] + ") from MACROS; Action: (" + action_token + "), Path: (" + original_path + ")");
       },
       ca4: function(action_token, original_path, action_node, what) {
         if (action_node[what] in E.fistDef) {
           return;
         }
-        return err("Unknown Fist for '" + what + ":' " + action_node[what] + "); Action: (" + action_token + "), Path: (" + original_path + ")", {
+        err("Unknown Fist for '" + what + ":' " + action_node[what] + "); Action: (" + action_token + "), Path: (" + original_path + ")", {
           action_node: action_node
         });
       },
@@ -75,38 +93,53 @@
         fistNm = fist.nm;
         model = E.appFist(fistNm);
         if (!(model != null)) {
-          return err("FIST is missing: app.js requires MODELS: <model-name>: fists:[...,'" + fistNm + "']", {
+          err("FIST is missing: app.js requires MODELS: <model-name>: fists:[...,'" + fistNm + "']", {
             fist: fist
           });
         }
       },
       fi2: function(field) {
-        var attr, filt, _i, _len, _ref, _results;
+        var attr, filt, filtList, filtNm, type, _i, _j, _len, _len1, _ref;
         _ref = ['h2h', 'd2h', 'h2d', 'validate'];
-        _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           attr = _ref[_i];
           if (!(attr in field)) {
             continue;
           }
-          filt = 'fist' + (attr === 'validate' ? 'VAL' : attr.toUpperCase()) + '$' + field[attr];
-          if (!(filt in E)) {
-            _results.push(err("Missing Fist Filter (E." + filt + ") in FIELD (" + field.fieldNm + ") for FIST (" + field.fistNm + ")", {
-              field: field
-            }));
-          } else {
-            _results.push(void 0);
+          type = attr === 'validate' ? 'VAL' : attr.toUpperCase();
+          filtList = attr === 'h2h' ? field[attr] : [field[attr]];
+          for (_j = 0, _len1 = filtList.length; _j < _len1; _j++) {
+            filtNm = filtList[_j];
+            if (filtNm && !((filt = 'fist' + type + '$' + filtNm) in E)) {
+              err("Missing Fist Filter (E." + filt + ") in FIELD (" + field.fieldNm + ") for FIST (" + field.fistNm + ")", {
+                field: field
+              });
+            }
           }
         }
-        return _results;
       },
       fi3: function(field, val) {
         if (val != null) {
           return;
         }
-        return warn("FIST field value is undefined in FIELD (" + field.fieldNm + ") for FIST (" + field.fistNm + ")", {
+        warn("FIST field value is undefined in FIELD (" + field.fieldNm + ") for FIST (" + field.fistNm + ")", {
           field: field
         });
+      },
+      fi4: function(type, fist, field) {
+        err("Unknown pulldown/radio option (" + type + ") in FIELD " + field.fieldNm + " for FIST " + field.fistNm + ".", {
+          field: field
+        });
+      },
+      v1: function(val, spec) {
+        err("Unknown variable specification/filter (#" + spec + ")");
+        return val != null ? val : '';
+      },
+      w1: function(wistNm) {
+        if (wistNm in E.wistDef) {
+          return;
+        }
+        err("Unknown Wist (" + wistNm + ").");
       }
     },
     SETTINGS: {

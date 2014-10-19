@@ -266,9 +266,6 @@
         attr_obj[data_nm] = (findVars(attr_obj[data_nm].join())).join('+');
       }
     }
-    if (debug) {
-      _log2(f, 'bottom', str, attr_obj);
-    }
     return [mkObj(attr_obj), empty, attrs_need_cleaning];
   };
 
@@ -332,7 +329,7 @@
 
   doError = function(file_stats, text) {
     console.error('ERROR', file_stats, text);
-    throw Error(text);
+    throw Error(text + ' in ' + file_stats);
   };
 
   ParseFile = function(file_stats, file_contents) {
@@ -549,7 +546,6 @@
       return stuff;
     };
     content = 'return ' + doChildren(children);
-    _log2(f, 'final', content);
     return {
       content: content,
       defer: stats.defer,

@@ -69,7 +69,6 @@
               sub = type === 'root' ? '' : type + '/';
               url = E.option.loadDirs[pkg] + pkg + '/' + sub + file + '.js';
               work.push(url);
-              _log2(f, 'to do ', url);
             }
           }
         }
@@ -97,7 +96,6 @@
       var el, f, id;
       f = 'inline';
       el = document.getElementById(id = 'view-' + type + '-' + nm);
-      _log2(f, 'inline el=', id, el);
       if (el) {
         return el.innerHTML;
       }
@@ -107,9 +105,7 @@
     LoadStrategy.prototype.preLoaded = function(pkg, type, nm) {
       var f, r, _ref, _ref1;
       f = 'preLoaded';
-      _log2(f, 'looking for ', pkg, type, nm);
       r = (_ref = E['view$' + pkg]) != null ? (_ref1 = _ref[type]) != null ? _ref1[nm] : void 0 : void 0;
-      _log2(f, 'found', ((r != null ? r.preloaded : void 0) ? 'PRELOADED' : 'broken'), r);
       return r;
     };
 
@@ -124,7 +120,7 @@
     };
 
     LoadStrategy.prototype.d_get = function(type, nm) {
-      var def, f, full_nm, full_nm_alt, pkg, promise, type_alt, uncompiled, _fn, _fn1, _i, _j, _len, _len1, _ref, _ref1,
+      var def, f, full_nm, full_nm_alt, pkg, promise, type_alt, uncompiled, _fn, _i, _j, _len, _len1, _ref, _ref1,
         _this = this;
       f = 'd_get';
       full_nm = type + '/' + nm + '.html';
@@ -137,11 +133,29 @@
       def = new m.Deferred();
       def.resolve(false);
       promise = def.promise;
+      type_alt = type === 'Layout' ? 'tmpl' : type.toLowerCase();
+      full_nm_alt = type + '/' + nm + '.' + type_alt + '.html';
       _ref = this.reverse_packages;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        pkg = _ref[_i];
+        if ((pkg !== 'Base' && pkg !== 'Dev' && pkg !== 'Proto') && type !== 'Layout') {
+          (function(pkg) {
+            return promise = promise.then(function(result) {
+              if (result !== false) {
+                return result;
+              }
+              if (!(pkg in E.option.loadDirs)) {
+                return false;
+              }
+              return _this.D_getFile(pkg, full_nm_alt);
+            });
+          })(pkg);
+        }
+      }
+      _ref1 = this.reverse_packages;
       _fn = function(pkg) {
         return promise = promise.then(function(result) {
           var compiled;
-          _log2(f, 'THEN-' + pkg, full_nm, 'S' === E.type_oau(result) ? result.slice(0, 40) : result);
           if (result !== false) {
             return result;
           }
@@ -154,28 +168,9 @@
           return _this.D_getFile(pkg, full_nm);
         });
       };
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        pkg = _ref[_i];
-        _fn(pkg);
-      }
-      type_alt = type === 'Layout' ? 'tmpl' : type.toLowerCase();
-      full_nm_alt = type + '/' + nm + '.' + type_alt + '.html';
-      _ref1 = this.reverse_packages;
-      _fn1 = function(pkg) {
-        return promise = promise.then(function(result) {
-          _log2(f, 'THEN-' + pkg, full_nm, 'S' === E.type_oau(result) ? result.slice(0, 40) : result);
-          if (result !== false) {
-            return result;
-          }
-          if (!(pkg in E.option.loadDirs)) {
-            return false;
-          }
-          return _this.D_getFile(pkg, full_nm_alt);
-        });
-      };
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
         pkg = _ref1[_j];
-        _fn1(pkg);
+        _fn(pkg);
       }
       promise = promise.then(function(result) {
         var parsed;
@@ -185,14 +180,17 @@
           }
           parsed = _this.compile(full_nm, result);
         } else {
-          _log2('ERROR', 'NO FILE FOUND! ' + type + ' - ' + nm);
+          throw new Error("Unable to locate View file (" + full_nm + ").");
+          console.error('ERROR', 'NO FILE FOUND! ', full_nm);
           parsed = false;
         }
+        _this.cache[full_nm] = parsed;
         return parsed;
       });
       promise.then(null, function(error) {
         throw error;
       });
+      this.cache[full_nm] = promise;
       return promise;
     };
 
