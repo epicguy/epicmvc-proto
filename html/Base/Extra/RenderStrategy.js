@@ -33,7 +33,7 @@
         return _this.onPopState(true);
       }), 0);
       window.onpopstate = this.onPopState;
-      this.redraw_guard = false;
+      this.redraw_guard = 0;
       m.redraw = this.m_redraw;
       this.init();
       true;
@@ -162,14 +162,22 @@
       var f,
         _this = this;
       f = 'm_redraw';
-      if (this.redraw_guard !== false) {
-        _log2(f, 'GUARD REDRAW');
+      this.redraw_guard++;
+      if (this.redraw_guard !== 1) {
+        _log2(f, 'GUARD REDRAW', this.redraw_guard);
         return;
       }
-      this.redraw_guard = true;
       return E.View().run().then(function(content) {
-        _this.render(content, 'TODO', 'TODO', false);
-        return _this.redraw_guard = false;
+        _this.redraw_guard--;
+        if (_this.redraw_guard !== 0) {
+          _this.redraw_guard = 0;
+          setTimeout((function() {
+            return _this.m_redraw();
+          }), 16);
+        }
+        return _this.render(content, 'TODO', 'TODO', false);
+      }).then(null, function(err) {
+        return console.error('RenderStrategy$Base m_redraw', err);
       });
     };
 

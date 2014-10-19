@@ -4,9 +4,12 @@
 class App$Base extends E.ModelJS
 	constructor: (view_nm, options) ->
 		ss= f: null, t: null, s: null, sp: [] # Save-path stack
+		super view_nm, options, ss
+		@clear()
+	clear: ->
 		@issues= new E.Issue @view_nm
 		@messages= new E.Issue @view_nm
-		super view_nm, options, ss
+		@invalidateTables ['Issue', 'Message']
 	goTo: (flow,t,s) ->
 		f= 'goTo'
 		was= "#{@f}/#{@t}/#{@s}"
@@ -17,16 +20,16 @@ class App$Base extends E.ModelJS
 		else if not s? or not E.appGetS( flow, t, s)?
 			s= E.appStartS flow, t
 		@f= flow; @t= t; @s= s
-		_log2 f, {was,is: "#{@f}/#{@t}/#{@s}"}
+		#_log2 f, {was,is: "#{@f}/#{@t}/#{@s}"}
 		if was isnt "#{@f}/#{@t}/#{@s}"
 			@invalidateTables ['V'] # This table is specific to the 'path'
 	go: (path) ->
 		f= 'go'
 		q= path.split '/'
-		_log2 f, 'before', q, @f, @t, @s
+		#_log2 f, 'before', q, @f, @t, @s
 		for v,ix in [@f, @t, @s]
 			if not (q[ix]?.length) then q[ix]= v else break # Stop at first set value, rest will default
-		_log2 f, 'after', q, @f, @t, @s
+		#_log2 f, 'after', q, @f, @t, @s
 		@goTo q[0], q[1], q[2]
 	appGet: (attr) -> E.appGetSetting attr, @f, @t, @s
 	getStepPath: -> [@f, @t, @s]
@@ -39,10 +42,7 @@ class App$Base extends E.ModelJS
 				if @sp.length then q= @sp.pop(); @goTo q[0], q[1], q[2]
 			when 'add_message' then m.add p.type, p.msgs
 			when 'add_issue'   then i.add p.type, p.msgs
-			when 'clear'
-				@issues= new E.Issue @view_nm
-				@messages= new E.Issue @view_nm
-				@invalidateTables ['Issue', 'Message']
+			when 'clear' then @clear()
 			else  super ctx, act, p
 	setIssues: (issue_obj) ->
 		@issues.addObj issue_obj if issue_obj?.count() isnt 0

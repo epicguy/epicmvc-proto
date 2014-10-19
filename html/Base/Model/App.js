@@ -18,10 +18,15 @@
         s: null,
         sp: []
       };
+      App$Base.__super__.constructor.call(this, view_nm, options, ss);
+      this.clear();
+    }
+
+    App$Base.prototype.clear = function() {
       this.issues = new E.Issue(this.view_nm);
       this.messages = new E.Issue(this.view_nm);
-      App$Base.__super__.constructor.call(this, view_nm, options, ss);
-    }
+      return this.invalidateTables(['Issue', 'Message']);
+    };
 
     App$Base.prototype.goTo = function(flow, t, s) {
       var f, was, _ref;
@@ -38,10 +43,6 @@
       this.f = flow;
       this.t = t;
       this.s = s;
-      _log2(f, {
-        was: was,
-        is: "" + this.f + "/" + this.t + "/" + this.s
-      });
       if (was !== ("" + this.f + "/" + this.t + "/" + this.s)) {
         return this.invalidateTables(['V']);
       }
@@ -51,7 +52,6 @@
       var f, ix, q, v, _i, _len, _ref, _ref1;
       f = 'go';
       q = path.split('/');
-      _log2(f, 'before', q, this.f, this.t, this.s);
       _ref = [this.f, this.t, this.s];
       for (ix = _i = 0, _len = _ref.length; _i < _len; ix = ++_i) {
         v = _ref[ix];
@@ -61,7 +61,6 @@
           break;
         }
       }
-      _log2(f, 'after', q, this.f, this.t, this.s);
       return this.goTo(q[0], q[1], q[2]);
     };
 
@@ -92,9 +91,7 @@
         case 'add_issue':
           return i.add(p.type, p.msgs);
         case 'clear':
-          this.issues = new E.Issue(this.view_nm);
-          this.messages = new E.Issue(this.view_nm);
-          return this.invalidateTables(['Issue', 'Message']);
+          return this.clear();
         default:
           return App$Base.__super__.action.call(this, ctx, act, p);
       }

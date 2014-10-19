@@ -52,6 +52,8 @@ class Fist extends E.ModelJS
 		delete @fist[ rnm] # May be a little heavy handed
 	# Controller wants a fist's db values, after whole-form-validation
 	fistValidate: (ctx, fistNm, row) ->
+		f= 'fistValidate:'+ fistNm+ if row? then ':'+ row else ''
+		_log2 f
 		r= ctx
 		fist= @_getFist fistNm, row
 		errors= 0
@@ -64,7 +66,8 @@ class Fist extends E.ModelJS
 		else
 			r.fist$success= 'SUCCESS'
 			ans= r[ fist.nm]= {}
-			ans[ nm]= E.fistH2D field for nm,field of fist.db
+			ans[ nm]= E.fistH2D field, field.hval for nm,field of fist.db
+		_log2 f, 'result', r, ans
 		@invalidateTables [ fist.rnm] if invalidate is true
 		return
 	loadTable: (tbl_nm)->
@@ -113,15 +116,21 @@ class Fist extends E.ModelJS
 				fl.Choice= rows
 		fl
 	_getFist: (p_fist, p_row) ->
+		f= '_getFist:'+ p_fist+ if p_row? then ':'+ p_row else ''
 		# Return fist as record
 		# 'fist' rec is: nm:fistNm, rnm:fistNm+row, row:row, st:state, sp:spec
 		#   ht:{field recs by html name}, db:{field recs by db_nm}
 		rnm= p_fist+ if p_row then ':'+ p_row else ''
 		if rnm not of @fist
 			fist= @fist[ rnm]= {rnm, nm: p_fist, row: p_row, ht: {}, db: {}, st: 'new', sp: E.fistDef[ p_fist]}
+			_log2 f, 'new fist', fist
 			E.option.fi1 fist # Guard e.g. E[ E.appFist fistNm]()
 			for fieldNm in fist.sp.FIELDS
 				field= E.merge {}, E.fieldDef[ fieldNm], nm: fieldNm, fistNm: p_fist, row: p_row
+				field.h2h= switch E.type_oau field.h2h
+					when 'S' then field.h2h.split /[:,]/
+					when 'A' then field.h2h
+					else []
 				E.option.fi2 field # Verify h2h, d2h, h2d, validate exist in namespace
 				fist.ht[ fieldNm]= fist.db[ field.db_nm]= field # Alias by db_nm
 		else fist= @fist[ rnm]
@@ -132,21 +141,26 @@ class Fist extends E.ModelJS
 			fist.st= 'loaded'
 		return fist
 	_getChoices: (type, fist, field) ->
+		options= []; values= []
 		switch type
 			when 'array'
-				final_obj= options: [], values: []
 				for rec in field.cdata
 					if typeof rec is 'object'
-					then final_obj.options.push String rec[1]; final_obj.values.push String rec[0]
-					else final_obj.options.push String rec; final_obj.values.push String rec
-				final_obj
+					then options.push String rec[1]; values.push String rec[0]
+					else options.push String rec; values.push String rec
+				{options,values}
+			when 'wist'
+				[wistNm, val_col, opt_col]= field.cdata.split ':'
+				for row in E.Wist wistNm
+					options.push row[ opt_col]; values.push row[ val_col]
+				{options,values}
 			when 'custom'
 				E[ E.appFist fist.nm]().fistGetChoices fist.nm, field.nm, fist.row
-			else BROKEN()
+			else E.option.fi4 type, fist, field # No such 'type' for pulldown/radio list
 
 E.fistH2H= (field,val) ->
 	val= E.fistH2H$pre field,val # Master pre-filter
-	val= E['fistH2H$'+ str] field,val for str in (field.h2h?.split /[:,]/) ? []
+	val= E['fistH2H$'+ str] field, val for str in field.h2h
 	val
 E.fistH2H$pre= (field,val) -> val # Users can change to e.g. val.replace /[<>]/g, ''
 E.fistH2D= (field,val) -> if field.h2d then E['fistH2D$'+ field.h2d] field, val else val

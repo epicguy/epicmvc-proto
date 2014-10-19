@@ -66,6 +66,7 @@
     View$Base.prototype.nest_dn = function(who) {
       var f;
       f = 'nest_dn:' + who;
+      _log2(f, this.defer_it_cnt);
       if (this.defer_it_cnt > 0) {
         this.defer_it_cnt--;
       }
@@ -130,10 +131,6 @@
       for (nm in _ref) {
         rec = _ref[nm];
         dyn_m = rec[0], dyn_t = rec[1], dyn_list_orig = rec[2];
-        _log2(f, nm, 'loop top', dyn_list_orig.length, {
-          dyn_m: dyn_m,
-          dyn_t: dyn_t
-        });
         dyn_list = [];
         oM = E[dyn_m]();
         for (_i = 0, _len = dyn_list_orig.length; _i < _len; _i++) {
@@ -158,8 +155,7 @@
             prev_row = this.info_foreach[rh_alias].row;
           }
         }
-        info_parts = E.merge([], saved_info.info_parts);
-        _results.push(_log2(f, 'info_parts', this.info_parts));
+        _results.push(info_parts = E.merge([], saved_info.info_parts));
       }
       return _results;
     };
@@ -275,8 +271,6 @@
           return window.bytesToSize(Number(val));
         case 'uriencode':
           return encodeURIComponent(val);
-        case 'esc':
-          return window.EpicMvc.escape_html(val);
         case 'quo':
           return ((val.replace(/\\/g, '\\\\')).replace(/'/g, '\\\'')).replace(/"/g, '\\"');
         case '1':
@@ -291,7 +285,7 @@
             _ref = spec.slice(1).split('?'), left = _ref[0], right = _ref[1];
             return (val ? left : right != null ? right : '').replace(new RegExp('[%]', 'g'), val);
           } else {
-            return val;
+            return E.option.v1(val, spec);
           }
       }
     };
@@ -325,7 +319,6 @@
           }
         }
       }
-      _log2(f, clean_attrs);
       return clean_attrs;
     };
 
@@ -381,10 +374,10 @@
       f = 'T_page';
       if (this.frame_inx < this.frames.length) {
         d_load = E.oLoader.d_layout(name = this.frames[this.frame_inx++]);
-        view = (this.frame_inx < this.frames.length ? 'frame' : 'layout') + '/' + name;
+        view = (this.frame_inx < this.frames.length ? 'Frame' : 'Layout') + '/' + name;
       } else {
         d_load = E.oLoader.d_page(name = this.page_name);
-        view = 'page/' + name;
+        view = 'Page/' + name;
       }
       return this.piece_handle(view, attrs != null ? attrs : {}, d_load);
     };
@@ -394,7 +387,7 @@
       view = attrs.part;
       f = 'T_part:' + view;
       d_load = E.oLoader.d_part(view);
-      return this.piece_handle(view, attrs, d_load, true);
+      return this.piece_handle('Part/' + view, attrs, d_load, true);
     };
 
     View$Base.prototype.piece_handle = function(view, attrs, obj, is_part) {
@@ -405,6 +398,9 @@
       }
       _log2(f, view);
       content = obj.content, can_componentize = obj.can_componentize;
+      if (obj === false) {
+        _log2(f, 'AFTER ASSIGN', view, obj);
+      }
       this.info_parts.push(this.loadPartAttrs(attrs));
       this.info_defer.push([]);
       content = this.handleIt(content);
@@ -430,16 +426,20 @@
       d_result = d_load.then(function(obj) {
         var result;
         _log2(f, 'THEN', obj);
-        if (obj != null ? obj.then : void 0) {
-          BLOWUP();
+        try {
+          if (obj != null ? obj.then : void 0) {
+            BLOWUP();
+          }
+          _this.restoreInfo(saved_info);
+          result = _this.piece_handle(view, attrs, obj, is_part);
+          return result;
+        } finally {
+          _this.nest_dn(who + view);
         }
-        _this.restoreInfo(saved_info);
-        result = _this.piece_handle(view, attrs, obj, is_part);
-        _this.nest_dn(who + view);
-        return result;
       }, function(err) {
         console.error('D_piece', err);
-        _this.nest_dn(who + view);
+        _this.nest_dn(who + view + ' IN-ERROR');
+        return _this._Err('tag', 'page/part', attrs, err);
         throw err;
       });
       return d_result;
@@ -566,22 +566,34 @@
     };
 
     View$Base.prototype.T_fist = function(attrs, content_f) {
-      var f, model, rh_alias, table, tbl, _ref, _ref1, _ref2, _ref3;
+      var ans, f, fist, masterAlias, model, rh_1, rh_2, rh_alias, subTable, table, tbl, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
       f = 'T_fist';
       _log2(f, attrs, content_f);
-      model = (_ref = E.fistDef[attrs.fist].event) != null ? _ref : 'Fist';
+      fist = E.fistDef[attrs.fist];
+      model = (_ref = fist.event) != null ? _ref : 'Fist';
       table = attrs.fist + (attrs.row != null ? ':' + attrs.row : '');
-      _ref1 = this._accessModelTable(model + '/' + table, attrs.alias), tbl = _ref1[0], rh_alias = _ref1[1];
+      subTable = (_ref1 = attrs.via) != null ? _ref1 : fist.via;
+      masterAlias = !(subTable != null) ? attrs.alias : void 0;
+      _ref2 = this._accessModelTable(model + '/' + table, masterAlias), tbl = _ref2[0], rh_alias = _ref2[1];
+      _log2(f, 'tbl,rh_alias (master)', tbl, rh_alias);
       this.info_foreach[rh_alias].row = tbl[0];
       this.info_foreach[rh_alias].count = 0;
-      if (content_f) {
-        return this.handleIt(content_f);
-      } else {
-        if ((_ref2 = attrs.part) == null) {
-          attrs.part = (_ref3 = E.fistDef[attrs.fist].part) != null ? _ref3 : 'fist_default';
-        }
-        return this.T_part(attrs);
+      rh_1 = rh_alias;
+      if (subTable != null) {
+        _ref3 = this._accessModelTable(table + '/' + subTable, attrs.alias), tbl = _ref3[0], rh_alias = _ref3[1];
+        _log2(f, 'tbl,rh_alias (subTable)', tbl, rh_alias);
+        this.info_foreach[rh_alias].row = tbl[0];
+        this.info_foreach[rh_alias].count = 0;
+        rh_2 = rh_alias;
       }
+      ans = content_f ? this.handleIt(content_f) : ((_ref4 = attrs.part) != null ? _ref4 : attrs.part = (_ref5 = fist.part) != null ? _ref5 : 'fist_default', this.T_part(attrs));
+      if (rh_2) {
+        delete this.info_foreach[rh_2];
+      }
+      if (rh_1) {
+        delete this.info_foreach[rh_1];
+      }
+      return ans;
     };
 
     return View$Base;

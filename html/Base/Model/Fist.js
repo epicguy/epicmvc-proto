@@ -84,7 +84,9 @@
     };
 
     Fist.prototype.fistValidate = function(ctx, fistNm, row) {
-      var ans, errors, field, fieldNm, fist, invalidate, nm, r, _ref, _ref1;
+      var ans, errors, f, field, fieldNm, fist, invalidate, nm, r, _ref, _ref1;
+      f = 'fistValidate:' + fistNm + (row != null ? ':' + row : '');
+      _log2(f);
       r = ctx;
       fist = this._getFist(fistNm, row);
       errors = 0;
@@ -105,9 +107,10 @@
         _ref1 = fist.db;
         for (nm in _ref1) {
           field = _ref1[nm];
-          ans[nm] = E.fistH2D(field);
+          ans[nm] = E.fistH2D(field, field.hval);
         }
       }
+      _log2(f, 'result', r, ans);
       if (invalidate === true) {
         this.invalidateTables([fist.rnm]);
       }
@@ -191,7 +194,8 @@
     };
 
     Fist.prototype._getFist = function(p_fist, p_row) {
-      var db_value_hash, field, fieldNm, fist, nm, rnm, _i, _len, _ref, _ref1, _ref2;
+      var db_value_hash, f, field, fieldNm, fist, nm, rnm, _i, _len, _ref, _ref1, _ref2;
+      f = '_getFist:' + p_fist + (p_row != null ? ':' + p_row : '');
       rnm = p_fist + (p_row ? ':' + p_row : '');
       if (!(rnm in this.fist)) {
         fist = this.fist[rnm] = {
@@ -203,6 +207,7 @@
           st: 'new',
           sp: E.fistDef[p_fist]
         };
+        _log2(f, 'new fist', fist);
         E.option.fi1(fist);
         _ref = fist.sp.FIELDS;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -212,6 +217,16 @@
             fistNm: p_fist,
             row: p_row
           });
+          field.h2h = (function() {
+            switch (E.type_oau(field.h2h)) {
+              case 'S':
+                return field.h2h.split(/[:,]/);
+              case 'A':
+                return field.h2h;
+              default:
+                return [];
+            }
+          })();
           E.option.fi2(field);
           fist.ht[fieldNm] = fist.db[field.db_nm] = field;
         }
@@ -231,29 +246,42 @@
     };
 
     Fist.prototype._getChoices = function(type, fist, field) {
-      var final_obj, rec, _i, _len, _ref;
+      var opt_col, options, rec, row, val_col, values, wistNm, _i, _j, _len, _len1, _ref, _ref1, _ref2;
+      options = [];
+      values = [];
       switch (type) {
         case 'array':
-          final_obj = {
-            options: [],
-            values: []
-          };
           _ref = field.cdata;
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             rec = _ref[_i];
             if (typeof rec === 'object') {
-              final_obj.options.push(String(rec[1]));
-              final_obj.values.push(String(rec[0]));
+              options.push(String(rec[1]));
+              values.push(String(rec[0]));
             } else {
-              final_obj.options.push(String(rec));
-              final_obj.values.push(String(rec));
+              options.push(String(rec));
+              values.push(String(rec));
             }
           }
-          return final_obj;
+          return {
+            options: options,
+            values: values
+          };
+        case 'wist':
+          _ref1 = field.cdata.split(':'), wistNm = _ref1[0], val_col = _ref1[1], opt_col = _ref1[2];
+          _ref2 = E.Wist(wistNm);
+          for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+            row = _ref2[_j];
+            options.push(row[opt_col]);
+            values.push(row[val_col]);
+          }
+          return {
+            options: options,
+            values: values
+          };
         case 'custom':
           return E[E.appFist(fist.nm)]().fistGetChoices(fist.nm, field.nm, fist.row);
         default:
-          return BROKEN();
+          return E.option.fi4(type, fist, field);
       }
     };
 
@@ -262,11 +290,11 @@
   })(E.ModelJS);
 
   E.fistH2H = function(field, val) {
-    var str, _i, _len, _ref, _ref1, _ref2;
+    var str, _i, _len, _ref;
     val = E.fistH2H$pre(field, val);
-    _ref2 = (_ref = (_ref1 = field.h2h) != null ? _ref1.split(/[:,]/) : void 0) != null ? _ref : [];
-    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
-      str = _ref2[_i];
+    _ref = field.h2h;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      str = _ref[_i];
       val = E['fistH2H$' + str](field, val);
     }
     return val;

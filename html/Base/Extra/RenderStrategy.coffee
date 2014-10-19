@@ -25,7 +25,7 @@ class RenderStrategy$Base
 		window.onpopstate = @onPopState
 		# TODO IMPLEMENT MODALS WITHOUT JQUERY, SO WITHOUT BOOTSTRAP I THINK
 		#TODO JQUERY $(document).on 'hidden.bs.modal', => E.action 'close_modal', {}
-		@redraw_guard= false
+		@redraw_guard= 0
 		m.redraw= @m_redraw
 		@init()
 		true
@@ -83,14 +83,22 @@ class RenderStrategy$Base
 
 	m_redraw: =>
 		f= 'm_redraw'
-		if @redraw_guard isnt false
-			_log2 f, 'GUARD REDRAW'
+		@redraw_guard++
+		if @redraw_guard isnt 1
+			_log2 f, 'GUARD REDRAW', @redraw_guard
 			return
-		@redraw_guard= true
 		E.View().run().then (content) =>
 			#_log2 'DEFER-R', 'RESULTS: content', content
+			# Assume @render call won't go async and we end up back in this module
+			@redraw_guard--
+			if @redraw_guard isnt 0 # Someone updated content while we were busy drawing
+				@redraw_guard= 0
+				setTimeout (=> @m_redraw()), 16
 			@render content, 'TODO', 'TODO', false
-			@redraw_guard= false
+		.then null, (err) => # Make own .then to catch issues in above .then
+			# These may be errors from m.render
+			console.error 'RenderStrategy$Base m_redraw', err
+
 	render: (content, history, action, modal) ->
 		f= 'render'
 		if @was_modal
