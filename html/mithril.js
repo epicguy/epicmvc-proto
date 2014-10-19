@@ -446,10 +446,12 @@ Mithril = m = new function app(window, undefined) {
 	var pendingMax= 0
 	var pendingGuardRequest= 0
 	m.startComputation = function(guard) {
+		//try { throw new Error( 'startComputation')} catch ( e) { console.error( e.message, (e.stack.split('\n'))[2])}
 		if (guard && pendingRequests=== pendingGuardRequest) pendingGuardRequest++;
 		pendingMax= Math.max( pendingMax, ++pendingRequests);
 	}
 	m.endComputation = function() {
+		//try { throw new Error( 'endComputation')} catch ( e) { console.error( e.message, (e.stack.split('\n'))[2])}
 		pendingRequests = Math.max(pendingRequests - 1, 0);
 		if (pendingRequests=== 0) {
 			if( pendingMax> pendingGuardRequest) m.redraw();
