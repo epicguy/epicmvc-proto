@@ -227,7 +227,7 @@ app= (window, undef) ->
 	appGetVars= (flow,track,step) ->
 		f= ':appGetVars'
 		vars= merge {}, aFlows[ flow].v, aFlows[ flow].TRACKS[ track].v, aFlows[ flow].TRACKS[ track].STEPS[ step].v
-		_log2 f, ( "#{k}:#{v}" for own k,v of vars).join ', '
+		#_log2 f, ( "#{k}:#{v}" for own k,v of vars).join ', '
 		vars
 
 	# How E.<view-model> function works:
@@ -270,10 +270,12 @@ app= (window, undef) ->
 			ans= _d_doAction action_token, data, E.App().getStepPath()
 		finally
 			if ans?.then?
-			then (ans.then more).then final, final # Call final for better or for worse, in sickness or in health
+			then (ans.then more).then final,( (e)-> final(); throw e) # Call final for better or for worse, in sickness or in health
 			else
 				# If _d_doAction fails, ans is likely undefined, and so 'more' will likely fail
-				try more ans finally final()
+				#try more ans finally final()
+				setTimeout final, 0 # Same as try/finally, assuming more does not go async, but better for e.g. erorrs in model call
+				more ans if ans? # Errors in _d_doAction result in no ans defined
 		return
 
 	_d_doAction= (action_token, data, original_path) ->
@@ -480,7 +482,7 @@ class ModelJS
 		E.merge {}, st # clone and return
 	invalidateTables: (tbl_nms,not_tbl_names) -> # Use true for all
 		f= ':ModelJS.invalidateTables~'+ @view_nm
-		_log2 f, tbl_nms, not_tbl_names
+		#_log2 f, tbl_nms, not_tbl_names
 		not_tbl_names?= []
 		tbl_nms= (nm for nm of @Table when not (nm in not_tbl_names)) if tbl_nms is true
 		deleted_tbl_nms= []

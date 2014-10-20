@@ -4,7 +4,6 @@
 
   var Issue, ModelJS, app, klass, nm, w, _ref,
     __slice = [].slice,
-    __hasProp = {}.hasOwnProperty,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   app = function(window, undef) {
@@ -319,19 +318,9 @@
       return (_ref1 = appFindAttr(flow, track, step != null ? step : false, setting_name)) != null ? _ref1 : aSetting[setting_name];
     };
     appGetVars = function(flow, track, step) {
-      var f, k, v, vars;
+      var f, vars;
       f = ':appGetVars';
       vars = merge({}, aFlows[flow].v, aFlows[flow].TRACKS[track].v, aFlows[flow].TRACKS[track].STEPS[step].v);
-      _log2(f, ((function() {
-        var _results;
-        _results = [];
-        for (k in vars) {
-          if (!__hasProp.call(vars, k)) continue;
-          v = vars[k];
-          _results.push("" + k + ":" + v);
-        }
-        return _results;
-      })()).join(', '));
       return vars;
     };
     make_model_functions = function() {
@@ -393,12 +382,14 @@
         ans = _d_doAction(action_token, data, E.App().getStepPath());
       } finally {
         if ((ans != null ? ans.then : void 0) != null) {
-          (ans.then(more)).then(final, final);
-        } else {
-          try {
-            more(ans);
-          } finally {
+          (ans.then(more)).then(final, (function(e) {
             final();
+            throw e;
+          }));
+        } else {
+          setTimeout(final, 0);
+          if (ans != null) {
+            more(ans);
           }
         }
       }
@@ -816,7 +807,6 @@
     ModelJS.prototype.invalidateTables = function(tbl_nms, not_tbl_names) {
       var deleted_tbl_nms, f, nm, _i, _len;
       f = ':ModelJS.invalidateTables~' + this.view_nm;
-      _log2(f, tbl_nms, not_tbl_names);
       if (not_tbl_names == null) {
         not_tbl_names = [];
       }
