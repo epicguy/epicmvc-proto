@@ -18,12 +18,13 @@ class View$Base extends E.ModelJS
 		if @defer_it_cnt is 0
 			BLOWUP() if @in_run
 			@in_run= true
-			_log2 f, 'START RUN', @frames, @start= new Date().getTime()
+			@start= new Date().getTime() #%#
+			#_log2 f, 'START RUN', @frames, @start
 			@defer_it= new m.Deferred()
 		@defer_it_cnt++
 	nest_dn: (who) ->
 		f= 'nest_dn:'+ who
-		_log2 f, @defer_it_cnt
+		#_log2 f, @defer_it_cnt
 		@defer_it_cnt-- if @defer_it_cnt > 0
 		if @defer_it_cnt is 0
 			_log2 f, 'END RUN', @defer_content, new Date().getTime()- @start
@@ -47,51 +48,37 @@ class View$Base extends E.ModelJS
 		@defer_it.promise
 	resetInfo: () ->
 		# Info for one render loop
-		@info_foreach= {} # [table-name|subtable-name]['table'&'row'&'size'&'count']=value
-		@info_parts= [{}] # Push p:attrs with each part, then pop; (top level is row w/o attrs)
-		@info_if_nms= {} # [if-name]=boolean (from <if_xxx name="if-name" ..>
-		@info_defer= [[]] # Stack arrays of defers as we render parts
+		@R= {}   # 'Row' [table-name-alias|subtable-name-alias]['m'odel or 'p'arent, row-'c'ount, 'o'riginal-name
+		@I= {}   # 'Info' [table-name-alias|subtable-nam-aliase]= single-row
+		@P= [{}] # 'Parts' Push p:attrs with each part, then pop; (top level is row w/o attrs)
+		@N= {}   # 'Names' [if-name]=boolean (from <if_xxx name="if-name" ..>
+		@D= [[]] # 'Defer' Stack arrays of defers as we render parts
 	saveInfo: () ->
 		f= 'saveInfo'
-		dyn= {}; row_num= {}
-		( dyn[ nm]= rec.dyn; row_num[ nm]= rec.count) for nm,rec of @info_foreach
-		saved_info= E.merge {}, info_foreach: {dyn,row_num}, info_parts: @info_parts
+		saved_info= E.merge {}, I: @I, P: @P
 		#_log2 f, saved_info
 		saved_info
 	restoreInfo: (saved_info) ->
 		f= 'restoreInfo'
 		#_log2 f, 'saved_info', saved_info
 		@resetInfo()
-		for nm,rec of saved_info.info_foreach.dyn
-			[dyn_m, dyn_t, dyn_list_orig]= rec
-			#_log2 f, nm, 'loop top', dyn_list_orig.length, {dyn_m,dyn_t}
-			dyn_list= []
-			oM= E[ dyn_m]()
-			for t_set in dyn_list_orig
-				#_log2 f, nm, 't_set', t_set[ 0], t_set[ 1]
-				[rh, rh_alias]= t_set
-				dyn_list.push t_set
-				if rh_alias not of @info_foreach
-					#_log2 f, nm, 'rh_alias not in info_foreach, load', rh_alias
-					if dyn_list.length is 1 # Get table from model, else nested
-						tbl= oM.getTable rh
-					else
-						tbl= prev_row[ rh]
-					row_num= saved_info.info_foreach.row_num[ rh_alias]
-					row= E.merge {}, tbl[ row_num]
-					#_log2 f, nm, 'got row', rh_alias, {row_num, row}
-					@info_foreach[ rh_alias]= dyn: [dyn_m, dyn_t, dyn_list], row: row, count: row_num
-					prev_row= row
-				else prev_row= @info_foreach[ rh_alias].row
-
-			info_parts= E.merge [], saved_info.info_parts # TODO SEE IF MERGE WORKS FOR THIS ARRAY SOURCE
-			#_log2 f, 'info_parts', @info_parts
+		@P= saved_info.P # TODO IS THIS SAFE?
+		@I= saved_info.I # TODO IS THIS SAFE?
+		# Rebuild 'R'
+		@R[ nm]= @_getMyRow @I[ nm] for nm of @I when nm not of @R
+		#_log2 f, 'restored:P,I,R', @P, @I, @R
+	_getMyRow: (I) ->
+		f= '_getMyRow'
+		#_log2 f, I
+		return (E[ I.m] I.o)[ I.c] if I.m? # I'm a top level table, get from model
+		@R[ I.p]= @_getMyRow @I[ I.p] if I.p not of @R # Load parent if needed
+		return @R[ I.p][ I.o][ I.c] if I.p and I.p of @R # Parent already loaded, return it's row
 	getTable: (nm) ->
 		f= 'Base:M/View.getTable:'+ nm
-		#_log2 f, @info_parts if nm is 'Part'
+		#_log2 f, @P if nm is 'Part'
 		switch nm
-			when 'If' then [@info_if_nms]
-			when 'Part' then @info_parts.slice -1
+			when 'If' then [@N]
+			when 'Part' then @P.slice -1
 			else []
 	invalidateTables: (view_nm, tbl_nms, deleted_tbl_nms) ->
 		return unless @did_run and deleted_tbl_nms.length
@@ -133,8 +120,9 @@ class View$Base extends E.ModelJS
 		#_log2 f, 'bottom',( typeof content), content
 		content
 	formatFromSpec: (val, spec, custom_spec) ->
+		f= 'formatFromSpec'
+		#_log2 f, val, spec, custom_spec
 		switch spec
-			when undefined then val # No spec
 			when '' then (if custom_spec then (window.EpicMvc.custom_filter? val, custom_spec) else val)
 			when 'count' then val?.length
 			when 'bool' then (if val then true else false)
@@ -154,15 +142,15 @@ class View$Base extends E.ModelJS
 						.replace( (new RegExp '[%]', 'g'), val)
 				else E.option.v1 val, spec
 	v3: (view_nm, tbl_nm, key, format_spec, custom_spec) ->
-		row=( E[ view_nm] tbl_nm)[ 0]
+		row=( E[ view_nm] tbl_nm)[ 0] # TODO NOT USING @_accessModelTable SO NO DYNAMIC PARTIAL UPDATE SUPPORTED
+		val= row[ key]
 		#console.log 'G3:', view_nm, tbl_nm, key, format_spec, custom_spec, row #if key not of row
-		@formatFromSpec row[ key], format_spec, custom_spec
-	v2: (table_ref, col_nm, format_spec, custom_spec, sub_nm) ->
-		#console.log 'G2:', {table_ref, col_nm, format_spec, custom_spec, sub_nm}
-		ans= @info_foreach[table_ref].row[col_nm]
-		if sub_nm? then ans= ans[sub_nm]
-		@formatFromSpec ans, format_spec, custom_spec
-	# When attrs may have leading dash for special treatment
+		if format_spec? then @formatFromSpec val, format_spec, custom_spec else val
+	v2: (table_ref, col_nm, format_spec, custom_spec) ->
+		#console.log 'G2:', {table_ref, col_nm, format_spec, custom_spec}
+		ans= @R[ table_ref][ col_nm]
+		if format_spec? then @formatFromSpec ans, format_spec, custom_spec else ans
+	# When attrs may have leading '?' for special treatment
 	weed: (attrs) ->
 		f= 'weed'
 		clean_attrs= {}
@@ -180,6 +168,7 @@ class View$Base extends E.ModelJS
 		# Build a new array, with either a copy if 'object' or 'text', else array is T_ funcs w/deferreds
 		out= []
 		for kid,ix in kids
+			#_log2 f, new Date().getTime()- @start
 			if 'A' is E.type_oau kid # Arrays are the parser's indication of an epic tag
 				out.push ix #['TBD',kid[ 0],kid[ 1]] # Place holder in 'out' for later population
 				ans= @['T_'+ kid[ 0]] kid[ 1], kid[ 2]
@@ -207,7 +196,7 @@ class View$Base extends E.ModelJS
 		result
 	T_page: ( attrs) =>
 		f= 'T_page'
-		#_log2 f, attrs
+		#_log2 f, attrs, new Date().getTime()- @start
 		if @frame_inx< @frames.length
 			d_load= E.oLoader.d_layout name= @frames[ @frame_inx++]
 			view= (if @frame_inx< @frames.length then 'Frame' else 'Layout')+ '/'+ name
@@ -219,6 +208,7 @@ class View$Base extends E.ModelJS
 	T_part: ( attrs) ->
 		view= attrs.part
 		f= 'T_part:'+ view
+		#_log2 f, new Date().getTime()- @start
 		d_load= E.oLoader.d_part view
 		@piece_handle 'Part/'+ view, attrs, d_load, true
 
@@ -227,13 +217,13 @@ class View$Base extends E.ModelJS
 		f= 'piece_handle'
 		#_log2 f, view, obj
 		return @D_piece view, attrs, obj, is_part if obj?.then # Was a thenable
-		_log2 f, view #, obj
+		#_log2 f, view, new Date().getTime()- @start #, obj
 		{content,can_componentize}= obj
 		_log2 f, 'AFTER ASSIGN', view, obj if obj is false
-		@info_parts.push @loadPartAttrs attrs
-		@info_defer.push []
+		@P.push @loadPartAttrs attrs
+		@D.push []
 		content= @handleIt content
-		defer= @info_defer.pop()
+		defer= @D.pop()
 		if can_componentize or attrs.dynamic or defer.length or not is_part
 			if defer.length and not can_componentize and not attrs.dynamic
 				_log2 "WARNING: DEFER logic in (#{view}); wrapping DIV tag."
@@ -247,9 +237,8 @@ class View$Base extends E.ModelJS
 		@nest_up who+ view
 		saved_info= @saveInfo()
 		d_result= d_load.then (obj) =>
-			_log2 f, 'THEN', obj
+			#_log2 f, 'THEN', obj
 			try
-				#return "NO FILE FOUND: (#{view})." if obj is false # TODO PUT THIS IN E.option.vN
 				BLOWUP() if obj?.then # THIS WOULD CAUSE A LOOP BACK TO  US
 				@restoreInfo saved_info
 				result= @piece_handle view, attrs, obj, is_part
@@ -265,13 +254,11 @@ class View$Base extends E.ModelJS
 
 	T_defer: ( attrs, content) -> # TODO IMPLEMENT DEFER LOGIC ATTRS?
 		f= 'Base:M/View.T_defer:'
-		# TODO NEW-ASYNC FIGURE OUT WHAT HANDLE-IT WILL DO HERE, AND WHAT TO DO ABOUT IT
-		#@info_defer[ @info_defer.length- 1].push {attrs, defer: @handleIt content}
 		f_content= @handleIt content
-		@info_defer[ @info_defer.length- 1].push {attrs, func: new Function 'el', 'attrs', f_content}
+		@D[ @D.length- 1].push {attrs, func: new Function 'el', 'attrs', f_content}
 		'' # No content to display for these
-	T_if_true: ( attrs, content) -> if @info_if_nms[ attrs.name] then @handleIt content() else ''
-	T_if_false: ( attrs, content) -> if @info_if_nms[ attrs.name] then '' else @handleIt content
+	T_if_true: ( attrs, content) -> if @N[ attrs.name] then @handleIt content() else ''
+	T_if_false: ( attrs, content) -> if @N[ attrs.name] then '' else @handleIt content
 	T_if: ( attrs, content) => # TODO
 		#console.log 'T_if', attrs, content?.length
 		issue= false
@@ -289,49 +276,46 @@ class View$Base extends E.ModelJS
 		else if 'not_set' of attrs
 			is_true= if attrs.not_set then false else true
 		else if 'table_is_not_empty' of attrs
-			val= attrs.table_is_not_empty
-			[lh, rh]= val.split '/' # Left/right halfs
-			# If left exists, it's nested as table/sub-table else assume model/table
-			[tbl]= @_accessModelTable val, false
+			tbl= @_accessModelTable attrs.table_is_not_empty, false
 			is_true= true if tbl.length
 		else issue= true
 		console.log 'ISSUE T_if', attrs if issue
-		@info_if_nms[ attrs.name]= is_true if 'name' of attrs
+		@N[ attrs.name]= is_true if 'name' of attrs
 		return if is_true and content
 			@handleIt content
 		else ''
 	_accessModelTable: (at_table, alias) ->
+		# Special case, alias===false if coming from <e-if> test, so don't save anything
 		[lh, rh]= at_table.split '/' # Left/right halfs
-		if lh of @info_foreach # Nested table reference
-			tbl= @info_foreach[lh].row[rh]
-			[dyn_m, dyn_t, dyn_list]= @info_foreach[ lh].dyn
+		if lh of @R # Nested table reference
+			tbl= @R[lh][rh]
+			root= p: lh # Parent's name in @I[]
 		else
-			oM= E[ lh]()
-			tbl= oM.getTable rh
-			[dyn_m, dyn_t, dyn_list]= [ lh, rh, []]
+			tbl= E[ lh] rh
+			root= m: lh # No 'p'arent, so a 'm'odel name
+		return tbl if alias is false
 
-		return [tbl, rh, lh, rh, oM] if tbl.length is 0 # No rows, so no need to store info nor reference alias
+		rh_alias= alias ? rh
+		return [tbl, rh_alias] if tbl.length is 0 # No rows, so no need to store info nor reference alias
 
-		rh_alias= rh # User may alias the tbl name, for e.g. reusable include-parts
-		rh_alias= alias if alias
-		dyn_list.push [rh, rh_alias]
-		@info_foreach[rh_alias]= dyn: [dyn_m, dyn_t, dyn_list]
-
-		[tbl, rh_alias, lh, rh, oM]
+		root.o= rh # Original name
+		@I[ rh_alias]= root
+		[tbl, rh_alias]
 
 	T_foreach: (attrs, content_f) ->
 		f= 'T_foreach'
-		_log2 f, attrs
+		#_log2 f, attrs
 		[tbl, rh_alias]= @_accessModelTable attrs.table, attrs.alias
 		return '' if tbl.length is 0 # No rows means no output
 		result= []
 		limit= if 'limit' of attrs then Number( attrs.limit)- 1  else tbl.length
 		for row,count in tbl
 			row= tbl[ count]
-			@info_foreach[rh_alias].row= row
-			@info_foreach[rh_alias].count= count
+			@R[ rh_alias]= row
+			@I[ rh_alias].c= count
 			result.push @handleIt content_f
-		delete @info_foreach[rh_alias]
+		delete @I[ rh_alias]
+		delete @R[ rh_alias]
 		return result
 	T_fist: (attrs, content_f) -> # Could have children, or a part=, or default to fist_default, (or E.fistDef[nm].part ?)
 		f= 'T_fist'
@@ -343,14 +327,14 @@ class View$Base extends E.ModelJS
 		masterAlias= if not subTable? then attrs.alias # else undefined
 		[tbl, rh_alias]= @_accessModelTable model+ '/'+ table, masterAlias
 		_log2 f, 'tbl,rh_alias (master)', tbl, rh_alias
-		@info_foreach[ rh_alias].row= tbl[ 0]
-		@info_foreach[ rh_alias].count= 0 # For save info
+		@R[ rh_alias]= tbl[ 0]
+		@I[ rh_alias].c= 0 # For save info
 		rh_1= rh_alias
 		if subTable?
 			[tbl, rh_alias]= @_accessModelTable table+ '/'+ subTable, attrs.alias
 			_log2 f, 'tbl,rh_alias (subTable)', tbl, rh_alias
-			@info_foreach[ rh_alias].row= tbl[ 0]
-			@info_foreach[ rh_alias].count= 0 # For save info
+			@R[ rh_alias]= tbl[ 0]
+			@I[ rh_alias].c= 0 # For save info
 			rh_2= rh_alias
 
 		ans= if content_f # TODO EXPERIMENTAL - HTML FORM COULD GO RIGHT BETWEEN THE TAGS
@@ -358,8 +342,8 @@ class View$Base extends E.ModelJS
 		else
 			attrs.part?= fist.part ? 'fist_default'
 			@T_part attrs
-		delete @info_foreach[ rh_2] if rh_2
-		delete @info_foreach[ rh_1] if rh_1
+		(delete @R[ rh_2]; delete @I[ rh_2]) if rh_2
+		(delete @R[ rh_1]; delete @I[ rh_2]) if rh_1
 		ans
 
 E.Model.View$Base= View$Base # Public API

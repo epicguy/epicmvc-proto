@@ -57,7 +57,7 @@
           BLOWUP();
         }
         this.in_run = true;
-        _log2(f, 'START RUN', this.frames, this.start = new Date().getTime());
+        this.start = new Date().getTime();
         this.defer_it = new m.Deferred();
       }
       return this.defer_it_cnt++;
@@ -66,7 +66,6 @@
     View$Base.prototype.nest_dn = function(who) {
       var f;
       f = 'nest_dn:' + who;
-      _log2(f, this.defer_it_cnt);
       if (this.defer_it_cnt > 0) {
         this.defer_it_cnt--;
       }
@@ -95,69 +94,50 @@
     };
 
     View$Base.prototype.resetInfo = function() {
-      this.info_foreach = {};
-      this.info_parts = [{}];
-      this.info_if_nms = {};
-      return this.info_defer = [[]];
+      this.R = {};
+      this.I = {};
+      this.P = [{}];
+      this.N = {};
+      return this.D = [[]];
     };
 
     View$Base.prototype.saveInfo = function() {
-      var dyn, f, nm, rec, row_num, saved_info, _ref;
+      var f, saved_info;
       f = 'saveInfo';
-      dyn = {};
-      row_num = {};
-      _ref = this.info_foreach;
-      for (nm in _ref) {
-        rec = _ref[nm];
-        dyn[nm] = rec.dyn;
-        row_num[nm] = rec.count;
-      }
       saved_info = E.merge({}, {
-        info_foreach: {
-          dyn: dyn,
-          row_num: row_num
-        },
-        info_parts: this.info_parts
+        I: this.I,
+        P: this.P
       });
       return saved_info;
     };
 
     View$Base.prototype.restoreInfo = function(saved_info) {
-      var dyn_list, dyn_list_orig, dyn_m, dyn_t, f, info_parts, nm, oM, prev_row, rec, rh, rh_alias, row, row_num, t_set, tbl, _i, _len, _ref, _results;
+      var f, nm, _results;
       f = 'restoreInfo';
       this.resetInfo();
-      _ref = saved_info.info_foreach.dyn;
+      this.P = saved_info.P;
+      this.I = saved_info.I;
       _results = [];
-      for (nm in _ref) {
-        rec = _ref[nm];
-        dyn_m = rec[0], dyn_t = rec[1], dyn_list_orig = rec[2];
-        dyn_list = [];
-        oM = E[dyn_m]();
-        for (_i = 0, _len = dyn_list_orig.length; _i < _len; _i++) {
-          t_set = dyn_list_orig[_i];
-          rh = t_set[0], rh_alias = t_set[1];
-          dyn_list.push(t_set);
-          if (!(rh_alias in this.info_foreach)) {
-            if (dyn_list.length === 1) {
-              tbl = oM.getTable(rh);
-            } else {
-              tbl = prev_row[rh];
-            }
-            row_num = saved_info.info_foreach.row_num[rh_alias];
-            row = E.merge({}, tbl[row_num]);
-            this.info_foreach[rh_alias] = {
-              dyn: [dyn_m, dyn_t, dyn_list],
-              row: row,
-              count: row_num
-            };
-            prev_row = row;
-          } else {
-            prev_row = this.info_foreach[rh_alias].row;
-          }
+      for (nm in this.I) {
+        if (!(nm in this.R)) {
+          _results.push(this.R[nm] = this._getMyRow(this.I[nm]));
         }
-        _results.push(info_parts = E.merge([], saved_info.info_parts));
       }
       return _results;
+    };
+
+    View$Base.prototype._getMyRow = function(I) {
+      var f;
+      f = '_getMyRow';
+      if (I.m != null) {
+        return (E[I.m](I.o))[I.c];
+      }
+      if (!(I.p in this.R)) {
+        this.R[I.p] = this._getMyRow(this.I[I.p]);
+      }
+      if (I.p && I.p in this.R) {
+        return this.R[I.p][I.o][I.c];
+      }
     };
 
     View$Base.prototype.getTable = function(nm) {
@@ -165,9 +145,9 @@
       f = 'Base:M/View.getTable:' + nm;
       switch (nm) {
         case 'If':
-          return [this.info_if_nms];
+          return [this.N];
         case 'Part':
-          return this.info_parts.slice(-1);
+          return this.P.slice(-1);
         default:
           return [];
       }
@@ -249,10 +229,9 @@
     };
 
     View$Base.prototype.formatFromSpec = function(val, spec, custom_spec) {
-      var left, right, str, _base, _ref;
+      var f, left, right, str, _base, _ref;
+      f = 'formatFromSpec';
       switch (spec) {
-        case void 0:
-          return val;
         case '':
           if (custom_spec) {
             return typeof (_base = window.EpicMvc).custom_filter === "function" ? _base.custom_filter(val, custom_spec) : void 0;
@@ -291,18 +270,24 @@
     };
 
     View$Base.prototype.v3 = function(view_nm, tbl_nm, key, format_spec, custom_spec) {
-      var row;
+      var row, val;
       row = (E[view_nm](tbl_nm))[0];
-      return this.formatFromSpec(row[key], format_spec, custom_spec);
+      val = row[key];
+      if (format_spec != null) {
+        return this.formatFromSpec(val, format_spec, custom_spec);
+      } else {
+        return val;
+      }
     };
 
-    View$Base.prototype.v2 = function(table_ref, col_nm, format_spec, custom_spec, sub_nm) {
+    View$Base.prototype.v2 = function(table_ref, col_nm, format_spec, custom_spec) {
       var ans;
-      ans = this.info_foreach[table_ref].row[col_nm];
-      if (sub_nm != null) {
-        ans = ans[sub_nm];
+      ans = this.R[table_ref][col_nm];
+      if (format_spec != null) {
+        return this.formatFromSpec(ans, format_spec, custom_spec);
+      } else {
+        return ans;
       }
-      return this.formatFromSpec(ans, format_spec, custom_spec);
     };
 
     View$Base.prototype.weed = function(attrs) {
@@ -396,15 +381,14 @@
       if (obj != null ? obj.then : void 0) {
         return this.D_piece(view, attrs, obj, is_part);
       }
-      _log2(f, view);
       content = obj.content, can_componentize = obj.can_componentize;
       if (obj === false) {
         _log2(f, 'AFTER ASSIGN', view, obj);
       }
-      this.info_parts.push(this.loadPartAttrs(attrs));
-      this.info_defer.push([]);
+      this.P.push(this.loadPartAttrs(attrs));
+      this.D.push([]);
       content = this.handleIt(content);
-      defer = this.info_defer.pop();
+      defer = this.D.pop();
       if (can_componentize || attrs.dynamic || defer.length || !is_part) {
         if (defer.length && !can_componentize && !attrs.dynamic) {
           _log2("WARNING: DEFER logic in (" + view + "); wrapping DIV tag.");
@@ -425,7 +409,6 @@
       saved_info = this.saveInfo();
       d_result = d_load.then(function(obj) {
         var result;
-        _log2(f, 'THEN', obj);
         try {
           if (obj != null ? obj.then : void 0) {
             BLOWUP();
@@ -449,7 +432,7 @@
       var f, f_content;
       f = 'Base:M/View.T_defer:';
       f_content = this.handleIt(content);
-      this.info_defer[this.info_defer.length - 1].push({
+      this.D[this.D.length - 1].push({
         attrs: attrs,
         func: new Function('el', 'attrs', f_content)
       });
@@ -457,7 +440,7 @@
     };
 
     View$Base.prototype.T_if_true = function(attrs, content) {
-      if (this.info_if_nms[attrs.name]) {
+      if (this.N[attrs.name]) {
         return this.handleIt(content());
       } else {
         return '';
@@ -465,7 +448,7 @@
     };
 
     View$Base.prototype.T_if_false = function(attrs, content) {
-      if (this.info_if_nms[attrs.name]) {
+      if (this.N[attrs.name]) {
         return '';
       } else {
         return this.handleIt(content);
@@ -473,7 +456,7 @@
     };
 
     View$Base.prototype.T_if = function(attrs, content) {
-      var is_true, issue, lh, rh, tbl, val, _ref, _ref1;
+      var is_true, issue, tbl, _ref;
       issue = false;
       is_true = false;
       if ('val' in attrs) {
@@ -497,9 +480,7 @@
       } else if ('not_set' in attrs) {
         is_true = attrs.not_set ? false : true;
       } else if ('table_is_not_empty' in attrs) {
-        val = attrs.table_is_not_empty;
-        _ref1 = val.split('/'), lh = _ref1[0], rh = _ref1[1];
-        tbl = this._accessModelTable(val, false)[0];
+        tbl = this._accessModelTable(attrs.table_is_not_empty, false);
         if (tbl.length) {
           is_true = true;
         }
@@ -510,7 +491,7 @@
         console.log('ISSUE T_if', attrs);
       }
       if ('name' in attrs) {
-        this.info_if_nms[attrs.name] = is_true;
+        this.N[attrs.name] = is_true;
       }
       if (is_true && content) {
         return this.handleIt(content);
@@ -520,34 +501,34 @@
     };
 
     View$Base.prototype._accessModelTable = function(at_table, alias) {
-      var dyn_list, dyn_m, dyn_t, lh, oM, rh, rh_alias, tbl, _ref, _ref1, _ref2;
+      var lh, rh, rh_alias, root, tbl, _ref;
       _ref = at_table.split('/'), lh = _ref[0], rh = _ref[1];
-      if (lh in this.info_foreach) {
-        tbl = this.info_foreach[lh].row[rh];
-        _ref1 = this.info_foreach[lh].dyn, dyn_m = _ref1[0], dyn_t = _ref1[1], dyn_list = _ref1[2];
+      if (lh in this.R) {
+        tbl = this.R[lh][rh];
+        root = {
+          p: lh
+        };
       } else {
-        oM = E[lh]();
-        tbl = oM.getTable(rh);
-        _ref2 = [lh, rh, []], dyn_m = _ref2[0], dyn_t = _ref2[1], dyn_list = _ref2[2];
+        tbl = E[lh](rh);
+        root = {
+          m: lh
+        };
       }
+      if (alias === false) {
+        return tbl;
+      }
+      rh_alias = alias != null ? alias : rh;
       if (tbl.length === 0) {
-        return [tbl, rh, lh, rh, oM];
+        return [tbl, rh_alias];
       }
-      rh_alias = rh;
-      if (alias) {
-        rh_alias = alias;
-      }
-      dyn_list.push([rh, rh_alias]);
-      this.info_foreach[rh_alias] = {
-        dyn: [dyn_m, dyn_t, dyn_list]
-      };
-      return [tbl, rh_alias, lh, rh, oM];
+      root.o = rh;
+      this.I[rh_alias] = root;
+      return [tbl, rh_alias];
     };
 
     View$Base.prototype.T_foreach = function(attrs, content_f) {
       var count, f, limit, result, rh_alias, row, tbl, _i, _len, _ref;
       f = 'T_foreach';
-      _log2(f, attrs);
       _ref = this._accessModelTable(attrs.table, attrs.alias), tbl = _ref[0], rh_alias = _ref[1];
       if (tbl.length === 0) {
         return '';
@@ -557,11 +538,12 @@
       for (count = _i = 0, _len = tbl.length; _i < _len; count = ++_i) {
         row = tbl[count];
         row = tbl[count];
-        this.info_foreach[rh_alias].row = row;
-        this.info_foreach[rh_alias].count = count;
+        this.R[rh_alias] = row;
+        this.I[rh_alias].c = count;
         result.push(this.handleIt(content_f));
       }
-      delete this.info_foreach[rh_alias];
+      delete this.I[rh_alias];
+      delete this.R[rh_alias];
       return result;
     };
 
@@ -576,22 +558,24 @@
       masterAlias = !(subTable != null) ? attrs.alias : void 0;
       _ref2 = this._accessModelTable(model + '/' + table, masterAlias), tbl = _ref2[0], rh_alias = _ref2[1];
       _log2(f, 'tbl,rh_alias (master)', tbl, rh_alias);
-      this.info_foreach[rh_alias].row = tbl[0];
-      this.info_foreach[rh_alias].count = 0;
+      this.R[rh_alias] = tbl[0];
+      this.I[rh_alias].c = 0;
       rh_1 = rh_alias;
       if (subTable != null) {
         _ref3 = this._accessModelTable(table + '/' + subTable, attrs.alias), tbl = _ref3[0], rh_alias = _ref3[1];
         _log2(f, 'tbl,rh_alias (subTable)', tbl, rh_alias);
-        this.info_foreach[rh_alias].row = tbl[0];
-        this.info_foreach[rh_alias].count = 0;
+        this.R[rh_alias] = tbl[0];
+        this.I[rh_alias].c = 0;
         rh_2 = rh_alias;
       }
       ans = content_f ? this.handleIt(content_f) : ((_ref4 = attrs.part) != null ? _ref4 : attrs.part = (_ref5 = fist.part) != null ? _ref5 : 'fist_default', this.T_part(attrs));
       if (rh_2) {
-        delete this.info_foreach[rh_2];
+        delete this.R[rh_2];
+        delete this.I[rh_2];
       }
       if (rh_1) {
-        delete this.info_foreach[rh_1];
+        delete this.R[rh_1];
+        delete this.I[rh_2];
       }
       return ans;
     };
