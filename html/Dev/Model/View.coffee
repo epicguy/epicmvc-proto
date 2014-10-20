@@ -34,28 +34,20 @@ class View extends E.Model.View$Base
 		out= @viewExe.doAllParts oPt.parts
 		@Opts= save
 		out
-	xgetTable:( nm) ->
-		return super nm if @Opts().form isnt true
-		switch nm
-			when 'Control', 'Form'
-				if @fist_table.Debug isnt true
-					for row in @fist_table.Control
-						row.label+= """
-<span class="dbg-tag-box" title="#{row.name}(#{row.type})">#</span>
-"""
-					@fist_table.Debug= true
-		super nm
 	my_accessModelTable: (at_table, alias) ->
 		[lh, rh]= at_table.split '/'
-		if lh of @info_foreach
-			row= @info_foreach[ lh].row
+		if lh of @R
+			row= @R[ lh]
 			if rh not of row
 				row_info= switch row_typ= E.type_oau row
 					when 'O' # Should be hashes object
 						row_info=( nm for nm of row).join()
 						row_info+= ' fieldNm:'+ row.fieldNm if 'fieldNm' of row
 					else row_info= "Not a hash (#{row_typ})"
-				err= "No such sub-table (#{rh}) in (#{lh}) (row=#{row_info}) (dyn:#{@info_foreach[lh].dyn.join ','})"
+				i= @I[ lh]; i_info= ''
+				for k,nm of m: 'model', p:'parent', c:'count' when i[ k]?
+					i_info+= nm+ ':'+ i[ k]
+				err= "No such sub-table (#{rh}) in (#{lh}) R(#{row_info}) I(#{i_info}})"
 				#_log2 'ERROR', err
 				throw new Error err
 		else if lh not of E
@@ -141,7 +133,7 @@ class View extends E.Model.View$Base
 		#"<span title='&#{view_nm}/#{tbl_nm}/#{col_nm}#{t_format_spec}#{t_custom_spec};'>#{val}</span>"
 		val
 	v2: (tbl_nm, col_nm, format_spec, custom_spec, sub_nm, give_error) ->
-		if tbl_nm not of @info_foreach
+		if tbl_nm not of @R
 			t_format_spec= if format_spec or custom_spec then '#'+ format_spec else ''
 			t_custom_spec= if custom_spec then '#'+ custom_spec else ''
 			key= '&'+ tbl_nm+ '/'+ col_nm+ t_format_spec+ t_custom_spec+ ';' # TODO sub_nm?

@@ -70,31 +70,11 @@
       return out;
     };
 
-    View.prototype.xgetTable = function(nm) {
-      var row, _i, _len, _ref;
-      if (this.Opts().form !== true) {
-        return View.__super__.xgetTable.call(this, nm);
-      }
-      switch (nm) {
-        case 'Control':
-        case 'Form':
-          if (this.fist_table.Debug !== true) {
-            _ref = this.fist_table.Control;
-            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-              row = _ref[_i];
-              row.label += "<span class=\"dbg-tag-box\" title=\"" + row.name + "(" + row.type + ")\">#</span>";
-            }
-            this.fist_table.Debug = true;
-          }
-      }
-      return View.__super__.xgetTable.call(this, nm);
-    };
-
     View.prototype.my_accessModelTable = function(at_table, alias) {
-      var err, lh, nm, rh, row, row_info, row_typ, _ref;
+      var err, i, i_info, k, lh, nm, rh, row, row_info, row_typ, _ref, _ref1;
       _ref = at_table.split('/'), lh = _ref[0], rh = _ref[1];
-      if (lh in this.info_foreach) {
-        row = this.info_foreach[lh].row;
+      if (lh in this.R) {
+        row = this.R[lh];
         if (!(rh in row)) {
           row_info = (function() {
             switch (row_typ = E.type_oau(row)) {
@@ -115,7 +95,20 @@
                 return row_info = "Not a hash (" + row_typ + ")";
             }
           })();
-          err = "No such sub-table (" + rh + ") in (" + lh + ") (row=" + row_info + ") (dyn:" + (this.info_foreach[lh].dyn.join(',')) + ")";
+          i = this.I[lh];
+          i_info = '';
+          _ref1 = {
+            m: 'model',
+            p: 'parent',
+            c: 'count'
+          };
+          for (k in _ref1) {
+            nm = _ref1[k];
+            if (i[k] != null) {
+              i_info += nm + ':' + i[k];
+            }
+          }
+          err = "No such sub-table (" + rh + ") in (" + lh + ") R(" + row_info + ") I(" + i_info + "})";
           throw new Error(err);
         }
       } else if (!(lh in E)) {
@@ -261,7 +254,7 @@
 
     View.prototype.v2 = function(tbl_nm, col_nm, format_spec, custom_spec, sub_nm, give_error) {
       var key, t_custom_spec, t_format_spec, val;
-      if (!(tbl_nm in this.info_foreach)) {
+      if (!(tbl_nm in this.R)) {
         t_format_spec = format_spec || custom_spec ? '#' + format_spec : '';
         t_custom_spec = custom_spec ? '#' + custom_spec : '';
         key = '&' + tbl_nm + '/' + col_nm + t_format_spec + t_custom_spec + ';';
