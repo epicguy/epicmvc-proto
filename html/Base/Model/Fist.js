@@ -144,7 +144,7 @@
     };
 
     Fist.prototype._makeField = function(fist, field, ix, row) {
-      var choice_type, choices, defaults, f, fl, rows, s, _i, _ref, _ref1, _ref2, _ref3;
+      var choice_type, choices, defaults, f, fl, rows, s, _i, _ref, _ref1, _ref2;
       f = '_makeField';
       defaults = {
         is_first: ix === 0,
@@ -161,9 +161,9 @@
       fl = E.merge(defaults, field);
       _ref = fl.type.split(':'), fl.type = _ref[0], choice_type = _ref[1];
       fl.id = 'U' + E.nextCounter();
-      fl.value = (_ref1 = field.hval) != null ? _ref1 : fl["default"];
+      fl.value = field.hval;
       if (fl.type === 'yesno') {
-        if ((_ref2 = fl.cdata) == null) {
+        if ((_ref1 = fl.cdata) == null) {
           fl.cdata = ['1', '0'];
         }
         fl.yes_val = String(fl.cdata[0]);
@@ -180,7 +180,7 @@
         choices = this._getChoices(choice_type, fist, field, row);
         rows = [];
         s = '';
-        for (ix = _i = 0, _ref3 = choices.options.length; 0 <= _ref3 ? _i < _ref3 : _i > _ref3; ix = 0 <= _ref3 ? ++_i : --_i) {
+        for (ix = _i = 0, _ref2 = choices.options.length; 0 <= _ref2 ? _i < _ref2 : _i > _ref2; ix = 0 <= _ref2 ? ++_i : --_i) {
           s = choices.values[ix] === (String(fl.value));
           rows.push({
             option: choices.options[ix],
@@ -313,10 +313,11 @@
   };
 
   E.fistD2H = function(field, val) {
+    var _ref;
     if (field.d2h) {
       return E['fistD2H$' + field.d2h](field, val);
     } else {
-      return val != null ? val : '';
+      return (_ref = val != null ? val : field["default"]) != null ? _ref : '';
     }
   };
 

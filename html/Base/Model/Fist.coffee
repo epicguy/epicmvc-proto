@@ -98,7 +98,7 @@ class Fist extends E.ModelJS
 		fl= E.merge defaults, field
 		[fl.type, choice_type]= fl.type.split ':'
 		fl.id= 'U'+ E.nextCounter()
-		fl.value= (field.hval) ? fl.default
+		fl.value= field.hval
 		if fl.type is 'yesno'
 			fl.cdata?= ['1','0']
 			fl.yes_val=( String fl.cdata[ 0])
@@ -164,7 +164,7 @@ E.fistH2H= (field,val) ->
 	val
 E.fistH2H$pre= (field,val) -> val # Users can change to e.g. val.replace /[<>]/g, ''
 E.fistH2D= (field,val) -> if field.h2d then E['fistH2D$'+ field.h2d] field, val else val
-E.fistD2H= (field,val) -> if field.d2h then E['fistD2H$'+ field.d2h] field, val else val ? ''
+E.fistD2H= (field,val) -> if field.d2h then E['fistD2H$'+ field.d2h] field, val else val ? field.default ? ''
 E.fistVAL= (field,val) ->
 	delete field.issue
 	check= true # Assume all is good
