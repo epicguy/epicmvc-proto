@@ -56,10 +56,6 @@
       while (target.tagName !== 'BODY' && !(data_action = target.getAttribute('data-e-action'))) {
         target = target.parentElement;
       }
-      _log2(f, 'event', {
-        type: type,
-        data_action: data_action
-      });
       if (!data_action) {
         return false;
       }
@@ -75,12 +71,6 @@
         data_params[nm] = attrs[ix].value;
       }
       val = target.value;
-      _log2(f, 'event', {
-        type: type,
-        data_action: data_action,
-        data_params: data_params,
-        val: val
-      });
       data_params.val = val;
       old_params = target.getAttribute('data-params');
       if (old_params) {
@@ -192,11 +182,10 @@
         BROKEN();
         m.render((container = document.getElementById(this.modalId)), this.modalView(content));
       } else {
-        _log2(f, 'START RENDER', start = new Date().getTime());
+        start = new Date().getTime();
         m.render((container = document.getElementById(this.baseId)), m('div', {}, content));
         _log2(f, 'END RENDER', new Date().getTime() - start);
       }
-      _log2(f, 'render......', this.content_watch, container);
       this.was_modal = modal;
       this.was_popped = false;
       this.very_first = false;

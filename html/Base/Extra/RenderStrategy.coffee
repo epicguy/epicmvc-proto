@@ -40,14 +40,14 @@ class RenderStrategy$Base
 		# Bubble up to any parent with a data-e-action
 		while target.tagName isnt 'BODY' and not data_action= target.getAttribute 'data-e-action'
 			target= target.parentElement
-		_log2 f, 'event', {type, data_action}
+		#_log2 f, 'event', {type, data_action}
 		return false if not data_action
 		data_params= {}; attrs= target.attributes
 		for ix in [0...attrs.length] when 'data-e-' is attrs[ ix].name.slice 0, 7
 			continue if 'action' is nm= attrs[ ix].name.slice 7
 			data_params[ nm]= attrs[ ix].value
 		val= target.value
-		_log2 f, 'event', {type, data_action, data_params, val}
+		#_log2 f, 'event', {type, data_action, data_params, val}
 		data_params.val= val
 		# TODO COMPATABILITY MODE, EH?
 		old_params= target.getAttribute 'data-params'
@@ -110,11 +110,12 @@ class RenderStrategy$Base
 			BROKEN() # TODO JQUERY
 			m.render (container= document.getElementById @modalId), @modalView content
 		else
-			_log2 f, 'START RENDER', start= new Date().getTime()
+			start= new Date().getTime() #%#
+			#_log2 f, 'START RENDER', start
 			# TODO NEW DYNAMIC START/END METHOD? m.render (container= document.getElementById @baseId), m 'div', {}, content
 			m.render (container= document.getElementById @baseId), m 'div', {}, content
 			_log2 f, 'END RENDER', new Date().getTime()- start
-		_log2 f, 'render......', @content_watch, container
+		#_log2 f, 'render......', @content_watch, container
 		#TODO FIGURE OUT HOW TO GET THIS FROM E.G. OPTIONS (watch container) for watch in @content_watch
 		#TODO WORK ON HISTORY NEXT @handleRenderState(history, action)
 		@was_modal= modal
