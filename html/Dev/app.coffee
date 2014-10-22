@@ -76,15 +76,27 @@ window.EpicMvc.app$Dev=
 			model= E.appFist fistNm
 			if not model?
 				err "FIST is missing: app.js requires MODELS: <model-name>: fists:[...,'#{fistNm}']", {fist}
+			for fieldNm in fist.sp.FIELDS
+				err "No such FIELD (#{fieldNm}) found for FIST (#{fistNm})", {fist} unless fieldNm of E.fieldDef
 			return
 
 		# E.option.fi2 field # Verify h2h, d2h, h2d, validate exist in namespace
-		fi2: (field)->
+		# field contains 'type','db_nm'
+		# unfamiliar type 'radio:','pulldown:','text','textarea','password','hidden','yesno'
+		fi2: (field, fist)->
+			str= "in FIELD (#{field.fieldNm}) for FIST (#{field.fistNm})"
 			for attr in ['h2h','d2h','h2d','validate'] when attr of field
 				type= if attr is 'validate' then 'VAL' else attr.toUpperCase()
 				filtList= if attr is 'h2h' then field[ attr] else [ field[ attr]]
 				for filtNm in filtList when filtNm and (filt= 'fist'+ type+ '$'+ filtNm) not of E
-					err "Missing Fist Filter (E.#{filt}) in FIELD (#{field.fieldNm}) for FIST (#{field.fistNm})", {field}
+					err "Missing Fist Filter (E.#{filt}) #{str}", {field}
+			err "'type' attribute missing #{str}" unless 'type' of field
+			err "'db_nm' attribute missing #{str}" unless 'db_nm' of field
+			familiar_types= ['radio','pulldown','text','textarea','password','hidden','yesno']
+			warn "Unfamiliar 'type' attribute #{str}" unless (field.type.split ':')[0] in familiar_types
+			if field.confirm?
+				err "Missing Confirm FIELD (#{field.confirm}) in FIST FIELDS #{str}" unless field.confirm in fist.sp.FIELDS
+				err "No such Confirm FIELD (#{field.confirm}) found #{str}" unless field.confirm of E.fieldDef
 			return
 
 		# E.option.fi3 field, val # Warn if not val?
