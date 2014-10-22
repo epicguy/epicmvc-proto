@@ -548,35 +548,38 @@
     };
 
     View$Base.prototype.T_fist = function(attrs, content_f) {
-      var ans, f, fist, masterAlias, model, rh_1, rh_2, rh_alias, subTable, table, tbl, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+      var ans, content, f, fist, foreach_attrs, masterAlias, model, part, rh_1, rh_alias, subTable, table, tbl, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7,
+        _this = this;
       f = 'T_fist';
       _log2(f, attrs, content_f);
       fist = E.fistDef[attrs.fist];
       model = (_ref = fist.event) != null ? _ref : 'Fist';
       table = attrs.fist + (attrs.row != null ? ':' + attrs.row : '');
-      subTable = (_ref1 = attrs.via) != null ? _ref1 : fist.via;
-      masterAlias = !(subTable != null) ? attrs.alias : void 0;
-      _ref2 = this._accessModelTable(model + '/' + table, masterAlias), tbl = _ref2[0], rh_alias = _ref2[1];
+      subTable = (_ref1 = (_ref2 = attrs.via) != null ? _ref2 : fist.via) != null ? _ref1 : 'Control';
+      masterAlias = 'Fist';
+      _ref3 = this._accessModelTable(model + '/' + table, masterAlias), tbl = _ref3[0], rh_alias = _ref3[1];
       _log2(f, 'tbl,rh_alias (master)', tbl, rh_alias);
       this.R[rh_alias] = tbl[0];
       this.I[rh_alias].c = 0;
       rh_1 = rh_alias;
-      if (subTable != null) {
-        _ref3 = this._accessModelTable(table + '/' + subTable, attrs.alias), tbl = _ref3[0], rh_alias = _ref3[1];
-        _log2(f, 'tbl,rh_alias (subTable)', tbl, rh_alias);
-        this.R[rh_alias] = tbl[0];
-        this.I[rh_alias].c = 0;
-        rh_2 = rh_alias;
+      content = content_f ? content_f : (part = (_ref4 = (_ref5 = attrs.part) != null ? _ref5 : fist.part) != null ? _ref4 : 'fist_default', (_ref6 = attrs.part) != null ? _ref6 : attrs.part = (_ref7 = fist.part) != null ? _ref7 : 'fist_default', function() {
+        return _this.kids([
+          [
+            'part', {
+              part: part
+            }
+          ]
+        ]);
+      });
+      foreach_attrs = {
+        table: masterAlias + '/' + subTable
+      };
+      if (attrs.alias != null) {
+        foreach_attrs.alias = attrs.alias;
       }
-      ans = content_f ? this.handleIt(content_f) : ((_ref4 = attrs.part) != null ? _ref4 : attrs.part = (_ref5 = fist.part) != null ? _ref5 : 'fist_default', this.T_part(attrs));
-      if (rh_2) {
-        delete this.R[rh_2];
-        delete this.I[rh_2];
-      }
-      if (rh_1) {
-        delete this.R[rh_1];
-        delete this.I[rh_2];
-      }
+      ans = this.T_foreach(foreach_attrs, content);
+      delete this.R[rh_1];
+      delete this.I[rh_1];
       return ans;
     };
 

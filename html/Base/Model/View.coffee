@@ -323,27 +323,24 @@ class View$Base extends E.ModelJS
 		fist= E.fistDef[ attrs.fist]
 		model= fist.event ? 'Fist'
 		table= attrs.fist+ if attrs.row? then ':'+ attrs.row else ''
-		subTable= attrs.via ? fist.via
-		masterAlias= if not subTable? then attrs.alias # else undefined
+		subTable= attrs.via ? fist.via ? 'Control'
+		masterAlias= 'Fist'
 		[tbl, rh_alias]= @_accessModelTable model+ '/'+ table, masterAlias
 		_log2 f, 'tbl,rh_alias (master)', tbl, rh_alias
 		@R[ rh_alias]= tbl[ 0]
 		@I[ rh_alias].c= 0 # For save info
 		rh_1= rh_alias
-		if subTable?
-			[tbl, rh_alias]= @_accessModelTable table+ '/'+ subTable, attrs.alias
-			_log2 f, 'tbl,rh_alias (subTable)', tbl, rh_alias
-			@R[ rh_alias]= tbl[ 0]
-			@I[ rh_alias].c= 0 # For save info
-			rh_2= rh_alias
 
-		ans= if content_f # TODO EXPERIMENTAL - HTML FORM COULD GO RIGHT BETWEEN THE TAGS
-			@handleIt content_f
+		content= if content_f # TODO EXPERIMENTAL - HTML FORM COULD GO RIGHT BETWEEN THE TAGS
+			content_f
 		else
+			part= attrs.part ? fist.part ? 'fist_default'
 			attrs.part?= fist.part ? 'fist_default'
-			@T_part attrs
-		(delete @R[ rh_2]; delete @I[ rh_2]) if rh_2
-		(delete @R[ rh_1]; delete @I[ rh_2]) if rh_1
+			()=> @kids [['part',{part}]]
+		foreach_attrs= table: masterAlias+ '/'+ subTable
+		foreach_attrs.alias= attrs.alias if attrs.alias?
+		ans= @T_foreach foreach_attrs, content
+		(delete @R[ rh_1]; delete @I[ rh_1])
 		ans
 
 E.Model.View$Base= View$Base # Public API
