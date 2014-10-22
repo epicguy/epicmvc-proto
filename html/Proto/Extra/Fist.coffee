@@ -21,3 +21,12 @@ E.fistVAL$test= (field, val) ->
 	re= field.validate_expr
 	re= new RegExp re if typeof re is 'string'
 	re.test val
+
+E.fistVAL$email= (field, val) ->
+	# 'fieldName' is given for debug messages
+	# [A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4}
+	most= '[A-Z0-9._+%-]'
+	some= '[A-Z0-9.-]'
+	few = '[A-Z]'
+	re = new RegExp "^#{most}+@#{some}+[.]#{few}{2,4}$", 'i'
+	if val.match re then true else false
