@@ -12,6 +12,7 @@ class RenderStrategy$Base
 		@very_first= true
 		@was_popped= false
 		@was_modal= false
+		@last_path= 'not_set'
 		@unloadMsgs= {}
 		@baseUrl= window.document.location.pathname
 		@baseId= "epic-new-page"
@@ -78,7 +79,8 @@ class RenderStrategy$Base
 			E.action 'browser_hash', hash: location.hash.substr 1
 		else
 			E.setModelState event.state if event.state
-			BROKEN() or @render() # TODO
+			m.startComputation() # Optionally call @m_redraw
+			m.endComputation()
 		return
 
 	m_redraw: =>
@@ -94,13 +96,14 @@ class RenderStrategy$Base
 			if @redraw_guard isnt 0 # Someone updated content while we were busy drawing
 				@redraw_guard= 0
 				setTimeout (=> @m_redraw()), 16
-			@render content, 'TODO', 'TODO', false
+			@render content
 		.then null, (err) => # Make own .then to catch issues in above .then
 			# These may be errors from m.render
 			console.error 'RenderStrategy$Base m_redraw', err
 
-	render: (content, history, action, modal) ->
+	render: (content) ->
 		f= 'render'
+		modal= false # TODO: HANDLE MODAL
 		if @was_modal
 			BROKEN() # TODO JQUERY
 			#TODO JQUERY window.$('.modal-backdrop').remove() # Get rid of that backdrop
@@ -117,7 +120,7 @@ class RenderStrategy$Base
 			_log2 f, 'END RENDER', new Date().getTime()- start
 		#_log2 f, 'render......', @content_watch, container
 		#TODO FIGURE OUT HOW TO GET THIS FROM E.G. OPTIONS (watch container) for watch in @content_watch
-		#TODO WORK ON HISTORY NEXT @handleRenderState(history, action)
+		@handleRenderState() # TODO WORK ON HISTORY NEXT
 		@was_modal= modal
 		@was_popped= false
 		@very_first= false
@@ -131,16 +134,19 @@ class RenderStrategy$Base
 				#$( '.modal', el).off 'hidden'
 		#m 'div', {config: onload}, content
 
-	handleRenderState: (history, action) ->
+	handleRenderState: () ->
+		path= E.App().getStepPath()
+		str_path= path.join '/'
+		history= if str_path is @last_path then 'replace' else true
 		# History can be: true, false, 'replace'
-		f= 'E:bootstrap.handleRenderState:'+ history+ ':'+ action
+		f= 'E:handleRenderState:'+ history+ ':'+ str_path
 		# Put a 'hash' into location bar, to match our current app location, for history
 		_log2 f, vf: @very_first, wp: @was_popped
 		return if not history
-		displayHash= if @very_first then '' else 'action-'+ action
+		displayHash= '' # if @very_first then '' else 'action-'+ action
 		# Does the current flow-path contain a 'dom_cache' value?
-		new_hash= E.getDomCache()
-		if new_hash is false then new_hash= E.getExternalUrl()
+		new_hash= (E.appFindAttr path[0], path[1], path[2], 'route') ? false
+		# new_hash= E.getExternalUrl new_hash, path # TODO: browser_hash variables
 		if new_hash isnt false then displayHash= new_hash
 		model_state= E.getModelState()
 		#_log2 f, ms: model_state, ha: displayHash, cvw: [action, @very_first, @was_popped]
@@ -149,6 +155,7 @@ class RenderStrategy$Base
 		else if not @was_popped and history is true # action, create history item
 			window.history.pushState? model_state, displayHash, '#'+displayHash
 			window.document.title= displayHash
+		@last_path= str_path
 		return
 
 E.Extra.RenderStrategy$Base= RenderStrategy$Base # Public API

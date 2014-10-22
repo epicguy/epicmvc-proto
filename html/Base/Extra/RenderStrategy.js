@@ -21,6 +21,7 @@
       this.very_first = true;
       this.was_popped = false;
       this.was_modal = false;
+      this.last_path = 'not_set';
       this.unloadMsgs = {};
       this.baseUrl = window.document.location.pathname;
       this.baseId = "epic-new-page";
@@ -144,7 +145,8 @@
         if (event.state) {
           E.setModelState(event.state);
         }
-        BROKEN() || this.render();
+        m.startComputation();
+        m.endComputation();
       }
     };
 
@@ -165,15 +167,16 @@
             return _this.m_redraw();
           }), 16);
         }
-        return _this.render(content, 'TODO', 'TODO', false);
+        return _this.render(content);
       }).then(null, function(err) {
         return console.error('RenderStrategy$Base m_redraw', err);
       });
     };
 
-    RenderStrategy$Base.prototype.render = function(content, history, action, modal) {
-      var container, f, start;
+    RenderStrategy$Base.prototype.render = function(content) {
+      var container, f, modal, start;
       f = 'render';
+      modal = false;
       if (this.was_modal) {
         BROKEN();
         m.render(document.getElementById(this.modalId), m());
@@ -186,14 +189,18 @@
         m.render((container = document.getElementById(this.baseId)), m('div', {}, content));
         _log2(f, 'END RENDER', new Date().getTime() - start);
       }
+      this.handleRenderState();
       this.was_modal = modal;
       this.was_popped = false;
       this.very_first = false;
     };
 
-    RenderStrategy$Base.prototype.handleRenderState = function(history, action) {
-      var displayHash, f, model_state, new_hash, _base, _base1;
-      f = 'E:bootstrap.handleRenderState:' + history + ':' + action;
+    RenderStrategy$Base.prototype.handleRenderState = function() {
+      var displayHash, f, history, model_state, new_hash, path, str_path, _base, _base1, _ref;
+      path = E.App().getStepPath();
+      str_path = path.join('/');
+      history = str_path === this.last_path ? 'replace' : true;
+      f = 'E:handleRenderState:' + history + ':' + str_path;
       _log2(f, {
         vf: this.very_first,
         wp: this.was_popped
@@ -201,11 +208,8 @@
       if (!history) {
         return;
       }
-      displayHash = this.very_first ? '' : 'action-' + action;
-      new_hash = E.getDomCache();
-      if (new_hash === false) {
-        new_hash = E.getExternalUrl();
-      }
+      displayHash = '';
+      new_hash = (_ref = E.appFindAttr(path[0], path[1], path[2], 'route')) != null ? _ref : false;
       if (new_hash !== false) {
         displayHash = new_hash;
       }
@@ -220,6 +224,7 @@
         }
         window.document.title = displayHash;
       }
+      this.last_path = str_path;
     };
 
     return RenderStrategy$Base;
