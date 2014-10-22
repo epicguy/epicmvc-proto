@@ -41,11 +41,41 @@ class Fist extends E.ModelJS
 					fist.fnm= fieldNm
 					#invalidate= true
 			else return super name, act, fistNm, fieldNm, p
-		if invalidate
+		invalidate2= @confirm fist, field, act
+		if invalidate or invalidate2
 			if p.async isnt true
 			then @invalidateTables [ fist.rnm]
 			else delete @Table[ fist.rnm]
 		return
+
+	confirm: (fist, field, act)->
+		return false unless field.confirm? or field.confirm_src? # SKIP: Field is neither target nor source
+		tar= if field.confirm_src? then field else fist.ht[ field.confirm]
+		src= fist.ht[ tar.confirm_src]
+		if tar.issue? # SKIP: Target is not valid yet
+			(delete src.issue; return true) if src.issue?
+			return false
+		was_val= src.hval
+		return false if was_val is '' and src.fieldNm isnt field.fieldNm # SKIP: Source is empty and not focused on source
+		was_issue= src.issue
+		val= E.fistH2H tar, was_val # Use Target H2H filter on Source
+		tval= E.fistH2H tar, tar.hval # Use Target H2H filter on Target
+		if val is tval
+			delete src.issue
+		else
+			check= 'FIELD_ISSUE'+ if src.issue_text then '_TEXT' else ''
+			@_makeIssue check, src
+
+		was_issue isnt src.issue
+
+	_makeIssue: (check, field)->
+		# 'check' can be a token-array or single-token (so add some extra info if needed)
+		token= check
+		if 'A' isnt E.type_oau token
+			token= [token, field.nm, field.label ? field.nm, field.issue_text]
+		field.issue= new E.Issue field.fistNm, field.nm
+		field.issue.add token[0], token.slice 1
+
 	# Controller wants a fist's fields/errors cleared
 	fistClear: (fistNm, row) ->
 		rnm= fistNm+ if row then ':'+ row else ''
@@ -59,6 +89,8 @@ class Fist extends E.ModelJS
 		errors= 0
 		for fieldNm, field of fist.ht
 			errors++ if true isnt E.fistVAL field, field.hval
+		for fieldNm, field of fist.ht when field.confirm?
+			errors++ if true is @confirm fist, field, 'fistValidate'
 		if errors
 			invalidate= true
 			r.fist$success= 'FAIL'
@@ -92,7 +124,7 @@ class Fist extends E.ModelJS
 		#_log2 f, {fist, field, ix}
 		# TODO FIX E-IF SO WE DON'T NEED 'yes' else '' ANYMORE!
 		defaults= {
-			is_first: ix is 0, focus: fist.fnm is field.nm, yes_val: 'X'
+			is_first: ix is 0, focus: fist.fnm is field.nm, yes_val: 'X', req: false
 			default: '', width: '', size: '', issue: '', value: '', selected: false, name: field.nm
 		}
 		fl= E.merge defaults, field
@@ -122,7 +154,7 @@ class Fist extends E.ModelJS
 		#   ht:{field recs by html name}, db:{field recs by db_nm}
 		rnm= p_fist+ if p_row then ':'+ p_row else ''
 		if rnm not of @fist
-			fist= @fist[ rnm]= {rnm, nm: p_fist, row: p_row, ht: {}, db: {}, st: 'new', sp: E.fistDef[ p_fist]}
+			fist= {rnm, nm: p_fist, row: p_row, ht: {}, db: {}, st: 'new', sp: E.fistDef[ p_fist]}
 			_log2 f, 'new fist', fist
 			E.option.fi1 fist # Guard e.g. E[ E.appFist fistNm]()
 			for fieldNm in fist.sp.FIELDS
@@ -131,8 +163,11 @@ class Fist extends E.ModelJS
 					when 'S' then field.h2h.split /[:,]/
 					when 'A' then field.h2h
 					else []
-				E.option.fi2 field # Verify h2h, d2h, h2d, validate exist in namespace
+				E.option.fi2 field, fist # Verify h2h, d2h, h2d, validate exist in namespace
 				fist.ht[ fieldNm]= fist.db[ field.db_nm]= field # Alias by db_nm
+			for fieldNm, rec of fist.ht when rec.confirm?
+				fist.ht[rec.confirm].confirm_src= fieldNm
+			@fist[ rnm]= fist
 		else fist= @fist[ rnm]
 		if fist.st is 'new'
 			db_value_hash= (E[ E.appFist p_fist]().fistGetValues p_fist, p_row) ? {}
@@ -189,5 +224,9 @@ E.fistVAL= (field,val) ->
 		field.issue.add token[0], token.slice 1
 	return check is true
 
+E.fistVAL$test= (field, val) ->
+	re= field.validate_expr
+	re= new RegExp re if typeof re is 'string'
+	re.test val
 
 E.Model.Fist$Base= Fist # Public API

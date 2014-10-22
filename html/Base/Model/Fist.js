@@ -20,7 +20,7 @@
     };
 
     Fist.prototype.event = function(name, act, fistNm, fieldNm, p) {
-      var f, field, fist, had_issue, invalidate, tmp_val, was_issue, was_val;
+      var f, field, fist, had_issue, invalidate, invalidate2, tmp_val, was_issue, was_val;
       f = 'event:' + act + '-' + fistNm + '/' + fieldNm;
       _log2(f, p);
       if (name !== 'Fist') {
@@ -68,13 +68,54 @@
         default:
           return Fist.__super__.event.call(this, name, act, fistNm, fieldNm, p);
       }
-      if (invalidate) {
+      invalidate2 = this.confirm(fist, field, act);
+      if (invalidate || invalidate2) {
         if (p.async !== true) {
           this.invalidateTables([fist.rnm]);
         } else {
           delete this.Table[fist.rnm];
         }
       }
+    };
+
+    Fist.prototype.confirm = function(fist, field, act) {
+      var check, src, tar, tval, val, was_issue, was_val;
+      if (!((field.confirm != null) || (field.confirm_src != null))) {
+        return false;
+      }
+      tar = field.confirm_src != null ? field : fist.ht[field.confirm];
+      src = fist.ht[tar.confirm_src];
+      if (tar.issue != null) {
+        if (src.issue != null) {
+          delete src.issue;
+          return true;
+        }
+        return false;
+      }
+      was_val = src.hval;
+      if (was_val === '' && src.fieldNm !== field.fieldNm) {
+        return false;
+      }
+      was_issue = src.issue;
+      val = E.fistH2H(tar, was_val);
+      tval = E.fistH2H(tar, tar.hval);
+      if (val === tval) {
+        delete src.issue;
+      } else {
+        check = 'FIELD_ISSUE' + (src.issue_text ? '_TEXT' : '');
+        this._makeIssue(check, src);
+      }
+      return was_issue !== src.issue;
+    };
+
+    Fist.prototype._makeIssue = function(check, field) {
+      var token, _ref;
+      token = check;
+      if ('A' !== E.type_oau(token)) {
+        token = [token, field.nm, (_ref = field.label) != null ? _ref : field.nm, field.issue_text];
+      }
+      field.issue = new E.Issue(field.fistNm, field.nm);
+      return field.issue.add(token[0], token.slice(1));
     };
 
     Fist.prototype.fistClear = function(fistNm, row) {
@@ -84,7 +125,7 @@
     };
 
     Fist.prototype.fistValidate = function(ctx, fistNm, row) {
-      var ans, errors, f, field, fieldNm, fist, invalidate, nm, r, _ref, _ref1;
+      var ans, errors, f, field, fieldNm, fist, invalidate, nm, r, _ref, _ref1, _ref2;
       f = 'fistValidate:' + fistNm + (row != null ? ':' + row : '');
       _log2(f);
       r = ctx;
@@ -97,6 +138,15 @@
           errors++;
         }
       }
+      _ref1 = fist.ht;
+      for (fieldNm in _ref1) {
+        field = _ref1[fieldNm];
+        if (field.confirm != null) {
+          if (true === this.confirm(fist, field, 'fistValidate')) {
+            errors++;
+          }
+        }
+      }
       if (errors) {
         invalidate = true;
         r.fist$success = 'FAIL';
@@ -104,9 +154,9 @@
       } else {
         r.fist$success = 'SUCCESS';
         ans = r[fist.nm] = {};
-        _ref1 = fist.db;
-        for (nm in _ref1) {
-          field = _ref1[nm];
+        _ref2 = fist.db;
+        for (nm in _ref2) {
+          field = _ref2[nm];
           ans[nm] = E.fistH2D(field, field.hval);
         }
       }
@@ -150,6 +200,7 @@
         is_first: ix === 0,
         focus: fist.fnm === field.nm,
         yes_val: 'X',
+        req: false,
         "default": '',
         width: '',
         size: '',
@@ -194,11 +245,11 @@
     };
 
     Fist.prototype._getFist = function(p_fist, p_row) {
-      var db_value_hash, f, field, fieldNm, fist, nm, rnm, _i, _len, _ref, _ref1, _ref2;
+      var db_value_hash, f, field, fieldNm, fist, nm, rec, rnm, _i, _len, _ref, _ref1, _ref2, _ref3;
       f = '_getFist:' + p_fist + (p_row != null ? ':' + p_row : '');
       rnm = p_fist + (p_row ? ':' + p_row : '');
       if (!(rnm in this.fist)) {
-        fist = this.fist[rnm] = {
+        fist = {
           rnm: rnm,
           nm: p_fist,
           row: p_row,
@@ -227,17 +278,25 @@
                 return [];
             }
           })();
-          E.option.fi2(field);
+          E.option.fi2(field, fist);
           fist.ht[fieldNm] = fist.db[field.db_nm] = field;
         }
+        _ref1 = fist.ht;
+        for (fieldNm in _ref1) {
+          rec = _ref1[fieldNm];
+          if (rec.confirm != null) {
+            fist.ht[rec.confirm].confirm_src = fieldNm;
+          }
+        }
+        this.fist[rnm] = fist;
       } else {
         fist = this.fist[rnm];
       }
       if (fist.st === 'new') {
-        db_value_hash = (_ref1 = E[E.appFist(p_fist)]().fistGetValues(p_fist, p_row)) != null ? _ref1 : {};
-        _ref2 = fist.db;
-        for (nm in _ref2) {
-          field = _ref2[nm];
+        db_value_hash = (_ref2 = E[E.appFist(p_fist)]().fistGetValues(p_fist, p_row)) != null ? _ref2 : {};
+        _ref3 = fist.db;
+        for (nm in _ref3) {
+          field = _ref3[nm];
           field.hval = E.fistD2H(field, db_value_hash[nm]);
         }
         fist.st = 'loaded';
@@ -347,6 +406,15 @@
       field.issue.add(token[0], token.slice(1));
     }
     return check === true;
+  };
+
+  E.fistVAL$test = function(field, val) {
+    var re;
+    re = field.validate_expr;
+    if (typeof re === 'string') {
+      re = new RegExp(re);
+    }
+    return re.test(val);
   };
 
   E.Model.Fist$Base = Fist;
