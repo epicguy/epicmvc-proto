@@ -43,6 +43,13 @@ class App$Base extends E.ModelJS
 			when 'add_message' then m.add p.type, p.msgs
 			when 'add_issue'   then i.add p.type, p.msgs
 			when 'clear' then @clear()
+			when 'route' # p.route
+				path= E.appSearchAttr 'route', p.route
+				if path is false
+					r.success= 'FAIL'
+				else
+					@goTo path[0], path[1], path[2]
+					r.success= 'SUCCESS'
 			else  super ctx, act, p
 	setIssues: (issue_obj) ->
 		@issues.addObj issue_obj if issue_obj?.count() isnt 0

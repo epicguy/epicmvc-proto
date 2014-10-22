@@ -73,7 +73,7 @@
     };
 
     App$Base.prototype.action = function(ctx, act, p) {
-      var i, m, q, r;
+      var i, m, path, q, r;
       r = ctx.r, i = ctx.i, m = ctx.m;
       switch (act) {
         case 'path':
@@ -92,6 +92,15 @@
           return i.add(p.type, p.msgs);
         case 'clear':
           return this.clear();
+        case 'route':
+          path = E.appSearchAttr('route', p.route);
+          if (path === false) {
+            return r.success = 'FAIL';
+          } else {
+            this.goTo(path[0], path[1], path[2]);
+            return r.success = 'SUCCESS';
+          }
+          break;
         default:
           return App$Base.__super__.action.call(this, ctx, act, p);
       }
