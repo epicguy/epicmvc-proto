@@ -165,6 +165,10 @@ app= (window, undef) ->
 		for inst_nm of oModel
 			oModel[ inst_nm].restoreState? modelState[ inst_nm]
 
+	getModelState= ()->
+		modelState= {}
+		modelState[k]= ss for k,o of oModel when o.saveState? and ss= o.saveState()
+		modelState
 	# The old 'AppConf' class; use app*() functions now
 	aSetting= frames: {}, modals: {}, layout: 'default', go: 'default//'
 	aMacros= {}
@@ -230,6 +234,14 @@ app= (window, undef) ->
 		#_log2 f, ( "#{k}:#{v}" for own k,v of vars).join ', '
 		vars
 
+	appSearchAttr= (attrNm, val)->
+		for flowNm, flow of aFlows
+			for trackNm, track of flow.TRACKS
+				for stepNm, step of track.STEPS
+					return [flowNm, trackNm, stepNm] if step[attrNm] is val
+				return [flowNm, trackNm, track.start] if track[attrNm] is val
+			return [flowNm, flow.start, aFlows[flow.start].start] if flow[attrNm] is val
+		return false
 	# How E.<view-model> function works:
 	# E.<view-model>() gives instance
 	# E.<view-model>('word') gives table (run model's getTable())
@@ -263,8 +275,6 @@ app= (window, undef) ->
 			E.App().setIssues action_result[ 0]
 			E.App().setMessages action_result[ 1]
 			inAction= false
-			modelState= {}
-			modelState[k]= ss for k,o of oModel when o.saveState? and ss= o.saveState()
 			#final() # Must be called to avoid halting all rendering, but not until promise finishes
 		try
 			ans= _d_doAction action_token, data, E.App().getStepPath()
@@ -314,18 +324,22 @@ app= (window, undef) ->
 				when 'A' then action_node.pass
 				when 'S' then action_node.pass.split ','
 				else []
+			for nm,ix in nms when (nm.indexOf ':') > -1
+				[name, copy_to]= nm.split ':'
+				master_data[copy_to]= master_data[name]
+				nms[ix]= name
 			# WARNING: "Action (#{action_token}) request data is missing param #{nm}"
 			option.ca2 action_token, original_path, nms, data, action_node #%#
 			# Process 'set:'
 			master_data[ nm]= val for nm,val of action_node.set
 			# Handle 'do:'
 			if action_node.do?
-				is_macro= not /[.]/.test action_node.do
+				is_macro= (action_node.do.indexOf '.') < 0
 				if is_macro # Handle 'MACRO'
 					option.ca3 action_token, original_path, action_node, aMacros #if not aMacros[action_node.do] #%#
 					return d_doActionNode aMacros[action_node.do]
 				[view_nm,view_act]= action_node.do.split '.'
-				view_act= view_act ? action_token
+				view_act= if view_act then view_act else action_token
 				d= new m.Deferred(); r= {}; i= new E.Issue view_nm, view_act; mg= new E.Issue view_nm ,view_act
 				ctx= {d,r,i,m:mg}
 				ans= E[ view_nm] ctx, view_act, master_data # TODO: Process d_cb
@@ -389,9 +403,11 @@ app= (window, undef) ->
 
 	E[ nm]= obj for nm,obj of {
 		type_oau # TODO SEE IF THIS WORKS FOR PEOPLE TO REPLACE E.G. $.IsArray
-		Model, Extra, option, action, merge, appconfs
+		Model, Extra, option, appconfs
+		action, merge, getModelState, setModelState
 		appGetF, appGetT, appGetS, appStartT, appStartS
 		appFindAction, appGetSetting, appGetVars, appFist
+		appFindAttr, appSearchAttr
 		fieldDef, fistDef, issueMap, wistDef
 		oModel # Just for internal checking / testing
 	}
@@ -490,7 +506,7 @@ class ModelJS
 		E.View().invalidateTables @view_nm, tbl_nms, deleted_tbl_nms
 	# These methods are for development support, when a Model isn't complete
 	# Invoked when user does e.g. 'else super <params>'
-	action: (ctx,act,parms) ->              E.option.m2 @view_nm, act,params #%#
+	action: (ctx,act,params) ->             E.option.m2 @view_nm, act,params #%#
 	loadTable: (tbl_nm) ->                  E.option.m3 @view_nm, tbl_nm # if tbl_nm not of @Table #%#
 	fistValidate: (ctx,fistNm,row) ->       E.option.m4 @view_nm, fistNm, row #%#
 	fistGetValues: (fistNm,row) ->          E.option.m5 @view_nm, fistNm, row #%#

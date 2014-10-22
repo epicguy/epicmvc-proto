@@ -7,7 +7,7 @@
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   app = function(window, undef) {
-    var E, Extra, Model, aActions, aFists, aFlows, aMacros, aModels, aSetting, action, appFindAction, appFindAttr, appFindNode, appFist, appGetF, appGetS, appGetSetting, appGetT, appGetVars, appInit, appLoadFormsIf, appModel, appStartS, appStartT, appconfs, counter, fieldDef, finish_logout, fistDef, fistInit, inAction, issueInit, issueMap, make_model_functions, merge, modelState, nm, oModel, obj, option, setModelState, type_oau, wistDef, wistInit, _d_doAction, _i, _len, _ref, _ref1;
+    var E, Extra, Model, aActions, aFists, aFlows, aMacros, aModels, aSetting, action, appFindAction, appFindAttr, appFindNode, appFist, appGetF, appGetS, appGetSetting, appGetT, appGetVars, appInit, appLoadFormsIf, appModel, appSearchAttr, appStartS, appStartT, appconfs, counter, fieldDef, finish_logout, fistDef, fistInit, getModelState, inAction, issueInit, issueMap, make_model_functions, merge, modelState, nm, oModel, obj, option, setModelState, type_oau, wistDef, wistInit, _d_doAction, _i, _len, _ref, _ref1;
     inAction = false;
     counter = 0;
     Model = {};
@@ -184,6 +184,17 @@
       }
       return _results;
     };
+    getModelState = function() {
+      var k, o, ss;
+      modelState = {};
+      for (k in oModel) {
+        o = oModel[k];
+        if ((o.saveState != null) && (ss = o.saveState())) {
+          modelState[k] = ss;
+        }
+      }
+      return modelState;
+    };
     aSetting = {
       frames: {},
       modals: {},
@@ -323,6 +334,30 @@
       vars = merge({}, aFlows[flow].v, aFlows[flow].TRACKS[track].v, aFlows[flow].TRACKS[track].STEPS[step].v);
       return vars;
     };
+    appSearchAttr = function(attrNm, val) {
+      var flow, flowNm, step, stepNm, track, trackNm, _ref1, _ref2;
+      for (flowNm in aFlows) {
+        flow = aFlows[flowNm];
+        _ref1 = flow.TRACKS;
+        for (trackNm in _ref1) {
+          track = _ref1[trackNm];
+          _ref2 = track.STEPS;
+          for (stepNm in _ref2) {
+            step = _ref2[stepNm];
+            if (step[attrNm] === val) {
+              return [flowNm, trackNm, stepNm];
+            }
+          }
+          if (track[attrNm] === val) {
+            return [flowNm, trackNm, track.start];
+          }
+        }
+        if (flow[attrNm] === val) {
+          return [flowNm, flow.start, aFlows[flow.start].start];
+        }
+      }
+      return false;
+    };
     make_model_functions = function() {
       var model, view, _results;
       _results = [];
@@ -363,20 +398,10 @@
         return m.endComputation();
       };
       more = function(action_result) {
-        var k, o, ss, _results;
         _log2(f, 'cb:', action_result[0], action_result[1]);
         E.App().setIssues(action_result[0]);
         E.App().setMessages(action_result[1]);
-        inAction = false;
-        modelState = {};
-        _results = [];
-        for (k in oModel) {
-          o = oModel[k];
-          if ((o.saveState != null) && (ss = o.saveState())) {
-            _results.push(modelState[k] = ss);
-          }
-        }
-        return _results;
+        return inAction = false;
       };
       try {
         ans = _d_doAction(action_token, data, E.App().getStepPath());
@@ -407,7 +432,7 @@
         return [master_issue, master_message];
       }
       d_doLeftSide = function(action_node) {
-        var ans, ctx, d, d_cb, fist, fist_model, i, is_macro, mg, nms, r, val, view_act, view_nm, what, _j, _len1, _ref1, _ref2, _ref3, _ref4;
+        var ans, copy_to, ctx, d, d_cb, fist, fist_model, i, is_macro, ix, mg, name, nms, r, val, view_act, view_nm, what, _j, _k, _len1, _len2, _ref1, _ref2, _ref3, _ref4, _ref5;
         if (action_node.go != null) {
           E.App().go(action_node.go);
         }
@@ -440,20 +465,29 @@
               return [];
           }
         })();
+        for (ix = _k = 0, _len2 = nms.length; _k < _len2; ix = ++_k) {
+          nm = nms[ix];
+          if (!((nm.indexOf(':')) > -1)) {
+            continue;
+          }
+          _ref3 = nm.split(':'), name = _ref3[0], copy_to = _ref3[1];
+          master_data[copy_to] = master_data[name];
+          nms[ix] = name;
+        }
         option.ca2(action_token, original_path, nms, data, action_node);
-        _ref3 = action_node.set;
-        for (nm in _ref3) {
-          val = _ref3[nm];
+        _ref4 = action_node.set;
+        for (nm in _ref4) {
+          val = _ref4[nm];
           master_data[nm] = val;
         }
         if (action_node["do"] != null) {
-          is_macro = !/[.]/.test(action_node["do"]);
+          is_macro = (action_node["do"].indexOf('.')) < 0;
           if (is_macro) {
             option.ca3(action_token, original_path, action_node, aMacros);
             return d_doActionNode(aMacros[action_node["do"]]);
           }
-          _ref4 = action_node["do"].split('.'), view_nm = _ref4[0], view_act = _ref4[1];
-          view_act = view_act != null ? view_act : action_token;
+          _ref5 = action_node["do"].split('.'), view_nm = _ref5[0], view_act = _ref5[1];
+          view_act = view_act ? view_act : action_token;
           d = new m.Deferred();
           r = {};
           i = new E.Issue(view_nm, view_act);
@@ -466,10 +500,10 @@
           };
           ans = E[view_nm](ctx, view_act, master_data);
           d_cb = function() {
-            var _ref5;
-            _ref5 = ctx.r;
-            for (nm in _ref5) {
-              val = _ref5[nm];
+            var _ref6;
+            _ref6 = ctx.r;
+            for (nm in _ref6) {
+              val = _ref6[nm];
               master_data[nm] = val;
             }
             master_issue.addObj(ctx.i);
@@ -598,9 +632,11 @@
       Model: Model,
       Extra: Extra,
       option: option,
+      appconfs: appconfs,
       action: action,
       merge: merge,
-      appconfs: appconfs,
+      getModelState: getModelState,
+      setModelState: setModelState,
       appGetF: appGetF,
       appGetT: appGetT,
       appGetS: appGetS,
@@ -610,6 +646,8 @@
       appGetSetting: appGetSetting,
       appGetVars: appGetVars,
       appFist: appFist,
+      appFindAttr: appFindAttr,
+      appSearchAttr: appSearchAttr,
       fieldDef: fieldDef,
       fistDef: fistDef,
       issueMap: issueMap,
@@ -833,7 +871,7 @@
       return E.View().invalidateTables(this.view_nm, tbl_nms, deleted_tbl_nms);
     };
 
-    ModelJS.prototype.action = function(ctx, act, parms) {
+    ModelJS.prototype.action = function(ctx, act, params) {
       return E.option.m2(this.view_nm, act, params);
     };
 
