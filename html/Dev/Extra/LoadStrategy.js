@@ -135,21 +135,23 @@
       promise = def.promise;
       type_alt = type === 'Layout' ? 'tmpl' : type.toLowerCase();
       full_nm_alt = type + '/' + nm + '.' + type_alt + '.html';
-      _ref = this.reverse_packages;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        pkg = _ref[_i];
-        if ((pkg !== 'Base' && pkg !== 'Dev' && pkg !== 'Proto') && type !== 'Layout') {
-          (function(pkg) {
-            return promise = promise.then(function(result) {
-              if (result !== false) {
-                return result;
-              }
-              if (!(pkg in E.option.loadDirs)) {
-                return false;
-              }
-              return _this.D_getFile(pkg, full_nm_alt);
-            });
-          })(pkg);
+      if (E.option.compat_path) {
+        _ref = this.reverse_packages;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          pkg = _ref[_i];
+          if ((pkg !== 'Base' && pkg !== 'Dev' && pkg !== 'Proto') && type !== 'Layout') {
+            (function(pkg) {
+              return promise = promise.then(function(result) {
+                if (result !== false) {
+                  return result;
+                }
+                if (!(pkg in E.option.loadDirs)) {
+                  return false;
+                }
+                return _this.D_getFile(pkg, full_nm_alt);
+              });
+            })(pkg);
+          }
         }
       }
       _ref1 = this.reverse_packages;

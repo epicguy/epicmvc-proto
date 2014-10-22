@@ -81,14 +81,14 @@ class LoadStrategy
 		# TODO COMPATABILITY MODE, EH?
 		type_alt= if type is 'Layout' then 'tmpl' else type.toLowerCase()
 		full_nm_alt= type+ '/'+ nm+ '.'+ type_alt+ '.html'
-		for pkg in @reverse_packages when pkg not in ['Base', 'Dev', 'Proto'] and type isnt 'Layout'
-			do (pkg) =>
-				promise= promise.then (result) =>
-					#_log2 f, 'THEN-'+ pkg, full_nm_alt, if 'S' is E.type_oau result then (result.slice 0, 40) else result
-					return result if result isnt false # No need to hit network again
-					return false if pkg not of E.option.loadDirs
-					@D_getFile pkg, full_nm_alt
-
+		if E.option.compat_path
+			for pkg in @reverse_packages when pkg not in ['Base', 'Dev', 'Proto'] and type isnt 'Layout'
+				do (pkg) =>
+					promise= promise.then (result) =>
+						#_log2 f, 'THEN-'+ pkg, full_nm_alt, if 'S' is E.type_oau result then (result.slice 0, 40) else result
+						return result if result isnt false # No need to hit network again
+						return false if pkg not of E.option.loadDirs
+						@D_getFile pkg, full_nm_alt
 		for pkg in @reverse_packages
 			do (pkg) =>
 				promise= promise.then (result) =>
