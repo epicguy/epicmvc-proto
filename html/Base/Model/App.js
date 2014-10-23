@@ -73,7 +73,8 @@
     };
 
     App$Base.prototype.action = function(ctx, act, p) {
-      var i, m, path, q, r;
+      var code, f, i, m, path, q, r, route, _ref;
+      f = ":App.action:" + act;
       r = ctx.r, i = ctx.i, m = ctx.m;
       switch (act) {
         case 'path':
@@ -99,6 +100,26 @@
           } else {
             this.goTo(path[0], path[1], path[2]);
             return r.success = 'SUCCESS';
+          }
+          break;
+        case 'parse_hash':
+          _ref = p.hash.split('~'), route = _ref[0], code = _ref[1];
+          if (code != null) {
+            return E.merge(r, {
+              type: 'code',
+              route: route,
+              code: code
+            });
+          } else {
+            path = E.appSearchAttr('route', route);
+            if (path === false) {
+              return r.success = 'FAIL';
+            } else {
+              return E.merge(r, {
+                type: 'path',
+                path: path.join('/')
+              });
+            }
           }
           break;
         default:

@@ -34,6 +34,7 @@ class App$Base extends E.ModelJS
 	appGet: (attr) -> E.appGetSetting attr, @f, @t, @s
 	getStepPath: -> [@f, @t, @s]
 	action: (ctx,act,p) ->
+		f= ":App.action:#{act}"
 		{r,i,m}= ctx
 		switch act
 			when 'path'      then @go p.path
@@ -50,7 +51,16 @@ class App$Base extends E.ModelJS
 				else
 					@goTo path[0], path[1], path[2]
 					r.success= 'SUCCESS'
-			else  super ctx, act, p
+			when 'parse_hash' # p.hash
+				[route,code]= p.hash.split '~' # Signifies token is attached
+				if code?
+					E.merge r, {type: 'code', route, code}
+				else
+					path= E.appSearchAttr 'route', route
+					if path is false
+						r.success= 'FAIL'
+					else E.merge r, {type: 'path', path: path.join '/'}
+			else super ctx, act, p
 	setIssues: (issue_obj) ->
 		@issues.addObj issue_obj if issue_obj?.count() isnt 0
 		@invalidateTables ['Issue']
