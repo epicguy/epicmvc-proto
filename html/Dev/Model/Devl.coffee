@@ -15,7 +15,7 @@ class Devl extends E.ModelJS
 		return if view_nm is @view_nm
 		return if @timer isnt false
 		# TODO NOTE This next line is needed, since models might not populate Table until end of render
-		@timer= setTimeout (=> @timer= false; @invalidateTables ['Model']), 0
+		@timer= setTimeout (=> @timer= false; @invalidateTables ['Model']), 10
 	action: (ctx,act,p) ->
 		f= 'dM:Devl('+ act+ ')'
 		switch act
@@ -29,17 +29,17 @@ class Devl extends E.ModelJS
 					@open_table= ''
 					@open_table_stack= []
 				else @open_model= ''
-				delete @Table.Model
+				@invalidateTables ['Model']
 			when 'close_subtable' # Pop list, in case of nested tables
 				return unless @open_table_stack.length
 				[dummy, @table_row_cnt, @table_by_col, @table_col]= @open_table_stack.pop()
-				delete @Table.Model
+				@invalidateTables ['Model']
 			when 'open_subtable' # p.name
 				@open_table_stack.push [p.name, @table_row_cnt, @table_by_col, @table_col]
 				@table_row_cnt= 0
 				@table_by_col= false
 				@table_col= false
-				delete @Table.Model
+				@invalidateTables ['Model']
 			when 'open_table' # p.name
 				if @open_table isnt p.name
 					@table_row_cnt= 0
@@ -49,18 +49,20 @@ class Devl extends E.ModelJS
 					@open_table_stack= []
 				else
 					@open_table= ''
-				delete @Table.Model
+				@invalidateTables ['Model']
 			when 'table_row_set' #p.row(opt)
-					@table_by_col= false
-					@table_row_cnt= p.row if p.row?
+				@table_by_col= false
+				@table_row_cnt= p.row if p.row?
+				@invalidateTables ['Model']
 			when 'table_col_set' #p.col
-					@table_col= p.col
-					@table_by_col= true
+				@table_col= p.col
+				@table_by_col= true
+				@invalidateTables ['Model']
 			when 'table_left', 'table_right'
 				incr= if act is 'table_left' then -1 else 1
 				_log2 f, act, incr, @table_row_cnt
 				@table_row_cnt+= incr
-				delete @Table.Model
+				@invalidateTables ['Model']
 			else return super ctx, act, p
 	loadTable: (tbl_nm) ->
 		f= 'dM:Devl.loadTable('+ tbl_nm+ ')'
@@ -70,6 +72,7 @@ class Devl extends E.ModelJS
 				table= []
 				for inst of E.oModel
 					nm= E.oModel[inst].view_nm
+					continue if nm is @view_nm # Don't track self, since we don't invalidate on self in tableChange
 					row= E.merge {is_open: '', Table: []}, {inst: inst, name: nm}
 					row.is_open= 'yes' if nm is @open_model
 					for tnm,rec of E.oModel[ inst].Table # Walk to each of this model's tables

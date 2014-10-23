@@ -38,7 +38,7 @@
       return this.timer = setTimeout((function() {
         _this.timer = false;
         return _this.invalidateTables(['Model']);
-      }), 0);
+      }), 10);
     };
 
     Devl.prototype.action = function(ctx, act, p) {
@@ -57,19 +57,19 @@
           } else {
             this.open_model = '';
           }
-          return delete this.Table.Model;
+          return this.invalidateTables(['Model']);
         case 'close_subtable':
           if (!this.open_table_stack.length) {
             return;
           }
           _ref = this.open_table_stack.pop(), dummy = _ref[0], this.table_row_cnt = _ref[1], this.table_by_col = _ref[2], this.table_col = _ref[3];
-          return delete this.Table.Model;
+          return this.invalidateTables(['Model']);
         case 'open_subtable':
           this.open_table_stack.push([p.name, this.table_row_cnt, this.table_by_col, this.table_col]);
           this.table_row_cnt = 0;
           this.table_by_col = false;
           this.table_col = false;
-          return delete this.Table.Model;
+          return this.invalidateTables(['Model']);
         case 'open_table':
           if (this.open_table !== p.name) {
             this.table_row_cnt = 0;
@@ -80,22 +80,23 @@
           } else {
             this.open_table = '';
           }
-          return delete this.Table.Model;
+          return this.invalidateTables(['Model']);
         case 'table_row_set':
           this.table_by_col = false;
           if (p.row != null) {
-            return this.table_row_cnt = p.row;
+            this.table_row_cnt = p.row;
           }
-          break;
+          return this.invalidateTables(['Model']);
         case 'table_col_set':
           this.table_col = p.col;
-          return this.table_by_col = true;
+          this.table_by_col = true;
+          return this.invalidateTables(['Model']);
         case 'table_left':
         case 'table_right':
           incr = act === 'table_left' ? -1 : 1;
           _log2(f, act, incr, this.table_row_cnt);
           this.table_row_cnt += incr;
-          return delete this.Table.Model;
+          return this.invalidateTables(['Model']);
         default:
           return Devl.__super__.action.call(this, ctx, act, p);
       }
@@ -111,6 +112,9 @@
           table = [];
           for (inst in E.oModel) {
             nm = E.oModel[inst].view_nm;
+            if (nm === this.view_nm) {
+              continue;
+            }
             row = E.merge({
               is_open: '',
               Table: []
