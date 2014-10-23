@@ -322,7 +322,7 @@
       i += 2;
     }
     if (parts[parts.length - 1]) {
-      results.push(sq(parts[parts.length - 1]));
+      results.push(entities(sq(parts[parts.length - 1])));
     }
     return results;
   };
