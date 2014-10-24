@@ -526,9 +526,19 @@
       d_doRightSide = function(action_node) {
         var choice, k, matches, next_node, val, _j, _len1, _ref1, _ref2, _ref3, _ref4;
         next_node = null;
-        _ref2 = (_ref1 = action_node.next) != null ? _ref1 : [];
+        if ((_ref1 = action_node.next) == null) {
+          action_node.next = [];
+        }
+        if ('A' !== type_oau(action_node.next)) {
+          action_node.next = [action_node.next];
+        }
+        _ref2 = action_node.next;
         for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
           choice = _ref2[_j];
+          if (!choice.when) {
+            next_node = choice;
+            break;
+          }
           if (choice.when === 'default') {
             next_node = choice;
             break;

@@ -353,8 +353,11 @@ app= (window, undef) ->
 
 		d_doRightSide= (action_node)->
 			next_node= null
-			for choice in action_node.next ? []
+			action_node.next?= []
+			action_node.next= [action_node.next] unless 'A' is type_oau action_node.next
+			for choice in action_node.next
 				#_log2 f+ '-d_doRightSide', 'choice', choice, master_data
+				(next_node= choice; break) if not choice.when
 				(next_node= choice; break) if choice.when is 'default'
 				(next_node= choice; break) if (typeof choice.when) is 'string' and choice.when is (master_data.success ? master_data.ok)
 				matches= true
