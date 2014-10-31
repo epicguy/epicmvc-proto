@@ -16,7 +16,7 @@
 
       this.handleEvent = __bind(this.handleEvent, this);
 
-      var baseDiv,
+      var baseDiv, modalDiv,
         _this = this;
       this.very_first = true;
       this.was_popped = false;
@@ -26,10 +26,12 @@
       this.baseUrl = window.document.location.pathname;
       this.baseId = "epic-new-page";
       this.modalId = "epic-new-modal";
-      this.basePage = '<div id="' + this.baseId + '"></div><div id="' + this.modalId + '"></div>';
       baseDiv = document.createElement('div');
       baseDiv.id = this.baseId;
       document.body.appendChild(baseDiv);
+      modalDiv = document.createElement('div');
+      modalDiv.id = this.modalId;
+      document.body.appendChild(modalDiv);
       setTimeout((function() {
         return _this.onPopState(true);
       }), 0);
@@ -57,6 +59,7 @@
       while (target.tagName !== 'BODY' && !(data_action = target.getAttribute('data-e-action'))) {
         target = target.parentElement;
       }
+      E.option.event(type, event_obj, target, data_action);
       if (!data_action) {
         return false;
       }
@@ -72,6 +75,12 @@
         data_params[nm] = attrs[ix].value;
       }
       val = target.value;
+      _log2(f, 'event', {
+        type: type,
+        data_action: data_action,
+        data_params: data_params,
+        val: val
+      }, target);
       data_params.val = val;
       old_params = target.getAttribute('data-params');
       if (old_params) {
@@ -81,6 +90,7 @@
           data_params[nm] = rec;
         }
       }
+      target.focus();
       prevent = E.Extra[E.option.dataAction](type, data_action, data_params);
       if (prevent) {
         event_obj.preventDefault();
@@ -159,7 +169,10 @@
         _log2(f, 'GUARD REDRAW', this.redraw_guard);
         return;
       }
-      return E.View().run().then(function(content) {
+      return E.View().run().then(function(modal_content) {
+        var content, modal;
+        modal = modal_content[0], content = modal_content[1];
+        _log2('DEFER-R', 'RESULTS: modal, content', modal, content);
         _this.redraw_guard--;
         if (_this.redraw_guard !== 0) {
           _this.redraw_guard = 0;
@@ -167,29 +180,29 @@
             return _this.m_redraw();
           }), 16);
         }
-        return _this.render(content);
+        return _this.render(modal, content);
       }).then(null, function(err) {
         return console.error('RenderStrategy$Base m_redraw', err);
       });
     };
 
-    RenderStrategy$Base.prototype.render = function(content) {
-      var container, f, modal, start;
+    RenderStrategy$Base.prototype.render = function(modal, content) {
+      var container, f, start;
       f = 'render';
-      modal = false;
+      start = new Date().getTime();
+      _log2(f, 'START RENDER', start, modal);
       if (this.was_modal) {
-        BROKEN();
-        m.render(document.getElementById(this.modalId), m());
+        m.render(document.getElementById(this.modalId), []);
       }
       if (modal) {
-        BROKEN();
-        m.render((container = document.getElementById(this.modalId)), this.modalView(content));
+        m.render((container = document.getElementById(this.modalId)), content);
       } else {
-        start = new Date().getTime();
         m.render((container = document.getElementById(this.baseId)), m('div', {}, content));
-        _log2(f, 'END RENDER', new Date().getTime() - start);
       }
-      this.handleRenderState();
+      _log2(f, 'END RENDER', new Date().getTime() - start);
+      if (!modal) {
+        this.handleRenderState();
+      }
       this.was_modal = modal;
       this.was_popped = false;
       this.very_first = false;

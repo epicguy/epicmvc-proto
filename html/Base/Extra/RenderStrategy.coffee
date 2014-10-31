@@ -17,15 +17,15 @@ class RenderStrategy$Base
 		@baseUrl= window.document.location.pathname
 		@baseId= "epic-new-page"
 		@modalId= "epic-new-modal"
-		@basePage= '<div id="'+ @baseId+ '"></div><div id="'+ @modalId+ '"></div>'
 		baseDiv= document.createElement 'div'
 		baseDiv.id= @baseId
 		document.body.appendChild baseDiv
+		modalDiv= document.createElement 'div'
+		modalDiv.id= @modalId
+		document.body.appendChild modalDiv
 		setTimeout (=> @onPopState true), 0
 		#TODO DETECT MANUAL HASHCHANGE window.onhashchange = (a) -> console.log 'onhashChange', a; alert 'hashChange'
 		window.onpopstate = @onPopState
-		# TODO IMPLEMENT MODALS WITHOUT JQUERY, SO WITHOUT BOOTSTRAP I THINK
-		#TODO JQUERY $(document).on 'hidden.bs.modal', => E.action 'close_modal', {}
 		@redraw_guard= 0
 		m.redraw= @m_redraw
 		@init()
@@ -41,6 +41,7 @@ class RenderStrategy$Base
 		# Bubble up to any parent with a data-e-action
 		while target.tagName isnt 'BODY' and not data_action= target.getAttribute 'data-e-action'
 			target= target.parentElement
+		E.option.event type, event_obj, target, data_action
 		#_log2 f, 'event', {type, data_action}
 		return false if not data_action
 		data_params= {}; attrs= target.attributes
@@ -48,12 +49,13 @@ class RenderStrategy$Base
 			continue if 'action' is nm= attrs[ ix].name.slice 7
 			data_params[ nm]= attrs[ ix].value
 		val= target.value
-		#_log2 f, 'event', {type, data_action, data_params, val}
+		_log2 f, 'event', {type, data_action, data_params, val}, target
 		data_params.val= val
 		# TODO COMPATABILITY MODE, EH?
 		old_params= target.getAttribute 'data-params'
 		data_params[ nm]= rec for nm,rec of JSON.parse old_params if old_params
 
+		target.focus() # TODO TESTING IS THIS HOW BOOTSTRAP AVOIDS THE DBLCLICK TEXT MARKING?
 		prevent= E.Extra[ E.option.dataAction] type, data_action, data_params
 		event_obj.preventDefault() if prevent  # Added to keep LOGIN FORM from posting to fresh URL
 		#TODO event_obj.stopPropagation()
@@ -89,50 +91,36 @@ class RenderStrategy$Base
 		if @redraw_guard isnt 1
 			_log2 f, 'GUARD REDRAW', @redraw_guard
 			return
-		E.View().run().then (content) =>
-			#_log2 'DEFER-R', 'RESULTS: content', content
+		E.View().run().then (modal_content) =>
+			[modal, content]= modal_content
+			_log2 'DEFER-R', 'RESULTS: modal, content', modal, content
 			# Assume @render call won't go async and we end up back in this module
 			@redraw_guard--
 			if @redraw_guard isnt 0 # Someone updated content while we were busy drawing
 				@redraw_guard= 0
 				setTimeout (=> @m_redraw()), 16
-			@render content
+			@render modal, content
 		.then null, (err) => # Make own .then to catch issues in above .then
 			# These may be errors from m.render
 			console.error 'RenderStrategy$Base m_redraw', err
 
-	render: (content) ->
+	render: (modal, content) ->
 		f= 'render'
-		modal= false # TODO: HANDLE MODAL
+		start= new Date().getTime() #%#
+		_log2 f, 'START RENDER', start, modal
 		if @was_modal
-			BROKEN() # TODO JQUERY
-			#TODO JQUERY window.$('.modal-backdrop').remove() # Get rid of that backdrop
-			#TODO JQUERY window.$('body').removeClass 'modal-open' # Bootstrap 3 adds this class to the body to disable page scroll
-			m.render (document.getElementById @modalId), m()
+			m.render (document.getElementById @modalId), []
 		if modal
-			BROKEN() # TODO JQUERY
-			m.render (container= document.getElementById @modalId), @modalView content
+			# Note, Can put backdrop in layout if desired, with .modal-backdrop and optional e-action
+			m.render (container= document.getElementById @modalId), content
 		else
-			start= new Date().getTime() #%#
-			#_log2 f, 'START RENDER', start
-			# TODO NEW DYNAMIC START/END METHOD? m.render (container= document.getElementById @baseId), m 'div', {}, content
 			m.render (container= document.getElementById @baseId), m 'div', {}, content
-			_log2 f, 'END RENDER', new Date().getTime()- start
-		#_log2 f, 'render......', @content_watch, container
-		#TODO FIGURE OUT HOW TO GET THIS FROM E.G. OPTIONS (watch container) for watch in @content_watch
-		@handleRenderState() # TODO WORK ON HISTORY NEXT
+		_log2 f, 'END RENDER', new Date().getTime()- start
+		@handleRenderState() if not modal # Let's not bother with modals and history, for now
 		@was_modal= modal
 		@was_popped= false
 		@very_first= false
 		return
-
-	#modalView: (content) ->
-		#onload= (el, isInit, context) ->
-			## TODO TEST TWO MODALS IN A ROW (OR ONE REPLACES THE OTHER (REMOVE 'if' IF NEEDS TO CALL MODAL AGAIN)
-			#$( '.modal', el).modal() if isInit or true # TODO TRUE BECAUSE I HAVE SEEN ISSUES WITH THIS
-			#context.onunload= (el) ->
-				#$( '.modal', el).off 'hidden'
-		#m 'div', {config: onload}, content
 
 	handleRenderState: () ->
 		path= E.App().getStepPath()
