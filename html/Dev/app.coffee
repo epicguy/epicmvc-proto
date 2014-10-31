@@ -20,6 +20,20 @@ window.EpicMvc.app$Dev=
 			err "Could not find model (#{view_name}) in namespace E.Model", aModels
 			return
 
+		# option.ap1 path, flow, t, s #Conirm path has 2 slashes, and path exists
+		ap1: (path, flow, t, s) ->
+			err "App 'path' (#{path}) must have exactly two slashes" if (path.replace /[^\/]+/g, '').length isnt 2
+			# flow must be set at this point, and be valid; t and s may be blank so there must be .start values
+			if not flow or flow not of E.aFlows
+				err "App 'path' (#{path}) did not result in a valid 'flow' (#{flow}).", {path,flow,t,s}
+			if not t then t= E.appStartT flow
+			if not t or t not of E.aFlows[ flow].TRACKS
+				err "App 'path' (#{path}) did not result in a valid 'track' (#{t}).", {path,flow,t,s}
+			if not s then s= E.appStartS flow, t
+			if not s or s not of E.aFlows[ flow].TRACKS[ t].STEPS
+				err "App 'path' (#{path}) did not result in a valid 'step' (#{s}).", {path,flow,t,s}
+			return
+
 		# option.m1 view, model #if not E.Model[ model.class]?
 		m1: (view, model) ->
 			return if model.class of E.Model

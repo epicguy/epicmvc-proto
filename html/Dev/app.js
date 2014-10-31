@@ -33,6 +33,41 @@
         }
         err("Could not find model (" + view_name + ") in namespace E.Model", aModels);
       },
+      ap1: function(path, flow, t, s) {
+        if ((path.replace(/[^\/]+/g, '')).length !== 2) {
+          err("App 'path' (" + path + ") must have exactly two slashes");
+        }
+        if (!flow || !(flow in E.aFlows)) {
+          err("App 'path' (" + path + ") did not result in a valid 'flow' (" + flow + ").", {
+            path: path,
+            flow: flow,
+            t: t,
+            s: s
+          });
+        }
+        if (!t) {
+          t = E.appStartT(flow);
+        }
+        if (!t || !(t in E.aFlows[flow].TRACKS)) {
+          err("App 'path' (" + path + ") did not result in a valid 'track' (" + t + ").", {
+            path: path,
+            flow: flow,
+            t: t,
+            s: s
+          });
+        }
+        if (!s) {
+          s = E.appStartS(flow, t);
+        }
+        if (!s || !(s in E.aFlows[flow].TRACKS[t].STEPS)) {
+          err("App 'path' (" + path + ") did not result in a valid 'step' (" + s + ").", {
+            path: path,
+            flow: flow,
+            t: t,
+            s: s
+          });
+        }
+      },
       m1: function(view, model) {
         if (model["class"] in E.Model) {
           return;
