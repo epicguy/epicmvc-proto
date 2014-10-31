@@ -10,7 +10,11 @@
 
     function Tab(view_nm, options) {
       Tab.__super__.constructor.call(this, view_nm, options);
-      this.tabs = options != null ? options : {};
+      this.tabs = E.merge({
+        Modal: {
+          backdrop: false
+        }
+      }, options);
     }
 
     Tab.prototype.event = function(name, type, groupNm, itemNm, data) {
@@ -24,16 +28,60 @@
         data: data
       });
       group = this._getTab(groupNm, itemNm);
-      changed = this._setTab(group, itemNm);
+      switch (groupNm) {
+        case 'Modal':
+          changed = this._toggleModal(group, itemNm);
+          break;
+        case 'Drop':
+          changed = this._toggleDrop(group, itemNm);
+          break;
+        default:
+          changed = this._setTab(group, itemNm);
+      }
       if (changed) {
         return this.invalidateTables([groupNm]);
       }
     };
 
     Tab.prototype.action = function(ctx, act, p) {
+      var change, group, groupNm, nm;
       switch (act) {
         case 'toggle':
-          return this.event('Tab', 'click', p.group, p.item, p);
+          this.event('Tab', 'click', p.group, p.item, p);
+          break;
+        case 'clear_modal':
+          groupNm = 'Modal';
+          group = this._getTab(groupNm);
+          change = false;
+          for (nm in group) {
+            if (nm !== 'backdrop' && group[nm] === true) {
+              group.backdrop = group[nm] = false;
+              change = true;
+            }
+          }
+          if (change) {
+            this.invalidateTables([groupNm]);
+          }
+          break;
+        case 'clear_drop':
+          groupNm = 'Drop';
+          group = this._getTab(groupNm);
+          change = false;
+          for (nm in group) {
+            if (group[nm] === true) {
+              group[nm] = false;
+              change = true;
+            }
+          }
+          if (change) {
+            this.invalidateTables([groupNm]);
+          }
+          break;
+        case 'clear':
+          this.event('Tab', 'click', p.group, '_CLEARED', p);
+          break;
+        default:
+          return Tab.__super__.action.call(this, ctx, act, p);
       }
     };
 
@@ -54,6 +102,52 @@
         }
       }
       return this.tabs[groupNm];
+    };
+
+    Tab.prototype._toggleModal = function(group, itemNm) {
+      var change, nm, now;
+      if (itemNm === '_CLEARED') {
+        change = false;
+        for (nm in group) {
+          if ((nm !== 'backdrop' && nm !== itemNm) && group[nm] === true) {
+            change = true;
+            group.backdrop = group[nm] = false;
+          }
+        }
+      } else if (group[itemNm] !== true) {
+        change = true;
+        now = group.backdrop = group[itemNm] = true;
+        for (nm in group) {
+          if ((nm !== 'backdrop' && nm !== itemNm) && group[nm] === true) {
+            group[nm] = false;
+          }
+        }
+      }
+      return change;
+    };
+
+    Tab.prototype._toggleDrop = function(group, itemNm) {
+      var change, nm, now;
+      if (itemNm === '_CLEARED') {
+        change = false;
+        for (nm in group) {
+          if (nm !== itemNm && group[nm] === true) {
+            change = true;
+            group[nm] = false;
+          }
+        }
+      } else {
+        change = true;
+        now = group[itemNm] = !group[itemNm];
+        if (now === true) {
+          for (nm in group) {
+            if (nm !== itemNm && group[nm] === true) {
+              group[nm] = false;
+            }
+          }
+        }
+      }
+      return change;
     };
 
     Tab.prototype._setTab = function(group, itemNm) {
