@@ -28,13 +28,22 @@
         version = '/' + this.opts.version;
       }
       this.route_prefix = "//" + this.opts.host + (port != null ? port : '') + (prefix != null ? prefix : '') + (version != null ? version : '') + "/";
+      this.SetToken(false);
     }
 
     RestAPI.prototype.GetPrefix = function() {
       return this.route_prefix;
     };
 
-    RestAPI.prototype.D_Request = function(method, route, data) {
+    RestAPI.prototype.GetToken = function() {
+      return this.token;
+    };
+
+    RestAPI.prototype.SetToken = function(token) {
+      this.token = token;
+    };
+
+    RestAPI.prototype.D_Request = function(method, route, data, header_obj) {
       var status;
       status = {
         code: false,
@@ -46,6 +55,14 @@
         method: method,
         url: this.route_prefix + route,
         data: data,
+        config: function(xhr) {
+          var nm, val, _ref;
+          _ref = header_obj != null ? header_obj : {};
+          for (nm in _ref) {
+            val = _ref[nm];
+            xhr.setRequestHeader(nm, val);
+          }
+        },
         unwrapSuccess: function(response) {
           return {
             status: status,
@@ -72,6 +89,67 @@
         }
       })).then(null, function(e_with_status_n_data) {
         return e_with_status_n_data;
+      });
+    };
+
+    RestAPI.prototype.D_Get = function(route, data) {
+      return this.D_RequestAuth('GET', route, data);
+    };
+
+    RestAPI.prototype.D_Post = function(route, data) {
+      return this.D_RequestAuth('POST', route, data);
+    };
+
+    RestAPI.prototype.D_Del = function(route, data) {
+      return this.D_RequestAuth('DEL', route, data);
+    };
+
+    RestAPI.prototype.D_Put = function(route, data) {
+      return this.D_RequestAuth('PUT', route, data);
+    };
+
+    RestAPI.prototype.D_RequestAuth = function(method, route, data, header_obj) {
+      var d, token,
+        _this = this;
+      token = this.GetToken();
+      if (token === false) {
+        setTimeout(function() {
+          return E.action('Request.no_token');
+        }, 0);
+        d = new m.Deferred();
+        d.resolve({
+          status: {
+            code: 401,
+            text: 'NO_TOKEN',
+            ok: false
+          },
+          data: {
+            error: 'TOKEN'
+          }
+        });
+        return d.promise;
+      }
+      if (header_obj == null) {
+        header_obj = {};
+      }
+      header_obj.Authorization = "" + token.token_type + " " + token.access_token;
+      return (this.D_Request(method, route, data, header_obj)).then(function(status_n_data) {
+        if (status.code === 401) {
+          setTimeout(function() {
+            return E.action('Request.bad_token');
+          }, 0);
+          return {
+            status: {
+              code: 401,
+              text: 'BAD_TOKEN',
+              ok: false
+            },
+            data: {
+              error: 'TOKEN'
+            }
+          };
+        }
+        return status_n_data;
       });
     };
 
