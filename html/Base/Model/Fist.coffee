@@ -158,6 +158,7 @@ class Fist extends E.ModelJS
 			_log2 f, 'new fist', fist
 			E.option.fi1 fist # Guard e.g. E[ E.appFist fistNm]()
 			for fieldNm in fist.sp.FIELDS
+				#_log2 f, 'new field', p_fist, fieldNm, E.fieldDef[ fieldNm]
 				field= E.merge {}, E.fieldDef[ fieldNm], nm: fieldNm, fistNm: p_fist, row: p_row
 				field.h2h= switch E.type_oau field.h2h
 					when 'S' then field.h2h.split /[:,]/
