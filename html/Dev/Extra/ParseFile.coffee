@@ -31,7 +31,7 @@ mkNm= (nm) -> if nm.match /^[a-zA-Z_]*$/ then nm else sq nm
 mkObj= (obj) -> '{'+ ((mkNm nm)+ ':'+ val for nm,val of obj).join()+ '}'
 
 # Single quote a string
-sq= (text)-> "'"+ (text.replace /'/gm, '\\\'').replace( /\n/g, '\\n') + "'"
+sq= (text)-> "'"+ (text.replace /'/gm, '\\\'').replace( /\r?\n/gm, '\\n') + "'"
 
 # TODO NEEDS SOME DECENT TEST SCENARIOS
 findStyleVal= (i, a) -> # returns: [true, 'string-value', top, i] ['error-msg', nm, start, i] [false] (EOF)
@@ -164,6 +164,35 @@ FindAttrs= (file_info, str)->
 			[grp,pane]= (parts.join '').split ':'
 			attr_obj.className.push "&Tab/#{grp}/#{pane}#?active;"
 			continue
+
+		# DROPDOWNS
+		# before: <div e-drop-pane="A1">
+		# after: <div class="&Tab/Drop/A1#?open;">
+		if nm is 'data-e-drop-pane'
+			[grp,pane]= [ 'Drop', (parts.join '')]
+			attr_obj.className.push "&Tab/#{grp}/#{pane}#?open;"
+		# before: <li e-drop="A1">
+		# after:  <li data-e-action="event:Tab:Drop:A1:click">
+		if nm is 'data-e-drop'
+			[grp,pane]= [ 'Drop', (parts.join '')]
+			attr_obj['data-e-action']?= []
+			attr_obj['data-e-action'].push "event:Tab:#{grp}:#{pane}:click-enter"
+			continue
+
+		# MODALS
+		# before: <div e-modal-pane="A1">
+		# after: <div class="&Tab/Modal/A1#?in?hide;">
+		if nm is 'data-e-modal-pane'
+			[grp,pane]= [ 'Modal', (parts.join '')]
+			attr_obj.className.push "&Tab/#{grp}/#{pane}#?in?hide;"
+		# before: <li e-modal="A1">
+		# after:  <li data-e-action="event:Tab:Modal:A1:click">
+		if nm is 'data-e-modal'
+			[grp,pane]= [ 'Modal', (parts.join '')]
+			attr_obj['data-e-action']?= []
+			attr_obj['data-e-action'].push "event:Tab:#{grp}:#{pane}:click-enter"
+			continue
+
 		if nm is 'className'
 			attr_obj.className.push parts.join ''
 			continue
@@ -224,7 +253,7 @@ ParseFile= (file_stats, file_contents) ->
 	f= ':Dev.E/ParseFile.ParseFile~'+file_stats
 	counter= 0
 	nextCounter= -> ++counter
-	etags= ['page','part', 'if', 'if_true', 'if_false', 'foreach', 'fist', 'defer']
+	etags= ['page','part', 'if', 'if_true', 'if_false', 'foreach', 'fist', 'defer', 'comment']
 	T_EPIC= 0
 	T_M1= 1
 	T_M2= 2
@@ -272,6 +301,7 @@ ParseFile= (file_stats, file_contents) ->
 	after= after.replace /<\/epic:/g, '</e-'
 	after= after.replace /<e-page_part/g, '<e-part'
 	after= after.replace /<e-form_part/g, '<e-fist'
+	after= after.replace /<e-dyno_form/g, '<e-fist'
 	after= after.replace /form="/g, 'fist="'
 	after= after.replace /\sp:/g, ' e-'
 	after= after.replace /Tag\/If/g, 'View/If'
@@ -279,6 +309,14 @@ ParseFile= (file_stats, file_contents) ->
 	after= after.replace /\ size="/g, ' ?size="'
 	after= after.replace /data-action=/g, 'e-action='
 	after= after.replace /Pageflow\//g, 'App/'
+
+	# link/form action w/action=
+	after= after.replace /\saction=/g, ' e-action='
+	after= after.replace /e-link_action/g, 'a'
+	after= after.replace /e-form_action/g, 'button' # TODO WILL THIS WORK ACROSS THE BOARD?
+
+	# Var sepcs #.. to #?, or #[not ?].
+	after= after.replace /(&(?:[^\/;#]+\/){1,2}[^\/;#]+#)[.]/g, '$1?'
 
 	# Create array of 4 parts: non-tag-content, leading-slash, tag-name, attrs
 	# End of 'attrs' may have a '/' (or is '/' if leading-slash is '/')

@@ -37,7 +37,7 @@
   };
 
   sq = function(text) {
-    return "'" + (text.replace(/'/gm, '\\\'')).replace(/\n/g, '\\n') + "'";
+    return "'" + (text.replace(/'/gm, '\\\'')).replace(/\r?\n/gm, '\\n') + "'";
   };
 
   findStyleVal = function(i, a) {
@@ -172,7 +172,7 @@
   };
 
   FindAttrs = function(file_info, str) {
-    var attr_obj, attr_split, attrs_need_cleaning, data_nm, debug, empty, eq, event_attrs_shortcuts, f, good, grp, i, nm, pane, parts, quo, start, style_obj, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
+    var attr_obj, attr_split, attrs_need_cleaning, data_nm, debug, empty, eq, event_attrs_shortcuts, f, good, grp, i, nm, pane, parts, quo, start, style_obj, _i, _len, _ref, _ref1, _ref10, _ref11, _ref12, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
     f = ':parse.FindAttrs:';
     event_attrs_shortcuts = ['data-e-click', 'data-e-change', 'data-e-dblclick', 'data-e-enter', 'data-e-keyup', 'data-e-focus', 'data-e-blur', 'data-e-event'];
     str = ' ' + str;
@@ -245,6 +245,30 @@
         attr_obj.className.push("&Tab/" + grp + "/" + pane + "#?active;");
         continue;
       }
+      if (nm === 'data-e-drop-pane') {
+        _ref6 = ['Drop', parts.join('')], grp = _ref6[0], pane = _ref6[1];
+        attr_obj.className.push("&Tab/" + grp + "/" + pane + "#?open;");
+      }
+      if (nm === 'data-e-drop') {
+        _ref7 = ['Drop', parts.join('')], grp = _ref7[0], pane = _ref7[1];
+        if ((_ref8 = attr_obj['data-e-action']) == null) {
+          attr_obj['data-e-action'] = [];
+        }
+        attr_obj['data-e-action'].push("event:Tab:" + grp + ":" + pane + ":click-enter");
+        continue;
+      }
+      if (nm === 'data-e-modal-pane') {
+        _ref9 = ['Modal', parts.join('')], grp = _ref9[0], pane = _ref9[1];
+        attr_obj.className.push("&Tab/" + grp + "/" + pane + "#?in?hide;");
+      }
+      if (nm === 'data-e-modal') {
+        _ref10 = ['Modal', parts.join('')], grp = _ref10[0], pane = _ref10[1];
+        if ((_ref11 = attr_obj['data-e-action']) == null) {
+          attr_obj['data-e-action'] = [];
+        }
+        attr_obj['data-e-action'].push("event:Tab:" + grp + ":" + pane + ":click-enter");
+        continue;
+      }
       if (nm === 'className') {
         attr_obj.className.push(parts.join(''));
         continue;
@@ -259,9 +283,9 @@
     } else {
       delete attr_obj.className;
     }
-    _ref6 = ['data-e-action'];
-    for (_i = 0, _len = _ref6.length; _i < _len; _i++) {
-      data_nm = _ref6[_i];
+    _ref12 = ['data-e-action'];
+    for (_i = 0, _len = _ref12.length; _i < _len; _i++) {
+      data_nm = _ref12[_i];
       if (attr_obj[data_nm]) {
         attr_obj[data_nm] = (findVars(attr_obj[data_nm].join())).join('+');
       }
@@ -339,7 +363,7 @@
     nextCounter = function() {
       return ++counter;
     };
-    etags = ['page', 'part', 'if', 'if_true', 'if_false', 'foreach', 'fist', 'defer'];
+    etags = ['page', 'part', 'if', 'if_true', 'if_false', 'foreach', 'fist', 'defer', 'comment'];
     T_EPIC = 0;
     T_M1 = 1;
     T_M2 = 2;
@@ -363,6 +387,7 @@
     after = after.replace(/<\/epic:/g, '</e-');
     after = after.replace(/<e-page_part/g, '<e-part');
     after = after.replace(/<e-form_part/g, '<e-fist');
+    after = after.replace(/<e-dyno_form/g, '<e-fist');
     after = after.replace(/form="/g, 'fist="');
     after = after.replace(/\sp:/g, ' e-');
     after = after.replace(/Tag\/If/g, 'View/If');
@@ -370,6 +395,10 @@
     after = after.replace(/\ size="/g, ' ?size="');
     after = after.replace(/data-action=/g, 'e-action=');
     after = after.replace(/Pageflow\//g, 'App/');
+    after = after.replace(/\saction=/g, ' e-action=');
+    after = after.replace(/e-link_action/g, 'a');
+    after = after.replace(/e-form_action/g, 'button');
+    after = after.replace(/(&(?:[^\/;#]+\/){1,2}[^\/;#]+#)[.]/g, '$1?');
     parts = after.split(/<(\/?)([:a-z_0-9-]+)([^>]*)>/);
     pre_count = 0;
     i = 0;
