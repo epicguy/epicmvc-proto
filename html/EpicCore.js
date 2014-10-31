@@ -536,7 +536,7 @@
         _ref2 = action_node.next;
         for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
           choice = _ref2[_j];
-          if (!choice.when) {
+          if (!('when' in choice)) {
             next_node = choice;
             break;
           }
