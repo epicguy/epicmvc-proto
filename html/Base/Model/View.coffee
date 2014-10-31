@@ -29,13 +29,16 @@ class View$Base extends E.ModelJS
 		if @defer_it_cnt is 0
 			_log2 f, 'END RUN', @defer_content, new Date().getTime()- @start
 			@in_run= false
-			#_log2 f, 'RESOLVE', @defer_content
-			@defer_it.resolve @defer_content
+			#_log2 f, 'RESOLVE', @modal, @defer_content
+			@defer_it.resolve [@modal, @defer_content]
 	run: ->
 		f= 'run'
 		who= 'R'
 		[flow, track, step]= E.App().getStepPath()
-		layout= E.appGetSetting 'layout', flow, track, step
+		if modal= E.appFindAttr flow, track, step,  'modal'
+			modal=( E.appGetSetting 'modals')[ modal] ? modal
+		layout= modal ? E.appGetSetting 'layout', flow, track, step
+		@modal= if modal then true else false
 		@page_name=( E.appGetS flow, track, step).page ? step
 		@did_run= true
 		@frames[ @frames.length- 1]= layout
@@ -89,30 +92,31 @@ class View$Base extends E.ModelJS
 		return
 	# Wraper for page/part content which needs special treatment (dyanmic='div', epic:defer's, etc.)
 	wrap: (view, attrs, content, defer, has_root)->
-		inside= defer: defer
-		attrs.config= (el, isInit, context) =>
-			f= 'Base:M/View..config:'+ view
-			for defer in inside.defer
-				_log2 f, defer
-				@doDefer defer, el
-		attrs[ 'data-part']= view
+		f= 'wrap'
+		if defer.length
+			inside= E.merge [], defer
+			attrs.config= (element, isInit, context) =>
+				f= 'Base:M/View..config:'+ view
+				for defer in inside
+					_log2 f, defer
+					@doDefer defer, element, isInit, context
 		if 'dynamic' of attrs # Always render the container, even if content is null
 			tag: attrs.dynamic, attrs: attrs, children: content
 		else
 			return '' unless content
 			if has_root
+				# TODO WHAT IS GOING ON WITH attrs TO wrap IF CONTENT HAS ATTRS? (part=)
+				_log2 f, 'has-root-content', {view,attrs,content,defer,has_root}
+				BLOWUP() if 'A' isnt E.type_oau content
+				content[0].attrs.config= attrs.config # Pass the defer logic to the part's div
 				content
 			else
 				tag: 'div', attrs: attrs, children: content
-	doDefer: (defer_obj, el) =>
+	doDefer: (defer_obj, element, isInit, context) =>
 		if 'A' is E.type_oau defer_obj.defer
 			_log2 'WARNING', 'Got an array for defer', defer_obj.defer
 			return 'WAS-ARRAY'
-		return defer_obj.func el, defer_obj.attrs if defer_obj.func
-		defer_obj.defer.then (f_content) =>
-			defer_obj.func= new Function 'el', 'attrs', f_content
-			@doDefer defer_obj, el
-			return
+		defer_obj.func element, isInit, context, defer_obj.attrs if defer_obj.func
 	handleIt: (content) =>
 		f= 'handleIt'
 		#_log2 f, 'top',( typeof content) #, content
@@ -148,7 +152,10 @@ class View$Base extends E.ModelJS
 		if format_spec? then @formatFromSpec val, format_spec, custom_spec else val
 	v2: (table_ref, col_nm, format_spec, custom_spec) ->
 		#console.log 'G2:', {table_ref, col_nm, format_spec, custom_spec}
-		ans= @R[ table_ref][ col_nm]
+		if col_nm[ 0] is '_' # For e.g. &Table/_COUNT;
+			ans= @R[ table_ref]._[ (col_nm.slice 1).toLowerCase()] # TODO COMPATABLITY, REMOVE LOWER CASE
+		else
+			ans= @R[ table_ref][ col_nm]
 		if format_spec? then @formatFromSpec ans, format_spec, custom_spec else ans
 	# When attrs may have leading '?' for special treatment
 	weed: (attrs) ->
@@ -217,18 +224,21 @@ class View$Base extends E.ModelJS
 		f= 'piece_handle'
 		#_log2 f, view, obj
 		return @D_piece view, attrs, obj, is_part if obj?.then # Was a thenable
-		#_log2 f, view, new Date().getTime()- @start #, obj
+		#_log2 f, view #, new Date().getTime()- @start #, obj
 		{content,can_componentize}= obj
 		_log2 f, 'AFTER ASSIGN', view, obj if obj is false
 		@P.push @loadPartAttrs attrs
 		@D.push []
 		content= @handleIt content
 		defer= @D.pop()
+		_log2 f, 'defer', view, defer
 		if can_componentize or attrs.dynamic or defer.length or not is_part
+			_log2 f, 'defer YES', view, defer
 			if defer.length and not can_componentize and not attrs.dynamic
 				_log2 "WARNING: DEFER logic in (#{view}); wrapping DIV tag."
 			result= @wrap view, attrs, content, defer, can_componentize
 		else
+			_log2 f, 'defer NO!', view, defer
 			result= content
 		result
 	D_piece: (view, attrs, d_load, is_part) ->
@@ -255,7 +265,18 @@ class View$Base extends E.ModelJS
 	T_defer: ( attrs, content) -> # TODO IMPLEMENT DEFER LOGIC ATTRS?
 		f= 'Base:M/View.T_defer:'
 		f_content= @handleIt content
-		@D[ @D.length- 1].push {attrs, func: new Function 'el', 'attrs', f_content}
+		#_log f, content, f_content
+		# When epic tags are inside defer, you get nested arrays that need to be joined (w/o commas)
+		if 'A' is E.type_oau f_content
+			sep= ''
+			ans= ''
+			joiner= (a) ->
+				for e in a
+					if 'A' is E.type_oau e then joiner e else ans+= sep+ e
+			joiner f_content
+			#_log f, 'join', ans
+			f_content= ans
+		@D[ @D.length- 1].push {attrs, func: new Function 'element', 'isInit', 'context', 'attrs', f_content}
 		'' # No content to display for these
 	T_if_true: ( attrs, content) -> if @N[ attrs.name] then @handleIt content() else ''
 	T_if_false: ( attrs, content) -> if @N[ attrs.name] then '' else @handleIt content
@@ -268,13 +289,20 @@ class View$Base extends E.ModelJS
 				is_true= true if attrs.val is attrs.eq
 			else if 'ne' of attrs
 				is_true= true if attrs.val isnt attrs.ne
+			else if 'gt' of attrs
+				is_true= true if attrs.val > attrs.gt
 			else if 'in_list' of attrs
 				is_true= true if attrs.val in attrs.in_list.split ','
+			else if 'not_in_list' of attrs
+				is_true= true if attrs.val not in attrs.not_in_list.split ','
 			else issue= true
 		else if 'set' of attrs
 			is_true= if attrs.set then true else false
 		else if 'not_set' of attrs
 			is_true= if attrs.not_set then false else true
+		else if 'table_is_empty' of attrs
+			tbl= @_accessModelTable attrs.table_is_empty, false
+			is_true= true if not tbl.length
 		else if 'table_is_not_empty' of attrs
 			tbl= @_accessModelTable attrs.table_is_not_empty, false
 			is_true= true if tbl.length
@@ -311,6 +339,7 @@ class View$Base extends E.ModelJS
 		limit= if 'limit' of attrs then Number( attrs.limit)- 1  else tbl.length
 		for row,count in tbl
 			row= tbl[ count]
+			row._= count: count, first: count is 0, last: count is limit- 1, break: false # break: TODO
 			@R[ rh_alias]= row
 			@I[ rh_alias].c= count
 			result.push @handleIt content_f

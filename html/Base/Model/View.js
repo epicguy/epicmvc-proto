@@ -72,17 +72,21 @@
       if (this.defer_it_cnt === 0) {
         _log2(f, 'END RUN', this.defer_content, new Date().getTime() - this.start);
         this.in_run = false;
-        return this.defer_it.resolve(this.defer_content);
+        return this.defer_it.resolve([this.modal, this.defer_content]);
       }
     };
 
     View$Base.prototype.run = function() {
-      var f, flow, layout, step, track, who, _ref, _ref1;
+      var f, flow, layout, modal, step, track, who, _ref, _ref1, _ref2;
       f = 'run';
       who = 'R';
       _ref = E.App().getStepPath(), flow = _ref[0], track = _ref[1], step = _ref[2];
-      layout = E.appGetSetting('layout', flow, track, step);
-      this.page_name = (_ref1 = (E.appGetS(flow, track, step)).page) != null ? _ref1 : step;
+      if (modal = E.appFindAttr(flow, track, step, 'modal')) {
+        modal = (_ref1 = (E.appGetSetting('modals'))[modal]) != null ? _ref1 : modal;
+      }
+      layout = modal != null ? modal : E.appGetSetting('layout', flow, track, step);
+      this.modal = modal ? true : false;
+      this.page_name = (_ref2 = (E.appGetS(flow, track, step)).page) != null ? _ref2 : step;
       this.did_run = true;
       this.frames[this.frames.length - 1] = layout;
       this.frame_inx = 0;
@@ -164,24 +168,23 @@
     };
 
     View$Base.prototype.wrap = function(view, attrs, content, defer, has_root) {
-      var inside,
+      var f, inside,
         _this = this;
-      inside = {
-        defer: defer
-      };
-      attrs.config = function(el, isInit, context) {
-        var f, _i, _len, _ref, _results;
-        f = 'Base:M/View..config:' + view;
-        _ref = inside.defer;
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          defer = _ref[_i];
-          _log2(f, defer);
-          _results.push(_this.doDefer(defer, el));
-        }
-        return _results;
-      };
-      attrs['data-part'] = view;
+      f = 'wrap';
+      if (defer.length) {
+        inside = E.merge([], defer);
+        attrs.config = function(element, isInit, context) {
+          var _i, _len, _results;
+          f = 'Base:M/View..config:' + view;
+          _results = [];
+          for (_i = 0, _len = inside.length; _i < _len; _i++) {
+            defer = inside[_i];
+            _log2(f, defer);
+            _results.push(_this.doDefer(defer, element, isInit, context));
+          }
+          return _results;
+        };
+      }
       if ('dynamic' in attrs) {
         return {
           tag: attrs.dynamic,
@@ -193,6 +196,17 @@
           return '';
         }
         if (has_root) {
+          _log2(f, 'has-root-content', {
+            view: view,
+            attrs: attrs,
+            content: content,
+            defer: defer,
+            has_root: has_root
+          });
+          if ('A' !== E.type_oau(content)) {
+            BLOWUP();
+          }
+          content[0].attrs.config = attrs.config;
           return content;
         } else {
           return {
@@ -204,19 +218,14 @@
       }
     };
 
-    View$Base.prototype.doDefer = function(defer_obj, el) {
-      var _this = this;
+    View$Base.prototype.doDefer = function(defer_obj, element, isInit, context) {
       if ('A' === E.type_oau(defer_obj.defer)) {
         _log2('WARNING', 'Got an array for defer', defer_obj.defer);
         return 'WAS-ARRAY';
       }
       if (defer_obj.func) {
-        return defer_obj.func(el, defer_obj.attrs);
+        return defer_obj.func(element, isInit, context, defer_obj.attrs);
       }
-      return defer_obj.defer.then(function(f_content) {
-        defer_obj.func = new Function('el', 'attrs', f_content);
-        _this.doDefer(defer_obj, el);
-      });
     };
 
     View$Base.prototype.handleIt = function(content) {
@@ -282,7 +291,11 @@
 
     View$Base.prototype.v2 = function(table_ref, col_nm, format_spec, custom_spec) {
       var ans;
-      ans = this.R[table_ref][col_nm];
+      if (col_nm[0] === '_') {
+        ans = this.R[table_ref]._[(col_nm.slice(1)).toLowerCase()];
+      } else {
+        ans = this.R[table_ref][col_nm];
+      }
       if (format_spec != null) {
         return this.formatFromSpec(ans, format_spec, custom_spec);
       } else {
@@ -389,12 +402,15 @@
       this.D.push([]);
       content = this.handleIt(content);
       defer = this.D.pop();
+      _log2(f, 'defer', view, defer);
       if (can_componentize || attrs.dynamic || defer.length || !is_part) {
+        _log2(f, 'defer YES', view, defer);
         if (defer.length && !can_componentize && !attrs.dynamic) {
           _log2("WARNING: DEFER logic in (" + view + "); wrapping DIV tag.");
         }
         result = this.wrap(view, attrs, content, defer, can_componentize);
       } else {
+        _log2(f, 'defer NO!', view, defer);
         result = content;
       }
       return result;
@@ -429,12 +445,31 @@
     };
 
     View$Base.prototype.T_defer = function(attrs, content) {
-      var f, f_content;
+      var ans, f, f_content, joiner, sep;
       f = 'Base:M/View.T_defer:';
       f_content = this.handleIt(content);
+      if ('A' === E.type_oau(f_content)) {
+        sep = '';
+        ans = '';
+        joiner = function(a) {
+          var e, _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = a.length; _i < _len; _i++) {
+            e = a[_i];
+            if ('A' === E.type_oau(e)) {
+              _results.push(joiner(e));
+            } else {
+              _results.push(ans += sep + e);
+            }
+          }
+          return _results;
+        };
+        joiner(f_content);
+        f_content = ans;
+      }
       this.D[this.D.length - 1].push({
         attrs: attrs,
-        func: new Function('el', 'attrs', f_content)
+        func: new Function('element', 'isInit', 'context', 'attrs', f_content)
       });
       return '';
     };
@@ -456,7 +491,7 @@
     };
 
     View$Base.prototype.T_if = function(attrs, content) {
-      var is_true, issue, tbl, _ref;
+      var is_true, issue, tbl, _ref, _ref1;
       issue = false;
       is_true = false;
       if ('val' in attrs) {
@@ -468,8 +503,16 @@
           if (attrs.val !== attrs.ne) {
             is_true = true;
           }
+        } else if ('gt' in attrs) {
+          if (attrs.val > attrs.gt) {
+            is_true = true;
+          }
         } else if ('in_list' in attrs) {
           if (_ref = attrs.val, __indexOf.call(attrs.in_list.split(','), _ref) >= 0) {
+            is_true = true;
+          }
+        } else if ('not_in_list' in attrs) {
+          if (_ref1 = attrs.val, __indexOf.call(attrs.not_in_list.split(','), _ref1) < 0) {
             is_true = true;
           }
         } else {
@@ -479,6 +522,11 @@
         is_true = attrs.set ? true : false;
       } else if ('not_set' in attrs) {
         is_true = attrs.not_set ? false : true;
+      } else if ('table_is_empty' in attrs) {
+        tbl = this._accessModelTable(attrs.table_is_empty, false);
+        if (!tbl.length) {
+          is_true = true;
+        }
       } else if ('table_is_not_empty' in attrs) {
         tbl = this._accessModelTable(attrs.table_is_not_empty, false);
         if (tbl.length) {
@@ -538,6 +586,12 @@
       for (count = _i = 0, _len = tbl.length; _i < _len; count = ++_i) {
         row = tbl[count];
         row = tbl[count];
+        row._ = {
+          count: count,
+          first: count === 0,
+          last: count === limit - 1,
+          "break": false
+        };
         this.R[rh_alias] = row;
         this.I[rh_alias].c = count;
         result.push(this.handleIt(content_f));
