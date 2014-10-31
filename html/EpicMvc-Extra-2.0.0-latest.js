@@ -137,7 +137,6 @@
   GlobalDrag = (function() {
 
     function GlobalDrag(pre_flight) {
-      var _this = this;
       this.pre_flight = pre_flight;
       this.data = __bind(this.data, this);
 
@@ -170,9 +169,14 @@
       this.src_elem = false;
       this.src_data = false;
       this.drag_type = false;
-      $(function() {
-        return $(document).dragenter(_this.handleDragEnter).dragleave(_this.handleDragLeave).dragover(_this.handleDragOver);
-      });
+      console.error('GlobalDrag needs help.');
+      /*
+      		$ => $(document)
+      			.dragenter( @handleDragEnter)
+      			.dragleave( @handleDragLeave)
+      			.dragover( @handleDragOver)
+      */
+
     }
 
     GlobalDrag.prototype.get_type = function(t) {
