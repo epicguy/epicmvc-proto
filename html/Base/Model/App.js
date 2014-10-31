@@ -29,39 +29,44 @@
     };
 
     App$Base.prototype.goTo = function(flow, t, s) {
-      var f, was, _ref;
+      var f, was;
       f = 'goTo';
       was = "" + this.f + "/" + this.t + "/" + this.s;
-      if (!flow || !(E.appGetF(flow) != null)) {
-        _ref = (E.appGetSetting('go')).split('/'), flow = _ref[0], t = _ref[1], s = _ref[2];
-      } else if (!(t != null) || !(E.appGetT(flow, t) != null)) {
-        t = E.appStartT(flow);
-        s = E.appStartS(flow, t);
-      } else if (!(s != null) || !(E.appGetS(flow, t, s) != null)) {
-        s = E.appStartS(flow, t);
-      }
       this.f = flow;
       this.t = t;
       this.s = s;
+      _log2(f, {
+        was: was,
+        is: "" + this.f + "/" + this.t + "/" + this.s
+      });
       if (was !== ("" + this.f + "/" + this.t + "/" + this.s)) {
         return this.invalidateTables(['V']);
       }
     };
 
     App$Base.prototype.go = function(path) {
-      var f, ix, q, v, _i, _len, _ref, _ref1;
-      f = 'go';
-      q = path.split('/');
-      _ref = [this.f, this.t, this.s];
-      for (ix = _i = 0, _len = _ref.length; _i < _len; ix = ++_i) {
-        v = _ref[ix];
-        if (!((_ref1 = q[ix]) != null ? _ref1.length : void 0)) {
-          q[ix] = v;
-        } else {
-          break;
+      var f, flow, s, t, _ref;
+      f = 'go:' + path;
+      _ref = path.split('/'), flow = _ref[0], t = _ref[1], s = _ref[2];
+      if (!flow) {
+        flow = this.f;
+        if (!t) {
+          t = this.t;
         }
       }
-      return this.goTo(q[0], q[1], q[2]);
+      E.option.ap1(path, flow, t, s);
+      if (!t) {
+        t = E.appStartT(flow);
+      }
+      if (!s) {
+        s = E.appStartS(flow, t);
+      }
+      _log2(f, {
+        flow: flow,
+        t: t,
+        s: s
+      }, this.f, this.t, this.s);
+      return this.goTo(flow, t, s);
     };
 
     App$Base.prototype.appGet = function(attr) {

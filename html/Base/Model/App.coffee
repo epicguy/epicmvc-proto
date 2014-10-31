@@ -13,24 +13,22 @@ class App$Base extends E.ModelJS
 	goTo: (flow,t,s) ->
 		f= 'goTo'
 		was= "#{@f}/#{@t}/#{@s}"
-		if not flow or not E.appGetF(flow)?
-			[flow, t, s]= (E.appGetSetting 'go').split '/'
-		else if not t? or not E.appGetT(flow, t)?
-			t= E.appStartT flow; s= E.appStartS flow, t
-		else if not s? or not E.appGetS( flow, t, s)?
-			s= E.appStartS flow, t
 		@f= flow; @t= t; @s= s
-		#_log2 f, {was,is: "#{@f}/#{@t}/#{@s}"}
+		_log2 f, {was,is: "#{@f}/#{@t}/#{@s}"}
 		if was isnt "#{@f}/#{@t}/#{@s}"
 			@invalidateTables ['V'] # This table is specific to the 'path'
 	go: (path) ->
-		f= 'go'
-		q= path.split '/'
-		#_log2 f, 'before', q, @f, @t, @s
-		for v,ix in [@f, @t, @s]
-			if not (q[ix]?.length) then q[ix]= v else break # Stop at first set value, rest will default
-		#_log2 f, 'after', q, @f, @t, @s
-		@goTo q[0], q[1], q[2]
+		f= 'go:'+path
+		[flow, t, s]= path.split '/'
+		if not flow
+			flow= @f
+			if not t
+				t= @t
+		E.option.ap1 path, flow, t, s # Verify 2 slashes, and valid path #%#
+		if not t then t= E.appStartT flow
+		if not s then s= E.appStartS flow, t
+		_log2 f, {flow,t,s}, @f, @t, @s
+		@goTo flow, t, s
 	appGet: (attr) -> E.appGetSetting attr, @f, @t, @s
 	getStepPath: -> [@f, @t, @s]
 	action: (ctx,act,p) ->
