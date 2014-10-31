@@ -37,25 +37,14 @@ app= (window, undef) ->
 	oModel= {} # Instances of model classes
 	modelState= {}
 	appconfs= [] # Will be an array of the apps user sets in 'run'
-	option= loadDirs: {}
+	option= event: (->), loadDirs: {}
 		# load: loadstratgy-class-name placed into E.Extra
 		# render: render-class-name placed into E.Extra
-
-		# option.c1 inAction # if inAction isnt false
-		# option.a1 view_name, aModels #if view_name not of aModels
-		# option.a2 view_name, aModels, attribute #if attribute not of aModels[ view_name]
-		# option.m1 view, model #if not E.Model[ model.class]?
-		# option.m2-6 Issues with user's Model implementation
-		# option.ca1 action_token, original_path, action_node #if not action_node?
-		# option.ca2 action_token, original_path, nm, data, action_node
-		# option.ca3 action_token, original_path, action_node, aMacros #if not aMacros[action_node.do]
-		# option.ca4 action_token, original_path, action_node if not action_node.fist of E.fistDef
-		# option.v1 val, spec # Fell into default arm of v3-spec
-		# option.w1 wistNm # check wistNm of E.wistDef
+		# option.xxN - see Dev/app. for explainations of these
 
 	# Define these small validation functions as no-ops; Dev pkg can do the 'real' work
 	option[ nm]= (->) for nm in [ #%#
-		'c1', 'a1', 'a2', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6' #%#
+		'c1', 'a1', 'a2', 'ap1', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6' #%#
 		'ca1', 'ca2', 'ca3', 'ca4', 'fi1', 'fi2', 'fi3', 'v1', 'w1' #%#
 	] #%#
 
@@ -302,9 +291,6 @@ app= (window, undef) ->
 
 		d_doLeftSide= (action_node)->
 			#_log2 f, 'd_doLeftSide:', {action_node}
-			# Handle 'go:'
-			if action_node.go?
-				E.App().go action_node.go
 			# Process 'fist:' or 'clear:'
 			for what in ['fist','clear'] # TODO CONSIDER HANDLING clear: AS A doRightSide ACTIVITY, SO AFER do: PROCESING
 				continue if what not of action_node
@@ -352,6 +338,9 @@ app= (window, undef) ->
 				return if ans?.then? then ans.then d_cb else d_cb ans
 
 		d_doRightSide= (action_node)->
+			# Handle 'go:'
+			if action_node.go?
+				E.App().go action_node.go
 			next_node= null
 			action_node.next?= []
 			action_node.next= [action_node.next] unless 'A' is type_oau action_node.next
@@ -406,13 +395,13 @@ app= (window, undef) ->
 
 	E[ nm]= obj for nm,obj of {
 		type_oau # TODO SEE IF THIS WORKS FOR PEOPLE TO REPLACE E.G. $.IsArray
-		Model, Extra, option, appconfs
+		Model, Extra, option
 		action, merge, getModelState, setModelState
 		appGetF, appGetT, appGetS, appStartT, appStartS
 		appFindAction, appGetSetting, appGetVars, appFist
 		appFindAttr, appSearchAttr
 		fieldDef, fistDef, issueMap, wistDef
-		oModel # Just for internal checking / testing
+		oModel, appconfs, aFlows # Just for internal checking / testing #%#
 	}
 	return E
 

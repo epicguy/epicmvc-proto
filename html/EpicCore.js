@@ -16,9 +16,10 @@
     modelState = {};
     appconfs = [];
     option = {
+      event: (function() {}),
       loadDirs: {}
     };
-    _ref = ['c1', 'a1', 'a2', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6', 'ca1', 'ca2', 'ca3', 'ca4', 'fi1', 'fi2', 'fi3', 'v1', 'w1'];
+    _ref = ['c1', 'a1', 'a2', 'ap1', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6', 'ca1', 'ca2', 'ca3', 'ca4', 'fi1', 'fi2', 'fi3', 'v1', 'w1'];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       nm = _ref[_i];
       option[nm] = (function() {});
@@ -433,9 +434,6 @@
       }
       d_doLeftSide = function(action_node) {
         var ans, copy_to, ctx, d, d_cb, fist, fist_model, i, is_macro, ix, mg, name, nms, r, val, view_act, view_nm, what, _j, _k, _len1, _len2, _ref1, _ref2, _ref3, _ref4, _ref5;
-        if (action_node.go != null) {
-          E.App().go(action_node.go);
-        }
         _ref1 = ['fist', 'clear'];
         for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
           what = _ref1[_j];
@@ -525,6 +523,9 @@
       };
       d_doRightSide = function(action_node) {
         var choice, k, matches, next_node, val, _j, _len1, _ref1, _ref2, _ref3, _ref4;
+        if (action_node.go != null) {
+          E.App().go(action_node.go);
+        }
         next_node = null;
         if ((_ref1 = action_node.next) == null) {
           action_node.next = [];
@@ -642,7 +643,6 @@
       Model: Model,
       Extra: Extra,
       option: option,
-      appconfs: appconfs,
       action: action,
       merge: merge,
       getModelState: getModelState,
@@ -662,7 +662,9 @@
       fistDef: fistDef,
       issueMap: issueMap,
       wistDef: wistDef,
-      oModel: oModel
+      oModel: oModel,
+      appconfs: appconfs,
+      aFlows: aFlows
     };
     for (nm in _ref1) {
       obj = _ref1[nm];
