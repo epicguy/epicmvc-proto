@@ -33,10 +33,14 @@ class GlobalDrag
 		@src_elem= false
 		@src_data= false
 		@drag_type= false # Normalized to a string; if false, global ignores it so default can occur
+		# TODO NEED TO FIGURE OUT IF WE SHOULD GO WITHOUT JQUERY?
+		console.error 'GlobalDrag needs help.'
+		###
 		$ => $(document)
 			.dragenter( @handleDragEnter)
 			.dragleave( @handleDragLeave)
 			.dragover( @handleDragOver)
+		###
 
 	get_type: (t) ->
 		@log3 'get_type',( typeof t), t
