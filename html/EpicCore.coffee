@@ -78,7 +78,7 @@ app= (window, undef) ->
 		func[ atype]= (dest,source)-> # Update 'dest' as an array
 			f= 'func:A'
 			#_log2 f+ depth, {dest,source}
-			reutrn undef if (type_oau source) isnt atype # only copy if same type
+			return undef if (type_oau source) isnt atype # only copy if same type
 			for s,inx in source
 				ans= dup dest[ inx], s
 				dest[ inx]= ans if ans isnt undef
