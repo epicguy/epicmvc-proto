@@ -133,6 +133,9 @@
             fist: fist
           });
         }
+        if (!fist.sp.FIELDS) {
+          err("FIELDS attribute missing from FIST definition");
+        }
         _ref = fist.sp.FIELDS;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           fieldNm = _ref[_i];
