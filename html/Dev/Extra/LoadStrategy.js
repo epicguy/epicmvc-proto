@@ -26,6 +26,10 @@
       return this.refresh_stamp = (new Date).valueOf();
     };
 
+    LoadStrategy.prototype.makePkgDir = function(pkg) {
+      return E.option.loadDirs[pkg] + ((E.option.loadDirs[pkg].slice(-1)) === '/' ? pkg : '');
+    };
+
     LoadStrategy.prototype.D_loadAsync = function() {
       var def, el, f, file, file_list, next, pkg, promise, sub, type, url, work, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
       f = 'Dev:E/LoadStragegy.loadAsync';
@@ -41,7 +45,7 @@
           if (type === 'css') {
             for (_j = 0, _len1 = file_list.length; _j < _len1; _j++) {
               file = file_list[_j];
-              url = E.option.loadDirs[pkg] + pkg + '/css/' + file + '.css';
+              url = (this.makePkgDir(pkg)) + '/css/' + file + '.css';
               el = document.createElement('link');
               el.setAttribute('rel', 'stylesheet');
               el.setAttribute('type', 'text/css');
@@ -67,7 +71,7 @@
             for (_l = 0, _len3 = file_list.length; _l < _len3; _l++) {
               file = file_list[_l];
               sub = type === 'root' ? '' : type + '/';
-              url = E.option.loadDirs[pkg] + pkg + '/' + sub + file + '.js';
+              url = (this.makePkgDir(pkg)) + '/' + sub + file + '.js';
               work.push(url);
             }
           }
@@ -198,7 +202,7 @@
 
     LoadStrategy.prototype.D_getFile = function(pkg, nm) {
       var path;
-      path = E.option.loadDirs[pkg] + pkg + '/';
+      path = (this.makePkgDir(pkg)) + '/';
       return (m.request({
         background: true,
         method: 'GET',
