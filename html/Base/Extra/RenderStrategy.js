@@ -90,7 +90,6 @@
           data_params[nm] = rec;
         }
       }
-      target.focus();
       prevent = E.Extra[E.option.dataAction](type, data_action, data_params);
       if (prevent) {
         event_obj.preventDefault();

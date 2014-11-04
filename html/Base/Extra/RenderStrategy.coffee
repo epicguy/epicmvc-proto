@@ -55,7 +55,6 @@ class RenderStrategy$Base
 		old_params= target.getAttribute 'data-params'
 		data_params[ nm]= rec for nm,rec of JSON.parse old_params if old_params
 
-		target.focus() # TODO TESTING IS THIS HOW BOOTSTRAP AVOIDS THE DBLCLICK TEXT MARKING?
 		prevent= E.Extra[ E.option.dataAction] type, data_action, data_params
 		event_obj.preventDefault() if prevent  # Added to keep LOGIN FORM from posting to fresh URL
 		#TODO event_obj.stopPropagation()
