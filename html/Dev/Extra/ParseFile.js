@@ -172,11 +172,12 @@
   };
 
   FindAttrs = function(file_info, str) {
-    var attr_obj, attr_split, attrs_need_cleaning, data_nm, debug, empty, eq, event_attrs_shortcuts, f, good, grp, i, nm, pane, parts, quo, start, style_obj, _i, _len, _ref, _ref1, _ref10, _ref11, _ref12, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+    var attr_obj, attr_split, attrs_need_cleaning, className, data_e_action, debug, empty, eq, event_attrs_shortcuts, f, good, grp, i, nm, pane, parts, quo, start, style_obj, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
     f = ':parse.FindAttrs:';
     event_attrs_shortcuts = ['data-e-click', 'data-e-change', 'data-e-dblclick', 'data-e-enter', 'data-e-keyup', 'data-e-focus', 'data-e-blur', 'data-e-event'];
     str = ' ' + str;
     str = str.replace(/\se-/gm, ' data-e-');
+    str = str.replace(/\sex-/gm, ' data-ex-');
     attr_split = str.trim().split(/([\s="':;])/);
     empty = attr_split[attr_split.length - 1] === '/' ? '/' : '';
     attrs_need_cleaning = false;
@@ -184,7 +185,8 @@
       attr_split.pop();
     }
     attr_obj = {};
-    attr_obj.className = [];
+    className = [];
+    data_e_action = [];
     i = 0;
     debug = false;
     while (i < attr_split.length) {
@@ -208,18 +210,12 @@
       }
       if (__indexOf.call(event_attrs_shortcuts, nm) >= 0) {
         debug = true;
-        if ((_ref1 = attr_obj['data-e-action']) == null) {
-          attr_obj['data-e-action'] = [];
-        }
-        attr_obj['data-e-action'].push((nm.slice(7)) + ':' + parts.join(''));
+        data_e_action.push((nm.slice(7)) + ':' + parts.join(''));
         continue;
       }
       if (nm === 'data-e-action') {
         debug = true;
-        if ((_ref2 = attr_obj['data-e-action']) == null) {
-          attr_obj['data-e-action'] = [];
-        }
-        attr_obj[nm].push(parts.join(''));
+        data_e_action.push(parts.join(''));
         continue;
       }
       if (nm === 'config') {
@@ -232,45 +228,51 @@
         continue;
       }
       if (nm === 'data-e-tab') {
-        _ref3 = (parts.join('')).split(':'), grp = _ref3[0], pane = _ref3[1];
-        attr_obj.className.push("&Tab/" + grp + "/" + pane + "#?active;");
-        if ((_ref4 = attr_obj['data-e-action']) == null) {
-          attr_obj['data-e-action'] = [];
-        }
-        attr_obj['data-e-action'].push("event:Tab:" + grp + ":" + pane + ":click");
+        _ref1 = (parts.join('')).split(':'), grp = _ref1[0], pane = _ref1[1];
+        className.push("&Tab/" + grp + "/" + pane + "#?active;");
+        data_e_action.push("event:Tab:" + grp + ":" + pane + ":click");
         continue;
       }
       if (nm === 'data-e-tab-pane') {
-        _ref5 = (parts.join('')).split(':'), grp = _ref5[0], pane = _ref5[1];
-        attr_obj.className.push("&Tab/" + grp + "/" + pane + "#?active;");
+        _ref2 = (parts.join('')).split(':'), grp = _ref2[0], pane = _ref2[1];
+        className.push("&Tab/" + grp + "/" + pane + "#?active;");
+        continue;
+      }
+      if (nm === 'data-e-collapse') {
+        _ref3 = (parts.join('')).split(':'), grp = _ref3[0], pane = _ref3[1];
+        data_e_action.push("event:Tab:" + grp + ":" + pane + ":click");
+        continue;
+      }
+      if (nm === 'data-e-collapse-pane') {
+        _ref4 = (parts.join('')).split(':'), grp = _ref4[0], pane = _ref4[1];
+        className.push("&Tab/" + grp + "/" + pane + "#?in;");
+        attr_obj['data-ex-collapse'] = "'" + grp + ":" + pane + "'";
+        attr_obj.config = 'oE.ex';
         continue;
       }
       if (nm === 'data-e-drop-pane') {
-        _ref6 = ['Drop', parts.join('')], grp = _ref6[0], pane = _ref6[1];
-        attr_obj.className.push("&Tab/" + grp + "/" + pane + "#?open;");
+        _ref5 = ['Drop', parts.join('')], grp = _ref5[0], pane = _ref5[1];
+        className.push("&Tab/" + grp + "/" + pane + "#?open;");
       }
       if (nm === 'data-e-drop') {
-        _ref7 = ['Drop', parts.join('')], grp = _ref7[0], pane = _ref7[1];
-        if ((_ref8 = attr_obj['data-e-action']) == null) {
-          attr_obj['data-e-action'] = [];
-        }
-        attr_obj['data-e-action'].push("event:Tab:" + grp + ":" + pane + ":click-enter");
+        _ref6 = ['Drop', parts.join('')], grp = _ref6[0], pane = _ref6[1];
+        data_e_action.push("event:Tab:" + grp + ":" + pane + ":click-enter");
         continue;
       }
       if (nm === 'data-e-modal-pane') {
-        _ref9 = ['Modal', parts.join('')], grp = _ref9[0], pane = _ref9[1];
-        attr_obj.className.push("&Tab/" + grp + "/" + pane + "#?in?hide;");
+        _ref7 = ['Modal', parts.join('')], grp = _ref7[0], pane = _ref7[1];
+        className.push("&Tab/" + grp + "/" + pane + "#?in?hide;");
       }
       if (nm === 'data-e-modal') {
-        _ref10 = ['Modal', parts.join('')], grp = _ref10[0], pane = _ref10[1];
-        if ((_ref11 = attr_obj['data-e-action']) == null) {
-          attr_obj['data-e-action'] = [];
-        }
-        attr_obj['data-e-action'].push("event:Tab:" + grp + ":" + pane + ":click-enter");
+        _ref8 = ['Modal', parts.join('')], grp = _ref8[0], pane = _ref8[1];
+        data_e_action.push("event:Tab:" + grp + ":" + pane + ":click-enter");
         continue;
       }
+      if ('data-ex-' === nm.slice(0, 8)) {
+        attr_obj.config = 'oE.ex';
+      }
       if (nm === 'className') {
-        attr_obj.className.push(parts.join(''));
+        className.push(parts.join(''));
         continue;
       }
       if (nm[0] === '?') {
@@ -278,17 +280,11 @@
       }
       attr_obj[nm] = (findVars(parts.join(''))).join('+');
     }
-    if (attr_obj.className.length) {
-      attr_obj.className = (findVars(attr_obj.className.join(' '))).join('+');
-    } else {
-      delete attr_obj.className;
+    if (className.length) {
+      attr_obj.className = (findVars(className.join(' '))).join('+');
     }
-    _ref12 = ['data-e-action'];
-    for (_i = 0, _len = _ref12.length; _i < _len; _i++) {
-      data_nm = _ref12[_i];
-      if (attr_obj[data_nm]) {
-        attr_obj[data_nm] = (findVars(attr_obj[data_nm].join())).join('+');
-      }
+    if (data_e_action.length) {
+      attr_obj['data-e-action'] = (findVars(data_e_action.join())).join('+');
     }
     return [mkObj(attr_obj), empty, attrs_need_cleaning];
   };

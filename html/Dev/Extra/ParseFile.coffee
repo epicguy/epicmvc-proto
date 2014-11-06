@@ -118,12 +118,14 @@ FindAttrs= (file_info, str)->
 	]
 	str= ' '+ str
 	str= str.replace /\se-/gm, ' data-e-'
+	str= str.replace /\sex-/gm, ' data-ex-'
 	attr_split= str.trim().split /([\s="':;])/
 	empty= if attr_split[ attr_split.length- 1] is '/' then '/' else ''
 	attrs_need_cleaning= false # If an attr nm has leading dash, flag to clean from list if value is empty/false/undef/null (m2)
 	attr_split.pop() if empty is '/'
 	attr_obj= {}
-	attr_obj.className= []
+	className= []
+	data_e_action= []
 	i= 0
 	debug= false # TODO DEBUG
 	while i< attr_split.length
@@ -134,13 +136,11 @@ FindAttrs= (file_info, str)->
 			continue
 		if nm in event_attrs_shortcuts
 			debug= true # TODO DEBUG
-			attr_obj['data-e-action']?= []
-			attr_obj['data-e-action'].push (nm.slice 7)+ ':'+ parts.join ''
+			data_e_action.push (nm.slice 7)+ ':'+ parts.join ''
 			continue
 		if nm is 'data-e-action' # Allow users to use this attribute directly
 			debug= true # TODO DEBUG
-			attr_obj['data-e-action']?= []
-			attr_obj[ nm].push parts.join ''
+			data_e_action.push parts.join ''
 			continue
 		if nm is 'config'
 			attr_obj[ nm]= parts.join ''
@@ -149,20 +149,36 @@ FindAttrs= (file_info, str)->
 			style_obj= findStyles file_info, parts
 			attr_obj[ nm]= mkObj style_obj
 			continue
+
+		# TABS
 		# before: <li e-tab="Home:news">
 		# after:  <li class="&Tab/Home/news#?active;" data-e-action="event:Tab:Home:news:click">
 		if nm is 'data-e-tab'
 			[grp,pane]= (parts.join '').split ':'
-			attr_obj.className.push "&Tab/#{grp}/#{pane}#?active;"
-			# attr_obj['data-e-event']= "event:Tab:#{grp}:#{pane}:click"
-			attr_obj['data-e-action']?= []
-			attr_obj['data-e-action'].push "event:Tab:#{grp}:#{pane}:click"
+			className.push "&Tab/#{grp}/#{pane}#?active;"
+			data_e_action.push "event:Tab:#{grp}:#{pane}:click"
 			continue
 		# before: <div e-tab-pane="Home:news">
 		# after:  <div class="&Tab/Home/news#?active;">
 		if nm is 'data-e-tab-pane'
 			[grp,pane]= (parts.join '').split ':'
-			attr_obj.className.push "&Tab/#{grp}/#{pane}#?active;"
+			className.push "&Tab/#{grp}/#{pane}#?active;"
+			continue
+
+		# COLLAPSE
+		# before: <li e-collapse="Head:nav">
+		# after:  <li data-e-action="event:Tab:Head:nav:click">
+		if nm is 'data-e-collapse'
+			[grp,pane]= (parts.join '').split ':'
+			data_e_action.push "event:Tab:#{grp}:#{pane}:click"
+			continue
+		# before: <div e-collapse-pane="Head:nav">
+		# after:  <div class="&Tab/Head/nav#?in;">
+		if nm is 'data-e-collapse-pane'
+			[grp,pane]= (parts.join '').split ':'
+			className.push "&Tab/#{grp}/#{pane}#?in;"
+			attr_obj[ 'data-ex-collapse']= "'#{grp}:#{pane}'"
+			attr_obj.config= 'oE.ex' # Mithril style extention using 'config'
 			continue
 
 		# DROPDOWNS
@@ -170,13 +186,12 @@ FindAttrs= (file_info, str)->
 		# after: <div class="&Tab/Drop/A1#?open;">
 		if nm is 'data-e-drop-pane'
 			[grp,pane]= [ 'Drop', (parts.join '')]
-			attr_obj.className.push "&Tab/#{grp}/#{pane}#?open;"
+			className.push "&Tab/#{grp}/#{pane}#?open;"
 		# before: <li e-drop="A1">
 		# after:  <li data-e-action="event:Tab:Drop:A1:click">
 		if nm is 'data-e-drop'
 			[grp,pane]= [ 'Drop', (parts.join '')]
-			attr_obj['data-e-action']?= []
-			attr_obj['data-e-action'].push "event:Tab:#{grp}:#{pane}:click-enter"
+			data_e_action.push "event:Tab:#{grp}:#{pane}:click-enter"
 			continue
 
 		# MODALS
@@ -184,26 +199,29 @@ FindAttrs= (file_info, str)->
 		# after: <div class="&Tab/Modal/A1#?in?hide;">
 		if nm is 'data-e-modal-pane'
 			[grp,pane]= [ 'Modal', (parts.join '')]
-			attr_obj.className.push "&Tab/#{grp}/#{pane}#?in?hide;"
+			className.push "&Tab/#{grp}/#{pane}#?in?hide;"
 		# before: <li e-modal="A1">
 		# after:  <li data-e-action="event:Tab:Modal:A1:click">
 		if nm is 'data-e-modal'
 			[grp,pane]= [ 'Modal', (parts.join '')]
-			attr_obj['data-e-action']?= []
-			attr_obj['data-e-action'].push "event:Tab:#{grp}:#{pane}:click-enter"
+			data_e_action.push "event:Tab:#{grp}:#{pane}:click-enter"
 			continue
 
+		# ex-USER-DEFINED="anything"
+		# before: <input ex-some="thnig">
+		# after: <input data-ex-some="thing" config=oE.ex> (Calls E.ex$some('thing',...))
+		if 'data-ex-' is nm.slice 0, 8
+			attr_obj.config= 'oE.ex' # Mithril style extention using 'config'
+
 		if nm is 'className'
-			attr_obj.className.push parts.join ''
+			className.push parts.join ''
 			continue
 		attrs_need_cleaning= true if nm[ 0] is '?'
 		#_log2 f, 'nm,fl', nm, attrs_need_cleaning
 		attr_obj[ nm]=( findVars parts.join '').join '+'
-	if attr_obj.className.length
-		attr_obj.className=( findVars attr_obj.className.join ' ').join '+'
-	else delete attr_obj.className
-	for data_nm in ['data-e-action']
-		attr_obj[data_nm]=( findVars attr_obj[data_nm].join()).join '+' if attr_obj[data_nm]
+	if className.length
+		attr_obj.className=( findVars className.join ' ').join '+'
+	attr_obj['data-e-action']=( findVars data_e_action.join()).join '+' if data_e_action.length
 	#_log2 f, 'bottom', str, attr_obj if debug
 	# A string of JavaScript code representing an object, and empty (as '' or '/')
 	[ (mkObj attr_obj), empty, attrs_need_cleaning]
