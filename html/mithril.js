@@ -454,7 +454,7 @@ Mithril = m = new function app(window, undefined) {
 		//try { throw new Error( 'endComputation')} catch ( e) { console.error( e.message, (e.stack.split('\n'))[2])}
 		pendingRequests = Math.max(pendingRequests - 1, 0);
 		if (pendingRequests=== 0) {
-			if( pendingMax> pendingGuardRequest) m.redraw();
+			if( pendingMax> pendingGuardRequest) m.redraw() //JCS: TODO setTimeout( m.redraw, 10); // JCS: ALLOW MULTIPLE DOM EVENTS TO ACCUMUATE
 			pendingGuardRequest= pendingMax= 0;
 		 }
 	}
