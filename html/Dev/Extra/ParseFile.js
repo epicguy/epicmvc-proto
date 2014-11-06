@@ -172,7 +172,7 @@
   };
 
   FindAttrs = function(file_info, str) {
-    var attr_obj, attr_split, attrs_need_cleaning, className, data_e_action, debug, empty, eq, event_attrs_shortcuts, f, good, grp, i, nm, pane, parts, quo, start, style_obj, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
+    var attr_obj, attr_split, attrs_need_cleaning, className, data_e_action, empty, eq, event_attrs_shortcuts, f, good, grp, i, nm, pane, parts, quo, start, style_obj, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
     f = ':parse.FindAttrs:';
     event_attrs_shortcuts = ['data-e-click', 'data-e-change', 'data-e-dblclick', 'data-e-enter', 'data-e-keyup', 'data-e-focus', 'data-e-blur', 'data-e-event'];
     str = ' ' + str;
@@ -188,7 +188,6 @@
     className = [];
     data_e_action = [];
     i = 0;
-    debug = false;
     while (i < attr_split.length) {
       _ref = FindAttrVal(i, attr_split), good = _ref[0], start = _ref[1], i = _ref[2], nm = _ref[3], eq = _ref[4], quo = _ref[5], parts = _ref[6];
       if (good === false) {
@@ -209,12 +208,10 @@
         continue;
       }
       if (__indexOf.call(event_attrs_shortcuts, nm) >= 0) {
-        debug = true;
         data_e_action.push((nm.slice(7)) + ':' + parts.join(''));
         continue;
       }
       if (nm === 'data-e-action') {
-        debug = true;
         data_e_action.push(parts.join(''));
         continue;
       }

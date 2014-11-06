@@ -127,7 +127,6 @@ FindAttrs= (file_info, str)->
 	className= []
 	data_e_action= []
 	i= 0
-	debug= false # TODO DEBUG
 	while i< attr_split.length
 		[good, start, i, nm, eq, quo, parts]= FindAttrVal i, attr_split
 		break if good is false # EOF
@@ -135,11 +134,9 @@ FindAttrs= (file_info, str)->
 			console.error 'ERROR - parse:', {file_info, good, start, i, nm, eq, quo, parts, str}
 			continue
 		if nm in event_attrs_shortcuts
-			debug= true # TODO DEBUG
 			data_e_action.push (nm.slice 7)+ ':'+ parts.join ''
 			continue
 		if nm is 'data-e-action' # Allow users to use this attribute directly
-			debug= true # TODO DEBUG
 			data_e_action.push parts.join ''
 			continue
 		if nm is 'config'
@@ -222,7 +219,7 @@ FindAttrs= (file_info, str)->
 	if className.length
 		attr_obj.className=( findVars className.join ' ').join '+'
 	attr_obj['data-e-action']=( findVars data_e_action.join()).join '+' if data_e_action.length
-	#_log2 f, 'bottom', str, attr_obj if debug
+	#_log2 f, 'bottom', str, attr_obj
 	# A string of JavaScript code representing an object, and empty (as '' or '/')
 	[ (mkObj attr_obj), empty, attrs_need_cleaning]
 
