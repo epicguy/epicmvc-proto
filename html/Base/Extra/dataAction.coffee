@@ -14,7 +14,9 @@ dataAction= (type, data_action, data_params) ->
 		if do_action and spec_type is type # The event-type (click/dblclick/etc.) matches user's spec
 			prevent= true if spec_type is 'click' # TODO
 			do_action= false
-			do( spec_action) -> setTimeout (-> E.action spec_action, data_params), 5
+			#TODO TYPE EVENTS ARE BEHIND do( spec_action) -> setTimeout (-> E.action spec_action, data_params), 0
+			E.action spec_action, data_params
+			#TODO WITHOUT SETTIMEOUT, MAY NEED TO HANDLE EVENT'S BEFORE ACTIONS, EH?
 	return prevent
 
 E.Extra.dataAction$Base= dataAction

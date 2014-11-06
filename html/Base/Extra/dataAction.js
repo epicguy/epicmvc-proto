@@ -27,11 +27,7 @@
           prevent = true;
         }
         do_action = false;
-        (function(spec_action) {
-          return setTimeout((function() {
-            return E.action(spec_action, data_params);
-          }), 5);
-        })(spec_action);
+        E.action(spec_action, data_params);
       }
     }
     return prevent;
