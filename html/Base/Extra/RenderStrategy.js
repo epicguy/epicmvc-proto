@@ -45,10 +45,20 @@
     RenderStrategy$Base.prototype.handleEvent = function(event_obj) {
       var attrs, data_action, data_params, f, ix, nm, old_params, prevent, rec, target, type, val, _i, _ref, _ref1;
       f = 'on[data-e-action]';
+      _log2(f, 'top', this.redraw_guard, (event_obj != null ? event_obj : window.event).type);
       if (event_obj == null) {
         event_obj = window.event;
       }
       type = event_obj.type;
+      if (type === 'mousedown') {
+        if (event_obj.which !== 1) {
+          return;
+        }
+        type = 'click';
+      }
+      if (type === 'keyup' && event_obj.keyCode === 9) {
+        return;
+      }
       if (type === 'keyup' && event_obj.keyCode === ENTER_KEY) {
         type = 'enter';
       }
@@ -90,7 +100,6 @@
           data_params[nm] = rec;
         }
       }
-      target.focus();
       prevent = E.Extra[E.option.dataAction](type, data_action, data_params);
       if (prevent) {
         event_obj.preventDefault();
@@ -100,7 +109,7 @@
 
     RenderStrategy$Base.prototype.init = function() {
       var event_name, interesting, _i, _len, _results;
-      interesting = ['click', 'change', 'dblclick', 'keyup', 'blur', 'focus'];
+      interesting = ['mousedown', 'change', 'dblclick', 'keyup', 'blur', 'focus'];
       _results = [];
       for (_i = 0, _len = interesting.length; _i < _len; _i++) {
         event_name = interesting[_i];
@@ -172,15 +181,15 @@
       return E.View().run().then(function(modal_content) {
         var content, modal;
         modal = modal_content[0], content = modal_content[1];
-        _log2('DEFER-R', 'RESULTS: modal, content', modal, content);
+        _log2('DEFER-R', 'RESULTS: modal, content', _this.redraw_guard, modal, content);
+        _this.render(modal, content);
         _this.redraw_guard--;
         if (_this.redraw_guard !== 0) {
           _this.redraw_guard = 0;
-          setTimeout((function() {
+          return setTimeout((function() {
             return _this.m_redraw();
           }), 16);
         }
-        return _this.render(modal, content);
       }).then(null, function(err) {
         return console.error('RenderStrategy$Base m_redraw', err);
       });
@@ -191,12 +200,12 @@
       f = 'render';
       start = new Date().getTime();
       _log2(f, 'START RENDER', start, modal);
-      if (this.was_modal) {
-        m.render(document.getElementById(this.modalId), []);
-      }
       if (modal) {
         m.render((container = document.getElementById(this.modalId)), content);
       } else {
+        if (this.was_modal) {
+          m.render(document.getElementById(this.modalId), []);
+        }
         m.render((container = document.getElementById(this.baseId)), m('div', {}, content));
       }
       _log2(f, 'END RENDER', new Date().getTime() - start);

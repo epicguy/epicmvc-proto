@@ -32,9 +32,15 @@ class RenderStrategy$Base
 		true
 	handleEvent: (event_obj) =>
 		f= 'on[data-e-action]'
+		_log2 f, 'top', @redraw_guard, (event_obj ? window.event).type
 		# Getting all events, need to weed out to 'data-e-action' nodes
 		event_obj?= window.event # IE < 9
 		type= event_obj.type
+		if type is 'mousedown' # This comes before 'blur' so I'm using it rather than 'click'
+			return if event_obj.which isnt 1 # Not a left click
+			type= 'click'
+		#TODO TEST return if type in ['blur','focus'] # TODO FIX THIS ISSUE WITH FORM FIELDS BEING REDRAWN
+		return if type is 'keyup' and event_obj.keyCode is 9 # TODO IS THIS NEEDED FOR FORMS?
 		type= 'enter' if type is 'keyup' and event_obj.keyCode is ENTER_KEY
 		target= event_obj.target
 		return false if target is window # blur had this
@@ -55,13 +61,13 @@ class RenderStrategy$Base
 		old_params= target.getAttribute 'data-params'
 		data_params[ nm]= rec for nm,rec of JSON.parse old_params if old_params
 
-		target.focus() # TODO TESTING IS THIS HOW BOOTSTRAP AVOIDS THE DBLCLICK TEXT MARKING?
+		#TODO IS THIS THE CLUPRIT? target.focus() # TODO TESTING IS THIS HOW BOOTSTRAP AVOIDS THE DBLCLICK TEXT MARKING?
 		prevent= E.Extra[ E.option.dataAction] type, data_action, data_params
 		event_obj.preventDefault() if prevent  # Added to keep LOGIN FORM from posting to fresh URL
 		#TODO event_obj.stopPropagation()
 		return false; # TODO
 	init: ->
-		interesting= ['click', 'change', 'dblclick', 'keyup', 'blur', 'focus']
+		interesting= ['mousedown', 'change', 'dblclick', 'keyup', 'blur', 'focus']
 		document.body.addEventListener event_name, @handleEvent, true for event_name in interesting
 
 	UnloadMessage: (ix,msg) ->
@@ -93,13 +99,13 @@ class RenderStrategy$Base
 			return
 		E.View().run().then (modal_content) =>
 			[modal, content]= modal_content
-			_log2 'DEFER-R', 'RESULTS: modal, content', modal, content
+			_log2 'DEFER-R', 'RESULTS: modal, content', @redraw_guard, modal, content
 			# Assume @render call won't go async and we end up back in this module
+			@render modal, content # Do before decrement of guard, since 'blur' event fired during this
 			@redraw_guard--
 			if @redraw_guard isnt 0 # Someone updated content while we were busy drawing
 				@redraw_guard= 0
 				setTimeout (=> @m_redraw()), 16
-			@render modal, content
 		.then null, (err) => # Make own .then to catch issues in above .then
 			# These may be errors from m.render
 			console.error 'RenderStrategy$Base m_redraw', err
@@ -108,12 +114,12 @@ class RenderStrategy$Base
 		f= 'render'
 		start= new Date().getTime() #%#
 		_log2 f, 'START RENDER', start, modal
-		if @was_modal
-			m.render (document.getElementById @modalId), []
 		if modal
 			# Note, Can put backdrop in layout if desired, with .modal-backdrop and optional e-action
 			m.render (container= document.getElementById @modalId), content
 		else
+			if @was_modal # Get rid of what was there
+				m.render (document.getElementById @modalId), []
 			m.render (container= document.getElementById @baseId), m 'div', {}, content
 		_log2 f, 'END RENDER', new Date().getTime()- start
 		@handleRenderState() if not modal # Let's not bother with modals and history, for now
