@@ -61,7 +61,7 @@
         var ans, f, inx, s, _j, _len1;
         f = 'func:A';
         if ((type_oau(source)) !== atype) {
-          reutrn(undef);
+          return undef;
         }
         for (inx = _j = 0, _len1 = source.length; _j < _len1; inx = ++_j) {
           s = source[inx];

@@ -90,6 +90,8 @@ window.EpicMvc.app$Dev=
 			model= E.appFist fistNm
 			if not model?
 				err "FIST is missing: app.js requires MODELS: <model-name>: fists:[...,'#{fistNm}']", {fist}
+			if not fist.sp.FIELDS
+				err "FIELDS attribute missing from FIST definition"
 			for fieldNm in fist.sp.FIELDS
 				err "No such FIELD (#{fieldNm}) found for FIST (#{fistNm})", {fist} unless fieldNm of E.fieldDef
 			return

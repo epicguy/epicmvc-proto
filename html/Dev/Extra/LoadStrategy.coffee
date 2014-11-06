@@ -7,6 +7,8 @@ class LoadStrategy
 		@cache_local_flag= true # False if we want browser to cache responses
 		@reverse_packages=( @appconfs[ i] for i in [@appconfs.length- 1..0])
 	clearCache: () -> @cache= {}; @refresh_stamp= (new Date).valueOf() # Like jQuery's no_cache
+	makePkgDir: (pkg)->
+		E.option.loadDirs[ pkg]+ if (E.option.loadDirs[ pkg].slice -1) is '/' then pkg else ''
 	D_loadAsync: () -> # Load up all the Model/Extra code stuff - caller should delay after
 		f= 'Dev:E/LoadStragegy.loadAsync'
 		# Insert script tags for all MANIFEST entries of each package-app-config file
@@ -14,7 +16,7 @@ class LoadStrategy
 			continue if pkg not of E.option.loadDirs
 			for type,file_list of E[ 'manifest$'+ pkg] ? {} when type is 'css'
 				for file in file_list
-					url= E.option.loadDirs[ pkg]+ pkg+ '/css/'+ file+ '.css'
+					url= (@makePkgDir pkg)+ '/css/'+ file+ '.css'
 					# <link rel="stylesheet" type="text/css" href="
 					el= document.createElement 'link'
 					el.setAttribute 'rel', 'stylesheet'
@@ -29,7 +31,7 @@ class LoadStrategy
 			for type,file_list of E[ 'manifest$'+ pkg] ? {} when type isnt 'css'
 				for file in file_list
 					sub= if type is 'root' then '' else type+ '/'
-					url= E.option.loadDirs[ pkg]+ pkg+ '/'+ sub+ file+ '.js'
+					url= (@makePkgDir pkg)+ '/'+ sub+ file+ '.js'
 					work.push url
 					#_log2 f, 'to do ', url
 
@@ -115,7 +117,7 @@ class LoadStrategy
 		return promise
 
 	D_getFile: (pkg,nm) -> # Must return a deferred
-		path= E.option.loadDirs[ pkg]+ pkg+ '/'
+		path= (@makePkgDir pkg)+ '/'
 		(m.request
 			background: true # Don't want 'm' to redraw the view
 			method: 'GET'
