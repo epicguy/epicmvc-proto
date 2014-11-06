@@ -6,10 +6,11 @@ class Tab extends E.ModelJS
 		f= 'event'
 		_log2 f, {name,type,groupNm,itemNm,data}
 		group= @_getTab groupNm, itemNm # Pass 'item' since it may never have been seen before
-		switch groupNm
-			when 'Modal' # This one toggles on/off
+		type= group.TYPE ? groupNm
+		switch type.toUpperCase()
+			when 'MODAL' # This one toggles on/off
 				changed= @_toggleModal group, itemNm
-			when 'Drop' # This one toggles on/off
+			when 'DROP', 'COLLAPSE' # This one toggles on/off
 				changed= @_toggleDrop group, itemNm
 			else
 				changed= @_setTab group, itemNm

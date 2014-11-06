@@ -18,7 +18,7 @@
     }
 
     Tab.prototype.event = function(name, type, groupNm, itemNm, data) {
-      var changed, f, group;
+      var changed, f, group, _ref;
       f = 'event';
       _log2(f, {
         name: name,
@@ -28,11 +28,13 @@
         data: data
       });
       group = this._getTab(groupNm, itemNm);
-      switch (groupNm) {
-        case 'Modal':
+      type = (_ref = group.TYPE) != null ? _ref : groupNm;
+      switch (type.toUpperCase()) {
+        case 'MODAL':
           changed = this._toggleModal(group, itemNm);
           break;
-        case 'Drop':
+        case 'DROP':
+        case 'COLLAPSE':
           changed = this._toggleDrop(group, itemNm);
           break;
         default:
