@@ -13,6 +13,8 @@
     __extends(View$Base, _super);
 
     function View$Base(view_nm, options) {
+      this.ex = __bind(this.ex, this);
+
       this.T_if = __bind(this.T_if, this);
 
       this.T_page = __bind(this.T_page, this);
@@ -206,7 +208,6 @@
           if ('A' !== E.type_oau(content)) {
             BLOWUP();
           }
-          content[0].attrs.config = attrs.config;
           return content;
         } else {
           return {
@@ -395,16 +396,11 @@
         return this.D_piece(view, attrs, obj, is_part);
       }
       content = obj.content, can_componentize = obj.can_componentize;
-      if (obj === false) {
-        _log2(f, 'AFTER ASSIGN', view, obj);
-      }
       this.P.push(this.loadPartAttrs(attrs));
       this.D.push([]);
       content = this.handleIt(content);
       defer = this.D.pop();
-      _log2(f, 'defer', view, defer);
       if (can_componentize || attrs.dynamic || defer.length || !is_part) {
-        _log2(f, 'defer YES', view, defer);
         if (defer.length && !can_componentize && !attrs.dynamic) {
           _log2("WARNING: DEFER logic in (" + view + "); wrapping DIV tag.");
         }
@@ -635,6 +631,97 @@
       delete this.R[rh_1];
       delete this.I[rh_1];
       return ans;
+    };
+
+    View$Base.prototype.value = function(el) {
+      if (el.value !== el.defaultValue) {
+        return el.value = el.defaultValue;
+      }
+    };
+
+    View$Base.prototype.A_at = function(orig_attrs) {
+      var attrs, nm, parts, val, _results;
+      attrs = E.merge({}, orig_attrs);
+      _results = [];
+      for (nm in attrs) {
+        val = attrs[nm];
+        if (!(nm[0] === 'e' && nm[2] === '-')) {
+          continue;
+        }
+        parts = nm.split('-');
+        _results.push(this['A_' + parts[0]](parts, val, attrs));
+      }
+      return _results;
+    };
+
+    View$Base.prototype.A_ea = function(parts, val, attrs) {
+      var _ref, _ref1;
+      if ((_ref = attrs.className) == null) {
+        attrs.className = '';
+      }
+      return attrs.className += " " + ((_ref1 = parts[1]) != null ? _ref1 : 'click') + ":" + val;
+    };
+
+    View$Base.prototype.ex = function(el, isInit, ctx) {
+      var attrs, d, e, f, ix, nm, p1, p2, val, _i, _ref, _ref1, _results;
+      f = 'ex';
+      attrs = el.attributes;
+      _results = [];
+      for (ix = _i = 0, _ref = attrs.length; 0 <= _ref ? _i < _ref : _i > _ref; ix = 0 <= _ref ? ++_i : --_i) {
+        if (!('data-ex-' === attrs[ix].name.slice(0, 8))) {
+          continue;
+        }
+        _ref1 = attrs[ix].name.split('-'), d = _ref1[0], e = _ref1[1], nm = _ref1[2], p1 = _ref1[3], p2 = _ref1[4];
+        val = attrs[ix].value;
+        _log2(f, attrs[ix].name, val, p1, p2);
+        _results.push(this['A_ex_' + nm](el, isInit, ctx, val, p1, p2));
+      }
+      return _results;
+    };
+
+    View$Base.prototype.A_ex_value = function(el, isInit, ctx, val, p1, p2) {
+      var f;
+      f = 'A_ex_value';
+      _log2(f, el.value, val, (el.value !== val ? 'CHANGE' : 'SAME'));
+      if (el.value !== val) {
+        return el.value = val;
+      }
+    };
+
+    View$Base.prototype.A_ex_timeago = function(el, isInit, ctx, val, p1, p2) {
+      var doIt, re_doIt, un_doIt;
+      un_doIt = function() {
+        if (ctx.timer) {
+          clearInterval(ctx.timer);
+          return delete ctx.timer;
+        }
+      };
+      doIt = function() {
+        return el.textContent = $.timeago(val);
+      };
+      re_doIt = function() {
+        un_doIt();
+        return ctx.timer = setInterval(doIt, 60000);
+      };
+      doIt();
+      re_doIt();
+      if (isInit) {
+        return ctx.onunload = un_doIt;
+      }
+    };
+
+    View$Base.prototype.A_ex_collapse = function(el, isInit, ctx, val, p1, p2) {
+      var f, g, height, i, _ref;
+      f = 'A_ex_collapse';
+      _ref = val.split(':'), g = _ref[0], i = _ref[1];
+      _log2(f, {
+        g: g,
+        i: i,
+        sH: el.scrollHeight,
+        g_row: (E.Tab(g))[0]
+      });
+      height = (E.Tab(g))[0][i] ? el.scrollHeight : 0;
+      return el.style.height = (String(height)) + 'px';
     };
 
     return View$Base;

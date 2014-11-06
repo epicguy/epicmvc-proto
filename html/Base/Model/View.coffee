@@ -108,7 +108,8 @@ class View$Base extends E.ModelJS
 				# TODO WHAT IS GOING ON WITH attrs TO wrap IF CONTENT HAS ATTRS? (part=)
 				_log2 f, 'has-root-content', {view,attrs,content,defer,has_root}
 				BLOWUP() if 'A' isnt E.type_oau content
-				content[0].attrs.config= attrs.config # Pass the defer logic to the part's div
+				# TODO E2 FIGURE OUT WHY I COMMENTED THIS OUT; ALSO, PLAN IS TO USE DATA-EX-* ATTRS PER ELEMENT, NOT <E-DEFER
+				#content[0].attrs.config= attrs.config # Pass the defer logic to the part's div
 				content
 			else
 				tag: 'div', attrs: attrs, children: content
@@ -226,14 +227,14 @@ class View$Base extends E.ModelJS
 		return @D_piece view, attrs, obj, is_part if obj?.then # Was a thenable
 		#_log2 f, view #, new Date().getTime()- @start #, obj
 		{content,can_componentize}= obj
-		_log2 f, 'AFTER ASSIGN', view, obj if obj is false
+		#_log2 f, 'AFTER ASSIGN', view, obj if obj is false
 		@P.push @loadPartAttrs attrs
 		@D.push []
 		content= @handleIt content
 		defer= @D.pop()
-		_log2 f, 'defer', view, defer
+		#_log2 f, 'defer', view, defer
 		if can_componentize or attrs.dynamic or defer.length or not is_part
-			_log2 f, 'defer YES', view, defer
+			#_log2 f, 'defer YES', view, defer
 			if defer.length and not can_componentize and not attrs.dynamic
 				_log2 "WARNING: DEFER logic in (#{view}); wrapping DIV tag."
 			result= @wrap view, attrs, content, defer, can_componentize
@@ -371,5 +372,47 @@ class View$Base extends E.ModelJS
 		ans= @T_foreach foreach_attrs, content
 		(delete @R[ rh_1]; delete @I[ rh_1])
 		ans
+	# Special case, with 'input' tags; need to copy value only if it does not reflect current value,
+	# to avoid focus/cursor-insertion point issues
+	# TODO IS THIS NEEDED ANYMORE SINCE WE HAVE EX- NOW?
+	value: (el) -> el.value= el.defaultValue if el.value isnt el.defaultValue
+	# TODO IS THIS NEEDED ANYMORE SINCE WE HAVE EX- NOW?
+	A_at: (orig_attrs) -> # Patch up attributes based on action, event, named-values, bootstrap, user shorcuts/extensions
+		attrs= E.merge {}, orig_attrs
+		for nm,val of attrs when nm[0] is 'e' and nm[2] is '-' # Special names needing processing
+			parts= nm.split '-'
+			@['A_'+ parts[ 0]] parts, val, attrs
+	# TODO IS THIS NEEDED ANYMORE SINCE WE HAVE EX- NOW?
+	A_ea: (parts, val, attrs) ->
+		attrs.className?= ''
+		attrs.className+= " #{parts[ 1] ? 'click'}:#{val}"
+	# TODO SHOULD THIS HAVE LIKE A PREFIX - A_ex OR SOMETHING? REFERENCED BY PARSER: oE.ex
+	ex: (el, isInit, ctx) => # Mithril config function
+		f= 'ex'
+		attrs= el.attributes
+		for ix in [0...attrs.length] when 'data-ex-' is attrs[ ix].name.slice 0, 8
+			#E.option.v2 el, attrs[ ix]
+			[d,e,nm,p1,p2]= attrs[ ix].name.split '-'
+			val= attrs[ ix].value
+			_log2 f, attrs[ ix].name, val, p1, p2
+			@['A_ex_'+ nm] el, isInit, ctx, val, p1, p2
+	# TODO MOVE A_ex_* INTO E.ex$* SO USERS CAN ADD THIER OWN; FIND A PLACE FOR THE BASE ONES, MOVE TIMEAGO TO IPM
+	A_ex_value: (el, isInit, ctx, val, p1, p2) ->
+		f= 'A_ex_value'
+		_log2 f, el.value, val, (if el.value isnt val then 'CHANGE' else 'SAME')
+		el.value= val if el.value isnt val
+	A_ex_timeago: (el, isInit, ctx, val, p1, p2) ->
+		un_doIt= ->( clearInterval ctx.timer; delete ctx.timer) if ctx.timer
+		doIt= -> el.textContent= $.timeago val
+		re_doIt= -> un_doIt(); ctx.timer= setInterval doIt, 60000
+		doIt()
+		re_doIt()
+		ctx.onunload= un_doIt if isInit
+	A_ex_collapse: (el, isInit, ctx, val, p1, p2) -> # set el's height using scrollHeight, if Tab/g/i is set, else 0
+		f= 'A_ex_collapse'
+		[g,i]= val.split ':' # Group-name : Item-name
+		_log2 f, {g,i,sH:el.scrollHeight,g_row:(E.Tab g)[ 0]}
+		height= if (E.Tab g)[ 0][ i] then el.scrollHeight else 0
+		el.style.height=( String height)+ 'px'
 
 E.Model.View$Base= View$Base # Public API
