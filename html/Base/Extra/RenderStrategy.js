@@ -43,7 +43,7 @@
     }
 
     RenderStrategy$Base.prototype.handleEvent = function(event_obj) {
-      var attrs, data_action, data_params, f, ix, nm, old_params, prevent, rec, target, type, val, _i, _ref, _ref1;
+      var attrs, data_action, data_params, f, files, ix, nm, old_params, prevent, rec, target, type, val, _i, _ref, _ref1;
       f = 'on[data-e-action]';
       _log2(f, 'top', this.redraw_guard, (event_obj != null ? event_obj : window.event).type);
       if (event_obj == null) {
@@ -85,13 +85,16 @@
         data_params[nm] = attrs[ix].value;
       }
       val = target.value;
+      files = target.files;
       _log2(f, 'event', {
         type: type,
         data_action: data_action,
         data_params: data_params,
-        val: val
+        val: val,
+        files: files
       }, target);
       data_params.val = val;
+      data_params._files = files;
       old_params = target.getAttribute('data-params');
       if (old_params) {
         _ref1 = JSON.parse(old_params);

@@ -55,8 +55,10 @@ class RenderStrategy$Base
 			continue if 'action' is nm= attrs[ ix].name.slice 7
 			data_params[ nm]= attrs[ ix].value
 		val= target.value
-		_log2 f, 'event', {type, data_action, data_params, val}, target
+		files= target.files
+		_log2 f, 'event', {type, data_action, data_params, val, files}, target
 		data_params.val= val
+		data_params._files= files
 		# TODO COMPATABILITY MODE, EH?
 		old_params= target.getAttribute 'data-params'
 		data_params[ nm]= rec for nm,rec of JSON.parse old_params if old_params
