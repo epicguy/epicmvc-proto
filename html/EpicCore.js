@@ -583,7 +583,7 @@
         return [master_issue, master_message];
       };
       err = function(err) {
-        return BLOWUP();
+        throw new Error('BLOWUP:' + err.message);
       };
       if ((ans != null ? ans.then : void 0) != null) {
         return ans.then(done, err);

@@ -370,7 +370,7 @@ app= (window, undef) ->
 		done= ()->
 			[master_issue, master_message]
 		err= (err) ->
-			BLOWUP() # TODO DO THE END COMPUTAION _ HOPE THAT THIS RESTORES DRAWING ABILITY
+			throw new Error 'BLOWUP:'+err.message # TODO DO THE END COMPUTAION _ HOPE THAT THIS RESTORES DRAWING ABILITY
 		if ans?.then? then ans.then done, err else done ans
 
 	fieldDef= {}
