@@ -95,6 +95,12 @@
       }, target);
       data_params.val = val;
       data_params._files = files;
+      for (nm in event_obj) {
+        val = event_obj[nm];
+        if (nm === 'touches' || nm === 'changedTouches' || nm === 'targetTouches') {
+          data_params[nm] = event_obj[nm];
+        }
+      }
       old_params = target.getAttribute('data-params');
       if (old_params) {
         _ref1 = JSON.parse(old_params);
@@ -112,7 +118,7 @@
 
     RenderStrategy$Base.prototype.init = function() {
       var event_name, interesting, _i, _len, _results;
-      interesting = ['mousedown', 'change', 'dblclick', 'keyup', 'blur', 'focus'];
+      interesting = ['mousedown', 'change', 'dblclick', 'keyup', 'blur', 'focus', 'touchstart', 'touchmove', 'touchend'];
       _results = [];
       for (_i = 0, _len = interesting.length; _i < _len; _i++) {
         event_name = interesting[_i];

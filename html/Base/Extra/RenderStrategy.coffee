@@ -59,6 +59,8 @@ class RenderStrategy$Base
 		_log2 f, 'event', {type, data_action, data_params, val, files}, target
 		data_params.val= val
 		data_params._files= files
+		# Support for Touch Events
+		data_params[nm]= event_obj[nm] for nm,val of event_obj when nm in ['touches','changedTouches','targetTouches']
 		# TODO COMPATABILITY MODE, EH?
 		old_params= target.getAttribute 'data-params'
 		data_params[ nm]= rec for nm,rec of JSON.parse old_params if old_params
@@ -69,7 +71,10 @@ class RenderStrategy$Base
 		#TODO event_obj.stopPropagation()
 		return false; # TODO
 	init: ->
-		interesting= ['mousedown', 'change', 'dblclick', 'keyup', 'blur', 'focus']
+		interesting= [
+			'mousedown', 'change', 'dblclick', 'keyup', 'blur', 'focus'
+			'touchstart', 'touchmove', 'touchend' # Touch Events
+		]
 		document.body.addEventListener event_name, @handleEvent, true for event_name in interesting
 
 	UnloadMessage: (ix,msg) ->
