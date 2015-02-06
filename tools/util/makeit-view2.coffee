@@ -14,7 +14,7 @@ epic_path= '../'+ process.argv[ 2]
 #window= E: Extra: {}, Model: {}
 window.E= require epic_path+ '/EpicCore.js'
 E= window.E # So it looks like it's in the global namespace, when used as closure below
-(require dev_dir+ '/Dev/Extra/ParseFile.js') window
+(require epic_path+ '/Dev/Extra/ParseFile.js') window
 
 class MockLoadStrategy
 	constructor: (dev_dir,pkg_nm) ->
@@ -54,7 +54,7 @@ class MockLoadStrategy
 doObj= (obj) ->
 		content= "function(){#{obj.content}}"
 		"{preloaded:1,can_componentize:#{obj.can_componentize},defer:#{obj.defer},content:#{content}}"
-	
+
 doIt= (dev_dir,pkg_nm) ->
 	f= 'doIt'
 	_log f, 'args', dev_dir, pkg_nm

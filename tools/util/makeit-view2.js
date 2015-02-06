@@ -18,7 +18,7 @@
 
   E = window.E;
 
-  (require(dev_dir + '/Dev/Extra/ParseFile.js'))(window);
+  (require(epic_path + '/Dev/Extra/ParseFile.js'))(window);
 
   MockLoadStrategy = (function() {
 
