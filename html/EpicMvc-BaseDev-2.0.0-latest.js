@@ -455,7 +455,7 @@ Mithril = m = new function app(window, undefined) {
 		//try { throw new Error( 'endComputation')} catch ( e) { console.error( e.message, (e.stack.split('\n'))[2])}
 		pendingRequests = Math.max(pendingRequests - 1, 0);
 		if (pendingRequests=== 0) {
-			if( pendingMax> pendingGuardRequest) m.redraw();
+			if( pendingMax> pendingGuardRequest) m.redraw() //JCS: TODO setTimeout( m.redraw, 10); // JCS: ALLOW MULTIPLE DOM EVENTS TO ACCUMUATE
 			pendingGuardRequest= pendingMax= 0;
 		 }
 	}
@@ -803,7 +803,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         var ans, f, inx, s, _j, _len1;
         f = 'func:A';
         if ((type_oau(source)) !== atype) {
-          reutrn(undef);
+          return undef;
         }
         for (inx = _j = 0, _len1 = source.length; _j < _len1; inx = ++_j) {
           s = source[inx];
@@ -1325,7 +1325,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         return [master_issue, master_message];
       };
       err = function(err) {
-        return BLOWUP();
+        throw new Error('BLOWUP:' + err.message);
       };
       if ((ans != null ? ans.then : void 0) != null) {
         return ans.then(done, err);
@@ -1749,6 +1749,8 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     __extends(View$Base, _super);
 
     function View$Base(view_nm, options) {
+      this.ex = __bind(this.ex, this);
+
       this.T_if = __bind(this.T_if, this);
 
       this.T_page = __bind(this.T_page, this);
@@ -1942,7 +1944,6 @@ if (typeof define == "function" && define.amd) define(function() {return m})
           if ('A' !== E.type_oau(content)) {
             BLOWUP();
           }
-          content[0].attrs.config = attrs.config;
           return content;
         } else {
           return {
@@ -2131,16 +2132,11 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         return this.D_piece(view, attrs, obj, is_part);
       }
       content = obj.content, can_componentize = obj.can_componentize;
-      if (obj === false) {
-        _log2(f, 'AFTER ASSIGN', view, obj);
-      }
       this.P.push(this.loadPartAttrs(attrs));
       this.D.push([]);
       content = this.handleIt(content);
       defer = this.D.pop();
-      _log2(f, 'defer', view, defer);
       if (can_componentize || attrs.dynamic || defer.length || !is_part) {
-        _log2(f, 'defer YES', view, defer);
         if (defer.length && !can_componentize && !attrs.dynamic) {
           _log2("WARNING: DEFER logic in (" + view + "); wrapping DIV tag.");
         }
@@ -2371,6 +2367,97 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       delete this.R[rh_1];
       delete this.I[rh_1];
       return ans;
+    };
+
+    View$Base.prototype.value = function(el) {
+      if (el.value !== el.defaultValue) {
+        return el.value = el.defaultValue;
+      }
+    };
+
+    View$Base.prototype.A_at = function(orig_attrs) {
+      var attrs, nm, parts, val, _results;
+      attrs = E.merge({}, orig_attrs);
+      _results = [];
+      for (nm in attrs) {
+        val = attrs[nm];
+        if (!(nm[0] === 'e' && nm[2] === '-')) {
+          continue;
+        }
+        parts = nm.split('-');
+        _results.push(this['A_' + parts[0]](parts, val, attrs));
+      }
+      return _results;
+    };
+
+    View$Base.prototype.A_ea = function(parts, val, attrs) {
+      var _ref, _ref1;
+      if ((_ref = attrs.className) == null) {
+        attrs.className = '';
+      }
+      return attrs.className += " " + ((_ref1 = parts[1]) != null ? _ref1 : 'click') + ":" + val;
+    };
+
+    View$Base.prototype.ex = function(el, isInit, ctx) {
+      var attrs, d, e, f, ix, nm, p1, p2, val, _i, _ref, _ref1, _results;
+      f = 'ex';
+      attrs = el.attributes;
+      _results = [];
+      for (ix = _i = 0, _ref = attrs.length; 0 <= _ref ? _i < _ref : _i > _ref; ix = 0 <= _ref ? ++_i : --_i) {
+        if (!('data-ex-' === attrs[ix].name.slice(0, 8))) {
+          continue;
+        }
+        _ref1 = attrs[ix].name.split('-'), d = _ref1[0], e = _ref1[1], nm = _ref1[2], p1 = _ref1[3], p2 = _ref1[4];
+        val = attrs[ix].value;
+        _log2(f, attrs[ix].name, val, p1, p2);
+        _results.push(this['A_ex_' + nm](el, isInit, ctx, val, p1, p2));
+      }
+      return _results;
+    };
+
+    View$Base.prototype.A_ex_value = function(el, isInit, ctx, val, p1, p2) {
+      var f;
+      f = 'A_ex_value';
+      _log2(f, el.value, val, (el.value !== val ? 'CHANGE' : 'SAME'));
+      if (el.value !== val) {
+        return el.value = val;
+      }
+    };
+
+    View$Base.prototype.A_ex_timeago = function(el, isInit, ctx, val, p1, p2) {
+      var doIt, re_doIt, un_doIt;
+      un_doIt = function() {
+        if (ctx.timer) {
+          clearInterval(ctx.timer);
+          return delete ctx.timer;
+        }
+      };
+      doIt = function() {
+        return el.textContent = $.timeago(val);
+      };
+      re_doIt = function() {
+        un_doIt();
+        return ctx.timer = setInterval(doIt, 60000);
+      };
+      doIt();
+      re_doIt();
+      if (isInit) {
+        return ctx.onunload = un_doIt;
+      }
+    };
+
+    View$Base.prototype.A_ex_collapse = function(el, isInit, ctx, val, p1, p2) {
+      var f, g, height, i, _ref;
+      f = 'A_ex_collapse';
+      _ref = val.split(':'), g = _ref[0], i = _ref[1];
+      _log2(f, {
+        g: g,
+        i: i,
+        sH: el.scrollHeight,
+        g_row: (E.Tab(g))[0]
+      });
+      height = (E.Tab(g))[0][i] ? el.scrollHeight : 0;
+      return el.style.height = (String(height)) + 'px';
     };
 
     return View$Base;
@@ -2873,7 +2960,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     }
 
     Tab.prototype.event = function(name, type, groupNm, itemNm, data) {
-      var changed, f, group;
+      var changed, f, group, _ref;
       f = 'event';
       _log2(f, {
         name: name,
@@ -2883,11 +2970,13 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         data: data
       });
       group = this._getTab(groupNm, itemNm);
-      switch (groupNm) {
-        case 'Modal':
+      type = (_ref = group.TYPE) != null ? _ref : groupNm;
+      switch (type.toUpperCase()) {
+        case 'MODAL':
           changed = this._toggleModal(group, itemNm);
           break;
-        case 'Drop':
+        case 'DROP':
+        case 'COLLAPSE':
           changed = this._toggleDrop(group, itemNm);
           break;
         default:
@@ -3227,11 +3316,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
           prevent = true;
         }
         do_action = false;
-        (function(spec_action) {
-          return setTimeout((function() {
-            return E.action(spec_action, data_params);
-          }), 5);
-        })(spec_action);
+        E.action(spec_action, data_params);
       }
     }
     return prevent;
@@ -3529,12 +3614,22 @@ if (typeof define == "function" && define.amd) define(function() {return m})
     }
 
     RenderStrategy$Base.prototype.handleEvent = function(event_obj) {
-      var attrs, data_action, data_params, f, ix, nm, old_params, prevent, rec, target, type, val, _i, _ref, _ref1;
+      var attrs, data_action, data_params, f, files, ix, nm, old_params, prevent, rec, target, type, val, _i, _ref, _ref1;
       f = 'on[data-e-action]';
+      _log2(f, 'top', this.redraw_guard, (event_obj != null ? event_obj : window.event).type);
       if (event_obj == null) {
         event_obj = window.event;
       }
       type = event_obj.type;
+      if (type === 'mousedown') {
+        if (event_obj.which !== 1) {
+          return;
+        }
+        type = 'click';
+      }
+      if (type === 'keyup' && event_obj.keyCode === 9) {
+        return;
+      }
       if (type === 'keyup' && event_obj.keyCode === ENTER_KEY) {
         type = 'enter';
       }
@@ -3561,13 +3656,22 @@ if (typeof define == "function" && define.amd) define(function() {return m})
         data_params[nm] = attrs[ix].value;
       }
       val = target.value;
+      files = target.files;
       _log2(f, 'event', {
         type: type,
         data_action: data_action,
         data_params: data_params,
-        val: val
+        val: val,
+        files: files
       }, target);
       data_params.val = val;
+      data_params._files = files;
+      for (nm in event_obj) {
+        val = event_obj[nm];
+        if (nm === 'touches' || nm === 'changedTouches' || nm === 'targetTouches') {
+          data_params[nm] = event_obj[nm];
+        }
+      }
       old_params = target.getAttribute('data-params');
       if (old_params) {
         _ref1 = JSON.parse(old_params);
@@ -3576,7 +3680,6 @@ if (typeof define == "function" && define.amd) define(function() {return m})
           data_params[nm] = rec;
         }
       }
-      target.focus();
       prevent = E.Extra[E.option.dataAction](type, data_action, data_params);
       if (prevent) {
         event_obj.preventDefault();
@@ -3586,7 +3689,7 @@ if (typeof define == "function" && define.amd) define(function() {return m})
 
     RenderStrategy$Base.prototype.init = function() {
       var event_name, interesting, _i, _len, _results;
-      interesting = ['click', 'change', 'dblclick', 'keyup', 'blur', 'focus'];
+      interesting = ['mousedown', 'change', 'dblclick', 'keyup', 'blur', 'focus', 'touchstart', 'touchmove', 'touchend'];
       _results = [];
       for (_i = 0, _len = interesting.length; _i < _len; _i++) {
         event_name = interesting[_i];
@@ -3658,15 +3761,15 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       return E.View().run().then(function(modal_content) {
         var content, modal;
         modal = modal_content[0], content = modal_content[1];
-        _log2('DEFER-R', 'RESULTS: modal, content', modal, content);
+        _log2('DEFER-R', 'RESULTS: modal, content', _this.redraw_guard, modal, content);
+        _this.render(modal, content);
         _this.redraw_guard--;
         if (_this.redraw_guard !== 0) {
           _this.redraw_guard = 0;
-          setTimeout((function() {
+          return setTimeout((function() {
             return _this.m_redraw();
           }), 16);
         }
-        return _this.render(modal, content);
       }).then(null, function(err) {
         return console.error('RenderStrategy$Base m_redraw', err);
       });
@@ -3677,12 +3780,12 @@ if (typeof define == "function" && define.amd) define(function() {return m})
       f = 'render';
       start = new Date().getTime();
       _log2(f, 'START RENDER', start, modal);
-      if (this.was_modal) {
-        m.render(document.getElementById(this.modalId), []);
-      }
       if (modal) {
         m.render((container = document.getElementById(this.modalId)), content);
       } else {
+        if (this.was_modal) {
+          m.render(document.getElementById(this.modalId), []);
+        }
         m.render((container = document.getElementById(this.baseId)), m('div', {}, content));
       }
       _log2(f, 'END RENDER', new Date().getTime() - start);
@@ -3874,6 +3977,9 @@ Layout: {
           err("FIST is missing: app.js requires MODELS: <model-name>: fists:[...,'" + fistNm + "']", {
             fist: fist
           });
+        }
+        if (!fist.sp.FIELDS) {
+          err("FIELDS attribute missing from FIST definition");
         }
         _ref = fist.sp.FIELDS;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -4824,11 +4930,12 @@ Layout: {
   };
 
   FindAttrs = function(file_info, str) {
-    var attr_obj, attr_split, attrs_need_cleaning, data_nm, debug, empty, eq, event_attrs_shortcuts, f, good, grp, i, nm, pane, parts, quo, start, style_obj, _i, _len, _ref, _ref1, _ref10, _ref11, _ref12, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+    var attr_obj, attr_split, attrs_need_cleaning, className, data_e_action, empty, eq, event_attrs_shortcuts, f, good, grp, i, nm, pane, parts, quo, start, style_obj, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
     f = ':parse.FindAttrs:';
     event_attrs_shortcuts = ['data-e-click', 'data-e-change', 'data-e-dblclick', 'data-e-enter', 'data-e-keyup', 'data-e-focus', 'data-e-blur', 'data-e-event'];
     str = ' ' + str;
     str = str.replace(/\se-/gm, ' data-e-');
+    str = str.replace(/\sex-/gm, ' data-ex-');
     attr_split = str.trim().split(/([\s="':;])/);
     empty = attr_split[attr_split.length - 1] === '/' ? '/' : '';
     attrs_need_cleaning = false;
@@ -4836,9 +4943,9 @@ Layout: {
       attr_split.pop();
     }
     attr_obj = {};
-    attr_obj.className = [];
+    className = [];
+    data_e_action = [];
     i = 0;
-    debug = false;
     while (i < attr_split.length) {
       _ref = FindAttrVal(i, attr_split), good = _ref[0], start = _ref[1], i = _ref[2], nm = _ref[3], eq = _ref[4], quo = _ref[5], parts = _ref[6];
       if (good === false) {
@@ -4859,19 +4966,11 @@ Layout: {
         continue;
       }
       if (__indexOf.call(event_attrs_shortcuts, nm) >= 0) {
-        debug = true;
-        if ((_ref1 = attr_obj['data-e-action']) == null) {
-          attr_obj['data-e-action'] = [];
-        }
-        attr_obj['data-e-action'].push((nm.slice(7)) + ':' + parts.join(''));
+        data_e_action.push((nm.slice(7)) + ':' + parts.join(''));
         continue;
       }
       if (nm === 'data-e-action') {
-        debug = true;
-        if ((_ref2 = attr_obj['data-e-action']) == null) {
-          attr_obj['data-e-action'] = [];
-        }
-        attr_obj[nm].push(parts.join(''));
+        data_e_action.push(parts.join(''));
         continue;
       }
       if (nm === 'config') {
@@ -4884,45 +4983,51 @@ Layout: {
         continue;
       }
       if (nm === 'data-e-tab') {
-        _ref3 = (parts.join('')).split(':'), grp = _ref3[0], pane = _ref3[1];
-        attr_obj.className.push("&Tab/" + grp + "/" + pane + "#?active;");
-        if ((_ref4 = attr_obj['data-e-action']) == null) {
-          attr_obj['data-e-action'] = [];
-        }
-        attr_obj['data-e-action'].push("event:Tab:" + grp + ":" + pane + ":click");
+        _ref1 = (parts.join('')).split(':'), grp = _ref1[0], pane = _ref1[1];
+        className.push("&Tab/" + grp + "/" + pane + "#?active;");
+        data_e_action.push("event:Tab:" + grp + ":" + pane + ":click");
         continue;
       }
       if (nm === 'data-e-tab-pane') {
-        _ref5 = (parts.join('')).split(':'), grp = _ref5[0], pane = _ref5[1];
-        attr_obj.className.push("&Tab/" + grp + "/" + pane + "#?active;");
+        _ref2 = (parts.join('')).split(':'), grp = _ref2[0], pane = _ref2[1];
+        className.push("&Tab/" + grp + "/" + pane + "#?active;");
+        continue;
+      }
+      if (nm === 'data-e-collapse') {
+        _ref3 = (parts.join('')).split(':'), grp = _ref3[0], pane = _ref3[1];
+        data_e_action.push("event:Tab:" + grp + ":" + pane + ":click");
+        continue;
+      }
+      if (nm === 'data-e-collapse-pane') {
+        _ref4 = (parts.join('')).split(':'), grp = _ref4[0], pane = _ref4[1];
+        className.push("&Tab/" + grp + "/" + pane + "#?in;");
+        attr_obj['data-ex-collapse'] = "'" + grp + ":" + pane + "'";
+        attr_obj.config = 'oE.ex';
         continue;
       }
       if (nm === 'data-e-drop-pane') {
-        _ref6 = ['Drop', parts.join('')], grp = _ref6[0], pane = _ref6[1];
-        attr_obj.className.push("&Tab/" + grp + "/" + pane + "#?open;");
+        _ref5 = ['Drop', parts.join('')], grp = _ref5[0], pane = _ref5[1];
+        className.push("&Tab/" + grp + "/" + pane + "#?open;");
       }
       if (nm === 'data-e-drop') {
-        _ref7 = ['Drop', parts.join('')], grp = _ref7[0], pane = _ref7[1];
-        if ((_ref8 = attr_obj['data-e-action']) == null) {
-          attr_obj['data-e-action'] = [];
-        }
-        attr_obj['data-e-action'].push("event:Tab:" + grp + ":" + pane + ":click-enter");
+        _ref6 = ['Drop', parts.join('')], grp = _ref6[0], pane = _ref6[1];
+        data_e_action.push("event:Tab:" + grp + ":" + pane + ":click-enter");
         continue;
       }
       if (nm === 'data-e-modal-pane') {
-        _ref9 = ['Modal', parts.join('')], grp = _ref9[0], pane = _ref9[1];
-        attr_obj.className.push("&Tab/" + grp + "/" + pane + "#?in?hide;");
+        _ref7 = ['Modal', parts.join('')], grp = _ref7[0], pane = _ref7[1];
+        className.push("&Tab/" + grp + "/" + pane + "#?in?hide;");
       }
       if (nm === 'data-e-modal') {
-        _ref10 = ['Modal', parts.join('')], grp = _ref10[0], pane = _ref10[1];
-        if ((_ref11 = attr_obj['data-e-action']) == null) {
-          attr_obj['data-e-action'] = [];
-        }
-        attr_obj['data-e-action'].push("event:Tab:" + grp + ":" + pane + ":click-enter");
+        _ref8 = ['Modal', parts.join('')], grp = _ref8[0], pane = _ref8[1];
+        data_e_action.push("event:Tab:" + grp + ":" + pane + ":click-enter");
         continue;
       }
+      if ('data-ex-' === nm.slice(0, 8)) {
+        attr_obj.config = 'oE.ex';
+      }
       if (nm === 'className') {
-        attr_obj.className.push(parts.join(''));
+        className.push(parts.join(''));
         continue;
       }
       if (nm[0] === '?') {
@@ -4930,17 +5035,11 @@ Layout: {
       }
       attr_obj[nm] = (findVars(parts.join(''))).join('+');
     }
-    if (attr_obj.className.length) {
-      attr_obj.className = (findVars(attr_obj.className.join(' '))).join('+');
-    } else {
-      delete attr_obj.className;
+    if (className.length) {
+      attr_obj.className = (findVars(className.join(' '))).join('+');
     }
-    _ref12 = ['data-e-action'];
-    for (_i = 0, _len = _ref12.length; _i < _len; _i++) {
-      data_nm = _ref12[_i];
-      if (attr_obj[data_nm]) {
-        attr_obj[data_nm] = (findVars(attr_obj[data_nm].join())).join('+');
-      }
+    if (data_e_action.length) {
+      attr_obj['data-e-action'] = (findVars(data_e_action.join())).join('+');
     }
     return [mkObj(attr_obj), empty, attrs_need_cleaning];
   };
@@ -5276,6 +5375,10 @@ Layout: {
       return this.refresh_stamp = (new Date).valueOf();
     };
 
+    LoadStrategy.prototype.makePkgDir = function(pkg) {
+      return E.option.loadDirs[pkg] + ((E.option.loadDirs[pkg].slice(-1)) === '/' ? pkg : '');
+    };
+
     LoadStrategy.prototype.D_loadAsync = function() {
       var def, el, f, file, file_list, next, pkg, promise, sub, type, url, work, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
       f = 'Dev:E/LoadStragegy.loadAsync';
@@ -5291,7 +5394,7 @@ Layout: {
           if (type === 'css') {
             for (_j = 0, _len1 = file_list.length; _j < _len1; _j++) {
               file = file_list[_j];
-              url = E.option.loadDirs[pkg] + pkg + '/css/' + file + '.css';
+              url = (this.makePkgDir(pkg)) + '/css/' + file + '.css';
               el = document.createElement('link');
               el.setAttribute('rel', 'stylesheet');
               el.setAttribute('type', 'text/css');
@@ -5317,7 +5420,7 @@ Layout: {
             for (_l = 0, _len3 = file_list.length; _l < _len3; _l++) {
               file = file_list[_l];
               sub = type === 'root' ? '' : type + '/';
-              url = E.option.loadDirs[pkg] + pkg + '/' + sub + file + '.js';
+              url = (this.makePkgDir(pkg)) + '/' + sub + file + '.js';
               work.push(url);
             }
           }
@@ -5448,7 +5551,7 @@ Layout: {
 
     LoadStrategy.prototype.D_getFile = function(pkg, nm) {
       var path;
-      path = E.option.loadDirs[pkg] + pkg + '/';
+      path = (this.makePkgDir(pkg)) + '/';
       return (m.request({
         background: true,
         method: 'GET',
@@ -5494,8 +5597,8 @@ Layout: {
 
 E.view$Dev={
 Layout: {
-"BaseDevl":{preloaded:1,can_componentize:false,defer:0,content:function(){return oE.kids([{tag:'h5',attrs:{},children:['I\'m an \'outer\' template']},['page',{}]])}},
-"bdevl":{preloaded:1,can_componentize:false,defer:0,content:function(){return oE.kids([{tag:'style',attrs:{},children:m.trust(' .dbg-part { border: solid 8px #888; }\n.dbg-tag-error-box { border: solid 2px #C44; font-weight: bold;}\n.dbg-tag-error-msg { color: red; }\n.dbg-tag-box { border: solid 2px #44C; }\n.dbg-part-box { font-size: .5em;\n -webkit-box-shadow: 10px 10px 5px #888;\n padding: 5px 5px 5px 15px;\n width: 10px;\n height: 10px;\n z-index: 99999;\n}\n.red { color: red; }\n.btn-group { background-color: #CCC; border-radius: 6px; }\n.dbg-toolbar .btn { padding: 6px 2px; }\n.dbg-toolbar:hover {\n top: -7px;\n}\n.dbg-toolbar {\n overflow-y: hidden;\n top: -46px;\n transition-property: top;\n transition-duration: .5s; ')},{tag:'div',attrs:{className:'dbg-toolbar',style:{position:'fixed',zIndex:'9999',backgroundColor:'#484848',fontSize:'10px',padding:'10px 10px 0 10px',right:'0'}},children:[{tag:'div',attrs:{className:'btn-toolbar'},children:[{tag:'div',attrs:{className:'btn-group'},children:[{tag:'a',attrs:{className:'btn btn-mini','data-e-action':'click:dbg_refresh','data-e-what':'file'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-repeat icon-repeat'},children:[]}]},{tag:'a',attrs:{className:'btn btn-mini','data-e-action':'click:dbg_toggle','data-e-what':'file'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-file icon-file '+oE.v3('Devl','Opts','file','?red')},children:[]}]},{tag:'a',attrs:{className:'btn btn-mini','data-e-action':'click:dbg_toggle','data-e-what':'tag'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-chevron-left icon-chevron-left '+oE.v3('Devl','Opts','tag','?red')},children:[]}]},{tag:'a',attrs:{className:'btn btn-mini','data-e-action':'click:dbg_toggle','data-e-what':'tag2'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-chevron-right icon-chevron-right '+oE.v3('Devl','Opts','tag2','?red')},children:[]}]},{tag:'a',attrs:{className:'btn btn-mini','data-e-action':'click:dbg_toggle','data-e-what':'form'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-edit icon-edit '+oE.v3('Devl','Opts','form','?red')},children:[]}]},{tag:'a',attrs:{className:'btn btn-mini','data-e-action':'click:dbg_toggle','data-e-what':'model'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-list-alt icon-list-alt '+oE.v3('Devl','Opts','model','?red')},children:[]}]}]}]},{tag:'div',attrs:{style:{textAlign:'center',color:'#FFF',letterSpacing:'5px',fontSize:'10px',height:'18px',paddingLeft:'4px',marginTop:'-3px'}},children:['EPIC']}]},['if',{set:oE.v3('Devl','Opts','model')},function(){return [{tag:'table',attrs:{width:'100%'},children:[{tag:'tr',attrs:{},children:[{tag:'td',attrs:{width:'20%',style:{backgroundColor:'#90C0FF',verticalAlign:'top',paddingTop:'75px',paddingBottom:'20px'}},children:oE.kids([['part',{part:'dbg_model',dynamic:'div'}]])},{tag:'td',attrs:{width:'100%',style:{verticalAlign:'top',position:'relative'}},children:oE.kids([['page',{}]])}]}]}]}],['if',{not_set:oE.v3('Devl','Opts','model')},function(){return oE.kids([['page',{}]])}]])}}}, Page: {
+"bdevl":{preloaded:1,can_componentize:false,defer:0,content:function(){return oE.kids([{tag:'style',attrs:{},children:m.trust(' .dbg-part { border: solid 8px #888; }\n.dbg-tag-error-box { border: solid 2px #C44; font-weight: bold;}\n.dbg-tag-error-msg { color: red; }\n.dbg-tag-box { border: solid 2px #44C; }\n.dbg-part-box { font-size: .5em;\n -webkit-box-shadow: 10px 10px 5px #888;\n padding: 5px 5px 5px 15px;\n width: 10px;\n height: 10px;\n z-index: 99999;\n}\n.red { color: red; }\n.btn-group { background-color: #CCC; border-radius: 6px; }\n.dbg-toolbar .btn { padding: 6px 2px; }\n.dbg-toolbar:hover {\n top: -7px;\n}\n.dbg-toolbar {\n overflow-y: hidden;\n top: -46px;\n transition-property: top;\n transition-duration: .5s;\n} ')},{tag:'div',attrs:{style:{position:'fixed',zIndex:'9999',backgroundColor:'#484848',fontSize:'10px',padding:'10px 10px 0 10px',right:'0'},className:'dbg-toolbar'},children:[{tag:'div',attrs:{className:'btn-toolbar'},children:[{tag:'div',attrs:{className:'btn-group'},children:[{tag:'a',attrs:{'data-e-what':'file',className:'btn btn-mini','data-e-action':'click:dbg_refresh'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-repeat icon-repeat'},children:[]}]},{tag:'a',attrs:{'data-e-what':'file',className:'btn btn-mini','data-e-action':'click:dbg_toggle'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-file icon-file '+oE.v3('Devl','Opts','file','?red')},children:[]}]},{tag:'a',attrs:{'data-e-what':'tag',className:'btn btn-mini','data-e-action':'click:dbg_toggle'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-chevron-left icon-chevron-left '+oE.v3('Devl','Opts','tag','?red')},children:[]}]},{tag:'a',attrs:{'data-e-what':'tag2',className:'btn btn-mini','data-e-action':'click:dbg_toggle'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-chevron-right icon-chevron-right '+oE.v3('Devl','Opts','tag2','?red')},children:[]}]},{tag:'a',attrs:{'data-e-what':'form',className:'btn btn-mini','data-e-action':'click:dbg_toggle'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-edit icon-edit '+oE.v3('Devl','Opts','form','?red')},children:[]}]},{tag:'a',attrs:{'data-e-what':'model',className:'btn btn-mini','data-e-action':'click:dbg_toggle'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-list-alt icon-list-alt '+oE.v3('Devl','Opts','model','?red')},children:[]}]}]}]},{tag:'div',attrs:{style:{textAlign:'center',color:'#FFF',letterSpacing:'5px',fontSize:'10px',height:'18px',paddingLeft:'4px',marginTop:'-3px'}},children:['EPIC']}]},['if',{set:oE.v3('Devl','Opts','model')},function(){return [{tag:'table',attrs:{width:'100%'},children:[{tag:'tr',attrs:{},children:[{tag:'td',attrs:{width:'20%',style:{backgroundColor:'#90C0FF',verticalAlign:'top',paddingTop:'75px',paddingBottom:'20px'}},children:oE.kids([['part',{part:'dbg_model',dynamic:'div'}]])},{tag:'td',attrs:{width:'100%',style:{verticalAlign:'top',position:'relative'}},children:oE.kids([['page',{}]])}]}]}]}],['if',{not_set:oE.v3('Devl','Opts','model')},function(){return oE.kids([['page',{}]])}]])}},
+"BaseDevl":{preloaded:1,can_componentize:false,defer:0,content:function(){return oE.kids([{tag:'h5',attrs:{},children:['I\'m an \'outer\' template']},['page',{}]])}}}, Page: {
 }, Part: {
-"dbg_model":{preloaded:1,can_componentize:false,defer:0,content:function(){return [{tag:'style',attrs:{},children:m.trust(' ul.dbg-model.nav, ul.dbg-model.nav ul { margin-bottom: 0; border: 0; }\nul.dbg-model.nav li a, ul.dbg-model.nav ul li a { padding: 0; border: 0; }\nul.dbg-model.nav ul li a { padding-left: 15px; } ')},{tag:'ul',attrs:{className:'dbg-model nav nav-tabs nav-stacked'},children:oE.kids([['foreach',{table:'Devl/Model'},function(){return [{tag:'li',attrs:{},children:oE.kids([{tag:'a',attrs:{'data-e-action':'click:dbg_open_model','data-e-name':oE.v2('Model','name')},children:[' ['+oE.v2('Model','tables')+'] '+oE.v2('Model','name')+' ('+oE.v2('Model','inst')+') ']},['if',{set:oE.v2('Model','is_open')},function(){return [{tag:'ul',attrs:{className:'nav nav-tabs nav-stacked'},children:oE.kids([['foreach',{table:'Model/Table'},function(){return [{tag:'li',attrs:{},children:oE.kids([{tag:'a',attrs:{'data-e-action':'click:dbg_open_table','data-e-name':oE.v2('Table','name')},children:[{tag:'span',attrs:{title:oE.v2('Table','cols')},children:['['+oE.v2('Table','rows')+'] '+oE.v2('Table','name')]}]},['if',{set:oE.v2('Table','is_open')},function(){return [{tag:'table',attrs:{border:'1',style:{fontSize:'8pt',lineHeight:'1'}},children:[{tag:'tbody',attrs:{},children:oE.kids([{tag:'tr',attrs:{},children:[{tag:'th',attrs:{},children:oE.kids([['if',{set:oE.v2('Table','by_col')},function(){return [{tag:'a',attrs:{'data-e-action':'click:dbg_table_by_row'},children:[' Row ']}]}],['if',{not_set:oE.v2('Table','by_col')},function(){return oE.kids([' Column ',['if',{set:oE.v2('Table','is_sub')},function(){return [{tag:'a',attrs:{'data-e-action':'click:dbg_close_subtable',style:{padding:'0'}},children:['^']}]}]])}]])},{tag:'th',attrs:{},children:['T']},{tag:'th',attrs:{},children:oE.kids([['if',{val:oE.v2('Table','rows'),eq:'1'},function(){return [' Value ']}],['if',{val:oE.v2('Table','rows'),ne:'1'},function(){return oE.kids([['if',{set:oE.v2('Table','by_col')},function(){return ['   '+oE.v2('Table','curr_col')+'   ']}],['if',{not_set:oE.v2('Table','by_col')},function(){return [{tag:'a',attrs:{'data-e-action':'click:dbg_table_left'},children:['<']},'   Value (row '+oE.v2('Table','row_cnt')+')   ',{tag:'a',attrs:{'data-e-action':'click:dbg_table_right'},children:['>']}]}]])}]])}]},['if',{not_set:oE.v2('Table','by_col')},function(){return oE.kids([['foreach',{table:'Table/Cols'},function(){return [{tag:'tr',attrs:{},children:oE.kids([{tag:'th',attrs:{},children:oE.kids([['if',{val:oE.v2('Table','rows'),eq:'1'},function(){return [' '+oE.v2('Cols','col')+' ']}],['if',{val:oE.v2('Table','rows'),ne:'1'},function(){return [{tag:'a',attrs:{'data-e-action':'click:dbg_table_col_set','data-e-col':oE.v2('Cols','col')},children:[oE.v2('Cols','col')]}]}]])},['if',{set:oE.v2('Cols','val')},function(){return [{tag:'td',attrs:{style:{color:'green'}},children:[oE.v2('Cols','type','1')]}]}],['if',{not_set:oE.v2('Cols','val')},function(){return [{tag:'td',attrs:{style:{color:'red'}},children:[oE.v2('Cols','type','1')]}]}],{tag:'td',attrs:{title:oE.v2('Cols','type')},children:oE.kids([['if',{val:oE.v2('Cols','type'),eq:'object'},function(){return oE.kids([['if',{not_set:oE.v2('Cols','len')},function(){return [' Table [ empty ]']}],['if',{set:oE.v2('Cols','len')},function(){return oE.kids([{tag:'a',attrs:{'data-e-action':'click:dbg_open_subtable','data-e-name':oE.v2('Cols','col'),style:{padding:'0'}},children:['Table']},' ['+oE.v2('Cols','len')+' row',['if',{val:oE.v2('Cols','len'),ne:'1'},function(){return ['s']}],'] '])}]])}],['if',{val:oE.v2('Cols','type'),ne:'object'},function(){return [' '+oE.v2('Cols','val')+' ']}]])}])}]}]])}],['if',{set:oE.v2('Table','by_col')},function(){return oE.kids([['foreach',{table:'Table/Rows'},function(){return [{tag:'tr',attrs:{},children:oE.kids([{tag:'th',attrs:{},children:[oE.v2('Rows','row')]},['if',{set:oE.v2('Rows','val')},function(){return [{tag:'td',attrs:{style:{color:'green'}},children:[oE.v2('Rows','type','1')]}]}],['if',{not_set:oE.v2('Rows','val')},function(){return [{tag:'td',attrs:{style:{color:'red'}},children:[oE.v2('Rows','type','1')]}]}],{tag:'td',attrs:{title:oE.v2('Rows','type')},children:oE.kids([['if',{val:oE.v2('Rows','type'),eq:'object'},function(){return oE.kids(['Table [ ',['if',{set:oE.v2('Rows','len')},function(){return oE.kids([oE.v2('Rows','len')+' row',['if',{val:oE.v2('Rows','len'),ne:'1'},function(){return ['s']}]])}],['if',{not_set:oE.v2('Rows','len')},function(){return ['empty']}],' ]'])}],['if',{val:oE.v2('Rows','type'),ne:'object'},function(){return [' '+oE.v2('Rows','val')+' ']}]])}])}]}]])}]])}]}]}]])}]}]])}]}]])}]}]])}]}}}};
+"dbg_model":{preloaded:1,can_componentize:false,defer:0,content:function(){return [{tag:'style',attrs:{},children:m.trust(' ul.dbg-model.nav, ul.dbg-model.nav ul { margin-bottom: 0; border: 0; }\nul.dbg-model.nav li a, ul.dbg-model.nav ul li a { padding: 0; border: 0; }\nul.dbg-model.nav ul li a { padding-left: 15px; } ')},{tag:'ul',attrs:{className:'dbg-model nav nav-tabs nav-stacked'},children:oE.kids([['foreach',{table:'Devl/Model'},function(){return [{tag:'li',attrs:{},children:oE.kids([{tag:'a',attrs:{'data-e-name':oE.v2('Model','name'),'data-e-action':'click:dbg_open_model'},children:[' ['+oE.v2('Model','tables')+'] '+oE.v2('Model','name')+' ('+oE.v2('Model','inst')+') ']},['if',{set:oE.v2('Model','is_open')},function(){return [{tag:'ul',attrs:{className:'nav nav-tabs nav-stacked'},children:oE.kids([['foreach',{table:'Model/Table'},function(){return [{tag:'li',attrs:{},children:oE.kids([{tag:'a',attrs:{'data-e-name':oE.v2('Table','name'),'data-e-action':'click:dbg_open_table'},children:[{tag:'span',attrs:{title:oE.v2('Table','cols')},children:['['+oE.v2('Table','rows')+'] '+oE.v2('Table','name')]}]},['if',{set:oE.v2('Table','is_open')},function(){return [{tag:'table',attrs:{border:'1',style:{fontSize:'8pt',lineHeight:'1'}},children:[{tag:'tbody',attrs:{},children:oE.kids([{tag:'tr',attrs:{},children:[{tag:'th',attrs:{},children:oE.kids([['if',{set:oE.v2('Table','by_col')},function(){return [{tag:'a',attrs:{'data-e-action':'click:dbg_table_by_row'},children:[' Row ']}]}],['if',{not_set:oE.v2('Table','by_col')},function(){return oE.kids([' Column ',['if',{set:oE.v2('Table','is_sub')},function(){return [{tag:'a',attrs:{style:{padding:'0'},'data-e-action':'click:dbg_close_subtable'},children:['^']}]}]])}]])},{tag:'th',attrs:{},children:['T']},{tag:'th',attrs:{},children:oE.kids([['if',{val:oE.v2('Table','rows'),eq:'1'},function(){return [' Value ']}],['if',{val:oE.v2('Table','rows'),ne:'1'},function(){return oE.kids([['if',{set:oE.v2('Table','by_col')},function(){return ['   '+oE.v2('Table','curr_col')+'   ']}],['if',{not_set:oE.v2('Table','by_col')},function(){return [{tag:'a',attrs:{'data-e-action':'click:dbg_table_left'},children:['<']},'   Value (row '+oE.v2('Table','row_cnt')+')   ',{tag:'a',attrs:{'data-e-action':'click:dbg_table_right'},children:['>']}]}]])}]])}]},['if',{not_set:oE.v2('Table','by_col')},function(){return oE.kids([['foreach',{table:'Table/Cols'},function(){return [{tag:'tr',attrs:{},children:oE.kids([{tag:'th',attrs:{},children:oE.kids([['if',{val:oE.v2('Table','rows'),eq:'1'},function(){return [' '+oE.v2('Cols','col')+' ']}],['if',{val:oE.v2('Table','rows'),ne:'1'},function(){return [{tag:'a',attrs:{'data-e-col':oE.v2('Cols','col'),'data-e-action':'click:dbg_table_col_set'},children:[oE.v2('Cols','col')]}]}]])},['if',{set:oE.v2('Cols','val')},function(){return [{tag:'td',attrs:{style:{color:'green'}},children:[oE.v2('Cols','type','1')]}]}],['if',{not_set:oE.v2('Cols','val')},function(){return [{tag:'td',attrs:{style:{color:'red'}},children:[oE.v2('Cols','type','1')]}]}],{tag:'td',attrs:{title:oE.v2('Cols','type')},children:oE.kids([['if',{val:oE.v2('Cols','type'),eq:'object'},function(){return oE.kids([['if',{not_set:oE.v2('Cols','len')},function(){return [' Table [ empty ]']}],['if',{set:oE.v2('Cols','len')},function(){return oE.kids([{tag:'a',attrs:{'data-e-name':oE.v2('Cols','col'),style:{padding:'0'},'data-e-action':'click:dbg_open_subtable'},children:['Table']},' ['+oE.v2('Cols','len')+' row',['if',{val:oE.v2('Cols','len'),ne:'1'},function(){return ['s']}],'] '])}]])}],['if',{val:oE.v2('Cols','type'),ne:'object'},function(){return [' '+oE.v2('Cols','val')+' ']}]])}])}]}]])}],['if',{set:oE.v2('Table','by_col')},function(){return oE.kids([['foreach',{table:'Table/Rows'},function(){return [{tag:'tr',attrs:{},children:oE.kids([{tag:'th',attrs:{},children:[oE.v2('Rows','row')]},['if',{set:oE.v2('Rows','val')},function(){return [{tag:'td',attrs:{style:{color:'green'}},children:[oE.v2('Rows','type','1')]}]}],['if',{not_set:oE.v2('Rows','val')},function(){return [{tag:'td',attrs:{style:{color:'red'}},children:[oE.v2('Rows','type','1')]}]}],{tag:'td',attrs:{title:oE.v2('Rows','type')},children:oE.kids([['if',{val:oE.v2('Rows','type'),eq:'object'},function(){return oE.kids(['Table [ ',['if',{set:oE.v2('Rows','len')},function(){return oE.kids([oE.v2('Rows','len')+' row',['if',{val:oE.v2('Rows','len'),ne:'1'},function(){return ['s']}]])}],['if',{not_set:oE.v2('Rows','len')},function(){return ['empty']}],' ]'])}],['if',{val:oE.v2('Rows','type'),ne:'object'},function(){return [' '+oE.v2('Rows','val')+' ']}]])}])}]}]])}]])}]}]}]])}]}]])}]}]])}]}]])}]}}}};
 
