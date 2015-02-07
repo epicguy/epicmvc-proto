@@ -294,7 +294,7 @@ app= (window, undef) ->
 			# Process 'fist:' or 'clear:'
 			for what in ['fist','clear'] # TODO CONSIDER HANDLING clear: AS A doRightSide ACTIVITY, SO AFER do: PROCESING
 				continue if what not of action_node
-				option.ca4 action_token, original_path, action_node, what
+				option.ca4 action_token, original_path, action_node, what #%#
 				fist= action_node[ what]
 				fist_model= E.fistDef[ fist].event ? 'Fist'
 				#_log2 f, 'd_doLeftSide:', {what, fist, fist_model, master_data}

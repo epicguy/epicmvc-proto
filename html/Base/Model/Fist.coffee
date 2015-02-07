@@ -156,7 +156,7 @@ class Fist extends E.ModelJS
 		if rnm not of @fist
 			fist= {rnm, nm: p_fist, row: p_row, ht: {}, db: {}, st: 'new', sp: E.fistDef[ p_fist]}
 			_log2 f, 'new fist', fist
-			E.option.fi1 fist # Guard e.g. E[ E.appFist fistNm]()
+			E.option.fi1 fist # Guard e.g. E[ E.appFist fistNm]() #%#
 			for fieldNm in fist.sp.FIELDS
 				#_log2 f, 'new field', p_fist, fieldNm, E.fieldDef[ fieldNm]
 				field= E.merge {}, E.fieldDef[ fieldNm], nm: fieldNm, fistNm: p_fist, row: p_row
@@ -164,7 +164,7 @@ class Fist extends E.ModelJS
 					when 'S' then field.h2h.split /[:,]/
 					when 'A' then field.h2h
 					else []
-				E.option.fi2 field, fist # Verify h2h, d2h, h2d, validate exist in namespace
+				E.option.fi2 field, fist # Verify h2h, d2h, h2d, validate exist in namespace #%#
 				fist.ht[ fieldNm]= fist.db[ field.db_nm]= field # Alias by db_nm
 			for fieldNm, rec of fist.ht when rec.confirm?
 				fist.ht[rec.confirm].confirm_src= fieldNm
@@ -205,7 +205,7 @@ E.fistVAL= (field,val) ->
 	delete field.issue
 	check= true # Assume all is good
 	# Either check if empty, or check for valid value
-	E.option.fi3 field, val # Warn if not val?
+	E.option.fi3 field, val # Warn if not val? #%#
 	if val.length is 0
 		if field.req is true # Value is empty, but required
 			check= if field.req_text
