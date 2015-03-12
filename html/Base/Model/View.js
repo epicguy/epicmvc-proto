@@ -674,54 +674,9 @@
         _ref1 = attrs[ix].name.split('-'), d = _ref1[0], e = _ref1[1], nm = _ref1[2], p1 = _ref1[3], p2 = _ref1[4];
         val = attrs[ix].value;
         _log2(f, attrs[ix].name, val, p1, p2);
-        _results.push(this['A_ex_' + nm](el, isInit, ctx, val, p1, p2));
+        _results.push(E['ex$' + nm](el, isInit, ctx, val, p1, p2));
       }
       return _results;
-    };
-
-    View$Base.prototype.A_ex_value = function(el, isInit, ctx, val, p1, p2) {
-      var f;
-      f = 'A_ex_value';
-      _log2(f, el.value, val, (el.value !== val ? 'CHANGE' : 'SAME'));
-      if (el.value !== val) {
-        return el.value = val;
-      }
-    };
-
-    View$Base.prototype.A_ex_timeago = function(el, isInit, ctx, val, p1, p2) {
-      var doIt, re_doIt, un_doIt;
-      un_doIt = function() {
-        if (ctx.timer) {
-          clearInterval(ctx.timer);
-          return delete ctx.timer;
-        }
-      };
-      doIt = function() {
-        return el.textContent = $.timeago(val);
-      };
-      re_doIt = function() {
-        un_doIt();
-        return ctx.timer = setInterval(doIt, 60000);
-      };
-      doIt();
-      re_doIt();
-      if (isInit) {
-        return ctx.onunload = un_doIt;
-      }
-    };
-
-    View$Base.prototype.A_ex_collapse = function(el, isInit, ctx, val, p1, p2) {
-      var f, g, height, i, _ref;
-      f = 'A_ex_collapse';
-      _ref = val.split(':'), g = _ref[0], i = _ref[1];
-      _log2(f, {
-        g: g,
-        i: i,
-        sH: el.scrollHeight,
-        g_row: (E.Tab(g))[0]
-      });
-      height = (E.Tab(g))[0][i] ? el.scrollHeight : 0;
-      return el.style.height = (String(height)) + 'px';
     };
 
     return View$Base;
@@ -729,5 +684,50 @@
   })(E.ModelJS);
 
   E.Model.View$Base = View$Base;
+
+  E.ex$value = function(el, isInit, ctx, val, p1, p2) {
+    var f;
+    f = 'A_ex_value';
+    _log2(f, el.value, val, (el.value !== val ? 'CHANGE' : 'SAME'));
+    if (el.value !== val) {
+      return el.value = val;
+    }
+  };
+
+  E.ex$timeago = function(el, isInit, ctx, val, p1, p2) {
+    var doIt, re_doIt, un_doIt;
+    un_doIt = function() {
+      if (ctx.timer) {
+        clearInterval(ctx.timer);
+        return delete ctx.timer;
+      }
+    };
+    doIt = function() {
+      return el.textContent = $.timeago(val);
+    };
+    re_doIt = function() {
+      un_doIt();
+      return ctx.timer = setInterval(doIt, 60000);
+    };
+    doIt();
+    re_doIt();
+    if (isInit) {
+      return ctx.onunload = un_doIt;
+    }
+  };
+
+  E.ex$collapse = function(el, isInit, ctx, val, p1, p2) {
+    var f, g, height, i, _ref;
+    f = 'A_ex_collapse';
+    _ref = val.split(':'), g = _ref[0], i = _ref[1];
+    _log2(f, {
+      g: g,
+      i: i,
+      sH: el.scrollHeight,
+      g_row: (E.Tab(g))[0]
+    });
+    height = (E.Tab(g))[0][i] ? el.scrollHeight : 0;
+    return el.style.height = (String(height)) + 'px';
+  };
 
 }).call(this);

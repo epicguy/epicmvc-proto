@@ -395,24 +395,28 @@ class View$Base extends E.ModelJS
 			[d,e,nm,p1,p2]= attrs[ ix].name.split '-'
 			val= attrs[ ix].value
 			_log2 f, attrs[ ix].name, val, p1, p2
-			@['A_ex_'+ nm] el, isInit, ctx, val, p1, p2
-	# TODO MOVE A_ex_* INTO E.ex$* SO USERS CAN ADD THIER OWN; FIND A PLACE FOR THE BASE ONES, MOVE TIMEAGO TO IPM
-	A_ex_value: (el, isInit, ctx, val, p1, p2) ->
-		f= 'A_ex_value'
-		_log2 f, el.value, val, (if el.value isnt val then 'CHANGE' else 'SAME')
-		el.value= val if el.value isnt val
-	A_ex_timeago: (el, isInit, ctx, val, p1, p2) ->
-		un_doIt= ->( clearInterval ctx.timer; delete ctx.timer) if ctx.timer
-		doIt= -> el.textContent= $.timeago val
-		re_doIt= -> un_doIt(); ctx.timer= setInterval doIt, 60000
-		doIt()
-		re_doIt()
-		ctx.onunload= un_doIt if isInit
-	A_ex_collapse: (el, isInit, ctx, val, p1, p2) -> # set el's height using scrollHeight, if Tab/g/i is set, else 0
-		f= 'A_ex_collapse'
-		[g,i]= val.split ':' # Group-name : Item-name
-		_log2 f, {g,i,sH:el.scrollHeight,g_row:(E.Tab g)[ 0]}
-		height= if (E.Tab g)[ 0][ i] then el.scrollHeight else 0
-		el.style.height=( String height)+ 'px'
+			E['ex$'+ nm] el, isInit, ctx, val, p1, p2
 
 E.Model.View$Base= View$Base # Public API
+
+# TODO FIND A PLACE FOR THE ex$* BASE FUNCTIONS, MOVE TIMEAGO TO IPM
+E.ex$value= (el, isInit, ctx, val, p1, p2) ->
+	f= 'A_ex_value'
+	_log2 f, el.value, val, (if el.value isnt val then 'CHANGE' else 'SAME')
+	el.value= val if el.value isnt val
+
+# TODO THIS IS BROKEN BECAUSE OF MISSING '$' (JQuery)
+E.ex$timeago= (el, isInit, ctx, val, p1, p2) ->
+	un_doIt= ->( clearInterval ctx.timer; delete ctx.timer) if ctx.timer
+	doIt= -> el.textContent= $.timeago val
+	re_doIt= -> un_doIt(); ctx.timer= setInterval doIt, 60000
+	doIt()
+	re_doIt()
+	ctx.onunload= un_doIt if isInit
+
+E.ex$collapse= (el, isInit, ctx, val, p1, p2) -> # set el's height using scrollHeight, if Tab/g/i is set, else 0
+	f= 'A_ex_collapse'
+	[g,i]= val.split ':' # Group-name : Item-name
+	_log2 f, {g,i,sH:el.scrollHeight,g_row:(E.Tab g)[ 0]}
+	height= if (E.Tab g)[ 0][ i] then el.scrollHeight else 0
+	el.style.height=( String height)+ 'px'
