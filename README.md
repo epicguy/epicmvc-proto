@@ -1,31 +1,30 @@
 epicmvc-proto (version 2)
 =============
 
-Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+Copyright 2007-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
-EpicMvc another JavaScript framework for web apps; Prototype version for existing clients.
+EpicMvc: a different kind of JavaScript framework for web apps
 
 Documentation is in the project: {Jamie, I can trade you github push rights for putting the docs in github}
 
-You can actually run the 'hello dude' app right out of git: https://rawgithub.com/epicguy/epicmvc-proto/master/html/world.html
+You can actually run the 'hello dude' app right out of git: http://cdn.rawgit.com/epicguy/epicmvc-proto/version2/html/world_dev.html
 
 ## Changes from version 1
 
 * Added Mithril view rendering engine, and used other support from it to avoid jQuery dependence.
 * View layer is Async when loading frames, layouts, pages, and parts (used in dev mode)
-* Manifest in app.js allows loading all your code assests dynamicaly (just put your app.js in *html)
+* Manifest in manifest.js allows loading all your code assests dynamicaly (put just your manifest.js in the index.html)
 * Fist handling is now 2-way binding by default
-* Model actions are now Async
 * Primary namespace is now 'E'
-* The Async logic is based on m.Deferred; Ajax uses m.request
-* Namespace for view *html files is now "e-", e.g. <e-page/> <e-part part="head" e-any="value">
-* For clickable actions: <h1 e-click="doIt" e-id="&M/id;">Do something</h1>
-* Model actions take an initial 'context' with a deferred, issue, message, and result object
+* Model actions are now Async to allow e.g. server side testing
+* The Async logic is based on Mithril m.Deferred; Ajax uses m.request
+* Attribute namespace for *.html view files is now "e-", e.g. &lt;e-page/&gt; &lt;e-part part="head" e-any="value"&gt;
+* For clickable actions any element will do: &lt;h1 e-click="doIt" e-id="&M/id;"&gt;Do something&lt;h1&gt;
+* Model actions take an initial 'context' containing: deferred, issue, message, and result object
 
 ##TODO
 
 This project is under construction
-
 
 ## License
 
