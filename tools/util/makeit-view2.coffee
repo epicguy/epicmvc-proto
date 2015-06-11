@@ -67,13 +67,13 @@ doIt= (dev_dir,pkg_nm) ->
 		out+= end+ "\"#{fnm}\":#{doObj load.layout fnm}"
 		end= ",\n"
 
-	out+= '}, Page: {\n'
+	out+= '},\nPage: {\n'
 	end= ''
 	for fnm in load.readdir 'Page'
 		out+= end+ "\"#{fnm}\":#{doObj load.page fnm}"
 		end= ",\n"
 
-	out+= '}, Part: {\n'
+	out+= '},\nPart: {\n'
 	end= ''
 	for fnm in load.readdir 'Part'
 		out+= end+ "\"#{fnm}\":#{doObj load.part fnm}"

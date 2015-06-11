@@ -119,7 +119,7 @@
       out += end + ("\"" + fnm + "\":" + (doObj(load.layout(fnm))));
       end = ",\n";
     }
-    out += '}, Page: {\n';
+    out += '},\nPage: {\n';
     end = '';
     _ref1 = load.readdir('Page');
     for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
@@ -127,7 +127,7 @@
       out += end + ("\"" + fnm + "\":" + (doObj(load.page(fnm))));
       end = ",\n";
     }
-    out += '}, Part: {\n';
+    out += '},\nPart: {\n';
     end = '';
     _ref2 = load.readdir('Part');
     for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {

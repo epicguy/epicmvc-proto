@@ -1,5 +1,6 @@
 
 # Build single version of all of EpicMvc w/o uglify
+# Note: to prep, you want to do e.g. ln ../html DevEpic
 
 ECHO() {
   echo $*
@@ -8,7 +9,7 @@ ECHO() {
 
 EpicDir=../html
 # OneEpic=../EpicMvc-One-2.0.0-%MD5_EPICMVC%.js
-OneEpic=$EpicDir/EpicMvc-BaseDev-2.0.0-latest.js
+OneEpic=$EpicDir/EpicMvc-BaseDev-2.1.0-latest.js
 
 cat copyright.js > $OneEpic
 ./makeit2 DevEpic $OneEpic
