@@ -103,8 +103,10 @@ class LoadStrategy
 			#_log2 f, 'THEN-COMPILE', full_nm, result
 			if result isnt false
 				# Could have been precompiled content
-				return result if result?.preloaded  # TODO FIGURE OUT WHAT GOES HERE TO DETECT PRECOMPILED CONTENT
-				parsed= @compile full_nm, result
+				# return result if result?.preloaded  # TODO FIGURE OUT WHAT GOES HERE TO DETECT PRECOMPILED CONTENT
+				parsed= if result?.preloaded  # TODO FIGURE OUT WHAT GOES HERE TO DETECT PRECOMPILED CONTENT
+				then result
+				else @compile full_nm, result
 			else
 				throw new Error "Unable to locate View file (#{full_nm})."
 				console.error 'ERROR', 'NO FILE FOUND! ', full_nm

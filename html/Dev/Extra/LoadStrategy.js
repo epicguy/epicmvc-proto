@@ -181,10 +181,7 @@
       promise = promise.then(function(result) {
         var parsed;
         if (result !== false) {
-          if (result != null ? result.preloaded : void 0) {
-            return result;
-          }
-          parsed = _this.compile(full_nm, result);
+          parsed = (result != null ? result.preloaded : void 0) ? result : _this.compile(full_nm, result);
         } else {
           throw new Error("Unable to locate View file (" + full_nm + ").");
           console.error('ERROR', 'NO FILE FOUND! ', full_nm);
