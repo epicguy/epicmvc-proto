@@ -1,5 +1,4 @@
-(function ($) {
-	"use strict";
+if( typeof jQuery != "undefined") { (function ($) {
 
 	//hooks for drag and drop events, like $.event.keyHooks and $.event.mouseHooks, but for drag and drop
 	var dndHooks = {
@@ -30,4 +29,4 @@
 	});
 
 }(jQuery));
-
+}
