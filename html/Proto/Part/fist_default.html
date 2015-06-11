@@ -68,7 +68,7 @@
                         <input  type="radio"
                                 name="&Control/name;"
                                 id="&Control/id;-&Choice/option;"
-                                value="&Choice/value#esc;"
+                                value="&Choice/value;"
                                 ?checked="&Choice/selected;">
                                 &Choice/option;
                     </label>
@@ -79,7 +79,7 @@
             <e-if val="&Control/type;" eq="pulldown">
                 <select name="&Control/name;" ?size="&Control/size;">
                     <e-foreach table="Control/Choice">
-                        <option value="&Choice/value#esc;"
+                        <option value="&Choice/value;"
                                 ?selected="&Choice/selected;">
                                 &Choice/option;
                         </option>
