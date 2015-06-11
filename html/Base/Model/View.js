@@ -21,8 +21,6 @@
 
       this.handleIt = __bind(this.handleIt, this);
 
-      this.doDefer = __bind(this.doDefer, this);
-
       var frames, ix, nm;
       View$Base.__super__.constructor.call(this, view_nm, options);
       frames = E.appGetSetting('frames');
@@ -103,8 +101,7 @@
       this.R = {};
       this.I = {};
       this.P = [{}];
-      this.N = {};
-      return this.D = [[]];
+      return this.N = {};
     };
 
     View$Base.prototype.saveInfo = function() {
@@ -169,65 +166,54 @@
       m.endComputation();
     };
 
-    View$Base.prototype.wrap = function(view, attrs, content, defer, has_root) {
-      var f, inside,
-        _this = this;
-      f = 'wrap';
-      if (defer.length) {
-        inside = E.merge([], defer);
-        attrs.config = function(element, isInit, context) {
-          var _i, _len, _results;
-          f = 'Base:M/View..config:' + view;
-          _results = [];
-          for (_i = 0, _len = inside.length; _i < _len; _i++) {
-            defer = inside[_i];
-            _log2(f, defer);
-            _results.push(_this.doDefer(defer, element, isInit, context));
-          }
-          return _results;
-        };
-      }
-      if ('dynamic' in attrs) {
-        return {
-          tag: attrs.dynamic,
-          attrs: attrs,
-          children: content
-        };
-      } else {
-        if (!content) {
-          return '';
-        }
-        if (has_root) {
-          _log2(f, 'has-root-content', {
-            view: view,
-            attrs: attrs,
-            content: content,
-            defer: defer,
-            has_root: has_root
-          });
-          if ('A' !== E.type_oau(content)) {
-            BLOWUP();
-          }
-          return content;
-        } else {
-          return {
-            tag: 'div',
-            attrs: attrs,
-            children: content
-          };
-        }
-      }
-    };
+    /* JCS: TODO FIGURE OUT IF DYNAMIC OR DEFER IS REALLY EVER NEEDED AGAIN - MITHRIL MAKES EVERYTHING DYNAMIC, NO? AND DATA-EX-* ATTRS DO DEFER, YES?
+    	#JCS:DEFER:DYNAMIC
+    	# Wraper for page/part content which needs special treatment (dyanmic='div', epic:defer's, etc.)
+    	wrap: (view, attrs, content, defer, has_root)->
+    		f= 'wrap'
+    		if defer.length
+    			inside= E.merge [], defer
+    			attrs.config= (element, isInit, context) =>
+    				f= 'Base:M/View..config:'+ view
+    				for defer in inside
+    					_log2 f, defer
+    					@doDefer defer, element, isInit, context
+    		if 'dynamic' of attrs # Always render the container, even if content is null
+    			tag: attrs.dynamic, attrs: attrs, children: content
+    		else
+    			return '' unless content
+    			if has_root
+    				# TODO WHAT IS GOING ON WITH attrs TO wrap IF CONTENT HAS ATTRS? (part=)
+    				_log2 f, 'has-root-content', {view,attrs,content,defer,has_root}
+    				BLOWUP() if 'A' isnt E.type_oau content
+    				# TODO E2 FIGURE OUT WHY I COMMENTED THIS OUT; ALSO, PLAN IS TO USE DATA-EX-* ATTRS PER ELEMENT, NOT <E-DEFER
+    				#content[0].attrs.config= attrs.config # Pass the defer logic to the part's div
+    				content
+    			else
+    				tag: 'div', attrs: attrs, children: content
+    	doDefer: (defer_obj, element, isInit, context) =>
+    		if 'A' is E.type_oau defer_obj.defer
+    			_log2 'WARNING', 'Got an array for defer', defer_obj.defer
+    			return 'WAS-ARRAY'
+    		defer_obj.func element, isInit, context, defer_obj.attrs if defer_obj.func
+    	T_defer: ( attrs, content) -> # TODO IMPLEMENT DEFER LOGIC ATTRS?
+    		f= 'Base:M/View.T_defer:'
+    		f_content= @handleIt content
+    		#_log f, content, f_content
+    		# When epic tags are inside defer, you get nested arrays that need to be joined (w/o commas)
+    		if 'A' is E.type_oau f_content
+    			sep= ''
+    			ans= ''
+    			joiner= (a) ->
+    				for e in a
+    					if 'A' is E.type_oau e then joiner e else ans+= sep+ e
+    			joiner f_content
+    			#_log f, 'join', ans
+    			f_content= ans
+    		@D[ @D.length- 1].push {attrs, func: new Function 'element', 'isInit', 'context', 'attrs', f_content}
+    		'' # No content to display for these
+    */
 
-    View$Base.prototype.doDefer = function(defer_obj, element, isInit, context) {
-      if ('A' === E.type_oau(defer_obj.defer)) {
-        _log2('WARNING', 'Got an array for defer', defer_obj.defer);
-        return 'WAS-ARRAY';
-      }
-      if (defer_obj.func) {
-        return defer_obj.func(element, isInit, context, defer_obj.attrs);
-      }
-    };
 
     View$Base.prototype.handleIt = function(content) {
       var f;
@@ -390,26 +376,28 @@
     };
 
     View$Base.prototype.piece_handle = function(view, attrs, obj, is_part) {
-      var can_componentize, content, defer, f, result;
+      var can_componentize, content, f;
       f = 'piece_handle';
       if (obj != null ? obj.then : void 0) {
         return this.D_piece(view, attrs, obj, is_part);
       }
       content = obj.content, can_componentize = obj.can_componentize;
       this.P.push(this.loadPartAttrs(attrs));
-      this.D.push([]);
-      content = this.handleIt(content);
-      defer = this.D.pop();
-      if (can_componentize || attrs.dynamic || defer.length || !is_part) {
-        if (defer.length && !can_componentize && !attrs.dynamic) {
-          _log2("WARNING: DEFER logic in (" + view + "); wrapping DIV tag.");
-        }
-        result = this.wrap(view, attrs, content, defer, can_componentize);
-      } else {
-        _log2(f, 'defer NO!', view, defer);
-        result = content;
-      }
-      return result;
+      return content = this.handleIt(content);
+      /* JCS:DEFER:DYNAMIC 
+      		defer= @D.pop()
+      		#_log2 f, 'defer', view, defer
+      		if can_componentize or not is_part or attrs.dynamic or defer.length
+      			#_log2 f, 'defer YES', view, defer
+      			if defer.length and not can_componentize and not attrs.dynamic
+      				_log2 "WARNING: DEFER logic in (#{view}); wrapping DIV tag."
+      			result= @wrap view, attrs, content, defer, can_componentize
+      		else
+      			#_log2 f, 'defer NO!', view, defer
+      			result= content
+      		result
+      */
+
     };
 
     View$Base.prototype.D_piece = function(view, attrs, d_load, is_part) {
@@ -438,36 +426,6 @@
         throw err;
       });
       return d_result;
-    };
-
-    View$Base.prototype.T_defer = function(attrs, content) {
-      var ans, f, f_content, joiner, sep;
-      f = 'Base:M/View.T_defer:';
-      f_content = this.handleIt(content);
-      if ('A' === E.type_oau(f_content)) {
-        sep = '';
-        ans = '';
-        joiner = function(a) {
-          var e, _i, _len, _results;
-          _results = [];
-          for (_i = 0, _len = a.length; _i < _len; _i++) {
-            e = a[_i];
-            if ('A' === E.type_oau(e)) {
-              _results.push(joiner(e));
-            } else {
-              _results.push(ans += sep + e);
-            }
-          }
-          return _results;
-        };
-        joiner(f_content);
-        f_content = ans;
-      }
-      this.D[this.D.length - 1].push({
-        attrs: attrs,
-        func: new Function('element', 'isInit', 'context', 'attrs', f_content)
-      });
-      return '';
     };
 
     View$Base.prototype.T_if_true = function(attrs, content) {

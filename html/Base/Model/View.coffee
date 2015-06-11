@@ -55,7 +55,7 @@ class View$Base extends E.ModelJS
 		@I= {}   # 'Info' [table-name-alias|subtable-nam-aliase]= single-row
 		@P= [{}] # 'Parts' Push p:attrs with each part, then pop; (top level is row w/o attrs)
 		@N= {}   # 'Names' [if-name]=boolean (from <if_xxx name="if-name" ..>
-		@D= [[]] # 'Defer' Stack arrays of defers as we render parts
+		#JCS:DEFER:DYNAMIC @D= [[]] # 'Defer' Stack arrays of defers as we render parts
 	saveInfo: () ->
 		f= 'saveInfo'
 		saved_info= E.merge {}, I: @I, P: @P
@@ -90,6 +90,8 @@ class View$Base extends E.ModelJS
 		m.startComputation()
 		m.endComputation()
 		return
+	### JCS: TODO FIGURE OUT IF DYNAMIC OR DEFER IS REALLY EVER NEEDED AGAIN - MITHRIL MAKES EVERYTHING DYNAMIC, NO? AND DATA-EX-* ATTRS DO DEFER, YES?
+	#JCS:DEFER:DYNAMIC
 	# Wraper for page/part content which needs special treatment (dyanmic='div', epic:defer's, etc.)
 	wrap: (view, attrs, content, defer, has_root)->
 		f= 'wrap'
@@ -118,6 +120,23 @@ class View$Base extends E.ModelJS
 			_log2 'WARNING', 'Got an array for defer', defer_obj.defer
 			return 'WAS-ARRAY'
 		defer_obj.func element, isInit, context, defer_obj.attrs if defer_obj.func
+	T_defer: ( attrs, content) -> # TODO IMPLEMENT DEFER LOGIC ATTRS?
+		f= 'Base:M/View.T_defer:'
+		f_content= @handleIt content
+		#_log f, content, f_content
+		# When epic tags are inside defer, you get nested arrays that need to be joined (w/o commas)
+		if 'A' is E.type_oau f_content
+			sep= ''
+			ans= ''
+			joiner= (a) ->
+				for e in a
+					if 'A' is E.type_oau e then joiner e else ans+= sep+ e
+			joiner f_content
+			#_log f, 'join', ans
+			f_content= ans
+		@D[ @D.length- 1].push {attrs, func: new Function 'element', 'isInit', 'context', 'attrs', f_content}
+		'' # No content to display for these
+	###
 	handleIt: (content) =>
 		f= 'handleIt'
 		#_log2 f, 'top',( typeof content) #, content
@@ -223,25 +242,27 @@ class View$Base extends E.ModelJS
 	# This step, may be happen in a .then, or immeadiate
 	piece_handle: (view, attrs, obj, is_part) ->
 		f= 'piece_handle'
-		#_log2 f, view, obj
+		#_log2 f, view, obj, "typeof content:", typeof obj.content, " has then?", (if obj?.then then 'yes' else 'no')
 		return @D_piece view, attrs, obj, is_part if obj?.then # Was a thenable
 		#_log2 f, view #, new Date().getTime()- @start #, obj
 		{content,can_componentize}= obj
 		#_log2 f, 'AFTER ASSIGN', view, obj if obj is false
 		@P.push @loadPartAttrs attrs
-		@D.push []
+		# JCS:DEFER:DYNAMIC @D.push []
 		content= @handleIt content
+		### JCS:DEFER:DYNAMIC 
 		defer= @D.pop()
 		#_log2 f, 'defer', view, defer
-		if can_componentize or attrs.dynamic or defer.length or not is_part
+		if can_componentize or not is_part or attrs.dynamic or defer.length
 			#_log2 f, 'defer YES', view, defer
 			if defer.length and not can_componentize and not attrs.dynamic
 				_log2 "WARNING: DEFER logic in (#{view}); wrapping DIV tag."
 			result= @wrap view, attrs, content, defer, can_componentize
 		else
-			_log2 f, 'defer NO!', view, defer
+			#_log2 f, 'defer NO!', view, defer
 			result= content
 		result
+		###
 	D_piece: (view, attrs, d_load, is_part) ->
 		f= 'D_piece'
 		who= 'P'
@@ -263,22 +284,6 @@ class View$Base extends E.ModelJS
 			throw err
 		d_result
 
-	T_defer: ( attrs, content) -> # TODO IMPLEMENT DEFER LOGIC ATTRS?
-		f= 'Base:M/View.T_defer:'
-		f_content= @handleIt content
-		#_log f, content, f_content
-		# When epic tags are inside defer, you get nested arrays that need to be joined (w/o commas)
-		if 'A' is E.type_oau f_content
-			sep= ''
-			ans= ''
-			joiner= (a) ->
-				for e in a
-					if 'A' is E.type_oau e then joiner e else ans+= sep+ e
-			joiner f_content
-			#_log f, 'join', ans
-			f_content= ans
-		@D[ @D.length- 1].push {attrs, func: new Function 'element', 'isInit', 'context', 'attrs', f_content}
-		'' # No content to display for these
 	T_if_true: ( attrs, content) -> if @N[ attrs.name] then @handleIt content() else ''
 	T_if_false: ( attrs, content) -> if @N[ attrs.name] then '' else @handleIt content
 	T_if: ( attrs, content) => # TODO
