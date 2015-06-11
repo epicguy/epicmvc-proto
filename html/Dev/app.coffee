@@ -135,6 +135,11 @@ window.EpicMvc.app$Dev=
 			return if wistNm of E.wistDef
 			err "Unknown Wist (#{wistNm})."
 			return
+		# E.option.v1 nm, attr # Test that E.ex$<nm> exists as a function (Mithril extension); User used attribute: data-ex-<nm>[-<p1>[-<p2>]]
+		v1: (nm,attr) ->
+			return if 'ex$'+ nm of E
+			err "Unknown Mithril extension function (E.ex$#{nm}) using attribute: #{attr}."
+			return
 
 	SETTINGS:
 		frames: MMM_Dev: 'bdevl'

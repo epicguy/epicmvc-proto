@@ -31,6 +31,14 @@
     E.opt = function(object) {
       return merge(option, object);
     };
+    E.camelCase = function(input, char) {
+      if (char == null) {
+        char = '-';
+      }
+      return input.toLowerCase().replace(new RegExp(char + '(.)', 'g'), function(match, group1) {
+        return group1.toUpperCase();
+      });
+    };
     type_oau = function(obj) {
       return {}.toString.call(obj)[8];
     };

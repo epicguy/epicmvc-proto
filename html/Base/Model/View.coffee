@@ -372,51 +372,15 @@ class View$Base extends E.ModelJS
 		ans= @T_foreach foreach_attrs, content
 		(delete @R[ rh_1]; delete @I[ rh_1])
 		ans
-	# Special case, with 'input' tags; need to copy value only if it does not reflect current value,
-	# to avoid focus/cursor-insertion point issues
-	# TODO IS THIS NEEDED ANYMORE SINCE WE HAVE EX- NOW?
-	value: (el) -> el.value= el.defaultValue if el.value isnt el.defaultValue
-	# TODO IS THIS NEEDED ANYMORE SINCE WE HAVE EX- NOW?
-	A_at: (orig_attrs) -> # Patch up attributes based on action, event, named-values, bootstrap, user shorcuts/extensions
-		attrs= E.merge {}, orig_attrs
-		for nm,val of attrs when nm[0] is 'e' and nm[2] is '-' # Special names needing processing
-			parts= nm.split '-'
-			@['A_'+ parts[ 0]] parts, val, attrs
-	# TODO IS THIS NEEDED ANYMORE SINCE WE HAVE EX- NOW?
-	A_ea: (parts, val, attrs) ->
-		attrs.className?= ''
-		attrs.className+= " #{parts[ 1] ? 'click'}:#{val}"
-	# TODO SHOULD THIS HAVE LIKE A PREFIX - A_ex OR SOMETHING? REFERENCED BY PARSER: oE.ex
+	# Referenced by parser as: oE.ex
 	ex: (el, isInit, ctx) => # Mithril config function
 		f= 'ex'
 		attrs= el.attributes
 		for ix in [0...attrs.length] when 'data-ex-' is attrs[ ix].name.slice 0, 8
-			#E.option.v2 el, attrs[ ix]
 			[d,e,nm,p1,p2]= attrs[ ix].name.split '-'
 			val= attrs[ ix].value
 			_log2 f, attrs[ ix].name, val, p1, p2
+			E.option.v1 nm, attrs[ ix].name #%#
 			E['ex$'+ nm] el, isInit, ctx, val, p1, p2
 
 E.Model.View$Base= View$Base # Public API
-
-# TODO FIND A PLACE FOR THE ex$* BASE FUNCTIONS, MOVE TIMEAGO TO IPM
-E.ex$value= (el, isInit, ctx, val, p1, p2) ->
-	f= 'A_ex_value'
-	_log2 f, el.value, val, (if el.value isnt val then 'CHANGE' else 'SAME')
-	el.value= val if el.value isnt val
-
-# TODO THIS IS BROKEN BECAUSE OF MISSING '$' (JQuery)
-E.ex$timeago= (el, isInit, ctx, val, p1, p2) ->
-	un_doIt= ->( clearInterval ctx.timer; delete ctx.timer) if ctx.timer
-	doIt= -> el.textContent= $.timeago val
-	re_doIt= -> un_doIt(); ctx.timer= setInterval doIt, 60000
-	doIt()
-	re_doIt()
-	ctx.onunload= un_doIt if isInit
-
-E.ex$collapse= (el, isInit, ctx, val, p1, p2) -> # set el's height using scrollHeight, if Tab/g/i is set, else 0
-	f= 'A_ex_collapse'
-	[g,i]= val.split ':' # Group-name : Item-name
-	_log2 f, {g,i,sH:el.scrollHeight,g_row:(E.Tab g)[ 0]}
-	height= if (E.Tab g)[ 0][ i] then el.scrollHeight else 0
-	el.style.height=( String height)+ 'px'

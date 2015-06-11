@@ -32,7 +32,7 @@
 
     LoadStrategy.prototype.D_loadAsync = function() {
       var def, el, f, file, file_list, next, pkg, promise, sub, type, url, work, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
-      f = 'Dev:E/LoadStragegy.loadAsync';
+      f = 'Dev:E/LoadStrategy.loadAsync';
       _ref = this.appconfs;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         pkg = _ref[_i];

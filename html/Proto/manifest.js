@@ -2,7 +2,7 @@
 (function() {
 
   E.manifest$Proto = {
-    Extra: ['Fist', 'GlobalDrag'],
+    Extra: ['Fist', 'GlobalDrag', 'misc'],
     root: ['app']
   };
 

@@ -23,7 +23,7 @@
         E.event(spec_action, type, group, item, interesting, data_params);
       }
       if (do_action && spec_type === type) {
-        if (spec_type === 'click') {
+        if (spec_type === 'click' || spec_type === 'rclick') {
           prevent = true;
         }
         do_action = false;

@@ -27,7 +27,9 @@ class RenderStrategy$Base
 		#TODO DETECT MANUAL HASHCHANGE window.onhashchange = (a) -> console.log 'onhashChange', a; alert 'hashChange'
 		window.onpopstate = @onPopState
 		@redraw_guard= 0
+		s= m.redraw.strategy
 		m.redraw= @m_redraw
+		m.redraw.strategy= s # Mithril 0.2.x puts this function here now
 		@init()
 		true
 	handleEvent: (event_obj) =>
@@ -36,9 +38,13 @@ class RenderStrategy$Base
 		# Getting all events, need to weed out to 'data-e-action' nodes
 		event_obj?= window.event # IE < 9
 		type= event_obj.type
+		type= 'change' if type is 'input' # New event type better than 'change', handles paste, cut, etc.
 		if type is 'mousedown' # This comes before 'blur' so I'm using it rather than 'click'
-			return if event_obj.which isnt 1 # Not a left click
-			type= 'click'
+			if event_obj.which is 1 or event_obj.button is 1
+				type= 'click'
+			else if event_obj.which is 3 or event_obj.button is 2
+				type= 'rclick'
+			else return # Not a left or right click
 		#TODO TEST return if type in ['blur','focus'] # TODO FIX THIS ISSUE WITH FORM FIELDS BEING REDRAWN
 		return if type is 'keyup' and event_obj.keyCode is 9 # TODO IS THIS NEEDED FOR FORMS?
 		type= 'enter' if type is 'keyup' and event_obj.keyCode is ENTER_KEY
@@ -72,7 +78,7 @@ class RenderStrategy$Base
 		return false; # TODO
 	init: ->
 		interesting= [
-			'mousedown', 'change', 'dblclick', 'keyup', 'blur', 'focus'
+			'mousedown', 'dblclick', 'keyup', 'blur', 'focus', 'input' # JCS: TODO SEE IF 'input' CAN SUPPLANT THIS: ,'change'
 			'touchstart', 'touchmove', 'touchend' # Touch Events
 		]
 		document.body.addEventListener event_name, @handleEvent, true for event_name in interesting

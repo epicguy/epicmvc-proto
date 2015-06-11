@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 #
 #
 # TODO LOGGING
@@ -14,7 +14,7 @@
 # B) USING MANIFEST FILE TO BUILD USER'S DEPLOY PACKAGE; ALSO REMOVES LOGS, ETC.
 #
 # TODO EVENTS
-# C) CONSIDER HOW TO INTERACT WITH MITHRIL WHEN USES DOES COMPONENT WITH E.G. ONCHANGE, ONCLICK, ETC.
+# C) CONSIDER HOW TO INTERACT WITH MITHRIL WHEN USER DOES COMPONENT WITH E.G. ONCHANGE, ONCLICK, ETC.
 #
 # TODO HISTORY (IN RENDER STRATEGY)
 # A) CONSIDER IF APP.COFFEE HAS A ROLE HERE
@@ -51,6 +51,8 @@ app= (window, undef) ->
 	E= {}
 	E.nextCounter= -> ++counter
 	E.opt= (object) -> merge option, object
+	# //stackoverflow.com/questions/10425287/convert-string-to-camelcase-with-regular-expression
+	E.camelCase= (input,char) -> char?= '-'; input.toLowerCase().replace (new RegExp char+ '(.)', 'g'), (match, group1) -> group1.toUpperCase()
 
 	# O, O (Clone attrs that are not Undefined)
 	# A, A (Clone position by postion) # TODO DOES THIS MAKES SENSE, TO REPLACE POSTION FOR POSTION IN THE ARRAY?

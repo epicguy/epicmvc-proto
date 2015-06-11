@@ -12,7 +12,7 @@ dataAction= (type, data_action, data_params) ->
 		if spec_type is 'event' # Any event will get passed to caller
 			E.event spec_action, type, group, item, interesting, data_params
 		if do_action and spec_type is type # The event-type (click/dblclick/etc.) matches user's spec
-			prevent= true if spec_type is 'click' # TODO
+			prevent= true if spec_type in ['click', 'rclick'] # TODO
 			do_action= false
 			#TODO TYPE EVENTS ARE BEHIND do( spec_action) -> setTimeout (-> E.action spec_action, data_params), 0
 			E.action spec_action, data_params

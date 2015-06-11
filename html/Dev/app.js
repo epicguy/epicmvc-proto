@@ -207,6 +207,12 @@
           return;
         }
         err("Unknown Wist (" + wistNm + ").");
+      },
+      v1: function(nm, attr) {
+        if ('ex$' + nm in E) {
+          return;
+        }
+        err("Unknown Mithril extension function (E.ex$" + nm + ") using attribute: " + attr + ".");
       }
     },
     SETTINGS: {

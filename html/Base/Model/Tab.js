@@ -170,4 +170,18 @@
 
   E.Model.Tab$Base = Tab;
 
+  E.ex$collapse = function(el, isInit, ctx, val, p1, p2) {
+    var f, g, height, i, _ref;
+    f = 'A_ex_collapse';
+    _ref = val.split(':'), g = _ref[0], i = _ref[1];
+    _log2(f, {
+      g: g,
+      i: i,
+      sH: el.scrollHeight,
+      g_row: (E.Tab(g))[0]
+    });
+    height = (E.Tab(g))[0][i] ? el.scrollHeight : 0;
+    return el.style.height = (String(height)) + 'px';
+  };
+
 }).call(this);

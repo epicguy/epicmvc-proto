@@ -10,7 +10,7 @@ class LoadStrategy
 	makePkgDir: (pkg)->
 		E.option.loadDirs[ pkg]+ if (E.option.loadDirs[ pkg].slice -1) is '/' then pkg else ''
 	D_loadAsync: () -> # Load up all the Model/Extra code stuff - caller should delay after
-		f= 'Dev:E/LoadStragegy.loadAsync'
+		f= 'Dev:E/LoadStrategy.loadAsync'
 		# Insert script tags for all MANIFEST entries of each package-app-config file
 		for pkg in @appconfs
 			continue if pkg not of E.option.loadDirs

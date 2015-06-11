@@ -19,7 +19,7 @@
 
             <!-- Text Area -->
             <e-if val="&Control/type;" eq="textarea">
-                <textarea   e-event="Fist:&Control/fistNm;:&Control/fieldNm;:keyup-focus-blur"
+                <textarea   e-event="Fist:&Control/fistNm;:&Control/fieldNm;:keyup-focus-blur-change"
                             name="&Control/name;"
                             ?required="&Control/req;">
                             &Control/value;
@@ -28,7 +28,7 @@
 
             <!-- Text Box -->
             <e-if val="&Control/type#lc;" eq="text">
-                <input  e-event="Fist:&Control/fistNm;:&Control/fieldNm;:keyup-focus-blur"
+                <input  e-event="Fist:&Control/fistNm;:&Control/fieldNm;:keyup-focus-blur-change"
                         class="form-control"
                         type="&Control/type#lc;"
                         name="&Control/name;"
@@ -39,7 +39,7 @@
 
             <!-- Password Box -->
             <e-if val="&Control/type#lc;" eq="password">
-                <input  e-event="Fist:&Control/fistNm;:&Control/fieldNm;:keyup-focus-blur"
+                <input  e-event="Fist:&Control/fistNm;:&Control/fieldNm;:keyup-focus-blur-change"
                         type="&Control/type#lc;"
                         class="form-control"
                         name="&Control/name;"

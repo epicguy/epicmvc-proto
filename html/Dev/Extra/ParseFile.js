@@ -2,18 +2,12 @@
 (function() {
   'use strict';
 
-  var E, FindAttrVal, FindAttrs, ParseFile, camelCase, doError, entities, findStyleVal, findStyles, findVars, mkNm, mkObj, nm_map, sq, _log2,
+  var E, FindAttrVal, FindAttrs, ParseFile, doError, entities, findStyleVal, findStyles, findVars, mkNm, mkObj, nm_map, sq, _log2,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   E = {};
 
   _log2 = function() {};
-
-  camelCase = function(input) {
-    return input.toLowerCase().replace(/-(.)/g, function(match, group1) {
-      return group1.toUpperCase();
-    });
-  };
 
   mkNm = function(nm) {
     if (nm.match(/^[a-zA-Z_]*$/)) {
@@ -56,7 +50,7 @@
     if (!(i < a.length)) {
       return [s + 'name', start, i];
     }
-    nm = camelCase(p);
+    nm = E.camelCase(p);
     start = i;
     while (i < a.length) {
       if ((p = a[i++].trim()) !== '') {
@@ -174,7 +168,7 @@
   FindAttrs = function(file_info, str) {
     var attr_obj, attr_split, attrs_need_cleaning, className, data_e_action, empty, eq, event_attrs_shortcuts, f, good, grp, i, nm, pane, parts, quo, start, style_obj, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
     f = ':parse.FindAttrs:';
-    event_attrs_shortcuts = ['data-e-click', 'data-e-change', 'data-e-dblclick', 'data-e-enter', 'data-e-keyup', 'data-e-focus', 'data-e-blur', 'data-e-event'];
+    event_attrs_shortcuts = ['data-e-click', 'data-e-rclick', 'data-e-change', 'data-e-dblclick', 'data-e-enter', 'data-e-keyup', 'data-e-focus', 'data-e-blur', 'data-e-event'];
     str = ' ' + str;
     str = str.replace(/\se-/gm, ' data-e-');
     str = str.replace(/\sex-/gm, ' data-ex-');

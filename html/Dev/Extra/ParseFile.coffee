@@ -23,9 +23,6 @@ _log2= ->
 
 # Parse attribute list
 
-# //stackoverflow.com/questions/10425287/convert-string-to-camelcase-with-regular-expression
-camelCase= (input) -> input.toLowerCase().replace /-(.)/g, (match, group1) -> group1.toUpperCase()
-
 # Make an Object into a string of Javascript i.e. {a:'stuff',b:'other'} (Smaller than JSON)
 mkNm= (nm) -> if nm.match /^[a-zA-Z_]*$/ then nm else sq nm
 mkObj= (obj) -> '{'+ ((mkNm nm)+ ':'+ val for nm,val of obj).join()+ '}'
@@ -43,7 +40,7 @@ findStyleVal= (i, a) -> # returns: [true, 'string-value', top, i] ['error-msg', 
 		break if (p= a[ i++].trim()) isnt ''
 	return [false] if p is ''
 	return [s+ 'name', start, i] unless i< a.length
-	nm= camelCase p
+	nm= E.camelCase p
 	# Find ':'
 	start= i
 	while i< a.length
@@ -113,7 +110,7 @@ FindAttrs= (file_info, str)->
 	f= ':parse.FindAttrs:'
 	# For data-e-action="click:action-name"
 	event_attrs_shortcuts= [
-		'data-e-click', 'data-e-change', 'data-e-dblclick', 'data-e-enter'
+		'data-e-click', 'data-e-rclick', 'data-e-change', 'data-e-dblclick', 'data-e-enter'
 		'data-e-keyup', 'data-e-focus', 'data-e-blur', 'data-e-event'
 	]
 	str= ' '+ str
@@ -205,7 +202,7 @@ FindAttrs= (file_info, str)->
 			continue
 
 		# ex-USER-DEFINED="anything"
-		# before: <input ex-some="thnig">
+		# before: <input ex-some="thing">
 		# after: <input data-ex-some="thing" config=oE.ex> (Calls E.ex$some('thing',...))
 		if 'data-ex-' is nm.slice 0, 8
 			attr_obj.config= 'oE.ex' # Mithril style extention using 'config'

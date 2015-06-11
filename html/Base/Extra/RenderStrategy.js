@@ -16,7 +16,7 @@
 
       this.handleEvent = __bind(this.handleEvent, this);
 
-      var baseDiv, modalDiv,
+      var baseDiv, modalDiv, s,
         _this = this;
       this.very_first = true;
       this.was_popped = false;
@@ -37,7 +37,9 @@
       }), 0);
       window.onpopstate = this.onPopState;
       this.redraw_guard = 0;
+      s = m.redraw.strategy;
       m.redraw = this.m_redraw;
+      m.redraw.strategy = s;
       this.init();
       true;
     }
@@ -50,11 +52,17 @@
         event_obj = window.event;
       }
       type = event_obj.type;
+      if (type === 'input') {
+        type = 'change';
+      }
       if (type === 'mousedown') {
-        if (event_obj.which !== 1) {
+        if (event_obj.which === 1 || event_obj.button === 1) {
+          type = 'click';
+        } else if (event_obj.which === 3 || event_obj.button === 2) {
+          type = 'rclick';
+        } else {
           return;
         }
-        type = 'click';
       }
       if (type === 'keyup' && event_obj.keyCode === 9) {
         return;
@@ -118,7 +126,7 @@
 
     RenderStrategy$Base.prototype.init = function() {
       var event_name, interesting, _i, _len, _results;
-      interesting = ['mousedown', 'change', 'dblclick', 'keyup', 'blur', 'focus', 'touchstart', 'touchmove', 'touchend'];
+      interesting = ['mousedown', 'dblclick', 'keyup', 'blur', 'focus', 'input', 'touchstart', 'touchmove', 'touchend'];
       _results = [];
       for (_i = 0, _len = interesting.length; _i < _len; _i++) {
         event_name = interesting[_i];
