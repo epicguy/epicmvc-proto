@@ -1,5 +1,5 @@
 // JCS: Version http://lhorie.github.io/mithril/archive/v0.2.0/
-// TODO REMOVE CODE NOT USED BY EPICMVC (LIKE ALL THE MODEL/VIEW STUFF)
+
 var m = (function app(window, undefined) {
 	var OBJECT = "[object Object]", ARRAY = "[object Array]", STRING = "[object String]", FUNCTION = "function";
 	var type = {}.toString;
@@ -516,16 +516,17 @@ var m = (function app(window, undefined) {
 		cellCache[id] = build(node, null, undefined, undefined, cell, cellCache[id], false, 0, null, undefined, configs);
 		for (var i = 0, len = configs.length; i < len; i++) configs[i]()
 	};
-	function getCellCacheKey(element) {
-		var index = nodeCache.indexOf(element);
-		return index < 0 ? nodeCache.push(element) - 1 : index
-	}
 
 	m.trust = function(value) {
 		value = new String(value);
 		value.$trusted = true;
 		return value
 	};
+
+	function getCellCacheKey(element) {
+		var index = nodeCache.indexOf(element);
+		return index < 0 ? nodeCache.push(element) - 1 : index
+	}
 
 	function gettersetter(store) {
 		var prop = function() {
@@ -550,105 +551,8 @@ var m = (function app(window, undefined) {
 	};
 
 	var roots = [], components = [], controllers = [], lastRedrawId = null, lastRedrawCallTime = 0, computePreRedrawHook = null, computePostRedrawHook = null, prevented = false, topComponent, unloaders = [];
-	var FRAME_BUDGET = 16; //60 frames per second = 1 call per 16 ms
-	function parameterize(component, args) {
-		var controller = function() {
-			return (component.controller || noop).apply(this, args) || this
-		}
-		var view = function(ctrl) {
-			if (arguments.length > 1) args = args.concat([].slice.call(arguments, 1))
-			return component.view.apply(component, args ? [ctrl].concat(args) : [ctrl])
-		}
-		view.$original = component.view
-		var output = {controller: controller, view: view}
-		if (args[0] && args[0].key != null) output.attrs = {key: args[0].key}
-		return output
-	}
-	m.component = function(component) {
-		return parameterize(component, [].slice.call(arguments, 1))
-	}
-	m.mount = m.module = function(root, component) {
-		if (!root) throw new Error("Please ensure the DOM element exists before rendering a template into it.");
-		var index = roots.indexOf(root);
-		if (index < 0) index = roots.length;
-		
-		var isPrevented = false;
-		var event = {preventDefault: function() {
-			isPrevented = true;
-			computePreRedrawHook = computePostRedrawHook = null;
-		}};
-		for (var i = 0, unloader; unloader = unloaders[i]; i++) {
-			unloader.handler.call(unloader.controller, event)
-			unloader.controller.onunload = null
-		}
-		if (isPrevented) {
-			for (var i = 0, unloader; unloader = unloaders[i]; i++) unloader.controller.onunload = unloader.handler
-		}
-		else unloaders = []
-		
-		if (controllers[index] && typeof controllers[index].onunload === FUNCTION) {
-			controllers[index].onunload(event)
-		}
-		
-		if (!isPrevented) {
-			m.redraw.strategy("all");
-			m.startComputation();
-			roots[index] = root;
-			if (arguments.length > 2) component = subcomponent(component, [].slice.call(arguments, 2))
-			var currentComponent = topComponent = component = component || {controller: function() {}};
-			var constructor = component.controller || noop
-			var controller = new constructor;
-			//controllers may call m.mount recursively (via m.route redirects, for example)
-			//this conditional ensures only the last recursive m.mount call is applied
-			if (currentComponent === topComponent) {
-				controllers[index] = controller;
-				components[index] = component
-			}
-			endFirstComputation();
-			return controllers[index]
-		}
-	};
-	var redrawing = false
-	m.redraw = function(force) {
-		if (redrawing) return
-		redrawing = true
-		//lastRedrawId is a positive number if a second redraw is requested before the next animation frame
-		//lastRedrawID is null if it's the first redraw and not an event handler
-		if (lastRedrawId && force !== true) {
-			//when setTimeout: only reschedule redraw if time between now and previous redraw is bigger than a frame, otherwise keep currently scheduled timeout
-			//when rAF: always reschedule redraw
-			if ($requestAnimationFrame === window.requestAnimationFrame || new Date - lastRedrawCallTime > FRAME_BUDGET) {
-				if (lastRedrawId > 0) $cancelAnimationFrame(lastRedrawId);
-				lastRedrawId = $requestAnimationFrame(redraw, FRAME_BUDGET)
-			}
-		}
-		else {
-			redraw();
-			lastRedrawId = $requestAnimationFrame(function() {lastRedrawId = null}, FRAME_BUDGET)
-		}
-		redrawing = false
-	};
+	m.redraw = function(force) {}
 	m.redraw.strategy = m.prop();
-	function redraw() {
-		if (computePreRedrawHook) {
-			computePreRedrawHook()
-			computePreRedrawHook = null
-		}
-		for (var i = 0, root; root = roots[i]; i++) {
-			if (controllers[i]) {
-				var args = components[i].controller && components[i].controller.$$args ? [controllers[i]].concat(components[i].controller.$$args) : [controllers[i]]
-				m.render(root, components[i].view ? components[i].view(controllers[i], args) : "")
-			}
-		}
-		//after rendering within a routed context, we need to scroll back to the top, and fetch the document title for history.pushState
-		if (computePostRedrawHook) {
-			computePostRedrawHook();
-			computePostRedrawHook = null
-		}
-		lastRedrawId = null;
-		lastRedrawCallTime = new Date;
-		m.redraw.strategy("diff")
-	}
 
 	var pendingRequests = 0;
 	m.startComputation = function() {pendingRequests++};
@@ -664,145 +568,6 @@ var m = (function app(window, undefined) {
 		else m.endComputation();
 	}
 
-	m.withAttr = function(prop, withAttrCallback) {
-		return function(e) {
-			e = e || event;
-			var currentTarget = e.currentTarget || this;
-			withAttrCallback(prop in currentTarget ? currentTarget[prop] : currentTarget.getAttribute(prop))
-		}
-	};
-
-	//routing
-	var modes = {pathname: "", hash: "#", search: "?"};
-	var redirect = noop, routeParams, currentRoute, isDefaultRoute = false;
-	m.route = function() {
-		//m.route()
-		if (arguments.length === 0) return currentRoute;
-		//m.route(el, defaultRoute, routes)
-		else if (arguments.length === 3 && type.call(arguments[1]) === STRING) {
-			var root = arguments[0], defaultRoute = arguments[1], router = arguments[2];
-			redirect = function(source) {
-				var path = currentRoute = normalizeRoute(source);
-				if (!routeByValue(root, router, path)) {
-					if (isDefaultRoute) throw new Error("Ensure the default route matches one of the routes defined in m.route")
-					isDefaultRoute = true
-					m.route(defaultRoute, true)
-					isDefaultRoute = false
-				}
-			};
-			var listener = m.route.mode === "hash" ? "onhashchange" : "onpopstate";
-			window[listener] = function() {
-				var path = $location[m.route.mode]
-				if (m.route.mode === "pathname") path += $location.search
-				if (currentRoute != normalizeRoute(path)) {
-					redirect(path)
-				}
-			};
-			computePreRedrawHook = setScroll;
-			window[listener]()
-		}
-		//config: m.route
-		else if (arguments[0].addEventListener || arguments[0].attachEvent) {
-			var element = arguments[0];
-			var isInitialized = arguments[1];
-			var context = arguments[2];
-			var vdom = arguments[3];
-			element.href = (m.route.mode !== 'pathname' ? $location.pathname : '') + modes[m.route.mode] + vdom.attrs.href;
-			if (element.addEventListener) {
-				element.removeEventListener("click", routeUnobtrusive);
-				element.addEventListener("click", routeUnobtrusive)
-			}
-			else {
-				element.detachEvent("onclick", routeUnobtrusive);
-				element.attachEvent("onclick", routeUnobtrusive)
-			}
-		}
-		//m.route(route, params, shouldReplaceHistoryEntry)
-		else if (type.call(arguments[0]) === STRING) {
-			var oldRoute = currentRoute;
-			currentRoute = arguments[0];
-			var args = arguments[1] || {}
-			var queryIndex = currentRoute.indexOf("?")
-			var params = queryIndex > -1 ? parseQueryString(currentRoute.slice(queryIndex + 1)) : {}
-			for (var i in args) params[i] = args[i]
-			var querystring = buildQueryString(params)
-			var currentPath = queryIndex > -1 ? currentRoute.slice(0, queryIndex) : currentRoute
-			if (querystring) currentRoute = currentPath + (currentPath.indexOf("?") === -1 ? "?" : "&") + querystring;
-
-			var shouldReplaceHistoryEntry = (arguments.length === 3 ? arguments[2] : arguments[1]) === true || oldRoute === arguments[0];
-
-			if (window.history.pushState) {
-				computePreRedrawHook = setScroll
-				computePostRedrawHook = function() {
-					window.history[shouldReplaceHistoryEntry ? "replaceState" : "pushState"](null, $document.title, modes[m.route.mode] + currentRoute);
-				};
-				redirect(modes[m.route.mode] + currentRoute)
-			}
-			else {
-				$location[m.route.mode] = currentRoute
-				redirect(modes[m.route.mode] + currentRoute)
-			}
-		}
-	};
-	m.route.param = function(key) {
-		if (!routeParams) throw new Error("You must call m.route(element, defaultRoute, routes) before calling m.route.param()")
-		return routeParams[key]
-	};
-	m.route.mode = "search";
-	function normalizeRoute(route) {
-		return route.slice(modes[m.route.mode].length)
-	}
-	function routeByValue(root, router, path) {
-		routeParams = {};
-
-		var queryStart = path.indexOf("?");
-		if (queryStart !== -1) {
-			routeParams = parseQueryString(path.substr(queryStart + 1, path.length));
-			path = path.substr(0, queryStart)
-		}
-
-		// Get all routes and check if there's
-		// an exact match for the current path
-		var keys = Object.keys(router);
-		var index = keys.indexOf(path);
-		if(index !== -1){
-			m.mount(root, router[keys [index]]);
-			return true;
-		}
-
-		for (var route in router) {
-			if (route === path) {
-				m.mount(root, router[route]);
-				return true
-			}
-
-			var matcher = new RegExp("^" + route.replace(/:[^\/]+?\.{3}/g, "(.*?)").replace(/:[^\/]+/g, "([^\\/]+)") + "\/?$");
-
-			if (matcher.test(path)) {
-				path.replace(matcher, function() {
-					var keys = route.match(/:[^\/]+/g) || [];
-					var values = [].slice.call(arguments, 1, -2);
-					for (var i = 0, len = keys.length; i < len; i++) routeParams[keys[i].replace(/:|\./g, "")] = decodeURIComponent(values[i])
-					m.mount(root, router[route])
-				});
-				return true
-			}
-		}
-	}
-	function routeUnobtrusive(e) {
-		e = e || event;
-		if (e.ctrlKey || e.metaKey || e.which === 2) return;
-		if (e.preventDefault) e.preventDefault();
-		else e.returnValue = false;
-		var currentTarget = e.currentTarget || e.srcElement;
-		var args = m.route.mode === "pathname" && currentTarget.search ? parseQueryString(currentTarget.search.slice(1)) : {};
-		while (currentTarget && currentTarget.nodeName.toUpperCase() != "A") currentTarget = currentTarget.parentNode
-		m.route(currentTarget[m.route.mode].slice(modes[m.route.mode].length), args)
-	}
-	function setScroll() {
-		if (m.route.mode != "hash" && $location.hash) $location.hash = $location.hash;
-		else window.scrollTo(0, 0)
-	}
 	function buildQueryString(object, prefix) {
 		var duplicates = {}
 		var str = []
@@ -841,8 +606,6 @@ var m = (function app(window, undefined) {
 		}
 		return params
 	}
-	m.route.buildQueryString = buildQueryString
-	m.route.parseQueryString = parseQueryString
 	
 	function reset(root) {
 		var cacheKey = getCellCacheKey(root);
@@ -991,32 +754,6 @@ var m = (function app(window, undefined) {
 		if (type.call(e) === "[object Error]" && !e.constructor.toString().match(/ Error/)) throw e
 	};
 
-	m.sync = function(args) {
-		var method = "resolve";
-		function synchronizer(pos, resolved) {
-			return function(value) {
-				results[pos] = value;
-				if (!resolved) method = "reject";
-				if (--outstanding === 0) {
-					deferred.promise(results);
-					deferred[method](results)
-				}
-				return value
-			}
-		}
-
-		var deferred = m.deferred();
-		var outstanding = args.length;
-		var results = new Array(outstanding);
-		if (args.length > 0) {
-			for (var i = 0; i < args.length; i++) {
-				args[i].then(synchronizer(i, true), synchronizer(i, false))
-			}
-		}
-		else deferred.resolve([]);
-
-		return deferred.promise
-	};
 	function identity(value) {return value}
 
 	function ajax(options) {
