@@ -4,10 +4,8 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Template • TodoMVC</title>
-		<xlink rel="stylesheet" type="text/css" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"/>
 		<link rel="stylesheet" href="http://cdn.rawgit.com/tastejs/todomvc-common/master/base.css">
 		<link rel="stylesheet" href="http://cdn.rawgit.com/tastejs/todomvc-app-css/master/index.css">
-		<style>xdiv.dbg-toolbar {top: -30px;}</style>
 	</head>
 	<body>
 <script type="x/template" id="view-Page-default">
@@ -16,8 +14,10 @@
 				<h1>todos</h1>
 				<e-fist fist="Add" part="simple" e-autofocus="y"/>
 			</header>
-	<e-part part="main"/>
-	<e-part part="footer"/>
+			<e-if val="&TODO/Stats/count;" gt="0">
+				<e-part part="main"/>
+				<e-part part="footer"/>
+			</e-if>
 		</section>
 		<footer class="info">
 			<p>Double-click to edit a todo</p>
@@ -41,7 +41,6 @@
 
 <script type="x/template" id="view-Part-main">
 			<!-- This section should be hidden by default and shown when there are todos -->
-	<e-if val="&TODO/Stats/count;" gt="0">
 			<section class="main">
 				<input class="toggle-all" type="checkbox" checked="&TODO/Stats/all_marked;" e-change="mark_all">
 				<label for="toggle-all">Mark all as complete</label>
@@ -64,11 +63,9 @@
 					</e-foreach>
 				</ul>
 			</section>
-	</e-if>
 </script>
 <script type="x/template" id="view-Part-footer">
 			<!-- This footer should hidden by default and shown when there are todos -->
-	<e-if val="&TODO/Stats/count;" gt="0">
 			<footer class="footer">
 				<!-- This should be `0 items left` by default -->
 				<span class="todo-count"><strong>&TODO/Stats/count;</strong> item&TODO/Stats/count##s; left</span>
@@ -89,11 +86,10 @@
 					<button e-click="clear_completed" class="clear-completed">Clear completed</button>
 				</e-if>
 			</footer>
-	</e-if>
 </script>
 <!-- Scripts here. Don't remove ? -->
 <script type="text/javascript" src="EpicMvc-BaseDev-2.1.0-latest.js"></script>
-<xscript type="text/javascript" src="EpicMvc-Extra-2.1.0-latest.js"></xscript>
+<script type="text/javascript" src="EpicMvc-Extra-2.1.0-latest.js"></script>
 <script type="text/javascript" src="coffee-script.js"> </script>
 <script type="text/coffeescript">
 E.fist$TODO=
@@ -224,6 +220,7 @@ class TODO extends window.E.ModelJS
 			else return super fistNm
 		return
 E.Model.TODO= TODO
+
 E.custom_filter= (val, spec) -> # TODO LETS CHANGE THIS TO USE E.G. E.hashhash$s
 	switch spec
 		when 's' # Pluralize a word
@@ -231,13 +228,14 @@ E.custom_filter= (val, spec) -> # TODO LETS CHANGE THIS TO USE E.G. E.hashhash$s
 		else
 			throw new Error 'Unknown custom_filter spec: ##'+ spec
 	return
+
 E.ex$focus= (el, beenHere, ctx, val, p1, p2) ->
 	el.focus() if !beenHere and val.length
 	return
+
 </script>
 		<script type="text/coffeescript">
-			#E.run ['Base', 'Dev', 'Proto', 'TODO']
-			E.run ['Base', 'TODO']
+			E.run ['Base', 'Dev', 'Proto', 'TODO']
 		</script>
 	</body>
 </html>
