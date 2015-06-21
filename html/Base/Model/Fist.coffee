@@ -79,7 +79,9 @@ class Fist extends E.ModelJS
 	# Controller wants a fist's fields/errors cleared
 	fistClear: (fistNm, row) ->
 		rnm= fistNm+ if row then ':'+ row else ''
-		delete @fist[ rnm] # May be a little heavy handed
+		if rnm of @fist
+			delete @fist[ rnm] # May be a little heavy handed
+			@invalidateTables [ rnm] # Update the views with the cleared form
 	# Controller wants a fist's db values, after whole-form-validation
 	fistValidate: (ctx, fistNm, row) ->
 		f= 'fistValidate:'+ fistNm+ if row? then ':'+ row else ''
@@ -88,6 +90,10 @@ class Fist extends E.ModelJS
 		fist= @_getFist fistNm, row
 		errors= 0
 		for fieldNm, field of fist.ht
+			hval= E.fistH2H field, field.hval # Run H2H if e.g. not done on blur
+			if hval isnt field.hval
+				field.hval= hval
+				invalidate= true
 			errors++ if true isnt E.fistVAL field, field.hval
 		for fieldNm, field of fist.ht when field.confirm?
 			errors++ if true is @confirm fist, field, 'fistValidate'

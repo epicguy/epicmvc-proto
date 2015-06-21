@@ -77,10 +77,7 @@
       m2: function(view_nm, act, parms) {
         err("Model (" + view_nm + ").action() didn't know action (" + act + ")");
       },
-      m3: function(view_nm, tbl_nm, table) {
-        if (tbl_nm in table) {
-          return;
-        }
+      m3: function(view_nm, tbl_nm) {
         err("Model (" + view_nm + ").loadTable() didn't know table-name (" + tbl_nm + ")");
       },
       m4: function(view_nm, fistNm, row) {
@@ -91,6 +88,9 @@
       },
       m6: function(view_nm, fistNm, fieldNm, row) {
         err("Model (" + view_nm + ").fistGetChoices() did't know FIST-FIELD (" + fistNm + "-" + fieldNm + ")");
+      },
+      m7: function(view_nm, options) {
+        err("Model (" + view_nm + ").route() needs to be implemented.");
       },
       ca1: function(action_token, original_path, action_node) {
         if (action_node != null) {
@@ -199,8 +199,14 @@
         });
       },
       v1: function(val, spec) {
-        err("Unknown variable specification/filter (#" + spec + ")");
+        err("Unknown variable specification/filter (#" + spec + ") Note: custom specs use ##");
         return val != null ? val : '';
+      },
+      v2: function(val, custom_spec) {
+        if (typeof E.custom_filter === 'function') {
+          return;
+        }
+        return err("Unknown custom specification/filter (##" + custom_spec + "). Note: uses ## and requires function E.custom_spec");
       },
       w1: function(wistNm) {
         if (wistNm in E.wistDef) {
@@ -208,7 +214,7 @@
         }
         err("Unknown Wist (" + wistNm + ").");
       },
-      v1: function(nm, attr) {
+      ex1: function(nm, attr) {
         if ('ex$' + nm in E) {
           return;
         }

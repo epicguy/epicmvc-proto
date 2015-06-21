@@ -19,7 +19,7 @@
       event: (function() {}),
       loadDirs: {}
     };
-    _ref = ['c1', 'a1', 'a2', 'ap1', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6', 'ca1', 'ca2', 'ca3', 'ca4', 'fi1', 'fi2', 'fi3', 'v1', 'w1'];
+    _ref = ['c1', 'a1', 'a2', 'ap1', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'ca1', 'ca2', 'ca3', 'ca4', 'fi1', 'fi2', 'fi3', 'fi4', 'v1', 'v2', 'w1', 'ex1'];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       nm = _ref[_i];
       option[nm] = (function() {});
@@ -909,6 +909,10 @@
 
     ModelJS.prototype.fistGetChoices = function(fistNm, fieldNm, row) {
       return E.option.m6(this.view_nm, fistNm, fieldNm, row);
+    };
+
+    ModelJS.prototype.route = function(options) {
+      return E.option.m7(this.view_nm, options);
     };
 
     return ModelJS;

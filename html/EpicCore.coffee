@@ -44,8 +44,9 @@ app= (window, undef) ->
 
 	# Define these small validation functions as no-ops; Dev pkg can do the 'real' work
 	option[ nm]= (->) for nm in [ #%#
-		'c1', 'a1', 'a2', 'ap1', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6' #%#
-		'ca1', 'ca2', 'ca3', 'ca4', 'fi1', 'fi2', 'fi3', 'v1', 'w1' #%#
+		'c1', 'a1', 'a2', 'ap1', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7' #%#
+		'ca1', 'ca2', 'ca3', 'ca4', 'fi1', 'fi2', 'fi3', 'fi4', 'v1', 'v2' #%#
+		'w1', 'ex1' #%#
 	] #%#
 
 	E= {}
@@ -499,12 +500,13 @@ class ModelJS
 		(deleted_tbl_nms.push nm; delete @Table[nm]) for nm in tbl_nms when nm of @Table
 		E.View().invalidateTables @view_nm, tbl_nms, deleted_tbl_nms
 	# These methods are for development support, when a Model isn't complete
-	# Invoked when user does e.g. 'else super <params>'
+	# Invoked when user does e.g. 'else super <params>', or if they did not implement the method but need to
 	action: (ctx,act,params) ->             E.option.m2 @view_nm, act,params #%#
 	loadTable: (tbl_nm) ->                  E.option.m3 @view_nm, tbl_nm # if tbl_nm not of @Table #%#
 	fistValidate: (ctx,fistNm,row) ->       E.option.m4 @view_nm, fistNm, row #%#
 	fistGetValues: (fistNm,row) ->          E.option.m5 @view_nm, fistNm, row #%#
 	fistGetChoices: (fistNm,fieldNm,row) -> E.option.m6 @view_nm, fistNm, fieldNm, row #%#
+	route: (options) ->                     E.option.m7 @view_nm, options #%#
 
 w= if typeof window isnt "undefined" then window else {}
 w.EpicMvc= w.E= new app w

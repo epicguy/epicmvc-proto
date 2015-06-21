@@ -85,6 +85,7 @@
         modal = (_ref1 = (E.appGetSetting('modals'))[modal]) != null ? _ref1 : modal;
       }
       layout = modal != null ? modal : E.appGetSetting('layout', flow, track, step);
+      this.N = {};
       this.modal = modal ? true : false;
       this.page_name = (_ref2 = (E.appGetS(flow, track, step)).page) != null ? _ref2 : step;
       this.did_run = true;
@@ -101,7 +102,6 @@
       this.R = {};
       this.I = {};
       this.P = [{}];
-      return this.N = {};
     };
 
     View$Base.prototype.saveInfo = function() {
@@ -144,13 +144,19 @@
     };
 
     View$Base.prototype.getTable = function(nm) {
-      var f;
+      var f, p, rVal, _i, _len, _ref;
       f = 'Base:M/View.getTable:' + nm;
       switch (nm) {
         case 'If':
           return [this.N];
         case 'Part':
-          return this.P.slice(-1);
+          rVal = {};
+          _ref = this.P;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            p = _ref[_i];
+            E.merge(rVal, p);
+          }
+          return [rVal];
         default:
           return [];
       }
@@ -225,15 +231,17 @@
     };
 
     View$Base.prototype.formatFromSpec = function(val, spec, custom_spec) {
-      var f, left, right, str, _base, _ref;
+      var f, left, right, str, _ref;
       f = 'formatFromSpec';
       switch (spec) {
         case '':
           if (custom_spec) {
-            return typeof (_base = window.EpicMvc).custom_filter === "function" ? _base.custom_filter(val, custom_spec) : void 0;
+            E.option.v2(val, custom_spec);
+            return E.custom_filter(val, custom_spec);
           } else {
             return val;
           }
+          break;
         case 'count':
           return val != null ? val.length : void 0;
         case 'bool':
@@ -340,7 +348,7 @@
       return out;
     };
 
-    View$Base.prototype.loadPartAttrs = function(attrs) {
+    View$Base.prototype.loadPartAttrs = function(attrs, full) {
       var attr, f, result, val;
       f = 'Base:M/View.loadPartAttrs';
       result = {};
@@ -349,7 +357,7 @@
         if ('data-e-' !== attr.slice(0, 7)) {
           continue;
         }
-        result[attr.slice(7)] = val;
+        result[full ? attr : attr.slice(7)] = val;
       }
       return result;
     };
@@ -376,14 +384,17 @@
     };
 
     View$Base.prototype.piece_handle = function(view, attrs, obj, is_part) {
-      var can_componentize, content, f;
+      var can_componentize, content, f, saved_info;
       f = 'piece_handle';
       if (obj != null ? obj.then : void 0) {
         return this.D_piece(view, attrs, obj, is_part);
       }
       content = obj.content, can_componentize = obj.can_componentize;
+      saved_info = this.saveInfo();
       this.P.push(this.loadPartAttrs(attrs));
-      return content = this.handleIt(content);
+      content = this.handleIt(content);
+      this.restoreInfo(saved_info);
+      return content;
       /* JCS:DEFER:DYNAMIC 
       		defer= @D.pop()
       		#_log2 f, 'defer', view, defer
@@ -422,7 +433,7 @@
       }, function(err) {
         console.error('D_piece', err);
         _this.nest_dn(who + view + ' IN-ERROR');
-        return _this._Err('tag', 'page/part', attrs, err);
+        return typeof _this._Err === "function" ? _this._Err('tag', 'page/part', attrs, err) : void 0;
         throw err;
       });
       return d_result;
@@ -573,9 +584,9 @@
       content = content_f ? content_f : (part = (_ref4 = (_ref5 = attrs.part) != null ? _ref5 : fist.part) != null ? _ref4 : 'fist_default', (_ref6 = attrs.part) != null ? _ref6 : attrs.part = (_ref7 = fist.part) != null ? _ref7 : 'fist_default', function() {
         return _this.kids([
           [
-            'part', {
+            'part', E.merge({
               part: part
-            }
+            }, _this.loadPartAttrs(attrs, true))
           ]
         ]);
       });
@@ -603,7 +614,7 @@
         _ref1 = attrs[ix].name.split('-'), d = _ref1[0], e = _ref1[1], nm = _ref1[2], p1 = _ref1[3], p2 = _ref1[4];
         val = attrs[ix].value;
         _log2(f, attrs[ix].name, val, p1, p2);
-        E.option.v1(nm, attrs[ix].name);
+        E.option.ex1(nm, attrs[ix].name);
         _results.push(E['ex$' + nm](el, isInit, ctx, val, p1, p2));
       }
       return _results;

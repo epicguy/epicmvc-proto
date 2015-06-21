@@ -2,10 +2,12 @@
 (function() {
   'use strict';
 
-  var ENTER_KEY, RenderStrategy$Base,
+  var ENTER_KEY, ESCAPE_KEY, RenderStrategy$Base,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   ENTER_KEY = 13;
+
+  ESCAPE_KEY = 27;
 
   RenderStrategy$Base = (function() {
 
@@ -45,7 +47,7 @@
     }
 
     RenderStrategy$Base.prototype.handleEvent = function(event_obj) {
-      var attrs, data_action, data_params, f, files, ix, nm, old_params, prevent, rec, target, type, val, _i, _ref, _ref1;
+      var attrs, data_action, data_params, f, files, ix, nm, old_params, prevent, rec, target, type, val, _i, _j, _len, _ref, _ref1, _ref2;
       f = 'on[data-e-action]';
       _log2(f, 'top', this.redraw_guard, (event_obj != null ? event_obj : window.event).type);
       if (event_obj == null) {
@@ -67,8 +69,14 @@
       if (type === 'keyup' && event_obj.keyCode === 9) {
         return;
       }
-      if (type === 'keyup' && event_obj.keyCode === ENTER_KEY) {
-        type = 'enter';
+      if (type === 'keyup') {
+        switch (event_obj.keyCode) {
+          case ENTER_KEY:
+            type = 'enter';
+            break;
+          case ESCAPE_KEY:
+            type = 'escape';
+        }
       }
       target = event_obj.target;
       if (target === window) {
@@ -93,6 +101,9 @@
         data_params[nm] = attrs[ix].value;
       }
       val = target.value;
+      if (target.type === 'checkbox' && target.checked === false) {
+        val = false;
+      }
       files = target.files;
       _log2(f, 'event', {
         type: type,
@@ -103,17 +114,18 @@
       }, target);
       data_params.val = val;
       data_params._files = files;
-      for (nm in event_obj) {
-        val = event_obj[nm];
-        if (nm === 'touches' || nm === 'changedTouches' || nm === 'targetTouches') {
+      _ref1 = ['touches', 'changedTouches', 'targetTouches'];
+      for (_j = 0, _len = _ref1.length; _j < _len; _j++) {
+        nm = _ref1[_j];
+        if (nm in event_obj) {
           data_params[nm] = event_obj[nm];
         }
       }
       old_params = target.getAttribute('data-params');
       if (old_params) {
-        _ref1 = JSON.parse(old_params);
-        for (nm in _ref1) {
-          rec = _ref1[nm];
+        _ref2 = JSON.parse(old_params);
+        for (nm in _ref2) {
+          rec = _ref2[nm];
           data_params[nm] = rec;
         }
       }
@@ -126,7 +138,7 @@
 
     RenderStrategy$Base.prototype.init = function() {
       var event_name, interesting, _i, _len, _results;
-      interesting = ['mousedown', 'dblclick', 'keyup', 'blur', 'focus', 'input', 'touchstart', 'touchmove', 'touchend'];
+      interesting = ['mousedown', 'dblclick', 'keyup', 'blur', 'focus', 'change', 'input', 'touchstart', 'touchmove', 'touchend'];
       _results = [];
       for (_i = 0, _len = interesting.length; _i < _len; _i++) {
         event_name = interesting[_i];
@@ -169,6 +181,9 @@
       });
       if (event === true || !event.state) {
         if (this.was_popped || !this.very_first) {
+          E.action('browser_rehash', {
+            hash: location.hash.substr(1)
+          });
           return;
         }
       }
@@ -235,7 +250,7 @@
     };
 
     RenderStrategy$Base.prototype.handleRenderState = function() {
-      var displayHash, f, history, model_state, new_hash, path, str_path, _base, _base1, _ref;
+      var displayHash, f, history, model_state, new_hash, path, route, str_path, _base, _base1;
       path = E.App().getStepPath();
       str_path = path.join('/');
       history = str_path === this.last_path ? 'replace' : true;
@@ -248,7 +263,13 @@
         return;
       }
       displayHash = '';
-      new_hash = (_ref = E.appFindAttr(path[0], path[1], path[2], 'route')) != null ? _ref : false;
+      route = E.appFindAttr(path[0], path[1], path[2], 'route');
+      if (typeof route === 'object' && 'model' in route) {
+        new_hash = E[route.model]().route(route);
+      }
+      if (typeof route === 'string') {
+        new_hash = route;
+      }
       if (new_hash !== false) {
         displayHash = new_hash;
       }

@@ -5,6 +5,7 @@
 
 # Put on-load event scripts here
 ENTER_KEY= 13
+ESCAPE_KEY= 27
 
 # Strategy(s) for rendering content
 class RenderStrategy$Base
@@ -47,7 +48,10 @@ class RenderStrategy$Base
 			else return # Not a left or right click
 		#TODO TEST return if type in ['blur','focus'] # TODO FIX THIS ISSUE WITH FORM FIELDS BEING REDRAWN
 		return if type is 'keyup' and event_obj.keyCode is 9 # TODO IS THIS NEEDED FOR FORMS?
-		type= 'enter' if type is 'keyup' and event_obj.keyCode is ENTER_KEY
+		if type is 'keyup'
+			switch event_obj.keyCode
+				when  ENTER_KEY then type= 'enter'
+				when ESCAPE_KEY then type= 'escape'
 		target= event_obj.target
 		return false if target is window # blur had this
 		# Bubble up to any parent with a data-e-action
@@ -61,12 +65,13 @@ class RenderStrategy$Base
 			continue if 'action' is nm= attrs[ ix].name.slice 7
 			data_params[ nm]= attrs[ ix].value
 		val= target.value
+		val= false if target.type is 'checkbox' and target.checked is false
 		files= target.files
 		_log2 f, 'event', {type, data_action, data_params, val, files}, target
 		data_params.val= val
 		data_params._files= files
 		# Support for Touch Events
-		data_params[nm]= event_obj[nm] for nm,val of event_obj when nm in ['touches','changedTouches','targetTouches']
+		data_params[nm]= event_obj[nm] for nm in ['touches','changedTouches','targetTouches'] when nm of event_obj
 		# TODO COMPATABILITY MODE, EH?
 		old_params= target.getAttribute 'data-params'
 		data_params[ nm]= rec for nm,rec of JSON.parse old_params if old_params
@@ -78,7 +83,7 @@ class RenderStrategy$Base
 		return false; # TODO
 	init: ->
 		interesting= [
-			'mousedown', 'dblclick', 'keyup', 'blur', 'focus', 'input' # JCS: TODO SEE IF 'input' CAN SUPPLANT THIS: ,'change'
+			'mousedown', 'dblclick', 'keyup', 'blur', 'focus', 'change', 'input' # 'change' still needed for e.g. checkbox
 			'touchstart', 'touchmove', 'touchend' # Touch Events
 		]
 		document.body.addEventListener event_name, @handleEvent, true for event_name in interesting
@@ -94,7 +99,9 @@ class RenderStrategy$Base
 		f= 'E:bootstrap.onPopState: '
 		_log2 f, was_popped: @was_popped, very_first: @very_first, true, state: if event is true then 'X' else event.state
 		if event is true or not event.state # Special processing - making sure this logic happens in FF as initial load
-			return if @was_popped or not @very_first # We did handle it already
+			if @was_popped or not @very_first # We did handle it already
+				E.action 'browser_rehash', hash: location.hash.substr 1
+				return
 		@was_popped= true
 		if @very_first
 			E.action 'browser_hash', hash: location.hash.substr 1
@@ -151,10 +158,11 @@ class RenderStrategy$Base
 		_log2 f, vf: @very_first, wp: @was_popped
 		return if not history
 		displayHash= '' # if @very_first then '' else 'action-'+ action
-		# Does the current flow-path contain a 'dom_cache' value?
-		new_hash= (E.appFindAttr path[0], path[1], path[2], 'route') ? false
-		# new_hash= E.getExternalUrl new_hash, path # TODO: browser_hash variables
-		if new_hash isnt false then displayHash= new_hash
+		# Does the current flow-path contain a 'route' value?
+		route= E.appFindAttr path[0], path[1], path[2], 'route'
+		new_hash= E[ route.model]().route route if typeof route is 'object' and 'model' of route
+		new_hash= route if typeof route is 'string'
+		displayHash= new_hash if new_hash isnt false
 		model_state= E.getModelState()
 		#_log2 f, ms: model_state, ha: displayHash, cvw: [action, @very_first, @was_popped]
 		if @very_first or history is 'replace'

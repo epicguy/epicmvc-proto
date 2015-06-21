@@ -922,7 +922,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       event: (function() {}),
       loadDirs: {}
     };
-    _ref = ['c1', 'a1', 'a2', 'ap1', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6', 'ca1', 'ca2', 'ca3', 'ca4', 'fi1', 'fi2', 'fi3', 'v1', 'w1'];
+    _ref = ['c1', 'a1', 'a2', 'ap1', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'ca1', 'ca2', 'ca3', 'ca4', 'fi1', 'fi2', 'fi3', 'fi4', 'v1', 'v2', 'w1', 'ex1'];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       nm = _ref[_i];
       option[nm] = (function() {});
@@ -1814,6 +1814,10 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       return E.option.m6(this.view_nm, fistNm, fieldNm, row);
     };
 
+    ModelJS.prototype.route = function(options) {
+      return E.option.m7(this.view_nm, options);
+    };
+
     return ModelJS;
 
   })();
@@ -1990,6 +1994,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         modal = (_ref1 = (E.appGetSetting('modals'))[modal]) != null ? _ref1 : modal;
       }
       layout = modal != null ? modal : E.appGetSetting('layout', flow, track, step);
+      this.N = {};
       this.modal = modal ? true : false;
       this.page_name = (_ref2 = (E.appGetS(flow, track, step)).page) != null ? _ref2 : step;
       this.did_run = true;
@@ -2006,7 +2011,6 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       this.R = {};
       this.I = {};
       this.P = [{}];
-      return this.N = {};
     };
 
     View$Base.prototype.saveInfo = function() {
@@ -2049,13 +2053,19 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     };
 
     View$Base.prototype.getTable = function(nm) {
-      var f;
+      var f, p, rVal, _i, _len, _ref;
       f = 'Base:M/View.getTable:' + nm;
       switch (nm) {
         case 'If':
           return [this.N];
         case 'Part':
-          return this.P.slice(-1);
+          rVal = {};
+          _ref = this.P;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            p = _ref[_i];
+            E.merge(rVal, p);
+          }
+          return [rVal];
         default:
           return [];
       }
@@ -2130,15 +2140,17 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     };
 
     View$Base.prototype.formatFromSpec = function(val, spec, custom_spec) {
-      var f, left, right, str, _base, _ref;
+      var f, left, right, str, _ref;
       f = 'formatFromSpec';
       switch (spec) {
         case '':
           if (custom_spec) {
-            return typeof (_base = window.EpicMvc).custom_filter === "function" ? _base.custom_filter(val, custom_spec) : void 0;
+            E.option.v2(val, custom_spec);
+            return E.custom_filter(val, custom_spec);
           } else {
             return val;
           }
+          break;
         case 'count':
           return val != null ? val.length : void 0;
         case 'bool':
@@ -2245,7 +2257,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       return out;
     };
 
-    View$Base.prototype.loadPartAttrs = function(attrs) {
+    View$Base.prototype.loadPartAttrs = function(attrs, full) {
       var attr, f, result, val;
       f = 'Base:M/View.loadPartAttrs';
       result = {};
@@ -2254,7 +2266,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         if ('data-e-' !== attr.slice(0, 7)) {
           continue;
         }
-        result[attr.slice(7)] = val;
+        result[full ? attr : attr.slice(7)] = val;
       }
       return result;
     };
@@ -2281,14 +2293,17 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     };
 
     View$Base.prototype.piece_handle = function(view, attrs, obj, is_part) {
-      var can_componentize, content, f;
+      var can_componentize, content, f, saved_info;
       f = 'piece_handle';
       if (obj != null ? obj.then : void 0) {
         return this.D_piece(view, attrs, obj, is_part);
       }
       content = obj.content, can_componentize = obj.can_componentize;
+      saved_info = this.saveInfo();
       this.P.push(this.loadPartAttrs(attrs));
-      return content = this.handleIt(content);
+      content = this.handleIt(content);
+      this.restoreInfo(saved_info);
+      return content;
       /* JCS:DEFER:DYNAMIC 
       		defer= @D.pop()
       		#_log2 f, 'defer', view, defer
@@ -2327,7 +2342,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       }, function(err) {
         console.error('D_piece', err);
         _this.nest_dn(who + view + ' IN-ERROR');
-        return _this._Err('tag', 'page/part', attrs, err);
+        return typeof _this._Err === "function" ? _this._Err('tag', 'page/part', attrs, err) : void 0;
         throw err;
       });
       return d_result;
@@ -2478,9 +2493,9 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       content = content_f ? content_f : (part = (_ref4 = (_ref5 = attrs.part) != null ? _ref5 : fist.part) != null ? _ref4 : 'fist_default', (_ref6 = attrs.part) != null ? _ref6 : attrs.part = (_ref7 = fist.part) != null ? _ref7 : 'fist_default', function() {
         return _this.kids([
           [
-            'part', {
+            'part', E.merge({
               part: part
-            }
+            }, _this.loadPartAttrs(attrs, true))
           ]
         ]);
       });
@@ -2508,7 +2523,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         _ref1 = attrs[ix].name.split('-'), d = _ref1[0], e = _ref1[1], nm = _ref1[2], p1 = _ref1[3], p2 = _ref1[4];
         val = attrs[ix].value;
         _log2(f, attrs[ix].name, val, p1, p2);
-        E.option.v1(nm, attrs[ix].name);
+        E.option.ex1(nm, attrs[ix].name);
         _results.push(E['ex$' + nm](el, isInit, ctx, val, p1, p2));
       }
       return _results;
@@ -2645,11 +2660,14 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     Fist.prototype.fistClear = function(fistNm, row) {
       var rnm;
       rnm = fistNm + (row ? ':' + row : '');
-      return delete this.fist[rnm];
+      if (rnm in this.fist) {
+        delete this.fist[rnm];
+        return this.invalidateTables([rnm]);
+      }
     };
 
     Fist.prototype.fistValidate = function(ctx, fistNm, row) {
-      var ans, errors, f, field, fieldNm, fist, invalidate, nm, r, _ref, _ref1, _ref2;
+      var ans, errors, f, field, fieldNm, fist, hval, invalidate, nm, r, _ref, _ref1, _ref2;
       f = 'fistValidate:' + fistNm + (row != null ? ':' + row : '');
       _log2(f);
       r = ctx;
@@ -2658,6 +2676,11 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       _ref = fist.ht;
       for (fieldNm in _ref) {
         field = _ref[fieldNm];
+        hval = E.fistH2H(field, field.hval);
+        if (hval !== field.hval) {
+          field.hval = hval;
+          invalidate = true;
+        }
         if (true !== E.fistVAL(field, field.hval)) {
           errors++;
         }
@@ -3641,10 +3664,12 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 (function() {
   'use strict';
 
-  var ENTER_KEY, RenderStrategy$Base,
+  var ENTER_KEY, ESCAPE_KEY, RenderStrategy$Base,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   ENTER_KEY = 13;
+
+  ESCAPE_KEY = 27;
 
   RenderStrategy$Base = (function() {
 
@@ -3684,7 +3709,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     }
 
     RenderStrategy$Base.prototype.handleEvent = function(event_obj) {
-      var attrs, data_action, data_params, f, files, ix, nm, old_params, prevent, rec, target, type, val, _i, _ref, _ref1;
+      var attrs, data_action, data_params, f, files, ix, nm, old_params, prevent, rec, target, type, val, _i, _j, _len, _ref, _ref1, _ref2;
       f = 'on[data-e-action]';
       _log2(f, 'top', this.redraw_guard, (event_obj != null ? event_obj : window.event).type);
       if (event_obj == null) {
@@ -3706,8 +3731,14 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       if (type === 'keyup' && event_obj.keyCode === 9) {
         return;
       }
-      if (type === 'keyup' && event_obj.keyCode === ENTER_KEY) {
-        type = 'enter';
+      if (type === 'keyup') {
+        switch (event_obj.keyCode) {
+          case ENTER_KEY:
+            type = 'enter';
+            break;
+          case ESCAPE_KEY:
+            type = 'escape';
+        }
       }
       target = event_obj.target;
       if (target === window) {
@@ -3732,6 +3763,9 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         data_params[nm] = attrs[ix].value;
       }
       val = target.value;
+      if (target.type === 'checkbox' && target.checked === false) {
+        val = false;
+      }
       files = target.files;
       _log2(f, 'event', {
         type: type,
@@ -3742,17 +3776,18 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       }, target);
       data_params.val = val;
       data_params._files = files;
-      for (nm in event_obj) {
-        val = event_obj[nm];
-        if (nm === 'touches' || nm === 'changedTouches' || nm === 'targetTouches') {
+      _ref1 = ['touches', 'changedTouches', 'targetTouches'];
+      for (_j = 0, _len = _ref1.length; _j < _len; _j++) {
+        nm = _ref1[_j];
+        if (nm in event_obj) {
           data_params[nm] = event_obj[nm];
         }
       }
       old_params = target.getAttribute('data-params');
       if (old_params) {
-        _ref1 = JSON.parse(old_params);
-        for (nm in _ref1) {
-          rec = _ref1[nm];
+        _ref2 = JSON.parse(old_params);
+        for (nm in _ref2) {
+          rec = _ref2[nm];
           data_params[nm] = rec;
         }
       }
@@ -3765,7 +3800,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     RenderStrategy$Base.prototype.init = function() {
       var event_name, interesting, _i, _len, _results;
-      interesting = ['mousedown', 'dblclick', 'keyup', 'blur', 'focus', 'input', 'touchstart', 'touchmove', 'touchend'];
+      interesting = ['mousedown', 'dblclick', 'keyup', 'blur', 'focus', 'change', 'input', 'touchstart', 'touchmove', 'touchend'];
       _results = [];
       for (_i = 0, _len = interesting.length; _i < _len; _i++) {
         event_name = interesting[_i];
@@ -3808,6 +3843,9 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       });
       if (event === true || !event.state) {
         if (this.was_popped || !this.very_first) {
+          E.action('browser_rehash', {
+            hash: location.hash.substr(1)
+          });
           return;
         }
       }
@@ -3874,7 +3912,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     };
 
     RenderStrategy$Base.prototype.handleRenderState = function() {
-      var displayHash, f, history, model_state, new_hash, path, str_path, _base, _base1, _ref;
+      var displayHash, f, history, model_state, new_hash, path, route, str_path, _base, _base1;
       path = E.App().getStepPath();
       str_path = path.join('/');
       history = str_path === this.last_path ? 'replace' : true;
@@ -3887,7 +3925,13 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         return;
       }
       displayHash = '';
-      new_hash = (_ref = E.appFindAttr(path[0], path[1], path[2], 'route')) != null ? _ref : false;
+      route = E.appFindAttr(path[0], path[1], path[2], 'route');
+      if (typeof route === 'object' && 'model' in route) {
+        new_hash = E[route.model]().route(route);
+      }
+      if (typeof route === 'string') {
+        new_hash = route;
+      }
       if (new_hash !== false) {
         displayHash = new_hash;
       }
@@ -4000,10 +4044,7 @@ Part: {
       m2: function(view_nm, act, parms) {
         err("Model (" + view_nm + ").action() didn't know action (" + act + ")");
       },
-      m3: function(view_nm, tbl_nm, table) {
-        if (tbl_nm in table) {
-          return;
-        }
+      m3: function(view_nm, tbl_nm) {
         err("Model (" + view_nm + ").loadTable() didn't know table-name (" + tbl_nm + ")");
       },
       m4: function(view_nm, fistNm, row) {
@@ -4014,6 +4055,9 @@ Part: {
       },
       m6: function(view_nm, fistNm, fieldNm, row) {
         err("Model (" + view_nm + ").fistGetChoices() did't know FIST-FIELD (" + fistNm + "-" + fieldNm + ")");
+      },
+      m7: function(view_nm, options) {
+        err("Model (" + view_nm + ").route() needs to be implemented.");
       },
       ca1: function(action_token, original_path, action_node) {
         if (action_node != null) {
@@ -4122,8 +4166,14 @@ Part: {
         });
       },
       v1: function(val, spec) {
-        err("Unknown variable specification/filter (#" + spec + ")");
+        err("Unknown variable specification/filter (#" + spec + ") Note: custom specs use ##");
         return val != null ? val : '';
+      },
+      v2: function(val, custom_spec) {
+        if (typeof E.custom_filter === 'function') {
+          return;
+        }
+        return err("Unknown custom specification/filter (##" + custom_spec + "). Note: uses ## and requires function E.custom_spec");
       },
       w1: function(wistNm) {
         if (wistNm in E.wistDef) {
@@ -4131,7 +4181,7 @@ Part: {
         }
         err("Unknown Wist (" + wistNm + ").");
       },
-      v1: function(nm, attr) {
+      ex1: function(nm, attr) {
         if ('ex$' + nm in E) {
           return;
         }
@@ -5010,7 +5060,7 @@ Part: {
   FindAttrs = function(file_info, str) {
     var attr_obj, attr_split, attrs_need_cleaning, className, data_e_action, empty, eq, event_attrs_shortcuts, f, good, grp, i, nm, pane, parts, quo, start, style_obj, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
     f = ':parse.FindAttrs:';
-    event_attrs_shortcuts = ['data-e-click', 'data-e-rclick', 'data-e-change', 'data-e-dblclick', 'data-e-enter', 'data-e-keyup', 'data-e-focus', 'data-e-blur', 'data-e-event'];
+    event_attrs_shortcuts = ['data-e-click', 'data-e-rclick', 'data-e-change', 'data-e-dblclick', 'data-e-enter', 'data-e-escape', 'data-e-keyup', 'data-e-focus', 'data-e-blur', 'data-e-event'];
     str = ' ' + str;
     str = str.replace(/\se-/gm, ' data-e-');
     str = str.replace(/\sex-/gm, ' data-ex-');

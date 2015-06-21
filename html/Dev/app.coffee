@@ -44,8 +44,7 @@ window.EpicMvc.app$Dev=
 		m2: (view_nm, act, parms) ->
 			err "Model (#{view_nm}).action() didn't know action (#{act})"
 			return
-		m3: (view_nm, tbl_nm, table) ->
-			return if tbl_nm of table
+		m3: (view_nm, tbl_nm) ->
 			err "Model (#{view_nm}).loadTable() didn't know table-name (#{tbl_nm})"
 			return
 		m4: (view_nm, fistNm, row) ->
@@ -56,6 +55,9 @@ window.EpicMvc.app$Dev=
 			return
 		m6: (view_nm, fistNm, fieldNm, row) ->
 			err "Model (#{view_nm}).fistGetChoices() did't know FIST-FIELD (#{fistNm}-#{fieldNm})"
+			return
+		m7: (view_nm, options) ->
+			err "Model (" + view_nm + ").route() needs to be implemented."
 			return
 
 		# WARNING: "No app. entry for action_token (#{action_token}) on path (#{original_path})"
@@ -127,16 +129,19 @@ window.EpicMvc.app$Dev=
 
 		# E.option.v1 val, spec # Fell into default arm of View:variable-get-with-spec
 		v1: (val, spec) ->
-			err "Unknown variable specification/filter (##{spec})"
+			err "Unknown variable specification/filter (##{spec}) Note: custom specs use ##"
 			val ? '' # Return this, so caller gets the unparsed result
+		v2: (val, custom_spec) ->
+			return if typeof E.custom_filter is 'function'
+			err "Unknown custom specification/filter (##" + custom_spec + "). Note: uses ## and requires function E.custom_spec"
 
 		# E.option.w1 wistNm # Ensure wistNm in E.wistDef
 		w1: (wistNm) ->
 			return if wistNm of E.wistDef
 			err "Unknown Wist (#{wistNm})."
 			return
-		# E.option.v1 nm, attr # Test that E.ex$<nm> exists as a function (Mithril extension); User used attribute: data-ex-<nm>[-<p1>[-<p2>]]
-		v1: (nm,attr) ->
+		# E.option.ex1 nm, attr # Test that E.ex$<nm> exists as a function (Mithril extension); User's attribute: data-ex-<nm>[-<p1>[-<p2>]]
+		ex1: (nm,attr) ->
 			return if 'ex$'+ nm of E
 			err "Unknown Mithril extension function (E.ex$#{nm}) using attribute: #{attr}."
 			return

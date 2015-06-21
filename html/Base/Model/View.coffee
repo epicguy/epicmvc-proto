@@ -38,6 +38,7 @@ class View$Base extends E.ModelJS
 		if modal= E.appFindAttr flow, track, step,  'modal'
 			modal=( E.appGetSetting 'modals')[ modal] ? modal
 		layout= modal ? E.appGetSetting 'layout', flow, track, step
+		@N= {}   # 'Names' [if-name]=boolean (from <if_xxx name="if-name" ..>
 		@modal= if modal then true else false
 		@page_name=( E.appGetS flow, track, step).page ? step
 		@did_run= true
@@ -54,8 +55,8 @@ class View$Base extends E.ModelJS
 		@R= {}   # 'Row' [table-name-alias|subtable-name-alias]['m'odel or 'p'arent, row-'c'ount, 'o'riginal-name
 		@I= {}   # 'Info' [table-name-alias|subtable-nam-aliase]= single-row
 		@P= [{}] # 'Parts' Push p:attrs with each part, then pop; (top level is row w/o attrs)
-		@N= {}   # 'Names' [if-name]=boolean (from <if_xxx name="if-name" ..>
 		#JCS:DEFER:DYNAMIC @D= [[]] # 'Defer' Stack arrays of defers as we render parts
+		return
 	saveInfo: () ->
 		f= 'saveInfo'
 		saved_info= E.merge {}, I: @I, P: @P
@@ -81,7 +82,11 @@ class View$Base extends E.ModelJS
 		#_log2 f, @P if nm is 'Part'
 		switch nm
 			when 'If' then [@N]
-			when 'Part' then @P.slice -1
+			when 'Part'
+				# @P.slice -1
+				rVal= {}
+				E.merge rVal, p for p in @P
+				[rVal]
 			else []
 	invalidateTables: (view_nm, tbl_nms, deleted_tbl_nms) ->
 		return unless @did_run and deleted_tbl_nms.length
@@ -147,7 +152,11 @@ class View$Base extends E.ModelJS
 		f= 'formatFromSpec'
 		#_log2 f, val, spec, custom_spec
 		switch spec
-			when '' then (if custom_spec then (window.EpicMvc.custom_filter? val, custom_spec) else val)
+			when ''
+				if custom_spec
+						E.option.v2 val, custom_spec #%#
+						E.custom_filter val, custom_spec
+					else val
 			when 'count' then val?.length
 			when 'bool' then (if val then true else false)
 			when 'bytes' then window.bytesToSize Number val
@@ -214,12 +223,12 @@ class View$Base extends E.ModelJS
 		out # Must return an array, so we can fill it's slots later
 
 	# Process data-e-any="value" into hash of 'any: value'
-	loadPartAttrs: (attrs) ->
+	loadPartAttrs: (attrs,full) ->
 		f= 'Base:M/View.loadPartAttrs'
 		result= {}
 		for attr,val of attrs
 			continue if 'data-e-' isnt attr.slice 0, 7
-			result[ attr.slice 7]= val
+			result[ if full then attr else attr.slice 7]= val
 		result
 	T_page: ( attrs) =>
 		f= 'T_page'
@@ -247,9 +256,12 @@ class View$Base extends E.ModelJS
 		#_log2 f, view #, new Date().getTime()- @start #, obj
 		{content,can_componentize}= obj
 		#_log2 f, 'AFTER ASSIGN', view, obj if obj is false
+		saved_info= @saveInfo()
 		@P.push @loadPartAttrs attrs
 		# JCS:DEFER:DYNAMIC @D.push []
 		content= @handleIt content
+		@restoreInfo saved_info
+		content
 		### JCS:DEFER:DYNAMIC 
 		defer= @D.pop()
 		#_log2 f, 'defer', view, defer
@@ -280,7 +292,7 @@ class View$Base extends E.ModelJS
 		, (err)=>
 			console.error 'D_piece', err
 			@nest_dn who+ view+ ' IN-ERROR'
-			return @_Err 'tag', 'page/part', attrs, err # TODO THIS IS USING EXTENDED DEV METHOD!!!!!
+			return @_Err? 'tag', 'page/part', attrs, err # TODO THIS IS USING EXTENDED DEV METHOD!!!!!
 			throw err
 		d_result
 
@@ -371,7 +383,7 @@ class View$Base extends E.ModelJS
 		else
 			part= attrs.part ? fist.part ? 'fist_default'
 			attrs.part?= fist.part ? 'fist_default'
-			()=> @kids [['part',{part}]]
+			()=> @kids [['part', E.merge {part}, @loadPartAttrs attrs, true]] # Pass along only data-e-* attrs
 		foreach_attrs= table: masterAlias+ '/'+ subTable
 		foreach_attrs.alias= attrs.alias if attrs.alias?
 		ans= @T_foreach foreach_attrs, content
@@ -385,7 +397,7 @@ class View$Base extends E.ModelJS
 			[d,e,nm,p1,p2]= attrs[ ix].name.split '-'
 			val= attrs[ ix].value
 			_log2 f, attrs[ ix].name, val, p1, p2
-			E.option.v1 nm, attrs[ ix].name #%#
+			E.option.ex1 nm, attrs[ ix].name #%#
 			E['ex$'+ nm] el, isInit, ctx, val, p1, p2
 
 E.Model.View$Base= View$Base # Public API

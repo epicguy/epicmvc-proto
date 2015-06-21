@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Template • TodoMVC</title>
+		<xlink rel="stylesheet" type="text/css" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"/>
+		<link rel="stylesheet" href="http://cdn.rawgit.com/tastejs/todomvc-common/master/base.css">
+		<link rel="stylesheet" href="http://cdn.rawgit.com/tastejs/todomvc-app-css/master/index.css">
+		<style>xdiv.dbg-toolbar {top: -30px;}</style>
+	</head>
+	<body>
+<script type="x/template" id="view-Page-default">
+		<section class="todoapp">
+			<header class="header">
+				<h1>todos</h1>
+				<e-fist fist="Add" part="simple" e-autofocus="y"/>
+			</header>
+	<e-part part="main"/>
+	<e-part part="footer"/>
+		</section>
+		<footer class="info">
+			<p>Double-click to edit a todo</p>
+			<p>Created by <a href="http://github.com/epicguy">epicguy</a></p>
+			<p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+		</footer>
+</script>
+<script type="x/template" id="view-Part-simple">
+	<input  e-event="Fist:&Control/fistNm;:&Control/fieldNm;:change"
+		e-action="&Control/action;"
+		placeholder="What needs to be done?"
+		?autofocus="&View/Part/autofocus#?Y;"
+		ex-focus="&View/Part/autofocus#?Y;"
+		class="new-todo"
+		type="&Control/type#lc;"
+		?name="&Control/name;"
+		value="&Control/value;"
+		?size="&Control/width;"
+		?required="&Control/req;">
+</script>
+
+<script type="x/template" id="view-Part-main">
+			<!-- This section should be hidden by default and shown when there are todos -->
+	<e-if val="&TODO/Stats/count;" gt="0">
+			<section class="main">
+				<input class="toggle-all" type="checkbox" checked="&TODO/Stats/all_marked;" e-change="mark_all">
+				<label for="toggle-all">Mark all as complete</label>
+				<ul class="todo-list">
+					<!-- These are here just to show the structure of the list items -->
+					<e-foreach table="TODO/ListItem">
+					<!-- List items should get the class `editing` when editing and `completed` when marked as completed -->
+					<li class="&ListItem/completed#?completed; &ListItem/isEdit#?editing;">
+						<div class="view">
+							<e-if not_set="&ListItem/is_edit;">
+								<input e-click="toggle_complete" e-id="&ListItem/id;" class="toggle" type="checkbox" ?checked="&ListItem/completed;">
+								<label e-dblclick="edit" e-id="&ListItem/id;">&ListItem/title;</label>
+								<button e-click="destroy" e-id="&ListItem/id;" class="destroy"></button>
+							</e-if>
+							<e-if set="&ListItem/is_edit;">
+								<e-fist fist="Edit" part="simple" e-autofocus="yes"/>
+							</e-if>
+						</div>
+					</li>
+					</e-foreach>
+				</ul>
+			</section>
+	</e-if>
+</script>
+<script type="x/template" id="view-Part-footer">
+			<!-- This footer should hidden by default and shown when there are todos -->
+	<e-if val="&TODO/Stats/count;" gt="0">
+			<footer class="footer">
+				<!-- This should be `0 items left` by default -->
+				<span class="todo-count"><strong>&TODO/Stats/count;</strong> item&TODO/Stats/count##s; left</span>
+				<!-- Remove this if you don't implement routing -->
+				<ul class="filters">
+					<li>
+						<a e-click="show_all" class="&TODO/Stats/show_all#?selected;">All</a>
+					</li>
+					<li>
+						<a e-click="show_active" class="&TODO/Stats/show_active#?selected;">Active</a>
+					</li>
+					<li>
+						<a e-click="show_completed" class="&TODO/Stats/show_completed#?selected;">Completed</a>
+					</li>
+				</ul>
+				<!-- Hidden if no completed items are left ? -->
+				<e-if val="&TODO/Stats/completed;" gt="0">
+					<button e-click="clear_completed" class="clear-completed">Clear completed</button>
+				</e-if>
+			</footer>
+	</e-if>
+</script>
+<!-- Scripts here. Don't remove ? -->
+<script type="text/javascript" src="EpicMvc-BaseDev-2.1.0-latest.js"></script>
+<xscript type="text/javascript" src="EpicMvc-Extra-2.1.0-latest.js"></xscript>
+<script type="text/javascript" src="coffee-script.js"> </script>
+<script type="text/coffeescript">
+E.fist$TODO=
+	FIELDS:
+		NewInput:  db_nm: 'input', type: 'text', h2h: 'trim', label: '', action: 'enter:add_it'
+		EditInput: db_nm: 'input', type: 'text', h2h: 'trim', label: '', action: 'enter:change_it,blur:change_it,escape:forget_it'
+	FISTS:
+		Add:  FIELDS:['NewInput']
+		Edit: FIELDS:['EditInput']
+E.app$TODO=
+	MODELS: TODO: class:'TODO', inst:'todo', fists: ['Add', 'Edit'], options: key:'todos-epicmvc'
+	ACTIONS:
+		show_all:        do: 'TODO.'
+		show_active:     do: 'TODO.'
+		show_completed:  do: 'TODO.'
+		toggle_complete: do: 'TODO.', pass: 'id'
+		destroy:         do: 'TODO.', pass: 'id'
+		clear_completed: do: 'TODO.'
+		add:             do: 'TODO.', pass: 'val'
+		add_it:          do: 'TODO.', fist: 'Add', next: when: 'OK', clear: 'Add'
+		edit:            do: 'TODO.', pass: 'id'
+		change_it:       do: 'TODO.', fist: 'Edit', next: clear:'Edit', do: 'TODO.edit', set: id:'none'
+		forget_it:       do: 'TODO.edit', set: id:'none'
+		mark_all:        do: 'TODO.', pass:'val'
+		browser_hash:    do: 'TODO.', pass:'hash'
+		browser_rehash:  do: 'TODO.', pass:'hash'
+	FLOWS: default: route: model: 'TODO', option: '.list-filter'
+
+class TODO extends window.E.ModelJS
+	constructor: ( view_nm, options) ->
+		f= 'TODO.constructor'
+		ss=
+			show: 'all' # all, active, completed
+			editing: false # the 'id' being edited
+		super view_nm, options, ss
+	saveState: ->
+		# Put in localStorage
+		new_list=( id:l.id, title:l.title, completed:l.completed for l in @list)
+		window.localStorage?.setItem @options.key, JSON.stringify new_list
+		super() # Returns a snapshot of the 'ss' state
+	restoreState: (copy_of_state) ->
+		f= 'TODO::restoreState'
+		super copy_of_state
+		@nextId= 0
+		# Pull from localStorage if it existed there
+		saved= window.localStorage?.getItem @options.key
+		@list= if typeof saved isnt 'string' then [] else JSON.parse saved
+		for l in @list
+			@nextId= l.id if l.id> @nextId
+		_log2 f, 'list', @list
+	_nextId: -> ++@nextId
+	route: (options) ->	return '/'+ if @show is 'all' then '' else @show
+	action: (ctx, act, p) ->
+		f= 'M:TODO::action'
+		_log2 f, 'act:', act, 'p:', p
+		{r,i,m}= ctx
+		switch act
+			when 'browser_hash' #p.hash as /,/active,/completed
+				@show= if p.hash in ['/active','/completed'] then p.hash.slice 1 else 'all'
+			when 'browser_rehash' #p.hash
+				was= @show
+				@show= if p.hash in ['/active','/completed'] then p.hash.slice 1 else 'all'
+				@invalidateTables true if @show isnt was
+			when 'show_completed', 'show_all', 'show_active'
+				was= @show
+				@show= act.slice 'show_'.length
+				@invalidateTables true if @show isnt was
+			when 'add_it' # p.Add.input (Fist.Field)
+				val= p.Add.input
+				if val.length
+					@list.push title: val, completed: false, id: @_nextId()+ ''
+					@invalidateTables true
+					r.ok= 'OK'
+			when 'toggle_complete'
+				for l in @list when l.id is p.id
+					l.completed= not l.completed
+					@invalidateTables true
+					break
+			when 'edit' #p.id
+				if @editing isnt p.id
+					@editing= p.id
+					@invalidateTables true
+					break
+			when 'change_it'
+				return if p.Edit.input.length is 0
+				for l in @list when l.id is @editing
+					l.title= p.Edit.input
+					@invalidateTables true
+					break
+			when 'destroy'
+				new_list=( l for l in @list when l.id isnt p.id)
+				if new_list.length isnt @list.length
+					@list= new_list
+					@invalidateTables true
+			when 'clear_completed'
+				new_list=( l for l in @list when l.completed isnt true)
+				if new_list.length isnt @list.length
+					@list= new_list
+					@invalidateTables true
+			when 'mark_all' #p.val
+				torf= if p.val is false then false else true
+				l.completed= torf for l in @list
+				@invalidateTables true
+			else return super ctx, act, p
+	loadTable: (tbl_nm) ->
+		switch tbl_nm
+			when 'Stats'
+				completed= 0
+				completed++ for l in @list when l.completed is true
+				row=
+					count: @list.length, show: @show, completed: completed
+					show_active: false, show_all: false, show_completed: false
+					all_marked: completed is @list.length
+				row[ 'show_'+ @show]= true
+				@Table[ tbl_nm]= [ row ]
+			when 'ListItem'
+				table= []
+				for row in @list when @show is 'all' or row.completed is (@show is 'completed')
+					table.push E.merge {is_edit: row.id is @editing}, row
+				@Table[ tbl_nm]= table
+			else super tbl_nm
+	fistGetValues: (fistNm, row) ->
+		switch fistNm
+			when 'Add' then ;
+			when 'Edit'
+				for l in @list when l.id is @editing
+					return input: l.title
+			else return super fistNm
+		return
+E.Model.TODO= TODO
+E.custom_filter= (val, spec) -> # TODO LETS CHANGE THIS TO USE E.G. E.hashhash$s
+	switch spec
+		when 's' # Pluralize a word
+			return if val is 1 then '' else 's'
+		else
+			throw new Error 'Unknown custom_filter spec: ##'+ spec
+	return
+E.ex$focus= (el, beenHere, ctx, val, p1, p2) ->
+	el.focus() if !beenHere and val.length
+	return
+</script>
+		<script type="text/coffeescript">
+			#E.run ['Base', 'Dev', 'Proto', 'TODO']
+			E.run ['Base', 'TODO']
+		</script>
+	</body>
+</html>
+

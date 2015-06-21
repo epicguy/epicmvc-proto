@@ -121,11 +121,14 @@
     Fist.prototype.fistClear = function(fistNm, row) {
       var rnm;
       rnm = fistNm + (row ? ':' + row : '');
-      return delete this.fist[rnm];
+      if (rnm in this.fist) {
+        delete this.fist[rnm];
+        return this.invalidateTables([rnm]);
+      }
     };
 
     Fist.prototype.fistValidate = function(ctx, fistNm, row) {
-      var ans, errors, f, field, fieldNm, fist, invalidate, nm, r, _ref, _ref1, _ref2;
+      var ans, errors, f, field, fieldNm, fist, hval, invalidate, nm, r, _ref, _ref1, _ref2;
       f = 'fistValidate:' + fistNm + (row != null ? ':' + row : '');
       _log2(f);
       r = ctx;
@@ -134,6 +137,11 @@
       _ref = fist.ht;
       for (fieldNm in _ref) {
         field = _ref[fieldNm];
+        hval = E.fistH2H(field, field.hval);
+        if (hval !== field.hval) {
+          field.hval = hval;
+          invalidate = true;
+        }
         if (true !== E.fistVAL(field, field.hval)) {
           errors++;
         }
