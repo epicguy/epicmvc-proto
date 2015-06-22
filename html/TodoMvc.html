@@ -12,7 +12,7 @@
 		<section class="todoapp">
 			<header class="header">
 				<h1>todos</h1>
-				<e-fist fist="Add" part="simple" e-autofocus="y"/>
+				<e-fist fist="Add" part="fist_add"/>
 			</header>
 			<e-if val="&TODO/Stats/count;" gt="0">
 				<e-part part="main"/>
@@ -25,18 +25,26 @@
 			<p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
 		</footer>
 </script>
-<script type="x/template" id="view-Part-simple">
+<script type="x/template" id="view-Part-fist_add">
 	<input  e-event="Fist:&Control/fistNm;:&Control/fieldNm;:change"
-		e-action="&Control/action;"
+		e-enter="add_it"
 		placeholder="What needs to be done?"
-		?autofocus="&View/Part/autofocus#?Y;"
-		ex-focus="&View/Part/autofocus#?Y;"
-		class="new-todo"
+		autofocus
+		class="edit new-todo"
 		type="&Control/type#lc;"
 		?name="&Control/name;"
 		value="&Control/value;"
-		?size="&Control/width;"
-		?required="&Control/req;">
+		>
+</script>
+<script type="x/template" id="view-Part-fist_edit">
+	<input  e-event="Fist:&Control/fistNm;:&Control/fieldNm;:change"
+		e-action="enter:change_it,blur:change_it,escape:forget_it"
+		ex-focus="x"
+		class="edit"
+		type="&Control/type#lc;"
+		?name="&Control/name;"
+		value="&Control/value;"
+		>
 </script>
 
 <script type="x/template" id="view-Part-main">
@@ -50,15 +58,15 @@
 					<!-- List items should get the class `editing` when editing and `completed` when marked as completed -->
 					<li class="&ListItem/completed#?completed; &ListItem/isEdit#?editing;">
 						<div class="view">
-							<e-if not_set="&ListItem/is_edit;">
-								<input e-click="toggle_complete" e-id="&ListItem/id;" class="toggle" type="checkbox" ?checked="&ListItem/completed;">
+							<input e-click="toggle_complete" e-id="&ListItem/id;" class="toggle" type="checkbox" ?checked="&ListItem/completed;">
+							<e-if not_set="&ListItem/isEdit;">
 								<label e-dblclick="edit" e-id="&ListItem/id;">&ListItem/title;</label>
 								<button e-click="destroy" e-id="&ListItem/id;" class="destroy"></button>
 							</e-if>
-							<e-if set="&ListItem/is_edit;">
-								<e-fist fist="Edit" part="simple" e-autofocus="yes"/>
-							</e-if>
 						</div>
+							<e-if set="&ListItem/isEdit;">
+								<e-fist fist="Edit" part="fist_edit"/>
+							</e-if>
 					</li>
 					</e-foreach>
 				</ul>
@@ -94,11 +102,10 @@
 <script type="text/coffeescript">
 E.fist$TODO=
 	FIELDS:
-		NewInput:  db_nm: 'input', type: 'text', h2h: 'trim', label: '', action: 'enter:add_it'
-		EditInput: db_nm: 'input', type: 'text', h2h: 'trim', label: '', action: 'enter:change_it,blur:change_it,escape:forget_it'
+		AnInput:  db_nm: 'input', type: 'text', h2h: 'trim', label: ''
 	FISTS:
-		Add:  FIELDS:['NewInput']
-		Edit: FIELDS:['EditInput']
+		Add:  FIELDS:['AnInput']
+		Edit: FIELDS:['AnInput']
 E.app$TODO=
 	MODELS: TODO: class:'TODO', inst:'todo', fists: ['Add', 'Edit'], options: key:'todos-epicmvc'
 	ACTIONS:
@@ -208,7 +215,7 @@ class TODO extends window.E.ModelJS
 			when 'ListItem'
 				table= []
 				for row in @list when @show is 'all' or row.completed is (@show is 'completed')
-					table.push E.merge {is_edit: row.id is @editing}, row
+					table.push E.merge {isEdit: row.id is @editing}, row
 				@Table[ tbl_nm]= table
 			else super tbl_nm
 	fistGetValues: (fistNm, row) ->
