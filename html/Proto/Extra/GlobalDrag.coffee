@@ -1,4 +1,4 @@
-# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 # Use:
 # (In your HTML file, inside $())
 #
