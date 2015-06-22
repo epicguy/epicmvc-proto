@@ -1,3 +1,4 @@
+# Copyright 2007-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 # Mitrhil extension/config-fuction to support 'timeago' package for 1min events on individual elements
 # Use: <span data-ex-timeago="&Model/Subscription/expires;"></span>

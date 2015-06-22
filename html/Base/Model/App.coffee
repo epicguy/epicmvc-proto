@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 class App$Base extends E.ModelJS
 	constructor: (view_nm, options) ->

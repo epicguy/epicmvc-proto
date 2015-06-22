@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 # TODO DON'T RENDER DEBUG IF RENDERING INSIDE EPIC:DEFER
 
 class View extends E.Model.View$Base

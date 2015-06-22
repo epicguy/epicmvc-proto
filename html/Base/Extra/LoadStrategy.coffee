@@ -1,4 +1,4 @@
-# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 # This 'Base' load strategy expects all assests to be in memory variables (E.* namespace)
 class LoadStrategy$Base
