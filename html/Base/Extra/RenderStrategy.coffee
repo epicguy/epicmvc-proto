@@ -159,8 +159,9 @@ class RenderStrategy$Base
 		return if not history
 		displayHash= '' # if @very_first then '' else 'action-'+ action
 		# Does the current flow-path contain a 'route' value?
+		new_hash= false
 		route= E.appFindAttr path[0], path[1], path[2], 'route'
-		new_hash= E[ route.model]().route route if typeof route is 'object' and 'model' of route
+		new_hash= E[ route.model]().route route if (E.type_oau route) is 'O' and 'model' of route
 		new_hash= route if typeof route is 'string'
 		displayHash= new_hash if new_hash isnt false
 		model_state= E.getModelState()

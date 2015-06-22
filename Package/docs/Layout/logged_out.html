@@ -29,24 +29,3 @@
 	<!-- /#page-content-wrapper -->
 </div>
 <!-- /#wrapper -->
-<!-- Menu Toggle Script -->
-<e-defer>
-	$("#menu-toggle").click(function(e) {
-		e.preventDefault();
-		$("#wrapper").toggleClass("toggled");
-	});
-	console.log("JRH-1")
-	if (!window.location.hash && 'top' !== '#&App/V/scroll;') {
-		console.log("JRH-2")
-		if (window.location.hash !== '#&App/V/scroll;') {
-			console.log("JRH-3")
-			$('html,body').scrollTo('#&App/V/scroll;', {offset:-50, duration:800});
-		} else {
-			console.log("JRH-4")
-			setTimeout(function() {
-				console.log("JRH-5")
-				$('html,body').scrollTo('#&App/V/scroll;', 0);
-			}, 800);
-		}
-	}
-</e-defer>

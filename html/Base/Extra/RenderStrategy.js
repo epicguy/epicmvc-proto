@@ -263,8 +263,9 @@
         return;
       }
       displayHash = '';
+      new_hash = false;
       route = E.appFindAttr(path[0], path[1], path[2], 'route');
-      if (typeof route === 'object' && 'model' in route) {
+      if ((E.type_oau(route)) === 'O' && 'model' in route) {
         new_hash = E[route.model]().route(route);
       }
       if (typeof route === 'string') {

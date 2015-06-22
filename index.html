@@ -25,13 +25,13 @@
   -->
   <script type="text/javascript" charset="utf-8" src="html/mithril.js"></script>
   <script type="text/javascript" charset="utf-8" src="html/EpicCore.js"></script>
-  <script type="text/javascript" charset="utf-8" src="html/Package/Base/app.js"></script>
-  <script type="text/javascript" charset="utf-8" src="html/Package/BaseDevl/app.js"></script>
-  <script type="text/javascript" charset="utf-8" src="html/Package/BaseDevl/Extra/LoadStrategy.js"></script>
+  <script type="text/javascript" charset="utf-8" src="html/Base/manifest.js"></script>
+  <script type="text/javascript" charset="utf-8" src="html/Dev/manifest.js"></script>
+  <script type="text/javascript" charset="utf-8" src="html/Dev/Extra/LoadStrategy.js"></script>
 
   <!-- Doc App
   -->
-  <script type="text/javascript" charset="utf-8" src="Package/docs/app.js" ></script>
+  <script type="text/javascript" charset="utf-8" src="Package/docs/manifest.js" ></script>
   <script type="text/javascript" charset="utf-8" src="Package/docs/js/jquery.scrollTo.js" ></script>
 
   <!-- Doc CSS
@@ -45,11 +45,11 @@
 <!-- Init Script that sets the App in motion -->
 <script type="text/javascript">
   _log1= _log2
-  E.run( ['Base', 'BaseDevl', 'docs'], {
-                        load_dirs: [
-                                {dir:'html/Package/', pkgs:['Base','BaseDevl']},
-                                {dir:'Package/', pkgs:['docs']}
-                        ]}
+  E.run( ['Base', 'Dev', 'docs'], { loadDirs: { Base:'html/', Dev:'html/', docs:'Package/'}}
+                        //load_dirs: [
+                                //{dir:'html/Package/', pkgs:['Base','BaseDevl']},
+                                //{dir:'Package/', pkgs:['docs']}
+                        //]}
             );
 </script>
 
