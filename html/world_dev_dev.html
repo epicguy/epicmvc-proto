@@ -67,7 +67,7 @@ E.Model.Thing= Thing
 <body id="base-body">
 <script type="text/coffeescript">
 	# If this isnt coffeescript, it runs too soon, such that E.Thing is not defined (E.app$World not yet set)
-	E.run ['Base', 'Dev', 'World'], loadDirs: Base: '', Dev: ''
+	E.run ['Base', 'Dev', 'World'], loadDirs: Base: 'Base', Dev: 'Dev'
 </script>
   <script type="text/javascript" src="coffee-script.js"> </script>
 </body>
