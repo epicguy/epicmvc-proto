@@ -1,6 +1,5 @@
 
-# Build single version of all of EpicMvc w/ uglify
-# Note: to prep, you want to do e.g. ln ../html DevEpic
+# Build single version of Optional stuff (extra packages) w/o uglify
 
 ECHO() {
   echo $*
@@ -9,16 +8,21 @@ ECHO() {
 
 EpicDir=../html
 # OneEpic=../EpicMvc-One-2.0.0-%MD5_EPICMVC%.js
-OneEpic=$EpicDir/EpicMvc-Base-2.1.0-latest-min.js
+OneEpic=$EpicDir/EpicMvc-Extra-2.1.0-latest.js
 
 cat copyright.js > $OneEpic
-./makeit DevEpic $OneEpic
 
-PKG=Base
+PKG=Proto
 echo "Building:    $PKG"
-./makeit-pkg $EpicDir/$PKG $OneEpic
+./makeit-pkg2 $EpicDir/$PKG $OneEpic
 echo "Compressing: $PKG/view"
 ./makeit-view $EpicDir $EpicDir $PKG >> $OneEpic
+
+#PKG=Dev
+#echo "Building:    $PKG"
+#./makeit-pkg2 $EpicDir/$PKG $OneEpic
+#echo "Compressing: $PKG/view"
+#./makeit-view $EpicDir $EpicDir $PKG >> $OneEpic
 
 #KEY=%MD5_EPICMVC%
 #FILE=$OneEpic

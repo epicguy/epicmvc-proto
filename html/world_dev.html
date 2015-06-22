@@ -3,14 +3,13 @@
 <head>
   <title>Hello Dude Demo (Dev)</title>
   <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"/>
-  <script type="text/javascript" src="mithril.js"></script>
-  <script type="text/javascript" src="EpicMvc-One-2.0.0-latest.js"></script>
+  <script type="text/javascript" src="EpicMvc-BaseDev-2.1.0-latest.js"></script>
   <script type="text/javascript" src="coffee-script.js"> </script>
 
 <script type="text/coffeescript">
 E.app$World=
 	MODELS: Thing: class:'Thing', inst:'world_thing'
-	CLICKS: toggle: do: 'Thing.toggle'
+	ACTIONS: toggle: do: 'Thing.toggle'
 
 class Thing extends window.E.ModelJS
 	constructor: ( view_nm, options) ->
@@ -57,7 +56,7 @@ E.Model.Thing= Thing
 <body id="base-body">
 <script type="text/coffeescript">
 	# If this isnt coffeescript, it runs too soon, such that E.Thing is not defined (E.app$World not yet set)
-	E.run ['Base', 'BaseDevl', 'World']
+	E.run ['Base', 'Dev', 'World']
 </script>
 </body>
 </html>

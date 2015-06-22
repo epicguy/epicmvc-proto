@@ -1,0 +1,100 @@
+<!-- Hidden Controls -->
+<e-if val="&Control/type#lc;" eq="hidden">
+    <input type="&Control/type#lc;" name="&Control/name;" value="&Control/value;">
+</e-if>
+
+<!-- Viewable Controls -->
+<e-if val="&Control/type#lc;" ne="hidden">
+
+    <div class="form-group &Control/issue#?has-error;">
+
+        <!-- Label -->
+        <e-if val="&Control/type#lc;" ne="yesno">
+            <label for="&Control/name;" class="control-label">
+                <e-if_true name="req"><span class="form-req">*</span></e-if_true>
+                &Control/label;
+            </label>
+        </e-if>
+        <div class="controls">
+
+            <!-- Text Area -->
+            <e-if val="&Control/type;" eq="textarea">
+                <textarea   e-event="Fist:&Control/fistNm;:&Control/fieldNm;:keyup-focus-blur-change"
+                            name="&Control/name;"
+                            ?required="&Control/req;">
+                            &Control/value;
+                </textarea>
+            </e-if>
+
+            <!-- Text Box -->
+            <e-if val="&Control/type#lc;" eq="text">
+                <input  e-event="Fist:&Control/fistNm;:&Control/fieldNm;:keyup-focus-blur-change"
+                        class="form-control"
+                        type="&Control/type#lc;"
+                        name="&Control/name;"
+                        value="&Control/value;"
+                        size="&Control/width;"
+                        ?required="&Control/req;">
+            </e-if>
+
+            <!-- Password Box -->
+            <e-if val="&Control/type#lc;" eq="password">
+                <input  e-event="Fist:&Control/fistNm;:&Control/fieldNm;:keyup-focus-blur-change"
+                        type="&Control/type#lc;"
+                        class="form-control"
+                        name="&Control/name;"
+                        value="&Control/value;"
+                        size="&Control/width;"
+                        ?required="&Control/req;">
+            </e-if>
+
+            <!-- Check Box -->
+            <e-if val="&Control/type#lc;" eq="yesno">
+                <label for="&Control/id;" class="control-label">
+                    <input  type="checkbox"
+                            name="&Control/name;"
+                            id="&Control/id;"
+                            value="&Control/yes_val;"
+                            ?checked="&Control/selected;">
+                    <e-if_true name="req"><span class="form-req">*</span></e-if_true>
+                    &Control/label;
+                </label>
+            </e-if>
+
+            <!-- Radio Buttons -->
+            <e-if val="&Control/type;" eq="radio">
+                <e-foreach table="Control/Choice">
+                    <label for="&Control/id;-&Choice/option;" class="control-sublabel">
+                        <input  type="radio"
+                                name="&Control/name;"
+                                id="&Control/id;-&Choice/option;"
+                                value="&Choice/value;"
+                                ?checked="&Choice/selected;">
+                                &Choice/option;
+                    </label>
+                </e-foreach>
+            </e-if>
+
+            <!-- Pulldown -->
+            <e-if val="&Control/type;" eq="pulldown">
+                <select name="&Control/name;" ?size="&Control/size;">
+                    <e-foreach table="Control/Choice">
+                        <option value="&Choice/value;"
+                                ?selected="&Choice/selected;">
+                                &Choice/option;
+                        </option>
+                    </e-foreach>
+                </select>
+            </e-if>
+
+            <!-- Error Message -->
+            <e-if set="&Control/issue;">
+                <span class="help-block field-error">&Control/issue;</span>
+	        </e-if>
+
+        </div>
+        <!-- .controls -->
+    </div>
+    <!-- .control-group -->
+</e-if>
+<!-- not hidden -->

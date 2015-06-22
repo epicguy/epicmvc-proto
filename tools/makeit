@@ -3,11 +3,18 @@
 EpicMvc=$1
 MinOut=$2
 
+for FILE in mithril
+do
+  echo -n "$FILE "
+  cat $EpicMvc/${FILE}.js |uglifyjs >> $MinOut
+  echo >> $MinOut
+done
+
 for FILE in EpicCore
 do
   echo -n "$FILE "
   echo -ne "/*${FILE}*/" >> $MinOut
-  cat $EpicMvc/${FILE}.coffee | grep -vE "\s(f= ')|(_log. f,)" | coffee --compile --stdio | uglifyjs -nc >> $MinOut
+  cat $EpicMvc/${FILE}.coffee |grep -vE "\s(f= ['\"])|(_log. f)" |grep -v "#%#" |coffee --compile --stdio |uglifyjs -nc >> $MinOut
   echo >> $MinOut
 done
 echo done.

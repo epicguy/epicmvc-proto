@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>SudokuPaper on EpicMvc (Dev)</title>
+  <link rel="stylesheet" type="text/css" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"/>
+  <script type="text/javascript" src="http://rawgit.com/epicguy/epicmvc-proto/version2/html/EpicMvc-BaseDev-2.1.0-latest.js"></script>
+  <script type="text/javascript" src="http://rawgit.com/epicguy/epicmvc-proto/version2/html/EpicMvc-Extra-2.1.0-latest.js"></script>
+  <script type="text/javascript" src="http://rawgit.com/epicguy/epicmvc-proto/version2/html/coffee-script.js"> </script>
+
+<style type="text/css">
+span.Puz table { border-spacing: 0px; padding: 0px; border-color: black; text-align: center }
+
+span.Puz table.puzzle { background-color: black }
+span.Puz table.cell { border-style: solid; border-width: thin; background-color: white }
+span.Puz td.cell { border-style: solid; border-width: thin ; font-size: 30pt;  height: 60px; width: 60px }
+span.Puz td.sel  { border-style: none; border-width: thin ; font-size: 20pt;  height: 45px; width: 45px }
+
+span.Puz table.pad { border: none ; width: 100%}
+span.Puz table.pad td { border: none ; padding: 0px }
+span.Puz table.pad td { font-size: 10pt ; font-weight: bold }
+span.Puz table.selpad { height: 48px; width: 48px; border-spacing: 1px}
+span.Puz table.selpad td { border-width: thin; border-style: solid; padding: 0; font-size: 7pt; width: 33%}
+
+span.Puz table.pad td.on { color: black}
+span.Puz table.pad td { color: #EEE }
+
+span.Puz .highlight { background-color: #EEE }
+span.Puz .hover { background-color: #FF0 }
+span.Puz .highlight.hover { background-color: #DD6 }
+
+span.Puz .hidden { display: none }
+span.Puz [id|=choices] { text-align: left; }
+
+</style>
+
+<script type="text/coffeescript">
+E.app$Sudoku=
+	MODELS: Board: class:'Board', inst:'sudoku_board'
+	ACTIONS:
+		toggle_lit:   do: 'Board.toggle_lit',   pass: 'id'
+		solve:        do: 'Board.solve',        pass: 'id,label'
+		toggle_maybe: do: 'Board.toggle_maybe', pass: 'id,label'
+
+class Board extends window.E.ModelJS
+	constructor: ( view_nm, options) ->
+		ss=
+			sudoku: true
+			puzzle: @makepuz [
+				'...7..4..', '.2...9.5.', '3.4...8..',
+				'.6..2...7', '...9.8...', '7...6..4.',
+				'..8...6.2', '.7.5...9.', '..3..4...']
+		super view_nm, options, ss
+	makepuz: (spec) ->
+		j= 0
+		puz= {}
+		for cellRow in '123456789'.split ''
+			a= spec[ j++].split ''
+			i= 0
+			for cellCol in 'ABCDEFGHI'.split ''
+				puz[ cellRow+ cellCol]=
+					val: if (v= a[ i++]) in ['1','2','3','4','5','6','7','8','9'] then v else false
+					lit: false
+					choice: [false, false, false, false, false, false, false, false, false]
+		puz
+	makeview: (puzz) ->
+		for cellRow in [ '123', '456', '789']
+			CellCol: for cellCol in ['ABC', 'DEF', 'GHI']
+				Row: for row in cellRow.split ''
+					Col: for col in cellCol.split ''
+						id= row+ col
+						id: id
+						val: puzz[ id].val
+						lit: puzz[ id].lit
+						Choice:
+							for cr in [0, 1, 2]
+								Col: for cc in [0, 1, 2]
+									label: cr* 3+ cc+ 1, set: puzz[ id].choice[ cr* 3+ cc]
+	action: (ctx, app, p) ->
+		{r,i,m}= ctx
+		switch app
+			when 'toggle_lit' # p.id:1C
+				@puzzle[p.id].lit= not @puzzle[p.id].lit
+				@invalidateTables ['CellRow']
+			when 'solve' # p.id:1C p.label:1
+				issue= @trySolve @puzzle, p.id, p.label
+				if issue isnt false
+					i.add issue[ 0], issue[ 1]
+				else
+					@puzzle[p.id].val= p.label
+					@puzzle[p.id].lit= true
+					@invalidateTables ['CellRow']
+			when 'toggle_maybe' # p.id:1C p.label:1
+				label= parseInt p.label
+				@puzzle[p.id].choice[label- 1]= not @puzzle[p.id].choice[label- 1]
+				@invalidateTables ['CellRow']
+	loadTable: (tbl_nm) ->
+		switch tbl_nm
+			when 'CellRow'
+				@Table[ tbl_nm]= @makeview @puzzle
+			when 'Choices'
+				row= is_sudoku: if @sudoku then 'yes' else ''
+				@Table[ tbl_nm]= [ row]
+	trySolve: (puz, id, label) ->
+		# Check same cell, same row, same col for this value
+		c0= 'DEFGHI'; c1= 'ABCGHI'; c2= 'ABCDEF'; oCol= A:c0,B:c0,C:c0,D:c1,E:c1,F:c1,G:c2,H:c2,I:c2
+		r0= '456789'; r1= '123789'; r2= '123456'; oRow= 1:r0,2:r0,3:r0,4:r1,5:r1,6:r1,7:r2,8:r2,9:r2
+		mc0= 'ABC'; mc1= 'DEF'; mc2= 'GHI'; myCol= A:mc0,B:mc0,C:mc0,D:mc1,E:mc1,F:mc1,G:mc2,H:mc2,I:mc2
+		mr0= '123'; mr1= '456'; mr2= '789'; myRow= 1:mr0,2:mr0,3:mr0,4:mr1,5:mr1,6:mr1,7:mr2,8:mr2,9:mr2
+		for col in oCol[ id[ 1]].split ''
+			return ['CONFLICT_ROW', label] if puz[ id[ 0]+ col].val is label
+		for row in oRow[ id[ 0]].split ''
+			return ['CONFLICT_COL', label] if puz[ row+ id[ 1]].val is label
+		for row in myRow[ id[ 0]].split ''
+			for col in myCol[ id[ 1]].split ''
+				continue if id is myRow+ myCol # Not myself
+				return ['CONFLICT_CELL', label] if puz[ row+ col].val is label
+		false # No conflict
+E.Model.Board= Board
+
+E.issues$Sudoku=
+	default:
+		default: [
+			[ /CONFLICT_CELL/, 'You already have a "%1%" in this cell.']
+			[ /CONFLICT_ROW/,  'You already have a "%1%" in this row (going across).']
+			[ /CONFLICT_COL/,  'You already have a "%1%" in this column (going up/down).']
+		]
+E.ex$nocontextmenu= (el, beenHere) -> el.oncontextmenu= (-> false) unless beenHere
+</script>
+
+<script type="x/template" id="view-Page-default">
+	<e-part part="issues"/>
+	<h3>Left-click: "maybe"; Right-click: "I'm sure."</h3>
+	<e-part part="puz"/>
+</script>
+<script type="x/template" id="view-Part-puz">
+<span class="Puz">
+<table class="puzzle" ex-nocontextmenu="">
+<e-foreach table="Board/CellRow">
+	<tr>
+	<e-foreach table="CellRow/CellCol">
+		<td><table class="cell">
+		<e-foreach table="CellCol/Row">
+			<tr>
+			<e-foreach table="Row/Col" alias="C">
+				<e-if     set="&C/val;">
+					<td class="cell &C/lit#?highlight;" e-click="toggle_lit" e-id="&C/id;"><span>&C/val;</span></td>
+				</e-if>
+				<e-if not_set="&C/val;">
+					<td class="cell"><table class="pad">
+					<e-foreach table="C/Choice">
+						<tr>
+						<e-foreach table="Choice/Col">
+							<td class="&Col/set#?on;" e-rclick="solve" e-click="toggle_maybe" e-id="&C/id;" e-label="&Col/label;">&Col/label;</td>
+						</e-foreach>
+						</tr>
+					</e-foreach>
+				</table></td>
+				</e-if>
+			</e-foreach>
+			</tr>
+		</e-foreach>
+		</table></td>
+	</e-foreach>
+	</tr>
+</e-foreach>
+</table>
+</span>
+</script>
+<body id="base-body">
+<script type="text/coffeescript">
+	# If this isnt coffeescript, it runs too soon, such that E.Board is not defined (E.app$Sudoku not yet set)
+	E.run ['Base', 'Dev', 'Proto', 'Sudoku']
+</script>
+</body>
+</html>
+

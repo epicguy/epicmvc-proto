@@ -48,7 +48,7 @@ do
   echo -n "$A_FILE "
   E_FILE=`echo $ONE_FILE | cut -d/ -f3-`
   echo -ne "/*$E_FILE*/" >> $MinOut
-  cat $ONE_FILE | grep -vE "\s(f= ')|(_log. f,)" | coffee --compile --stdio | uglifyjs -nc >> $MinOut
+  cat $ONE_FILE | grep -vE "\s(f= ['\"])|(_log. f)" |grep -v "#%#" | coffee --compile --stdio | uglifyjs -nc >> $MinOut
   echo >> $MinOut
 done
 echo done.
