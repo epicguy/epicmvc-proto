@@ -301,6 +301,9 @@ ParseFile= (file_stats, file_contents) ->
 		'keygen','output','progress','meter'
 
 		'details','summary','menuitem','menu' # Interactive Elements
+
+		'g', 'title', 'defs', 'rect', 'tspan', 'line', 'ellipse' # SVG
+		'path','text','polygon','circle'
 	]
 	dom_close= [ 'img', 'br', 'input', 'hr' ]
 	after_comment= file_contents.replace( /-->/gm, '\x02').replace /<!--[^\x02]*\x02/gm, (m) ->
@@ -309,26 +312,26 @@ ParseFile= (file_stats, file_contents) ->
 	after= after_script
 
 	# TODO COMPATABILITY MODE, EH?
-	after= after.replace /<epic:/g, '<e-'
-	after= after.replace /<\/epic:/g, '</e-'
-	after= after.replace /<e-page_part/g, '<e-part'
-	after= after.replace /<e-form_part/g, '<e-fist'
-	after= after.replace /<e-dyno_form/g, '<e-fist'
-	after= after.replace /form="/g, 'fist="'
-	after= after.replace /\sp:/g, ' e-'
-	after= after.replace /Tag\/If/g, 'View/If'
-	after= after.replace /Tag\/Part/g, 'View/Part'
-	after= after.replace /\ size="/g, ' ?size="'
-	after= after.replace /data-action=/g, 'e-action='
-	after= after.replace /Pageflow\//g, 'App/'
+	#after= after.replace /<epic:/g, '<e-'
+	#after= after.replace /<\/epic:/g, '</e-'
+	#after= after.replace /<e-page_part/g, '<e-part'
+	#after= after.replace /<e-form_part/g, '<e-fist'
+	#after= after.replace /<e-dyno_form/g, '<e-fist'
+	#after= after.replace /\sform="/g, 'fist="'
+	#after= after.replace /\sp:/g, ' e-'
+	#after= after.replace /Tag\/If/g, 'View/If'
+	#after= after.replace /Tag\/Part/g, 'View/Part'
+	#after= after.replace /\ size="/g, ' ?size="'
+	#after= after.replace /data-action=/g, 'e-action='
+	#after= after.replace /Pageflow\//g, 'App/'
 
 	# link/form action w/action=
-	after= after.replace /\saction=/g, ' e-action='
-	after= after.replace /e-link_action/g, 'a'
-	after= after.replace /e-form_action/g, 'button' # TODO WILL THIS WORK ACROSS THE BOARD?
+	#after= after.replace /\saction=/g, ' e-action='
+	#after= after.replace /e-link_action/g, 'a'
+	#after= after.replace /e-form_action/g, 'button' # TODO WILL THIS WORK ACROSS THE BOARD?
 
 	# Var sepcs #.. to #?, or #[not ?].
-	after= after.replace /(&(?:[^\/;#]+\/){1,2}[^\/;#]+#)[.]/g, '$1?'
+	#after= after.replace /(&(?:[^\/;#]+\/){1,2}[^\/;#]+#)[.]/g, '$1?'
 
 	# Create array of 4 parts: non-tag-content, leading-slash, tag-name, attrs
 	# End of 'attrs' may have a '/' (or is '/' if leading-slash is '/')

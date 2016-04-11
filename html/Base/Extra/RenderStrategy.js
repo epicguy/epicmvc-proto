@@ -23,6 +23,7 @@
       this.very_first = true;
       this.was_popped = false;
       this.was_modal = false;
+      this.touchEndIsClick = false;
       this.last_path = 'not_set';
       this.unloadMsgs = {};
       this.baseUrl = window.document.location.pathname;
@@ -69,14 +70,27 @@
       if (type === 'keyup' && event_obj.keyCode === 9) {
         return;
       }
-      if (type === 'keyup') {
-        switch (event_obj.keyCode) {
-          case ENTER_KEY:
-            type = 'enter';
-            break;
-          case ESCAPE_KEY:
-            type = 'escape';
-        }
+      switch (type) {
+        case 'keyup':
+          switch (event_obj.keyCode) {
+            case ENTER_KEY:
+              type = 'enter';
+              break;
+            case ESCAPE_KEY:
+              type = 'escape';
+          }
+          break;
+        case 'touchstart':
+          this.touchEndIsClick = true;
+          break;
+        case 'touchmove':
+          this.touchEndIsClick = false;
+          break;
+        case 'touchend':
+          if (this.touchEndIsClick) {
+            type = 'click';
+          }
+          this.touchEndIsClick = false;
       }
       target = event_obj.target;
       if (target === window) {
@@ -275,15 +289,17 @@
         displayHash = new_hash;
       }
       model_state = E.getModelState();
-      if (this.very_first || history === 'replace') {
-        if (typeof (_base = window.history).replaceState === "function") {
-          _base.replaceState(model_state, displayHash, '#' + displayHash);
+      if (window.location.protocol !== 'file:') {
+        if (this.very_first || history === 'replace') {
+          if (typeof (_base = window.history).replaceState === "function") {
+            _base.replaceState(model_state, displayHash, '#' + displayHash);
+          }
+        } else if (!this.was_popped && history === true) {
+          if (typeof (_base1 = window.history).pushState === "function") {
+            _base1.pushState(model_state, displayHash, '#' + displayHash);
+          }
+          window.document.title = displayHash;
         }
-      } else if (!this.was_popped && history === true) {
-        if (typeof (_base1 = window.history).pushState === "function") {
-          _base1.pushState(model_state, displayHash, '#' + displayHash);
-        }
-        window.document.title = displayHash;
       }
       this.last_path = str_path;
     };

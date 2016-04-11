@@ -10,14 +10,14 @@
 
     function Devl(view_nm, options) {
       Devl.__super__.constructor.call(this, view_nm, options);
-      this.opts = {
+      this.opts = E.merge({
         file: false,
         tag: false,
         tag2: false,
         form: false,
         model: false,
         stack: false
-      };
+      }, options);
       this.open_model = '';
       this.open_table = '';
       this.open_table_stack = [];

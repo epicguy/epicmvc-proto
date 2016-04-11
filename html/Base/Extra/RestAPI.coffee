@@ -13,13 +13,13 @@
 
 class RestAPI
 	constructor: (opts)->
-		@opts= port: '', prefix: '', version: ''
+		@opts= port: '', prefix: '', version: '', proto: '//'
 		@opts[nm]= val for nm,val of opts
 		port= String @opts.port
 		port= ':'+ port if port.length
 		prefix= '/'+ @opts.prefix if @opts.prefix.length
 		version= '/'+ @opts.version if @opts.version.length
-		@route_prefix= "//#{@opts.host}#{port ? ''}#{prefix ? ''}#{version ? ''}/"
+		@route_prefix= "#{@opts.proto}#{@opts.host}#{port ? ''}#{prefix ? ''}#{version ? ''}/"
 		@SetToken false
 	GetPrefix: ()-> @route_prefix
 

@@ -13,6 +13,7 @@ class RenderStrategy$Base
 		@very_first= true
 		@was_popped= false
 		@was_modal= false
+		@touchEndIsClick= false
 		@last_path= 'not_set'
 		@unloadMsgs= {}
 		@baseUrl= window.document.location.pathname
@@ -48,10 +49,19 @@ class RenderStrategy$Base
 			else return # Not a left or right click
 		#TODO TEST return if type in ['blur','focus'] # TODO FIX THIS ISSUE WITH FORM FIELDS BEING REDRAWN
 		return if type is 'keyup' and event_obj.keyCode is 9 # TODO IS THIS NEEDED FOR FORMS?
-		if type is 'keyup'
-			switch event_obj.keyCode
-				when  ENTER_KEY then type= 'enter'
-				when ESCAPE_KEY then type= 'escape'
+		switch type
+			when 'keyup'
+				switch event_obj.keyCode
+					when  ENTER_KEY then type= 'enter'
+					when ESCAPE_KEY then type= 'escape'
+			when 'touchstart'
+				@touchEndIsClick = true
+			when 'touchmove'
+				@touchEndIsClick = false
+			when 'touchend'
+				type = 'click' if @touchEndIsClick
+				@touchEndIsClick = false
+
 		target= event_obj.target
 		return false if target is window # blur had this
 		# Bubble up to any parent with a data-e-action
@@ -166,11 +176,13 @@ class RenderStrategy$Base
 		displayHash= new_hash if new_hash isnt false
 		model_state= E.getModelState()
 		#_log2 f, ms: model_state, ha: displayHash, cvw: [action, @very_first, @was_popped]
-		if @very_first or history is 'replace'
-			window.history.replaceState? model_state, displayHash, '#'+displayHash
-		else if not @was_popped and history is true # action, create history item
-			window.history.pushState? model_state, displayHash, '#'+displayHash
-			window.document.title= displayHash
+		# iOS/phonegap did not like file:// URLS being pushed/replaced
+		if window.location.protocol isnt 'file:'
+			if @very_first or history is 'replace'
+				window.history.replaceState? model_state, displayHash, '#'+displayHash
+			else if not @was_popped and history is true # action, create history item
+				window.history.pushState? model_state, displayHash, '#'+displayHash
+				window.document.title= displayHash
 		@last_path= str_path
 		return
 

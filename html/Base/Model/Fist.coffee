@@ -20,7 +20,7 @@ class Fist extends E.ModelJS
 			when 'keyup', 'change' # User has changed a field's value possibly
 				# p.val
 				if field.type is 'yesno'
-					if p.val is field.cdata[ 0] # Toggle value
+					if p.val is false # Toggle value
 					then p.val= field.cdata[ 1]
 					else p.val= field.cdata[ 0]
 				if field.hval isnt p.val # Update our html-value state with el.value

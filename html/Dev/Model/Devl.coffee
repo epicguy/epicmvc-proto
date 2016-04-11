@@ -3,7 +3,7 @@
 class Devl extends E.ModelJS
 	constructor: (view_nm, options) ->
 		super view_nm, options
-		@opts= file: false, tag: false, tag2: false, form: false, model: false, stack: false
+		@opts= E.merge { file: false, tag: false, tag2: false, form: false, model: false, stack: false}, options
 		@open_model= ''
 		@open_table= ''
 		@open_table_stack= []

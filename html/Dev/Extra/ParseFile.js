@@ -363,29 +363,13 @@
       defer: 0
     };
     dom_pre_tags = ['pre', 'code'];
-    dom_nms = ['style', 'section', 'header', 'nav', 'article', 'aside', 'footer', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'address', 'main', 'hgroup', 'div', 'p', 'hr', 'pre', 'blockquote', 'ol', 'ul', 'li', 'dl', 'dt', 'dd', 'figure', 'figcaption', 'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr', 'ins', 'del', 'img', 'iframe', 'embed', 'oject', 'param', 'video', 'audio', 'source', 'track', 'canvas', 'map', 'area', 'svg', 'math', 'table', 'tbody', 'thead', 'tfoot', 'tr', 'td', 'th', 'caption', 'colgroup', 'col', 'form', 'fieldset', 'legend', 'label', 'input', 'button', 'select', 'datalist', 'optgroup', 'option', 'textarea', 'keygen', 'output', 'progress', 'meter', 'details', 'summary', 'menuitem', 'menu'];
+    dom_nms = ['style', 'section', 'header', 'nav', 'article', 'aside', 'footer', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'address', 'main', 'hgroup', 'div', 'p', 'hr', 'pre', 'blockquote', 'ol', 'ul', 'li', 'dl', 'dt', 'dd', 'figure', 'figcaption', 'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr', 'ins', 'del', 'img', 'iframe', 'embed', 'oject', 'param', 'video', 'audio', 'source', 'track', 'canvas', 'map', 'area', 'svg', 'math', 'table', 'tbody', 'thead', 'tfoot', 'tr', 'td', 'th', 'caption', 'colgroup', 'col', 'form', 'fieldset', 'legend', 'label', 'input', 'button', 'select', 'datalist', 'optgroup', 'option', 'textarea', 'keygen', 'output', 'progress', 'meter', 'details', 'summary', 'menuitem', 'menu', 'g', 'title', 'defs', 'rect', 'tspan', 'line', 'ellipse', 'path', 'text', 'polygon', 'circle'];
     dom_close = ['img', 'br', 'input', 'hr'];
     after_comment = file_contents.replace(/-->/gm, '\x02').replace(/<!--[^\x02]*\x02/gm, function(m) {
       return m.replace(/[^\n]+/gm, '');
     });
     after_script = after_comment.replace(/<\/script>/gm, '\x02').replace(/<script[^\x02]*\x02/gm, '');
     after = after_script;
-    after = after.replace(/<epic:/g, '<e-');
-    after = after.replace(/<\/epic:/g, '</e-');
-    after = after.replace(/<e-page_part/g, '<e-part');
-    after = after.replace(/<e-form_part/g, '<e-fist');
-    after = after.replace(/<e-dyno_form/g, '<e-fist');
-    after = after.replace(/form="/g, 'fist="');
-    after = after.replace(/\sp:/g, ' e-');
-    after = after.replace(/Tag\/If/g, 'View/If');
-    after = after.replace(/Tag\/Part/g, 'View/Part');
-    after = after.replace(/\ size="/g, ' ?size="');
-    after = after.replace(/data-action=/g, 'e-action=');
-    after = after.replace(/Pageflow\//g, 'App/');
-    after = after.replace(/\saction=/g, ' e-action=');
-    after = after.replace(/e-link_action/g, 'a');
-    after = after.replace(/e-form_action/g, 'button');
-    after = after.replace(/(&(?:[^\/;#]+\/){1,2}[^\/;#]+#)[.]/g, '$1?');
     parts = after.split(/<(\/?)([:a-z_0-9-]+)([^>]*)>/);
     pre_count = 0;
     i = 0;

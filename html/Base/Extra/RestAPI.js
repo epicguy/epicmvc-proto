@@ -11,7 +11,8 @@
       this.opts = {
         port: '',
         prefix: '',
-        version: ''
+        version: '',
+        proto: '//'
       };
       for (nm in opts) {
         val = opts[nm];
@@ -27,7 +28,7 @@
       if (this.opts.version.length) {
         version = '/' + this.opts.version;
       }
-      this.route_prefix = "//" + this.opts.host + (port != null ? port : '') + (prefix != null ? prefix : '') + (version != null ? version : '') + "/";
+      this.route_prefix = "" + this.opts.proto + this.opts.host + (port != null ? port : '') + (prefix != null ? prefix : '') + (version != null ? version : '') + "/";
       this.SetToken(false);
     }
 

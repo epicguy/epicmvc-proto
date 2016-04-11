@@ -34,7 +34,7 @@
         case 'keyup':
         case 'change':
           if (field.type === 'yesno') {
-            if (p.val === field.cdata[0]) {
+            if (p.val === false) {
               p.val = field.cdata[1];
             } else {
               p.val = field.cdata[0];
