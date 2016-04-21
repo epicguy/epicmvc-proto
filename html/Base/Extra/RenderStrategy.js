@@ -24,6 +24,7 @@
       this.was_popped = false;
       this.was_modal = false;
       this.touchEndIsClick = false;
+      this.touchBoundary = 10;
       this.last_path = 'not_set';
       this.unloadMsgs = {};
       this.baseUrl = window.document.location.pathname;
@@ -48,7 +49,7 @@
     }
 
     RenderStrategy$Base.prototype.handleEvent = function(event_obj) {
-      var attrs, data_action, data_params, f, files, ix, nm, old_params, prevent, rec, target, type, val, _i, _j, _len, _ref, _ref1, _ref2;
+      var attrs, data_action, data_params, f, files, ix, nm, old_params, prevent, rec, target, touch, type, val, x, y, _i, _j, _len, _ref, _ref1, _ref2, _ref3;
       f = 'E/RenderStrategy.handleEvent: ';
       _log2(f, 'top', this.redraw_guard, (event_obj != null ? event_obj : window.event).type);
       if (event_obj == null) {
@@ -81,13 +82,20 @@
           }
           break;
         case 'touchstart':
-          this.touchEndIsClick = true;
+          touch = event.targetTouches[0];
+          this.touchEndIsClick = [touch.pageX, touch.pageY];
           break;
         case 'touchmove':
-          this.touchEndIsClick = false;
-          break;
+          if (this.touchEndIsClick !== false) {
+            _ref = this.touchEndIsClick, x = _ref[0], y = _ref[1];
+            touch = event.targetTouches[0];
+            if ((Math.abs(touch.pageX - x)) > this.touchBoundary || (Math.abs(touch.pageY - y)) > this.touchBoundary) {
+              this.touchEndIsClick = false;
+            }
+          }
+          return true;
         case 'touchend':
-          if (this.touchEndIsClick) {
+          if (this.touchEndIsClick !== false) {
             type = 'click';
           }
           this.touchEndIsClick = false;
@@ -105,7 +113,7 @@
       }
       data_params = {};
       attrs = target.attributes;
-      for (ix = _i = 0, _ref = attrs.length; 0 <= _ref ? _i < _ref : _i > _ref; ix = 0 <= _ref ? ++_i : --_i) {
+      for (ix = _i = 0, _ref1 = attrs.length; 0 <= _ref1 ? _i < _ref1 : _i > _ref1; ix = 0 <= _ref1 ? ++_i : --_i) {
         if (!('data-e-' === attrs[ix].name.slice(0, 7))) {
           continue;
         }
@@ -128,18 +136,18 @@
       }, target);
       data_params.val = val;
       data_params._files = files;
-      _ref1 = ['touches', 'changedTouches', 'targetTouches'];
-      for (_j = 0, _len = _ref1.length; _j < _len; _j++) {
-        nm = _ref1[_j];
+      _ref2 = ['touches', 'changedTouches', 'targetTouches'];
+      for (_j = 0, _len = _ref2.length; _j < _len; _j++) {
+        nm = _ref2[_j];
         if (nm in event_obj) {
           data_params[nm] = event_obj[nm];
         }
       }
       old_params = target.getAttribute('data-params');
       if (old_params) {
-        _ref2 = JSON.parse(old_params);
-        for (nm in _ref2) {
-          rec = _ref2[nm];
+        _ref3 = JSON.parse(old_params);
+        for (nm in _ref3) {
+          rec = _ref3[nm];
           data_params[nm] = rec;
         }
       }

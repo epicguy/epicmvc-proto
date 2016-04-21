@@ -14,6 +14,7 @@ class RenderStrategy$Base
 		@was_popped= false
 		@was_modal= false
 		@touchEndIsClick= false
+		@touchBoundary= 10
 		@last_path= 'not_set'
 		@unloadMsgs= {}
 		@baseUrl= window.document.location.pathname
@@ -55,12 +56,18 @@ class RenderStrategy$Base
 					when  ENTER_KEY then type= 'enter'
 					when ESCAPE_KEY then type= 'escape'
 			when 'touchstart'
-				@touchEndIsClick = true
+				touch = event.targetTouches[ 0]
+				@touchEndIsClick=[ touch.pageX, touch.pageY]
 			when 'touchmove'
-				@touchEndIsClick = false
+				if @touchEndIsClick isnt false
+					[x, y]= @touchEndIsClick
+					touch = event.targetTouches[ 0]
+					if (Math.abs touch.pageX- x) > @touchBoundary|| (Math.abs touch.pageY- y) > @touchBoundary
+						@touchEndIsClick= false
+				return true
 			when 'touchend'
-				type = 'click' if @touchEndIsClick
-				@touchEndIsClick = false
+				type = 'click' if @touchEndIsClick isnt false
+				@touchEndIsClick= false
 
 		target= event_obj.target
 		return false if target is window # blur had this
