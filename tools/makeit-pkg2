@@ -1,20 +1,21 @@
 #!/bin/sh
+# JCS: Added |sort to make order of files deterministic so I can diff the results
 
 DevHtmlPkg=$1
 MinOut=$2
 
 COFFEE=''
-for FILE in `find -H $DevHtmlPkg -maxdepth 1 -name \*.coffee`  ; do COFFEE="$COFFEE $FILE" ; done
+for FILE in `find -H $DevHtmlPkg -maxdepth 1 -name \*.coffee |sort`  ; do COFFEE="$COFFEE $FILE" ; done
 JSS=''
 if [ -d $DevHtmlPkg/js ]
 then
-  for FILE in `find -H $DevHtmlPkg/js -name \*.js` ; do JSS="$JSS $FILE" ; done
+  for FILE in `find -H $DevHtmlPkg/js -name \*.js |sort` ; do JSS="$JSS $FILE" ; done
 fi
 for DIR in Model Extra
 do
   if [ -d $DevHtmlPkg/$DIR ]
   then
-    for FILE in `find -H $DevHtmlPkg/$DIR -name \*.coffee` ; do COFFEE="$COFFEE $FILE" ; done
+    for FILE in `find -H $DevHtmlPkg/$DIR -name \*.coffee |sort` ; do COFFEE="$COFFEE $FILE" ; done
   fi
 done
 
