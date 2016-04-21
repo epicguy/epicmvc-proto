@@ -5,7 +5,7 @@ DevHtmlPkg=$1
 MinOut=$2
 
 COFFEE=''
-for FILE in `find -H $DevHtmlPkg -maxdepth 1 -name \*.coffee |sort`  ; do COFFEE="$COFFEE $FILE" ; done
+for FILE in `find -H $DevHtmlPkg -maxdepth 1 -name \*.coffee |sort |grep -vi manifest`  ; do COFFEE="$COFFEE $FILE" ; done
 JSS=''
 if [ -d $DevHtmlPkg/js ]
 then
