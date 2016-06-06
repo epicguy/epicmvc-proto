@@ -44,6 +44,9 @@ class ClickAction
 				a_params_list[k]= v
 		r= @Epic.Execute class_method, a_params_list
 		#@Epic.log2 f, '@Epic.Execute-result', r
+		# Process any go: as shortcut to { call: 'Pageflow/path' p:{path:'//x'} }
+		if path= node.hasAttr 'go'
+			dummy= @Epic.Execute 'Pageflow/path', path: path
 		[rResults, rIssues, rMessages]= r
 		found_result_tag=
 			(if look_for_macro_result_tags then macro_node else node).matchResult rResults
