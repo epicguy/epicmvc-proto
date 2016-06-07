@@ -1,18 +1,45 @@
 'use strict'
-# Copyright 2007-2012 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 class TagExe
 	constructor: (@Epic,@view_nm) ->
 		@viewExe= @Epic.getView()
 		@resetForNextRequest()
 	resetForNextRequest: (state) ->
+		f= 'Base::TagExe.resetForNextRequest:state?'+ if state then 'T' else 'F'
 		@forms_included= {}
 		@fist_objects= {}
 		@info_foreach= {} # [table-name|subtable-name]['table'&'row'&'size'&'count']=value
 		@info_if_nms= {} # [if-name]=boolean (from <if_xxx name="if-name" ..>
 		@info_varGet3= {} # for &obj/table/var; type variables
-		@info_parts= [] # Push p:attrs with each part, then pop; getTable uses last pushed
+		@info_parts= [{}] # Push p:attrs with each part, then pop; getTable uses last pushed (top level appears an a row w/o attrs)
+		#@Epic.log2 f, 'state', state
 		if state
-			@info_foreach= $.extend true, {}, state
+			for nm,rec of state.info_foreach.dyn
+				#@Epic.log2 f, 'info_foreach nm=', nm, rec
+				[dyn_m, dyn_t, dyn_list_orig]= rec
+				dyn_list= []
+				oM= @Epic.getInstance dyn_m
+				for t_set in dyn_list_orig
+					@Epic.log2 f, nm, 't_set', t_set
+					[rh, rh_alias]= t_set
+					dyn_list.push t_set
+					if rh_alias not of @info_foreach
+						@Epic.log2 f, nm, 'rh_alias', rh_alias
+						# TODO CONSIDER TABLES THAT HOW HAVE NO ROWS OR LESS THAN ROW_NUM
+						# TODO FULLY NESTED DYNAMIC PARTS THAT REBUILD FROM THE PARENT REFERENCE WILL HELP WITH THE ABOVE ISSUE
+						if dyn_list.length is 1 # Get table from model, else nested
+							tbl= oM.getTable rh
+						else
+							tbl= prev_row[ rh]
+						row_num= state.info_foreach.row_num[ rh_alias]
+						row= $.extend true, {}, tbl[ row_num] # TODO DOES NOT HAVE TAG_FOREACH'S _COUNT, _FIRST, ETC.
+						@info_foreach[ rh_alias]= dyn: [dyn_m, dyn_t, dyn_list], row: row
+						prev_row= row
+					else prev_row= @info_foreach[ rh_alias].row
+
+			info_parts= $.extend true, {}, state.info_parts
+			@info_parts= info_parts.stuff # Added 'stuff' for an array vs. an object
+			#@Epic.log2 f, 'info_parts', @info_parts
 	formatFromSpec: (val, spec, custom_spec) ->
 		switch spec
 			when '' then window.EpicMvc.custom_filter? val, custom_spec
@@ -20,6 +47,8 @@ class TagExe
 			when 'bytes' then window.bytesToSize Number val
 			when 'uriencode' then encodeURIComponent val
 			when 'esc' then window.EpicMvc.escape_html val
+			when 'quo' then ((val.replace /\\/g, '\\\\').replace /'/g, '\\\'').replace /"/g, '\\"'  # Allows an item to be put into single quotes
+			when '1' then (String val)[0]
 			when 'lc' then (String val).toLowerCase()
 			when 'ucFirst'
 				str= (String str).toLowerCase()
@@ -28,13 +57,16 @@ class TagExe
 				if spec?.length> 4 and spec[0] is '?' # Ex. &Model/Tbl/val#?.true?false;
 					[left,right]= spec.substr(2).split '?'
 					(if (val is true or (typeof val== 'number' && val)) or val?.length then left else right)
-						.replace (new RegExp '['+ spec[1]+ ']', 'g'), ' '
+						.replace( (new RegExp '['+ spec[1]+ ']', 'g'), ' ')
+						.replace( (new RegExp '[%]', 'g'), val)
 				else if spec?.length
 					# Default spec
 					# if val is set, xlate spec to a string w/replaced spaces using first char
 					# Ex. &Model/Table/flag#.Replace.with.this.string; (Don't use / or ; or # in the string though)
 					if (val is true or (typeof val== 'number' && val)) or val?.length
-						spec.substr(1).replace (new RegExp '['+ spec.substr(0,1)+ ']', 'g'), ' '
+						spec.substr(1)
+							.replace( (new RegExp '['+ spec.substr(0,1)+ ']', 'g'), ' ')
+							.replace( (new RegExp '[%]', 'g'), val)
 					else ''
 				else val
 	varGet3: (view_nm, tbl_nm, key, format_spec, custom_spec) ->
@@ -43,6 +75,8 @@ class TagExe
 		row= (@info_varGet3[view_nm].getTable tbl_nm)[0]
 		@formatFromSpec row[key], format_spec, custom_spec
 	varGet2: (table_ref, col_nm, format_spec, custom_spec, sub_nm) ->
+		[dyn_m, dyn_t]= @info_foreach[ table_ref].dyn
+		@viewExe.haveTableRefrence dyn_m, dyn_t # Requires only base model/table
 		ans= @info_foreach[table_ref].row[col_nm]
 		if sub_nm? then ans= ans[sub_nm]
 		@formatFromSpec ans, format_spec, custom_spec
@@ -60,8 +94,14 @@ class TagExe
 				when 'delay' then delay= @viewExe.handleIt val
 				when 'id' then id= @viewExe.handleIt val
 				else plain_attrs.push "#{attr}=\"#{@viewExe.handleIt val}\""
-		state= $.extend true, {}, @info_foreach # TODO SNAPSHOT MORE STUFF?
-		return ["<#{tag} id=\"#{id}\" #{plain_attrs.join ' '}>", "</#{tag}>", id: id, delay: delay* 1000, state: state]
+		# TODO SNAPSHOT MORE STUFF?
+		dyn= {}; row_num= {}
+		( dyn[ nm]= rec.dyn; row_num[ nm]= rec.row._COUNT) for nm,rec of @info_foreach
+		state= $.extend true, {},
+			info_foreach: {dyn,row_num}
+			info_parts: stuff: @info_parts
+		return [ "<#{tag} id=\"#{id}\" #{plain_attrs.join ' '}>", "</#{tag}>",
+			id: id, delay: delay* 1000, state: state]
 	loadPartAttrs: (oPt) ->
 		f= ':tag.loadPartAttrs'
 		result= {}
@@ -73,10 +113,11 @@ class TagExe
 		result
 	Tag_page_part: (oPt) ->
 		f= ':tag.page-part:'+ oPt.attrs.part
+		part= @viewExe.handleIt oPt.attrs.part # Before pushing stack, so part="&Tag/Part/whatever;" works
 		@info_parts.push @loadPartAttrs oPt
 		[before, after, dynamicInfo]= @checkForDynamic oPt
 		#@Epic.log2 f, dynamicInfo
-		out= before+ (@viewExe.includePart (@viewExe.handleIt oPt.attrs.part), dynamicInfo)+ after
+		out= before+ (@viewExe.includePart part, dynamicInfo)+ after
 		@info_parts.pop()
 		out
 	Tag_page: (oPt) -> @viewExe.includePage()
@@ -91,6 +132,7 @@ class TagExe
 				row= {}
 				for field in @fist_table.Control
 					row[field.name]= [field]
+				@Epic.log2 f, row
 				[row]
 			else []
 	Tag_form_part: (oPt) -> # part="" form="" (opt)field=""
@@ -105,13 +147,16 @@ class TagExe
 		any_req= false
 		is_first= true
 		out= []
-		hpfl= oFi.getHtmlPostedFieldsList fm_nm
+		#hpfl= oFi.getHtmlPostedFieldsList fm_nm
+		hpfl=( nm for nm of oFi.getHtmlFieldValues())
 		issues= oFi.getFieldIssues()
+		focus_nm= oFi.getFocus()
 		map= window.EpicMvc['issues$'+ @Epic.appConf().getGroupNm()]
 		for fl_nm in hpfl
 			continue if one_field_nm isnt false and one_field_nm isnt fl_nm
 			orig= oFi.getFieldAttributes fl_nm
-			fl= $.extend {}, orig
+			fl= $.extend { tip: '', fistnm: fm_nm, focus: '' }, orig
+			fl.focus= 'yes' if fl_nm is focus_nm
 			fl.is_first= if is_first is true then 'yes' else ''
 			is_first= false
 			fl.yes_val = if fl.type is 'yesno' then String (fl.cdata ? '1') else 'not_used'
@@ -191,18 +236,13 @@ class TagExe
 					break
 				when 'in_list', 'not_in_list'
 					flip= true if nm is 'not_in_list'
-					found_true=(( val.split ',').indexOf left) isnt -1
+					found_true= left in ( val.split ',')
 					break
 				when 'table_has_no_values', 'table_is_empty', 'table_is_not_empty', 'table_has_values'
 					flip= true if nm is 'table_has_no_values' or nm is 'table_is_empty'
 					[lh, rh]= val.split '/' # Left/right halfs
 					# If left exists, it's nested as table/sub-table else assume model/table
-					if lh of @info_foreach
-						tbl= @info_foreach[lh].row[rh]
-					else
-						@viewExe.haveTableRefrence lh, rh
-						oMd= @Epic.getInstance lh
-						tbl= oMd.getTable rh
+					[tbl]= @_accessModelTable val, false
 					found_true= tbl.length isnt 0
 					break
 				when 'if_true', 'if_false'
@@ -227,31 +267,47 @@ class TagExe
 			@info_if_nms[found_nm]= found_true
 		out= @viewExe.doAllParts oPt.parts if found_true
 		out
+
+	# Make sure state contains orignal table reference, for dynmaic parts, etc. and create a 'build' list for dynamic restore-state
+	_accessModelTable: (spec, alias, spec_was_handled) ->
+
+		at_table= if spec_was_handled then spec else @viewExe.handleIt spec
+		[lh, rh]= at_table.split '/' # Left/right halfs
+		if lh of @info_foreach # Nested table reference
+			tbl= @info_foreach[lh].row[rh]
+			[dyn_m, dyn_t, dyn_list]= @info_foreach[ lh].dyn
+		else
+			oM= @Epic.getInstance lh
+			tbl= oM.getTable rh
+			[dyn_m, dyn_t, dyn_list]= [ lh, rh, []]
+
+		@viewExe.haveTableRefrence dyn_m, dyn_t # Requires only base model/table
+
+		return [tbl, rh, lh, rh, oM] if tbl.length is 0 # No rows, so no need to store state nor reference alias
+
+		rh_alias= rh # User may alias the tbl name, for e.g. reusable include-parts
+		rh_alias= @viewExe.handleIt alias if alias
+		dyn_list.push [rh, rh_alias]
+		@info_foreach[rh_alias]= dyn: [dyn_m, dyn_t, dyn_list]
+
+		[tbl, rh_alias, lh, rh, oM]
+
 	Tag_comment: (oPt) -> "\n<!--\n#{@viewExe.doAllParts oPt.parts}\n-->\n"
 
 	Tag_foreach: (oPt) ->
-		at_table= @viewExe.handleIt oPt.attrs.table
-		[lh, rh]= at_table.split '/' # Left/right halfs
-		# If left exists, it's nested as table/sub-table else assume model/table
-		if lh of @info_foreach
-			tbl= @info_foreach[lh].row[rh]
-		else
-			@viewExe.haveTableRefrence lh, rh
-			oMd= @Epic.getInstance lh
-			tbl= oMd.getTable rh
+		f= ':TagExe.Tag_foreach'
+		[tbl, rh_alias]= @_accessModelTable oPt.attrs.table, oPt.attrs.alias
 		return '' if tbl.length is 0 # No rows means no output
-		rh_alias= rh # User may alias the tbl name, for e.g. reusable include-parts
-		rh_alias= @viewExe.handleIt oPt.attrs.alias if 'alias' of oPt.attrs
-		@info_foreach[rh_alias]= {}
 		break_rows_list= @calcBreak tbl.length, oPt
+		#@Epic.log2 f, 'break_rows_list', break_rows_list
 		out= ''
 		limit= tbl.length
 		limit= Number( @viewExe.handleIt oPt.attrs.limit)- 1 if 'limit' of oPt.attrs
 		for row, count in tbl
 			break if count> limit
 			@info_foreach[rh_alias].row= $.extend true, {}, row,
-				_FIRST: count is 0, _LAST: count is tbl.length- 1,
-				_SIZE:tbl.length, _COUNT:count, _BREAK: count+ 1 in break_rows_list
+				_FIRST: (if count is 0 then 'F' else ''), _LAST: (if count is tbl.length- 1 then 'L' else ''),
+				_SIZE:tbl.length, _COUNT:count, _BREAK: (if count+ 1 in break_rows_list then 'B' else '')
 			out+= @viewExe.doAllParts oPt.parts
 		delete @info_foreach[rh_alias]
 		out
@@ -259,7 +315,7 @@ class TagExe
 		p= oPt.attrs # shortcut
 		break_rows_list= []
 		for nm in [ 'break_min', 'break_fixed', 'break_at', 'break_even']
-			p[nm]= if p[nm]? then @viewExe.handleIt p[nm] else 0
+			p[nm]= if p[nm]? then (Number @viewExe.handleIt p[nm]) else 0
 		check_for_breaks= if p.break_min and sZ< p.break_min then 0 else 1
 		if check_for_breaks and p.break_fixed
 			check_row= p.break_fixed
@@ -367,8 +423,8 @@ class TagExe
 		value= ''
 		for own attr, val of oPt.attrs
 			switch attr
-				when 'action' then action=( @viewExe.handleIt val).trim()
-				when 'value' then value=( @viewExe.handleIt val).trim()
+				when 'action' then action= $.trim @viewExe.handleIt val
+				when 'value' then value= $.trim @viewExe.handleIt val
 				else
 					if attr.match /^p_/
 						link[attr.substr 2]= @viewExe.handleIt val
@@ -376,21 +432,20 @@ class TagExe
 						out_attrs.push """
 							#{attr}="#{window.EpicMvc.escape_html @viewExe.handleIt val}"
 							"""
-		out_attrs.push 'title='+ action # TODO MOVE TO BASE_DEVEL
 		link._b= action # _b instead of _a because we are a 'button'
 		click_index= @Epic.request().addLink link
 		o= @Epic.renderer.form_action out_attrs, click_index, action, value
 	Tag_link_action: (oPt) ->
 		link= {}
+		plain_attr= {}
 		action= @viewExe.handleIt oPt.attrs.action
 		link._a= action
 		# Add any 'p:*' (inline parameters in HTML) to the HREF
-		plain_attr= title: action # TODO MOVE TO BASE_DEVL, THIS TITLE SETTING
 		for own attr, val of oPt.attrs
 			if (attr.substr 0, 2) is 'p:'
 				link[attr.substr 2]= @viewExe.handleIt val
 			else switch attr
-				when 'href', 'title', 'onclick', 'action'
+				when 'href', 'onclick', 'action'
 				else plain_attr[attr]= @viewExe.handleIt val
 		text= ''
 		text+= @viewExe.doAllParts oPt.parts

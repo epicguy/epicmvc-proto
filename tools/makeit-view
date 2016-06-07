@@ -1,4 +1,4 @@
 #!/bin/sh
 cd util
 
-node makeit-view.js $*
+node makeit-view2.js $*

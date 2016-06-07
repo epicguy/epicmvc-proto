@@ -2,7 +2,8 @@
 (function() {
   'use strict';
 
-  var FistFilt;
+  var FistFilt,
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   FistFilt = (function() {
 
@@ -19,7 +20,7 @@
             case '':
               return new_value;
             case 'trim_spaces':
-              return new_value.trim();
+              return $.trim(new_value);
             case 'digits_only':
               return new_value.replace(/[^0-9]/g, '');
             case 'lower_case':
@@ -54,6 +55,7 @@
       var check_pat, re;
       switch (validateExpr) {
         case void 0:
+          value = value.replace(/[^0-9]/g, '');
           check_pat = '[0-9]{10}';
           break;
         default:
@@ -70,7 +72,7 @@
     FistFilt.CHECK_zip = function(fieldName, validateExpr, value, oF) {
       switch (validateExpr) {
         case '5or9':
-          if (!value.match(/^[0-9]{5}(|[0-9]{4})/)) {
+          if (!value.match(/^[0-9]{5}(|[0-9]{4})$/)) {
             return false;
           }
           break;
@@ -81,18 +83,21 @@
     };
 
     FistFilt.CHECK_choice = function(fieldName, validateExpr, value, oF) {
-      var ix;
-      ix = oF.getChoices(fieldName).values.indexOf(value);
-      oF.Epic.log2('CHECK_choice:ix/value/values', ix, value, oF.getChoices(fieldName).values);
-      if (validateExpr) {
-        return ix >= validateExpr;
+      oF.Epic.log2('CHECK_choice:value/values', value, oF.getChoices(fieldName).values);
+      if (__indexOf.call(oF.getChoices(fieldName).values, value) < 0) {
+        return false;
       }
-      return ix !== -1;
+      if (validateExpr) {
+        if (oF.getChoices(fieldName).values[0] === value) {
+          return false;
+        }
+      }
+      return true;
     };
 
     FistFilt.CHECK_email = function(fieldName, validateExpr, value, oF) {
       var few, most, re, some;
-      most = '[A-Z0-9._%-]';
+      most = '[A-Z0-9._+%-]';
       some = '[A-Z0-9.-]';
       few = '[A-Z]';
       re = new RegExp("^" + most + "+@" + some + "+[.]" + few + "{2,4}$", 'i');
@@ -135,8 +140,22 @@
     };
 
     FistFilt.H2D_date_psuedo = function(fieldName, filtExpr, value) {
-      var Y, d, m;
+      var Y, d, f, m;
+      f = 'FF:H2D_date_psuedo';
+      oF.Epic.log2(f, fieldName, filtExpr, value);
       m = value[0], d = value[1], Y = value[2];
+      if (!((m != null) || (d != null) || (Y != null))) {
+        return '';
+      }
+      if (m == null) {
+        m = '';
+      }
+      if (d == null) {
+        d = '';
+      }
+      if (Y == null) {
+        Y = '';
+      }
       if (m.length === 1) {
         m = '0' + m;
       }
@@ -175,6 +194,7 @@
     };
 
     FistFilt.D2H_phone = function(fieldName, filtExpr, value) {
+      value = value.replace(/[^0-9]/g, '');
       return value.replace(/(...)(...)(...)/, '($1) $2-$3');
     };
 
@@ -183,8 +203,10 @@
     };
 
     FistFilt.D2H_date_psuedo = function(fieldName, filtExpr, value) {
-      var Y, d, m, _ref;
-      _ref = value.split('-'), Y = _ref[0], m = _ref[1], d = _ref[2];
+      var Y, d, f, m, _ref;
+      f = 'FF:D2H_date_psuedo';
+      oF.Epic.log2(f, fieldName, filtExpr, value);
+      _ref = ((value != null ? value : '--').split(/[^0-9-]/))[0].split('-'), Y = _ref[0], m = _ref[1], d = _ref[2];
       return [(m != null ? m : '').replace(/^0/, ''), (d != null ? d : '').replace(/^0/, ''), Y];
     };
 

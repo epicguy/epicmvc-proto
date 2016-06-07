@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2012 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 	# Filter functions (default behaviour)
 
@@ -35,7 +35,7 @@ class FistFilt
 		for k, one_spec of spec_ary
 			new_value= switch one_spec
 				when '' then new_value # Empty spec is do nothing?
-				when 'trim_spaces' then new_value.trim()
+				when 'trim_spaces' then $.trim new_value
 				when 'digits_only' then new_value.replace /[^0-9]/g, ''
 				when 'lower_case' then new_value.toLowerCase()
 				when 'upper_case' then new_value.toUpperCase()
@@ -53,28 +53,31 @@ class FistFilt
 
 	@CHECK_phone: (fieldName, validateExpr, value, oF) ->
 		switch validateExpr
-			when undefined then check_pat = '[0-9]{10}'
+			when undefined
+				value= value.replace /[^0-9]/g, ''
+				check_pat = '[0-9]{10}'
 			else BROKE()
 		re = new RegExp('^' + check_pat + '$')
 		if value.match re then true else false
 
 	@CHECK_zip: (fieldName, validateExpr, value, oF) ->
 		switch validateExpr
-			when '5or9' then return false if not value.match /^[0-9]{5}(|[0-9]{4})/
+			when '5or9' then return false if not value.match /^[0-9]{5}(|[0-9]{4})$/
 			else BROKE()
 		true
 
 	@CHECK_choice: (fieldName, validateExpr, value, oF) ->
 		# Allow values that are in the pulldown choices (less first choice if validateExpr==1)
-		ix= oF.getChoices(fieldName).values.indexOf value
-		oF.Epic.log2 'CHECK_choice:ix/value/values', ix, value, oF.getChoices(fieldName).values
-		return ix>= validateExpr if validateExpr
-		return ix isnt -1
+		oF.Epic.log2 'CHECK_choice:value/values', value, oF.getChoices(fieldName).values
+		return false if value not in oF.getChoices(fieldName).values
+		if validateExpr
+			return false if oF.getChoices(fieldName).values[0] is value
+		return true
 
 	@CHECK_email: (fieldName, validateExpr, value, oF) ->
 		# 'fieldName' is given for debug messages
 		# [A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4}
-		most= '[A-Z0-9._%-]'
+		most= '[A-Z0-9._+%-]'
 		some= '[A-Z0-9.-]'
 		few = '[A-Z]'
 		re = new RegExp "^#{most}+@#{some}+[.]#{few}{2,4}$", 'i'
@@ -103,8 +106,13 @@ class FistFilt
 		value
 
 	@H2D_date_psuedo: (fieldName, filtExpr, value) ->
+		f= 'FF:H2D_date_psuedo'
+		oF.Epic.log2 f, fieldName, filtExpr, value
 		# It's a list of control values (m/d/Y); db wants YYYY-MM-DD
 		[m,d,Y] = value
+		# TODO WHAT TO DO IF NOTHING ENTERED, AND NEED TO CHECK 'REQ' VS. VALID
+		return '' unless m? or d? or Y?
+		m?= ''; d?= ''; Y?= ''
 		m = '0' + m if m.length is 1
 		d = '0' + d if d.length is 1
 		"#{Y}-#{m}-#{d}"
@@ -129,14 +137,17 @@ class FistFilt
 	@D2H_null:      -> @D2H_.apply @, arguments # Alias
 
 	@D2H_phone: (fieldName, filtExpr, value) ->
+		value= value.replace /[^0-9]/g, ''# TODO: Remove if needed to handle international dates
 		value.replace /(...)(...)(...)/, '($1) $2-$3'
 
 	@D2H_date: (fieldName, filtExpr, value) ->
 		@D2H_date_psuedo(fieldName, filtExpr, value).join '/'
 
 	@D2H_date_psuedo: (fieldName, filtExpr, value) ->
+		f= 'FF:D2H_date_psuedo'
+		oF.Epic.log2 f, fieldName, filtExpr, value
 		# Control want's (m, d, y)
-		[Y, m, d]= value.split '-'
+		[Y, m, d]= ((value ? '--').split /[^0-9-]/)[0].split '-'
 		[((m ? '').replace /^0/, ''), ((d ? '').replace /^0/, ''), Y]
 
 	@D2H_blank_is_zero: (fieldName, filtExpr, value) ->

@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2012 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 class AppConf
 	constructor: (@Epic,@loadStrategy) ->
@@ -10,12 +10,10 @@ class AppConf
 		@config.FORMS= false
 	# MODELS map functions
 	getObj: (view_name,attribute) ->
-
 		if view_name not of @config.MODELS
-			alert ":AppConf.getObj: (app.js) MODELS: #{view_name}: [(#{view_name}) not in MODELS:, check spelling/case]"
+			throw new Error "No (#{view_name}) in 'MODELS:' in app.js"
 		if attribute not of @config.MODELS[view_name]
-			a= @confiig.XXX[ view_name+'#'+attribute+'#'+(nm for nm of @config.MODELS[view_name])]
-
+			throw new Error "No (#{atrribute}) in 'MODELS:#{view_name}' in app.js"
 		@config.MODELS[view_name][attribute]
 	loadFormsIf: ->
 		if @config.FORMS is false # First time, build index
@@ -82,12 +80,13 @@ class AppConf
 	getGroupNm: (f,t) ->
 		group= ( @findAttr f, t, false, 'group' ) || @config.OPTIONS.settings.group
 	getVars: (f,t,s) ->
+		f2= ':AppConf.getVars'
 		vars= $.extend {}, @config.FLOWS[f].v, @config.FLOWS[f].TRACKS[t].v, @config.FLOWS[f].TRACKS[t].STEPS[s].v
-		@Epic.log2 ( "#{k}:#{v}" for own k,v of vars).join ', '
+		@Epic.log2 f2, ( "#{k}:#{v}" for own k,v of vars).join ', '
 		vars
 
 	# returns: Object indexed by frame name (caller may alpha-sort for render order)
-	#Example: OPTIONS: frame: 499_BaseDevl: 'bdev' (view/bdev.frame.html)
+	#Example: OPTIONS: frame: QQQ_BaseDevl: 'bdev' (view/bdev.frame.html)
 	getFrames: -> @config.OPTIONS.frame
 
 window.EpicMvc.AppConf= AppConf # Public API

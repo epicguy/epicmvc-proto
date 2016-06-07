@@ -28,6 +28,9 @@
         return _this.onPopState(true);
       }), 0);
       window.onpopstate = this.onPopState;
+      $(document).on('hidden.bs.modal', function() {
+        return _this.Epic.makeClick(false, 'close_modal', {}, true);
+      });
       true;
     }
 
@@ -128,9 +131,10 @@
       _log2(f, {
         was_popped: this.was_popped,
         very_first: this.very_first,
-        special: event === true
+        special: event === true,
+        state: event === true ? 'XX' : event.state
       });
-      if (event === true) {
+      if (event === true || !event.state) {
         if (this.was_popped || !this.very_first) {
           return;
         }
@@ -151,23 +155,22 @@
     };
 
     bootstrap.prototype.render = function(content, history, click_index, modal) {
-      var container, f, watch, _i, _len, _ref,
-        _this = this;
+      var container, f, watch, _i, _len, _ref;
       f = 'E:bootstrap.render2: ';
       _log2(f, history, modal, this.was_modal);
       if (typeof history === 'undefined') {
         throw new Error('History is hosed!');
       }
       if (this.was_modal) {
-        window.$('#' + this.modalId + '>div').modal('hide');
+        window.$('#' + this.modalId + '>div.modal').modal('hide');
+        window.$('.modal-backdrop').remove();
+        window.$('body').removeClass('modal-open');
         $('#' + this.modalId).html('');
       }
       if (modal) {
         container = '#' + this.modalId;
         $(container).html(content);
-        window.$('#' + this.modalId + ' div.modal').modal().on('hidden', function() {
-          return _this.Epic.makeClick(false, 'close_modal', {}, true);
-        });
+        window.$('#' + this.modalId + ' div.modal').modal();
       } else {
         container = '#' + this.baseId;
         $(container).html(content);

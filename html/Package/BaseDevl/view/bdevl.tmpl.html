@@ -1,26 +1,73 @@
-<div class="dbg-toolbar">
-<epic:link_action action="dbg_refresh" p:what="file">[R]</epic:link_action>
-<epic:link_action action="dbg_toggle" p:what="file">
-[<epic:if     set="&Devl/Opts/file;">F</epic:if><epic:if not_set="&Devl/Opts/file;">f</epic:if>]
-</epic:link_action>
-</div>
-<!-- <epic:explain table="Devl/Opts"/> -->
+<style>
+.dbg-part { border: solid 8px #888; }
+.dbg-tag-error-box { border: solid 2px #C44; font-weight: bold;}
+.dbg-tag-error-msg { color: red; }
+.dbg-tag-box { border: solid 2px #44C; }
+.dbg-part-box { font-size: .5em;
+  -webkit-box-shadow: 10px 10px 5px #888;
+  padding: 5px 5px 5px 15px;
+  width: 10px;
+  height: 10px;
+  z-index: 99999;
+}
+.red { color: red; }
+</style>
+<script type="text/javascript">
+	(function($) {
+		$(document).ready(function() {
+			var $dur = "medium"; // Duration of Animation
 
-<!--
-<table bgcolor="white" width="100%"><tr><td>
-<table bgcolor="lightblue" width="100%"><tr>
-  <td width="25%" align="center"><font style="font-family:Arial;" color="white" size="-1"><b>Powered by</td>
-  <td width="15%" align="center" bgcolor="white"><font color="lightblue"><b>EpicMvc</td>
-  <td width="60%" align="center"><font style="font-family:Arial;" color="white" size="-1"><b>A JavaScript framework for small web projects</td>
-<td><table cellspacing="0" cellpadding="0"><tr>
-<td style="font-size:8pt"><a href="/epic/epic.html">E</a></td>
-<td style="font-size:8pt"><a href="/epic/epic.html?_action=go_tags">T</a></td>
-</tr><tr>
-<td style="font-size:8pt"><a href="$non_debug_app">H</a></td>
-<td style="font-size:8pt"><a href="$yes_debug_app">D</a></td>
-</tr></table></td>
-</tr></table>
-<table width="100%"><tr><td align="right"><font style="font-family:Arial" color="lightblue" size="-6"><b>Copyright (c) 2002 Data Transport Solutions, Inc.</td></tr></table>
-</td></tr></table>
--->
-<epic:page/>
+			$(".dbg-toolbar").css({
+				"right" : 0,
+				"top" : -52
+			})
+			$(".dbg-toolbar").hover(function() {
+				$(this).stop().animate({
+					top : -7
+				}, $dur);
+			}, function() {
+				$(this).stop().animate({
+					top : -52
+				}, $dur);
+			});
+			$(".dbg-toolbar").show();
+		});
+	})(jQuery);
+</script>
+<epic:debug>
+<div class="dbg-toolbar" style="position: fixed; z-index: 9999; background-color: #484848; font-size: 10px; padding: 10px 10px 0 10px; top: -52px; right: 0;">
+	<div class="btn-toolbar">
+		<div class="btn-group">
+			<epic:link_action action="dbg_refresh" p:what="file" class="btn btn-mini">
+				<i class="icon-refresh"><span class="epic-alternate">[R]</span></i>
+			</epic:link_action>
+			<epic:link_action action="dbg_toggle" p:what="file" class="btn btn-mini">
+					<i class="icon-h-sign icon-large &Devl/Opts/file#.red;"><span class="epic-alternate">[H]</span></i>
+			</epic:link_action>
+			<epic:link_action action="dbg_toggle" p:what="tag" class="btn btn-mini">
+					<i class="icon-chevron-left icon-large &Devl/Opts/tag#.red;"><span class="epic-alternate">[&lt;]</span></i>
+			</epic:link_action>
+			<epic:link_action action="dbg_toggle" p:what="tag2" class="btn btn-mini">
+					<i class="icon-chevron-right icon-large &Devl/Opts/tag2#.red;"><span class="epic-alternate">[&gt;]</span></i>
+			</epic:link_action>
+			<epic:link_action action="dbg_toggle" p:what="form" class="btn btn-mini">
+					<i class="icon-edit icon-large &Devl/Opts/form#.red;"><span class="epic-alternate">[F]</span></i>
+			</epic:link_action>
+			<epic:link_action action="dbg_toggle" p:what="model" class="btn btn-mini">
+					<i class="icon-reorder icon-large &Devl/Opts/model#.red;"><span class="epic-alternate">[M]</span></i>
+			</epic:link_action>
+		</div>
+	</div>
+	<div style="text-align: center; color: #FFF; letter-spacing: 5px; font-size: 10px; height: 18px; padding-left: 4px; margin-top: -3px;">EPIC</div>
+</div>
+</epic:debug>
+<epic:if set="&Devl/Opts/model;">
+	<table width="100%"><tr><td width="20%" style="background-color:#90C0FF;vertical-align:top;padding-top:75px;padding-bottom:20px;">
+		<epic:page_part part="dbg_model" dynamic="div" /> <!-- Show model list w/tables -->
+	</td><td width="100%" style="vertical-align:top;position:relative;">
+			<epic:page />
+	</td></tr></table>
+</epic:if>
+<epic:if not_set="&Devl/Opts/model;">
+	<epic:page />
+</epic:if>

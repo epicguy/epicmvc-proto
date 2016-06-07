@@ -2,13 +2,11 @@
 (function() {
   'use strict';
 
-  var Epic,
-    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+  var Epic;
 
   Epic = (function() {
 
     function Epic() {
-      this.refresh = __bind(this.refresh, this);
       this.appNm = 'Epic::appNm=NOT-SET';
       this.oView = null;
       this.getView = function() {
@@ -43,13 +41,9 @@
       };
     }
 
-    Epic.prototype.log1 = function() {
-      return null;
-    };
+    Epic.prototype.log1 = window.Function.prototype.bind.call(window.console.log, window.console);
 
-    Epic.prototype.log2 = function() {
-      return null;
-    };
+    Epic.prototype.log2 = window.Function.prototype.bind.call(window.console.log, window.console);
 
     Epic.prototype.nextCounter = function() {
       return ++this.counter;
@@ -89,7 +83,7 @@
     Epic.prototype.getLookaheadClick = function(planned_action) {
       var sp;
       sp = this.getInstance('Pageflow').getStepPath();
-      return this.oAppConf.findClick(planned_action, sp);
+      return this.oAppConf.findClick(sp, planned_action);
     };
 
     Epic.prototype.getDomCache = function() {
@@ -181,7 +175,11 @@
     };
 
     Epic.prototype.renderStrategy = function(content, history, click_index, modal) {
-      this.renderer.render(content, history, click_index, modal);
+      if (content !== false) {
+        this.renderer.render(content, history, click_index, modal);
+      } else {
+        this.renderer.handleRenderState(history, click_index);
+      }
       return null;
     };
 
@@ -191,10 +189,9 @@
       modal = this.oAppConf.findAttr(sp[0], sp[1], sp[2], 'modal');
       if (modal) {
         template = this.oAppConf.mapModalTemplate(modal);
-        modal = true;
       }
       history = (function() {
-        switch ("" + (Number(this.wasModal)) + ":" + (Number(modal))) {
+        switch ("" + (this.wasModal ? 1 : 0) + ":" + (modal ? 1 : 0)) {
           case '0:0':
             return true;
           case '1:0':
@@ -211,7 +208,7 @@
       try {
         stuff = this.oView.run();
       } catch (e) {
-        this.log2(':render error', e);
+        this.log2(':render error', e, e.stack);
         if (this.isSecurityError(e)) {
           return e;
         } else {
@@ -272,19 +269,6 @@
       return this.oFist = {};
     };
 
-    Epic.prototype.refresh = function(forTables) {
-      var _this = this;
-      if (this.inClick === true) {
-        return setTimeout((function() {
-          return _this.refresh(forTables);
-        }), 500);
-      } else {
-        if (this.oView.checkRefresh(forTables)) {
-          return this.renderSecure(true);
-        }
-      }
-    };
-
     Epic.prototype.makeClick = function(form_flag, action, params, render_flag) {
       var click_index, f, p_action;
       f = ':makeClick:' + action;
@@ -297,17 +281,37 @@
     };
 
     Epic.prototype.click = function(click_index, no_render) {
-      var after_sp, before_sp, click_result, f, k, o, oC, oPf, ss, _ref, _ref1, _ref2, _ref3;
+      var action_attrs, after_sp, before_sp, click_result, f, first_node, k, o, oC, oPf, planned_action, ss, _ref, _ref1, _ref2, _ref3;
       f = ':click';
       this.log2(f, click_index);
+      if ((_ref = window.event) != null) {
+        _ref.returnValue = false;
+      }
       if (this.inClick !== false && this.options.click_warning_text !== false) {
         alert(this.options.click_warning_text);
       }
+      oPf = this.getInstance('Pageflow');
+      before_sp = oPf.getStepPath();
+      if (click_index) {
+        this.oRequest.start(click_index);
+      }
+      if (click_index && no_render !== true) {
+        planned_action = this.oRequest.haveAction();
+        if (planned_action) {
+          first_node = this.oAppConf.findClick(before_sp, planned_action);
+        }
+        if (first_node && (first_node.hasAttr('dynamic')) === true) {
+          no_render = true;
+        }
+        this.log2(f, 'render?', {
+          no_render: no_render,
+          sp: before_sp,
+          action: planned_action,
+          node: first_node
+        });
+      }
       if (!no_render) {
         this.inClick = click_index;
-      }
-      if ((_ref = window.event) != null) {
-        _ref.returnValue = false;
       }
       _ref1 = this.oFist;
       for (k in _ref1) {
@@ -323,16 +327,12 @@
           o.eventNewRequest(this.click_path_changed);
         }
       }
-      if (click_index) {
-        this.oRequest.start(click_index);
-      }
-      oPf = this.getInstance('Pageflow');
-      before_sp = oPf.getStepPath();
       oC = new window.EpicMvc.ClickAction(this);
       click_result = oC.click();
       after_sp = oPf.getStepPath();
       oPf.setIssues(click_result[0]);
       oPf.setMessages(click_result[1]);
+      action_attrs = click_result[2];
       this.click_path_changed.flow = before_sp[0] !== after_sp[0];
       this.click_path_changed.track = this.click_path_changed.flow || before_sp[1] !== after_sp[1];
       this.click_path_changed.step = this.click_path_changed.track || before_sp[2] !== after_sp[2];
@@ -346,6 +346,8 @@
       }
       if (no_render !== true || this.click_path_changed.step) {
         this.renderSecure();
+      } else {
+        this.renderStrategy(false, 'replace', click_index);
       }
       return this.inClick = false;
     };
@@ -353,6 +355,7 @@
     Epic.prototype.renderSecure = function(avoid_form_reset) {
       var f, oC, oPf, render_attempts, render_result, sp, template;
       f = ':renderSecure';
+      this.log2(f, 'start, avoid_form_reset', avoid_form_reset);
       oC = new window.EpicMvc.ClickAction(this);
       oPf = this.getInstance('Pageflow');
       render_result = false;

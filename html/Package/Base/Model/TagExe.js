@@ -16,14 +16,47 @@
     }
 
     TagExe.prototype.resetForNextRequest = function(state) {
+      var dyn_list, dyn_list_orig, dyn_m, dyn_t, f, info_parts, nm, oM, prev_row, rec, rh, rh_alias, row, row_num, t_set, tbl, _i, _len, _ref;
+      f = 'Base::TagExe.resetForNextRequest:state?' + (state ? 'T' : 'F');
       this.forms_included = {};
       this.fist_objects = {};
       this.info_foreach = {};
       this.info_if_nms = {};
       this.info_varGet3 = {};
-      this.info_parts = [];
+      this.info_parts = [{}];
       if (state) {
-        return this.info_foreach = $.extend(true, {}, state);
+        _ref = state.info_foreach.dyn;
+        for (nm in _ref) {
+          rec = _ref[nm];
+          dyn_m = rec[0], dyn_t = rec[1], dyn_list_orig = rec[2];
+          dyn_list = [];
+          oM = this.Epic.getInstance(dyn_m);
+          for (_i = 0, _len = dyn_list_orig.length; _i < _len; _i++) {
+            t_set = dyn_list_orig[_i];
+            this.Epic.log2(f, nm, 't_set', t_set);
+            rh = t_set[0], rh_alias = t_set[1];
+            dyn_list.push(t_set);
+            if (!(rh_alias in this.info_foreach)) {
+              this.Epic.log2(f, nm, 'rh_alias', rh_alias);
+              if (dyn_list.length === 1) {
+                tbl = oM.getTable(rh);
+              } else {
+                tbl = prev_row[rh];
+              }
+              row_num = state.info_foreach.row_num[rh_alias];
+              row = $.extend(true, {}, tbl[row_num]);
+              this.info_foreach[rh_alias] = {
+                dyn: [dyn_m, dyn_t, dyn_list],
+                row: row
+              };
+              prev_row = row;
+            } else {
+              prev_row = this.info_foreach[rh_alias].row;
+            }
+          }
+        }
+        info_parts = $.extend(true, {}, state.info_parts);
+        return this.info_parts = info_parts.stuff;
       }
     };
 
@@ -40,6 +73,10 @@
           return encodeURIComponent(val);
         case 'esc':
           return window.EpicMvc.escape_html(val);
+        case 'quo':
+          return ((val.replace(/\\/g, '\\\\')).replace(/'/g, '\\\'')).replace(/"/g, '\\"');
+        case '1':
+          return (String(val))[0];
         case 'lc':
           return (String(val)).toLowerCase();
         case 'ucFirst':
@@ -48,10 +85,10 @@
         default:
           if ((spec != null ? spec.length : void 0) > 4 && spec[0] === '?') {
             _ref = spec.substr(2).split('?'), left = _ref[0], right = _ref[1];
-            return ((val === true || (typeof val === 'number' && val)) || (val != null ? val.length : void 0) ? left : right).replace(new RegExp('[' + spec[1] + ']', 'g'), ' ');
+            return ((val === true || (typeof val === 'number' && val)) || (val != null ? val.length : void 0) ? left : right).replace(new RegExp('[' + spec[1] + ']', 'g'), ' ').replace(new RegExp('[%]', 'g'), val);
           } else if (spec != null ? spec.length : void 0) {
             if ((val === true || (typeof val === 'number' && val)) || (val != null ? val.length : void 0)) {
-              return spec.substr(1).replace(new RegExp('[' + spec.substr(0, 1) + ']', 'g'), ' ');
+              return spec.substr(1).replace(new RegExp('[' + spec.substr(0, 1) + ']', 'g'), ' ').replace(new RegExp('[%]', 'g'), val);
             } else {
               return '';
             }
@@ -72,7 +109,9 @@
     };
 
     TagExe.prototype.varGet2 = function(table_ref, col_nm, format_spec, custom_spec, sub_nm) {
-      var ans;
+      var ans, dyn_m, dyn_t, _ref;
+      _ref = this.info_foreach[table_ref].dyn, dyn_m = _ref[0], dyn_t = _ref[1];
+      this.viewExe.haveTableRefrence(dyn_m, dyn_t);
       ans = this.info_foreach[table_ref].row[col_nm];
       if (sub_nm != null) {
         ans = ans[sub_nm];
@@ -86,7 +125,7 @@
     };
 
     TagExe.prototype.checkForDynamic = function(oPt) {
-      var attr, delay, id, plain_attrs, state, tag, val, _ref;
+      var attr, delay, dyn, id, nm, plain_attrs, rec, row_num, state, tag, val, _ref, _ref1;
       tag = 'dynamic' in oPt.attrs ? this.viewExe.handleIt(oPt.attrs.dynamic) : '';
       if (tag.length === 0) {
         return ['', '', false];
@@ -111,7 +150,23 @@
             plain_attrs.push("" + attr + "=\"" + (this.viewExe.handleIt(val)) + "\"");
         }
       }
-      state = $.extend(true, {}, this.info_foreach);
+      dyn = {};
+      row_num = {};
+      _ref1 = this.info_foreach;
+      for (nm in _ref1) {
+        rec = _ref1[nm];
+        dyn[nm] = rec.dyn;
+        row_num[nm] = rec.row._COUNT;
+      }
+      state = $.extend(true, {}, {
+        info_foreach: {
+          dyn: dyn,
+          row_num: row_num
+        },
+        info_parts: {
+          stuff: this.info_parts
+        }
+      });
       return [
         "<" + tag + " id=\"" + id + "\" " + (plain_attrs.join(' ')) + ">", "</" + tag + ">", {
           id: id,
@@ -138,11 +193,12 @@
     };
 
     TagExe.prototype.Tag_page_part = function(oPt) {
-      var after, before, dynamicInfo, f, out, _ref;
+      var after, before, dynamicInfo, f, out, part, _ref;
       f = ':tag.page-part:' + oPt.attrs.part;
+      part = this.viewExe.handleIt(oPt.attrs.part);
       this.info_parts.push(this.loadPartAttrs(oPt));
       _ref = this.checkForDynamic(oPt), before = _ref[0], after = _ref[1], dynamicInfo = _ref[2];
-      out = before + (this.viewExe.includePart(this.viewExe.handleIt(oPt.attrs.part), dynamicInfo)) + after;
+      out = before + (this.viewExe.includePart(part, dynamicInfo)) + after;
       this.info_parts.pop();
       return out;
     };
@@ -169,6 +225,7 @@
             field = _ref[_i];
             row[field.name] = [field];
           }
+          this.Epic.log2(f, row);
           return [row];
         default:
           return [];
@@ -176,7 +233,7 @@
     };
 
     TagExe.prototype.Tag_form_part = function(oPt) {
-      var any_req, choices, fl, fl_nm, fm_nm, help, hpfl, is_first, issues, ix, map, oFi, one_field_nm, orig, out, part, row, rows, s, show_req, value_fl_nm, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
+      var any_req, choices, fl, fl_nm, fm_nm, focus_nm, help, hpfl, is_first, issues, ix, map, nm, oFi, one_field_nm, orig, out, part, row, rows, s, show_req, value_fl_nm, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
       part = this.viewExe.handleIt((_ref = oPt.attrs.part) != null ? _ref : 'fist_default');
       row = this.viewExe.handleIt((_ref1 = oPt.attrs.row) != null ? _ref1 : false);
       fm_nm = this.viewExe.handleIt(oPt.attrs.form);
@@ -187,8 +244,16 @@
       any_req = false;
       is_first = true;
       out = [];
-      hpfl = oFi.getHtmlPostedFieldsList(fm_nm);
+      hpfl = (function() {
+        var _results;
+        _results = [];
+        for (nm in oFi.getHtmlFieldValues()) {
+          _results.push(nm);
+        }
+        return _results;
+      })();
       issues = oFi.getFieldIssues();
+      focus_nm = oFi.getFocus();
       map = window.EpicMvc['issues$' + this.Epic.appConf().getGroupNm()];
       for (_i = 0, _len = hpfl.length; _i < _len; _i++) {
         fl_nm = hpfl[_i];
@@ -196,7 +261,14 @@
           continue;
         }
         orig = oFi.getFieldAttributes(fl_nm);
-        fl = $.extend({}, orig);
+        fl = $.extend({
+          tip: '',
+          fistnm: fm_nm,
+          focus: ''
+        }, orig);
+        if (fl_nm === focus_nm) {
+          fl.focus = 'yes';
+        }
         fl.is_first = is_first === true ? 'yes' : '';
         is_first = false;
         fl.yes_val = fl.type === 'yesno' ? String((_ref3 = fl.cdata) != null ? _ref3 : '1') : 'not_used';
@@ -289,7 +361,7 @@
     };
 
     TagExe.prototype.ifAnyAll = function(oPt, is_if_any) {
-      var f, flip, found_nm, found_true, left, lh, nm, oMd, op, out, rh, right, tbl, use_op, val, _ref, _ref1;
+      var f, flip, found_nm, found_true, left, lh, nm, op, out, rh, right, tbl, use_op, val, _ref, _ref1;
       f = ':TagExe.ifAnyAll';
       out = '';
       found_nm = false;
@@ -361,7 +433,7 @@
             if (nm === 'not_in_list') {
               flip = true;
             }
-            found_true = ((val.split(',')).indexOf(left)) !== -1;
+            found_true = __indexOf.call(val.split(','), left) >= 0;
             break;
           case 'table_has_no_values':
           case 'table_is_empty':
@@ -371,13 +443,7 @@
               flip = true;
             }
             _ref1 = val.split('/'), lh = _ref1[0], rh = _ref1[1];
-            if (lh in this.info_foreach) {
-              tbl = this.info_foreach[lh].row[rh];
-            } else {
-              this.viewExe.haveTableRefrence(lh, rh);
-              oMd = this.Epic.getInstance(lh);
-              tbl = oMd.getTable(rh);
-            }
+            tbl = this._accessModelTable(val, false)[0];
             found_true = tbl.length !== 0;
             break;
           case 'if_true':
@@ -421,29 +487,44 @@
       return out;
     };
 
+    TagExe.prototype._accessModelTable = function(spec, alias, spec_was_handled) {
+      var at_table, dyn_list, dyn_m, dyn_t, lh, oM, rh, rh_alias, tbl, _ref, _ref1, _ref2;
+      at_table = spec_was_handled ? spec : this.viewExe.handleIt(spec);
+      _ref = at_table.split('/'), lh = _ref[0], rh = _ref[1];
+      if (lh in this.info_foreach) {
+        tbl = this.info_foreach[lh].row[rh];
+        _ref1 = this.info_foreach[lh].dyn, dyn_m = _ref1[0], dyn_t = _ref1[1], dyn_list = _ref1[2];
+      } else {
+        oM = this.Epic.getInstance(lh);
+        tbl = oM.getTable(rh);
+        _ref2 = [lh, rh, []], dyn_m = _ref2[0], dyn_t = _ref2[1], dyn_list = _ref2[2];
+      }
+      this.viewExe.haveTableRefrence(dyn_m, dyn_t);
+      if (tbl.length === 0) {
+        return [tbl, rh, lh, rh, oM];
+      }
+      rh_alias = rh;
+      if (alias) {
+        rh_alias = this.viewExe.handleIt(alias);
+      }
+      dyn_list.push([rh, rh_alias]);
+      this.info_foreach[rh_alias] = {
+        dyn: [dyn_m, dyn_t, dyn_list]
+      };
+      return [tbl, rh_alias, lh, rh, oM];
+    };
+
     TagExe.prototype.Tag_comment = function(oPt) {
       return "\n<!--\n" + (this.viewExe.doAllParts(oPt.parts)) + "\n-->\n";
     };
 
     TagExe.prototype.Tag_foreach = function(oPt) {
-      var at_table, break_rows_list, count, lh, limit, oMd, out, rh, rh_alias, row, tbl, _i, _len, _ref, _ref1;
-      at_table = this.viewExe.handleIt(oPt.attrs.table);
-      _ref = at_table.split('/'), lh = _ref[0], rh = _ref[1];
-      if (lh in this.info_foreach) {
-        tbl = this.info_foreach[lh].row[rh];
-      } else {
-        this.viewExe.haveTableRefrence(lh, rh);
-        oMd = this.Epic.getInstance(lh);
-        tbl = oMd.getTable(rh);
-      }
+      var break_rows_list, count, f, limit, out, rh_alias, row, tbl, _i, _len, _ref, _ref1;
+      f = ':TagExe.Tag_foreach';
+      _ref = this._accessModelTable(oPt.attrs.table, oPt.attrs.alias), tbl = _ref[0], rh_alias = _ref[1];
       if (tbl.length === 0) {
         return '';
       }
-      rh_alias = rh;
-      if ('alias' in oPt.attrs) {
-        rh_alias = this.viewExe.handleIt(oPt.attrs.alias);
-      }
-      this.info_foreach[rh_alias] = {};
       break_rows_list = this.calcBreak(tbl.length, oPt);
       out = '';
       limit = tbl.length;
@@ -456,11 +537,11 @@
           break;
         }
         this.info_foreach[rh_alias].row = $.extend(true, {}, row, {
-          _FIRST: count === 0,
-          _LAST: count === tbl.length - 1,
+          _FIRST: (count === 0 ? 'F' : ''),
+          _LAST: (count === tbl.length - 1 ? 'L' : ''),
           _SIZE: tbl.length,
           _COUNT: count,
-          _BREAK: (_ref1 = count + 1, __indexOf.call(break_rows_list, _ref1) >= 0)
+          _BREAK: ((_ref1 = count + 1, __indexOf.call(break_rows_list, _ref1) >= 0) ? 'B' : '')
         });
         out += this.viewExe.doAllParts(oPt.parts);
       }
@@ -475,7 +556,7 @@
       _ref = ['break_min', 'break_fixed', 'break_at', 'break_even'];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         nm = _ref[_i];
-        p[nm] = p[nm] != null ? this.viewExe.handleIt(p[nm]) : 0;
+        p[nm] = p[nm] != null ? Number(this.viewExe.handleIt(p[nm])) : 0;
       }
       check_for_breaks = p.break_min && sZ < p.break_min ? 0 : 1;
       if (check_for_breaks && p.break_fixed) {
@@ -647,10 +728,10 @@
         val = _ref2[attr];
         switch (attr) {
           case 'action':
-            action = (this.viewExe.handleIt(val)).trim();
+            action = $.trim(this.viewExe.handleIt(val));
             break;
           case 'value':
-            value = (this.viewExe.handleIt(val)).trim();
+            value = $.trim(this.viewExe.handleIt(val));
             break;
           default:
             if (attr.match(/^p_/)) {
@@ -660,7 +741,6 @@
             }
         }
       }
-      out_attrs.push('title=' + action);
       link._b = action;
       click_index = this.Epic.request().addLink(link);
       return o = this.Epic.renderer.form_action(out_attrs, click_index, action, value);
@@ -669,11 +749,9 @@
     TagExe.prototype.Tag_link_action = function(oPt) {
       var action, attr, attr_text, click_index, id, k, link, o, plain_attr, text, v, val, _ref;
       link = {};
+      plain_attr = {};
       action = this.viewExe.handleIt(oPt.attrs.action);
       link._a = action;
-      plain_attr = {
-        title: action
-      };
       _ref = oPt.attrs;
       for (attr in _ref) {
         if (!__hasProp.call(_ref, attr)) continue;
@@ -683,7 +761,6 @@
         } else {
           switch (attr) {
             case 'href':
-            case 'title':
             case 'onclick':
             case 'action':
               break;

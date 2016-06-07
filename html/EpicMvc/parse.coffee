@@ -1,10 +1,10 @@
 'use strict'
-# Copyright 2007-2012 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 
 # Parse out varGet2/3's as array with func name set
 FindVars= (text) ->
-	parts= text.split /&([a-zA-Z0-9_]+\/[^;]{1,50});?/gm
+	parts= text.split /&([a-zA-Z0-9_]+\/[^;]{1,60});?/gm
 	i= 0
 	return text if parts.length== 1
 	while i< parts.length- 1
@@ -62,4 +62,6 @@ ParseFile= (file_stats, file_contents) ->
 	return parts
 
 # Public API
-window.EpicMvc.ParseFile= ParseFile
+if window? then window.EpicMvc.ParseFile= ParseFile
+else module.exports= (w)-> w.EpicMvc.ParseFile= ParseFile
+

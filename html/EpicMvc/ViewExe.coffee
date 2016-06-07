@@ -1,20 +1,22 @@
 'use strict'
-# Copyright 2007-2012 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 class ViewExe
 	constructor: (@Epic,@loadStrategy,@content_watch) ->
 		@dynamicParts= []
 		frames= @Epic.oAppConf.getFrames()
 		@frames=( frames[ix] for ix in (nm for nm of frames).sort())
-		@Epic.log1 'ViewExec', @frames
+		@Epic.log1 ':ViewExec', @frames
+		# Init things that may be needed in calls made to this class before my 'init' is called
+		@dynamicMap= {} # Hash by Model:tbl_nm - list of dynamicParts indexes
 	init: (@template, @page) ->
-		@Epic.log2 ':view T:'+ @template, 'P:'+ page, (v for v in (@Epic.getInstance 'Pageflow').getStepPath()).join '/'
+		@Epic.log2 ':ViewExe.init T:'+ @template, 'P:'+ page, (v for v in (@Epic.getInstance 'Pageflow').getStepPath()).join '/'
 		@instance= @Epic.nextCounter() # Use to ignore delayed requests after a new init occured
 		@oTemplate= @loadStrategy.template @template
 		@oPage= @loadStrategy.page @page
 		@pageStack= []
 		(@pageStack.push @loadStrategy.template nm) for nm in @frames
 		@pageStack.push @oTemplate, @oPage
-		#@Epic.log1 'ViewExec.init', @pageStack
+		#@Epic.log1 ':ViewExec.init', @pageStack
 		@stack= []
 		@TagExe= @Epic.getInstance 'Tag'
 		@TagExe.resetForNextRequest()
@@ -22,7 +24,6 @@ class ViewExe
 		@dynamicParts= [defer:[],parent:0] # Parts refrences w/Tag-state allowing a re-draw of this part in the DOM
 		@dynamicMap= {} # Hash by Model:tbl_nm - list of dynamicParts indexes
 		@activeDynamicPartIx= 0 # Zero always exists, it's the template
-	checkRefresh: (tables) -> alert 'Epic: ViewExec.checkRefresh was disabled.'; false
 	part: (ix) -> @dynamicParts[ix or @activeDynamicPartIx]
 	doDynamicPart: (ix, instance) ->
 		f= ':ViewExe.doDynamicPart:'+ix
@@ -95,8 +96,13 @@ class ViewExe
 		@stack.push [@current, @activeDynamicPartIx]
 		@current= current
 		@addDynamicPart dynoInfo if dynoInfo
-		out= @doAllParts 0
-		[@current, @activeDynamicPartIx]= @stack.pop()
+		try
+			out= @doAllParts 0
+		catch e
+			throw e if @stack.length > 0
+			out= e.message+ "<pre>\n"+ e.stack+ "</pre>"
+		finally
+			[@current, @activeDynamicPartIx]= @stack.pop()
 		out
 	includePage: () -> @run @pageStack.shift 0 #oPage
 	includePart: (nm,dynoInfo) ->

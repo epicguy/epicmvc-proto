@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2012 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 # Epic.ConfExe manages execution of a click/macro from app.conf
 class ConfExe
@@ -26,7 +26,7 @@ class ConfExe
 			if not (k of results) or v isnt results[k] then return false
 		true
 	getTarget: -> @node.call || @node.macro
-	hasMacro: -> if @node.call? then false else true
+	hasMacro: -> if @node.macro? then true else false
 	hasResult: -> if @node.RESULTS? then true else false
 	getPAttrs: -> @node.p || null
 	getRAttrs: -> @node.r || null

@@ -1,3 +1,4 @@
+# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 class LoadStrategy
 	constructor: (@Epic) ->
@@ -5,41 +6,43 @@ class LoadStrategy
 		@cache= {}
 		@cache_local_flag= true # False if we want browser to cache responses
 	clearCache: () -> @cache= {}
-	getTmplNm: (nm) -> nm+ '.tmpl.html'
-	getPageNm: (nm) -> 'page/'+ nm+ '.page.html'
-	getPartNm: (nm) -> 'part/'+ nm+ '.part.html'
-	getFile: (nm) ->
-		return @cache[nm] if @cache[nm]?
-		results= false
+	preLoaded: (pkg,type,nm) -> window.EpicMvc['view$'+pkg]?[type]?[nm]
+	get: (type,nm) ->
+		full_nm=( if type isnt 'tmpl' then type+ '/' else '')+ nm+ '.'+ type+ '.html'
+		return @cache[full_nm] if @cache[full_nm]?
 		@reverse_packages?=( @Epic.appconfs[i] for i in [@Epic.appconfs.length- 1..0])
 		for pkg in @reverse_packages
-			path= "Package/#{pkg}/view/"
-			window.$.ajax
-				url: path+ nm
-				async:false
-				cache: if @cache_local_flag then false else true
-				dataType: 'text',
-				success: (data) -> results= data
-				error: (jqXHR,textStatus,errorThrown) ->
-					console.log 'AJAX ERROR '
+			if p= @preLoaded pkg, type, nm
+				results= p # Compiled and everything
+			else
+				results= @getFile pkg, full_nm
+				results= window.EpicMvc.ParseFile full_nm, results if results isnt false
+			@cache[full_nm]= results if @cache_local_flag and results isnt false
 			break if results isnt false
-		console.log 'NO FILE FOUND! '+ nm if results is false
-		@cache[nm]= String results if @cache_local_flag
+		if results is false
+			console.log 'NO FILE FOUND! '+ nm
+		results
+	getFile: (pkg,nm) ->
+		results= false
+		path= "Package/#{pkg}/view/"
+		path= "EpicPkg/#{pkg}/view/" if pkg in ['Base', 'BaseDevl', 'bootstrap']
+		window.$.ajax
+			url: path+ nm
+			async:false
+			cache: if @cache_local_flag then false else true
+			dataType: 'text',
+			success: (data) -> results= data
+			error: (jqXHR,textStatus,errorThrown) ->
+				console.log 'AJAX ERROR '
+		return results
 	getCombinedAppConfs: ->
 		result= {}
 		for pkg in @Epic.appconfs
 			window.$.extend true, result, window.EpicMvc['app$'+pkg]
 		result
-	template: (nm) ->
-		full_nm= @getTmplNm nm
-		window.EpicMvc.ParseFile full_nm, @getFile full_nm
-	page: (nm) ->
-		full_nm= @getPageNm nm
-		window.EpicMvc.ParseFile full_nm, @getFile full_nm
-	part: (nm) ->
-		full_nm= @getPartNm nm
-		window.EpicMvc.ParseFile full_nm, @getFile full_nm
-	fist: (grp_nm) ->
-		window.EpicMvc['fist$'+ grp_nm]
+	template: (nm) -> @get 'tmpl', nm
+	page: (nm) -> @get 'page', nm
+	part: (nm) -> @get 'part', nm
+	fist: (grp_nm) -> window.EpicMvc['fist$'+ grp_nm]
 
 window.EpicMvc.Extras.LoadStrategy$BaseDevl= LoadStrategy
