@@ -15,17 +15,24 @@
       return this.cache = {};
     };
 
-    LoadStrategy.prototype.preLoaded = function(pkg, type, nm) {
-      var _ref, _ref1;
-      return (_ref = window.EpicMvc['view$' + pkg]) != null ? (_ref1 = _ref[type]) != null ? _ref1[nm] : void 0 : void 0;
+    LoadStrategy.prototype.getTmplNm = function(nm) {
+      return nm + '.tmpl.html';
     };
 
-    LoadStrategy.prototype.get = function(type, nm) {
-      var full_nm, i, p, pkg, results, _i, _len, _ref, _ref1;
-      full_nm = (type !== 'tmpl' ? type + '/' : '') + nm + '.' + type + '.html';
-      if (this.cache[full_nm] != null) {
-        return this.cache[full_nm];
+    LoadStrategy.prototype.getPageNm = function(nm) {
+      return 'page/' + nm + '.page.html';
+    };
+
+    LoadStrategy.prototype.getPartNm = function(nm) {
+      return 'part/' + nm + '.part.html';
+    };
+
+    LoadStrategy.prototype.getFile = function(nm) {
+      var i, path, pkg, results, _i, _len, _ref, _ref1;
+      if (this.cache[nm] != null) {
+        return this.cache[nm];
       }
+      results = false;
       if ((_ref = this.reverse_packages) == null) {
         this.reverse_packages = (function() {
           var _i, _ref1, _results;
@@ -39,17 +46,19 @@
       _ref1 = this.reverse_packages;
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
         pkg = _ref1[_i];
-        if (p = this.preLoaded(pkg, type, nm)) {
-          results = p;
-        } else {
-          results = this.getFile(pkg, full_nm);
-          if (results !== false) {
-            results = window.EpicMvc.ParseFile(full_nm, results);
+        path = "Package/" + pkg + "/view/";
+        window.$.ajax({
+          url: path + nm,
+          async: false,
+          cache: this.cache_local_flag ? false : true,
+          dataType: 'text',
+          success: function(data) {
+            return results = data;
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+            return console.log('AJAX ERROR ');
           }
-        }
-        if (this.cache_local_flag && results !== false) {
-          this.cache[full_nm] = results;
-        }
+        });
         if (results !== false) {
           break;
         }
@@ -57,29 +66,9 @@
       if (results === false) {
         console.log('NO FILE FOUND! ' + nm);
       }
-      return results;
-    };
-
-    LoadStrategy.prototype.getFile = function(pkg, nm) {
-      var path, results;
-      results = false;
-      path = "Package/" + pkg + "/view/";
-      if (pkg === 'Base' || pkg === 'BaseDevl' || pkg === 'bootstrap') {
-        path = "EpicPkg/" + pkg + "/view/";
+      if (this.cache_local_flag) {
+        return this.cache[nm] = String(results);
       }
-      window.$.ajax({
-        url: path + nm,
-        async: false,
-        cache: this.cache_local_flag ? false : true,
-        dataType: 'text',
-        success: function(data) {
-          return results = data;
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-          return console.log('AJAX ERROR ');
-        }
-      });
-      return results;
     };
 
     LoadStrategy.prototype.getCombinedAppConfs = function() {
@@ -94,15 +83,21 @@
     };
 
     LoadStrategy.prototype.template = function(nm) {
-      return this.get('tmpl', nm);
+      var full_nm;
+      full_nm = this.getTmplNm(nm);
+      return window.EpicMvc.ParseFile(full_nm, this.getFile(full_nm));
     };
 
     LoadStrategy.prototype.page = function(nm) {
-      return this.get('page', nm);
+      var full_nm;
+      full_nm = this.getPageNm(nm);
+      return window.EpicMvc.ParseFile(full_nm, this.getFile(full_nm));
     };
 
     LoadStrategy.prototype.part = function(nm) {
-      return this.get('part', nm);
+      var full_nm;
+      full_nm = this.getPartNm(nm);
+      return window.EpicMvc.ParseFile(full_nm, this.getFile(full_nm));
     };
 
     LoadStrategy.prototype.fist = function(grp_nm) {

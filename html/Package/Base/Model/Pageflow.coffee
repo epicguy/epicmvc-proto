@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2012 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 class Pageflow extends window.EpicMvc.ModelJS
 	constructor: (epic,view_nm) ->
@@ -19,7 +19,6 @@ class Pageflow extends window.EpicMvc.ModelJS
 		else if not s? or not oC.getS( f, t, s)?
 			s= oC.startS f, t
 		@f= f; @t= t; @s= s
-		@invalidateTables ['V'] # This table is specific to the 'path'
 	go: (path) ->
 		q= path.split '/'
 		for v,ix in [@f, @t, @s]
@@ -50,7 +49,6 @@ class Pageflow extends window.EpicMvc.ModelJS
 		@invalidateTables ['Issue']
 	setMessages: (issue_obj) ->
 		@messages.addObj issue_obj if issue_obj?.count() isnt 0
-		@invalidateTables ['Message']
 	loadTable: (tbl_nm) ->
 		map= window.EpicMvc['issues$'+ @Epic.appConf().getGroupNm()]
 		@Table[ tbl_nm]= switch tbl_nm

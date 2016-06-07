@@ -17,22 +17,23 @@
     }
 
     ModelJS.prototype.action = function(act, parms) {
-      throw new Error("Model (" + this.view_nm + ").action() needs (" + act + ")");
+      window.alert("Unknown action (" + act + ") for model-name (" + this.view_nm + ").");
     };
 
     ModelJS.prototype.loadTable = function(tbl_nm) {
       if (tbl_nm in this.Table) {
         return;
       }
-      throw new Error("Model (" + this.view_nm + ").loadTable() needs (" + tbl_nm + ")");
+      window.alert("Model " + this.view_nm + ".loadTable needs (" + tbl_nm + ")");
+      return this.Table[tbl_nm] = [{}];
     };
 
     ModelJS.prototype.fistLoadData = function(oFist) {
-      throw new Error("Model (" + this.view_nm + ").fistLoadData() needs (" + (oFist.getFistNm()) + ")");
+      window.alert("Model (" + this.view_nm + ").fistLoadData() needs (" + (oFist.getFistNm()) + ")");
     };
 
     ModelJS.prototype.fistGetFieldChoices = function(oFist, field) {
-      throw new Error("Model (" + this.view_nm + ").fistGetFieldChoices() needs (" + (oFist.getFistNm()) + ":" + field + ")");
+      window.alert("Model (" + this.view_nm + ").fistGetFieldChoices() needs (" + (oFist.getFistNm()) + ":" + field + ")");
     };
 
     return ModelJS;

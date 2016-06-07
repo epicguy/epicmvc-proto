@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2012 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 class Issue
 	constructor: (@Epic, @t_view, @t_action) -> @issue_list= [] # Instance member
@@ -12,7 +12,7 @@ class Issue
 		@Epic.log2 f, 'params:type/msgs', type, msgs
 		switch typeof msgs
 			when 'undefined' then msgs= []
-			when 'string' then msgs= [ msgs ]
+			when 'string' then msgs [ msgs ]
 		switch type
 			when 'TEXT' then @issue_list.push token:'text', more:msgs, t_view: @t_view, t_action: @t_action
 			else
@@ -41,7 +41,6 @@ class Issue
 		final= []
 		for issue in @issue_list
 			final.push
-				token: issue.token
 				title: "#{issue.t_view}##{issue.t_action}##{issue.token}##{issue.more.join ','}"
 				issue: @map map, issue.t_view, issue.t_action, issue.token, issue.more
 		final
@@ -63,13 +62,12 @@ class Issue
 			for spec in (sub_map or [])
 				#@Epic.log2 'map:spec', spec
 				if token.match spec[0]
-					return @doMap token, spec[1], more, token
+					return @doMap spec[1], more
 		"#{t_view}##{t_action}##{token}##{more.join ','}"
-	doMap: (token, pattern,vals) ->
-		#@Epic.log2 'doMap', token, pattern, vals
+	doMap: (pattern,vals) ->
+		#@Epic.log2 'doMap', pattern, vals
 		new_str= pattern.replace /%([0-9])(?::([0-9]))?%/g, (str,i1,i2,more) ->
 			#@Epic.log2 str:str, i1:i1, i2:i2, more:more
-			return token if i1 is '0'
 			return if i2 then (vals[i1-1] or vals[i2-1] or '') else (vals[i1-1] or '')
 		new_str
 

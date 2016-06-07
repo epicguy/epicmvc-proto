@@ -25,11 +25,19 @@
     }
 
     AppConf.prototype.getObj = function(view_name, attribute) {
+      var a, nm;
       if (!(view_name in this.config.MODELS)) {
-        throw new Error("No (" + view_name + ") in 'MODELS:' in app.js");
+        alert(":AppConf.getObj: (app.js) MODELS: " + view_name + ": [(" + view_name + ") not in MODELS:, check spelling/case]");
       }
       if (!(attribute in this.config.MODELS[view_name])) {
-        throw new Error("No (" + atrribute + ") in 'MODELS:" + view_name + "' in app.js");
+        a = this.confiig.XXX[view_name + '#' + attribute + '#' + ((function() {
+          var _results;
+          _results = [];
+          for (nm in this.config.MODELS[view_name]) {
+            _results.push(nm);
+          }
+          return _results;
+        }).call(this))];
       }
       return this.config.MODELS[view_name][attribute];
     };
@@ -187,10 +195,9 @@
     };
 
     AppConf.prototype.getVars = function(f, t, s) {
-      var f2, k, v, vars;
-      f2 = ':AppConf.getVars';
+      var k, v, vars;
       vars = $.extend({}, this.config.FLOWS[f].v, this.config.FLOWS[f].TRACKS[t].v, this.config.FLOWS[f].TRACKS[t].STEPS[s].v);
-      this.Epic.log2(f2, ((function() {
+      this.Epic.log2(((function() {
         var _results;
         _results = [];
         for (k in vars) {

@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2012 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 class Epic
 	constructor: ->
@@ -25,10 +25,10 @@ class Epic
 		@options=
 			click_warning_text: 'WARNING: Still processing previous click event (check for javascript errors.)'
 
-	log1: window.Function.prototype.bind.call( window.console.log, window.console)
-	#log1: () -> null
-	log2: window.Function.prototype.bind.call( window.console.log, window.console)
-	#log2: () -> null
+	#log1: window.Function.prototype.bind.call( window.console.log, window.console)
+	log1: () -> null
+	#log2: window.Function.prototype.bind.call( window.console.log, window.console)
+	log2: () -> null
 	nextCounter: -> ++@counter
 	getPageflowPath: () ->
 		@getInstance( 'Pageflow').getStepPath().join '/'
@@ -49,7 +49,7 @@ class Epic
 		@getInstance( a[0]).getTable a[1]
 	getLookaheadClick: (planned_action) ->
 		sp= @getInstance( 'Pageflow').getStepPath()
-		@oAppConf.findClick sp, planned_action
+		@oAppConf.findClick planned_action, sp
 	getDomCache: ->
 		sp= @getInstance( 'Pageflow').getStepPath()
 		attr= @oAppConf.getS( sp[0], sp[1], sp[2]).dom_cache
@@ -99,18 +99,16 @@ class Epic
 		false
 	getFormData: -> @renderer.getFormData()
 	renderStrategy: (content,history,click_index,modal) ->
-		if content isnt false
-			@renderer.render content, history, click_index, modal
-		else
-			@renderer.handleRenderState history, click_index
+		@renderer.render content, history, click_index, modal
 		null
 	render: (template,sp,avoid_form_reset) ->
 		page= @oAppConf.getPage sp
 		modal= @oAppConf.findAttr sp[0], sp[1], sp[2], 'modal'
 		if modal
 			template= @oAppConf.mapModalTemplate modal
+			modal= true
 		#TODO IS THIS SET ON ACTION, NOT PAGE? SHOULD I USE FIND-ATTR? history= @oAppConf.getHistory sp
-		history= switch "#{if @wasModal then 1 else 0}:#{if modal then 1 else 0}"
+		history= switch "#{Number @wasModal}:#{Number modal}"
 			when '0:0' then true
 			when '1:0' then 'replace'
 			when '0:1' then false
@@ -120,7 +118,7 @@ class Epic
 		try
 			stuff= @oView.run()
 		catch e
-			@log2 ':render error', e, e.stack
+			@log2 ':render error', e
 			if @isSecurityError e then return e
 			else @inClick= false; throw e
 		@renderStrategy stuff, history, @inClick, modal
@@ -141,6 +139,10 @@ class Epic
 			delete @modelState[k]
 			delete @oModel[k]
 		@oFist= {}
+	refresh: (forTables) =>
+		if @inClick is true
+			setTimeout (=> @refresh forTables), 500
+		else @renderSecure true if @oView.checkRefresh forTables
 	makeClick: (form_flag,action,params,render_flag) -> # Convience method to build click on the fly
 		f= ':makeClick:'+action
 		@log2 f, 'form?'+(if form_flag then 'Y' else 'N'), 'render'+(if render_flag then 'Y' else 'N'), params
@@ -152,43 +154,30 @@ class Epic
 	click: (click_index,no_render) ->
 		f= ':click'
 		@log2 f, click_index
-		window.event?.returnValue = false #IE
 		if @inClick isnt false and @options.click_warning_text isnt false then alert @options.click_warning_text
-
-		oPf= @getInstance 'Pageflow'
-		before_sp= oPf.getStepPath()
-		@oRequest.start click_index if click_index
-		if click_index and no_render isnt true
-			planned_action= @oRequest.haveAction()
-			first_node= @oAppConf.findClick before_sp, planned_action if planned_action
-			no_render= true if first_node and (first_node.hasAttr 'dynamic') is true # app.coffee CLICKS: some_action: dynamic:true
-			@log2 f, 'render?', no_render: no_render, sp: before_sp, action: planned_action, node: first_node
 		@inClick= click_index if not no_render
-
+		window.event?.returnValue = false #IE
 		#TODO ALSO DO PREVENT DEFAULT, AND REMOVE THOSE RETURN FALSE'S
 		#TODO CONSIDER NOT DOING NEW-REQUEST IF NO_RENDER?
 		o.eventNewRequest?( @click_path_changed) for k,o of @oFist # Removing state where appropriate
 		o.eventNewRequest?( @click_path_changed) for k,o of @oModel
-
+		@oRequest.start click_index if click_index
+		oPf= @getInstance 'Pageflow'
+		before_sp= oPf.getStepPath()
 		oC= new window.EpicMvc.ClickAction @
 		click_result= oC.click()
 		after_sp= oPf.getStepPath()
 		oPf.setIssues click_result[0]
 		oPf.setMessages click_result[1]
-		action_attrs= click_result[2]
 		@click_path_changed.flow=  (before_sp[0]) isnt (after_sp[0])
 		@click_path_changed.track= @click_path_changed.flow  or (before_sp[1]) isnt (after_sp[1])
 		@click_path_changed.step=  @click_path_changed.track or (before_sp[2]) isnt (after_sp[2])
 		@modelState= {}
 		@modelState[k]= ss for k,o of @oModel when o.saveState? and ss= o.saveState()
-		if no_render isnt true or @click_path_changed.step
-			@renderSecure()
-		else
-			@renderStrategy false, 'replace', click_index
+		@renderSecure() if no_render isnt true or @click_path_changed.step
 		@inClick= false
 	renderSecure: (avoid_form_reset) ->
 		f= ':renderSecure'
-		@log2 f, 'start, avoid_form_reset', avoid_form_reset
 		oC= new window.EpicMvc.ClickAction @
 		oPf= @getInstance 'Pageflow'
 		render_result= false

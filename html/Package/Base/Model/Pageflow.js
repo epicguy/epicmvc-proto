@@ -43,8 +43,7 @@
       }
       this.f = f;
       this.t = t;
-      this.s = s;
-      return this.invalidateTables(['V']);
+      return this.s = s;
     };
 
     Pageflow.prototype.go = function(path) {
@@ -125,9 +124,8 @@
 
     Pageflow.prototype.setMessages = function(issue_obj) {
       if ((issue_obj != null ? issue_obj.count() : void 0) !== 0) {
-        this.messages.addObj(issue_obj);
+        return this.messages.addObj(issue_obj);
       }
-      return this.invalidateTables(['Message']);
     };
 
     Pageflow.prototype.loadTable = function(tbl_nm) {

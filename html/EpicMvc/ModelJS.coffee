@@ -1,5 +1,4 @@
 'use strict'
-# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 # Epic.ModelJS is an abstract for models implented all in JS
 class ModelJS

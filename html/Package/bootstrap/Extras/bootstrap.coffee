@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2014 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2012 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 #TODO Grab 'title' from Tag.head, and inject it?
 		
@@ -24,7 +24,6 @@ class bootstrap
 		#window.onhashchange = @LocationHashChanged
 		#TODO DETECT MANUAL HASHCHANGE window.onhashchange = (a) -> console.log 'onhashChange', a; alert 'hashChange'
 		window.onpopstate = @onPopState
-		$(document).on 'hidden.bs.modal', => @Epic.makeClick false, 'close_modal', {}, true
 		true
 	UnloadMessage: (ix,msg) ->
 		if msg
@@ -109,8 +108,8 @@ class bootstrap
 
 	onPopState: (event) =>
 		f= 'E:bootstrap.onPopState: '
-		_log2 f, was_popped: @was_popped, very_first: @very_first, special: event is true, state: if event is true then 'XX' else event.state
-		if event is true or not event.state # Special processing - making sure this logic happens in FF as initial load
+		_log2 f, was_popped: @was_popped, very_first: @very_first, special: event is true
+		if event is true # Special processing - making sure this logic happens in FF as initial load
 			return if @was_popped or not @very_first # We did handle it already
 		@was_popped= true
 		if @very_first
@@ -130,14 +129,14 @@ class bootstrap
 		#if @was_modal and modal # to avoid 'snap'
 		#	return alert 'Attempting to create a modal, while one is active, may "snap" - check your JavaScript'
 		if @was_modal
-			window.$('#'+@modalId+ '>div.modal').modal 'hide'
-			window.$('.modal-backdrop').remove() # Get rid of that backdrop
-			window.$('body').removeClass 'modal-open' # Bootstrap 3 adds this class to the body to disable page scroll
+			window.$('#'+@modalId+ '>div').modal 'hide' # Get rid of that backdrop
 			$('#'+@modalId).html ''
 		if modal
 			container= '#'+ @modalId
 			$(container).html content
 			window.$('#'+@modalId+ ' div.modal').modal() # Activate it (must include boostrap-modal.js)
+			.on 'hidden', =>
+				@Epic.makeClick false, 'close_modal', {}, true
 		else
 			container= '#'+ @baseId
 			$(container).html content

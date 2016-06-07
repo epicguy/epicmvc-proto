@@ -48,8 +48,18 @@
     };
 
     ClickAction.prototype.doAction = function(node, prev_action_result) {
-      var a_params_list, alias_params, class_method, dummy, f, found_result_tag, k, look_for_macro_result_tags, macro_node, path, r, rIssues, rMessages, rResults, r_vals, v;
+      var a_params_list, alias_params, class_method, f, found_result_tag, k, look_for_macro_result_tags, macro_node, r, rIssues, rMessages, rResults, r_vals, v;
       f = ":ClickAction.doAction(" + (node.getTarget()) + ")";
+      this.Epic.log2(f, 'getPAttrs/node/prev_action_result', ((function() {
+        var _ref, _results;
+        _ref = node.getPAttrs();
+        _results = [];
+        for (k in _ref) {
+          v = _ref[k];
+          _results.push("" + k + "=" + v);
+        }
+        return _results;
+      })()).join(', ', node, prev_action_result));
       r_vals = this.Epic.request().getValues();
       a_params_list = this.pullValueUsingAttr(node, r_vals, prev_action_result);
       class_method = node.getTarget();
@@ -66,37 +76,19 @@
           v = alias_params[k];
           a_params_list[k] = v;
         }
-        if (path = macro_node.hasAttr('go')) {
-          dummy = this.Epic.Execute('Pageflow/path', {
-            path: path
-          });
-        }
       }
-      r = class_method ? this.Epic.Execute(class_method, a_params_list) : [{}, {}, {}];
-      if (path = node.hasAttr('go')) {
-        dummy = this.Epic.Execute('Pageflow/path', {
-          path: path
-        });
-      }
+      r = this.Epic.Execute(class_method, a_params_list);
       rResults = r[0], rIssues = r[1], rMessages = r[2];
       found_result_tag = (look_for_macro_result_tags ? macro_node : node).matchResult(rResults);
       return [found_result_tag, rResults, rIssues, rMessages];
     };
 
     ClickAction.prototype.pullValueUsingAttr = function(node, r_vals, prev_action_result) {
-      var a_params_list, attr, f, fields_list, form_name, nm, oF;
-      f = ':ClickAction.pullValueUsingAttr';
+      var a_params_list, attr, fields_list, form_name, oF;
       a_params_list = $.extend({}, node.getPAttrs());
       if (form_name = node.hasAttr('use_form')) {
         oF = this.Epic.getFistInstance(form_name);
-        fields_list = (function() {
-          var _results;
-          _results = [];
-          for (nm in oF.getHtmlFieldValues()) {
-            _results.push(nm);
-          }
-          return _results;
-        })();
+        fields_list = oF.getHtmlPostedFieldsList(form_name);
         $.extend(a_params_list, this.pullValues(r_vals, fields_list, 'use_form'));
       }
       if (attr = node.hasAttr('use_fields')) {

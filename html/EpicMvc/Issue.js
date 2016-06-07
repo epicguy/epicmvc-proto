@@ -29,7 +29,7 @@
           msgs = [];
           break;
         case 'string':
-          msgs = [msgs];
+          msgs([msgs]);
       }
       switch (type) {
         case 'TEXT':
@@ -96,7 +96,6 @@
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         issue = _ref[_i];
         final.push({
-          token: issue.token,
           title: "" + issue.t_view + "#" + issue.t_action + "#" + issue.token + "#" + (issue.more.join(',')),
           issue: this.map(map, issue.t_view, issue.t_action, issue.token, issue.more)
         });
@@ -132,19 +131,16 @@
         for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
           spec = _ref[_j];
           if (token.match(spec[0])) {
-            return this.doMap(token, spec[1], more, token);
+            return this.doMap(spec[1], more);
           }
         }
       }
       return "" + t_view + "#" + t_action + "#" + token + "#" + (more.join(','));
     };
 
-    Issue.prototype.doMap = function(token, pattern, vals) {
+    Issue.prototype.doMap = function(pattern, vals) {
       var new_str;
       new_str = pattern.replace(/%([0-9])(?::([0-9]))?%/g, function(str, i1, i2, more) {
-        if (i1 === '0') {
-          return token;
-        }
         if (i2) {
           return vals[i1 - 1] || vals[i2 - 1] || '';
         } else {

@@ -77,10 +77,10 @@
     };
 
     ConfExe.prototype.hasMacro = function() {
-      if (this.node.macro != null) {
-        return true;
-      } else {
+      if (this.node.call != null) {
         return false;
+      } else {
+        return true;
       }
     };
 
