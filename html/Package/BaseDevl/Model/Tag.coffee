@@ -71,7 +71,7 @@ class TagExe extends window.EpicMvc.Model.TagExe$Base
 			spec= if format_spec and format_spec.length> 0 then '#'+ format_spec else if custom_spec and custom_spec.length> 0 then '##'+ custom_spec else ''
 			key= "Undefined: &#{tbl_nm}/#{col_nm}#{spec};"
 			if not (key of @errors_cache.get3)
-				window.alert "Undefined: &#{tbl_nm}/#{col_nm}#{spec};"
+				#window.alert "Undefined: &#{tbl_nm}/#{col_nm}#{spec};"
 				@errors_cache.get3[key]= true
 			val= "&amp;#{tbl_nm}/#{col_nm};" # Give back a visual of what is in the HTML
 		val
