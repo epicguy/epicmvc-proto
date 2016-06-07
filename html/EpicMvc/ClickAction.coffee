@@ -42,7 +42,9 @@ class ClickAction
 			if macro_node.hasResult() then look_for_macro_result_tags= true # Else use caller node's RESULT?
 			for own k,v of alias_params
 				a_params_list[k]= v
-		r= @Epic.Execute class_method, a_params_list
+			if path= macro_node.hasAttr 'go'
+				dummy= @Epic.Execute 'Pageflow/path', path: path
+		r= if class_method then @Epic.Execute class_method, a_params_list else [ {}, {}, {}]
 		#@Epic.log2 f, '@Epic.Execute-result', r
 		# Process any go: as shortcut to { call: 'Pageflow/path' p:{path:'//x'} }
 		if path= node.hasAttr 'go'

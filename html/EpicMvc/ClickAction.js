@@ -74,8 +74,13 @@
           v = alias_params[k];
           a_params_list[k] = v;
         }
+        if (path = macro_node.hasAttr('go')) {
+          dummy = this.Epic.Execute('Pageflow/path', {
+            path: path
+          });
+        }
       }
-      r = this.Epic.Execute(class_method, a_params_list);
+      r = class_method ? this.Epic.Execute(class_method, a_params_list) : [{}, {}, {}];
       if (path = node.hasAttr('go')) {
         dummy = this.Epic.Execute('Pageflow/path', {
           path: path
