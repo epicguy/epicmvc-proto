@@ -93,7 +93,7 @@
       most = '[A-Z0-9._%-]';
       some = '[A-Z0-9.-]';
       few = '[A-Z]';
-      re = new RegExp("^" + most + "+@" + some + "+[.]" + few + "{2,4}$", 'i');
+      re = new RegExp("^" + most + "+@" + some + "+[.]" + few + "{2,5}$", 'i');
       if (value.match(re)) {
         return true;
       } else {
