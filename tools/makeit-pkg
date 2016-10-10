@@ -1,20 +1,20 @@
-#!/bin/sh
+#!/bin/bash
 
 DevHtmlPkg=$1
 MinOut=$2
 
 COFFEE=''
-for FILE in `find -H $DevHtmlPkg -maxdepth 1 -name \*.coffee |sort |grep -vi manifest`  ; do COFFEE="$COFFEE $FILE" ; done
+for FILE in `find -H $DevHtmlPkg -maxdepth 1 -name \*.coffee`  ; do COFFEE="$COFFEE $FILE" ; done
 JSS=''
 if [ -d $DevHtmlPkg/js ]
 then
-  for FILE in `find -H $DevHtmlPkg/js -name \*.js |sort` ; do JSS="$JSS $FILE" ; done
+  for FILE in `find -H $DevHtmlPkg/js -name \*.js` ; do JSS="$JSS $FILE" ; done
 fi
 for DIR in Model Extra
 do
   if [ -d $DevHtmlPkg/$DIR ]
   then
-    for FILE in `find -H $DevHtmlPkg/$DIR -name \*.coffee |sort` ; do COFFEE="$COFFEE $FILE" ; done
+    for FILE in `find -H $DevHtmlPkg/$DIR -name \*.coffee` ; do COFFEE="$COFFEE $FILE" ; done
   fi
 done
 
@@ -36,7 +36,7 @@ do
   echo -n "$A_FILE "
   E_FILE=`echo $ONE_FILE | cut -d/ -f3-`
   echo -ne "/*$E_FILE*/" >> $MinOut
-  cat $ONE_FILE | uglifyjs >> $MinOut # Don't skip copyright notice, at the top, as a comment (i.e. not -nc)
+  cat $ONE_FILE >> $MinOut # Don't skip copyright notice, at the top, as a comment (i.e. not -nc)
   echo >> $MinOut
 done
 echo done.
@@ -48,8 +48,9 @@ do
   echo -n "$A_FILE "
   E_FILE=`echo $ONE_FILE | cut -d/ -f3-`
   echo -ne "/*$E_FILE*/" >> $MinOut
-  cat $ONE_FILE | grep -vE "\s(f= ['\"])|(_log. f)" |grep -v "#%#" | coffee --compile --stdio | uglifyjs -nc >> $MinOut
+  cat $ONE_FILE | grep -vE "\s(f= ['\"])|(_log. f)" |grep -v "#%#" | coffee --compile --stdio >> $MinOut
   echo >> $MinOut
 done
 echo done.
+
 
