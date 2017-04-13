@@ -1282,8 +1282,8 @@ else if (typeof define === "function" && define.amd) define(function() {return m
             if (!(inst_nm in oModel)) {
               option.m1(view, model);
               oModel[inst_nm] = new E.Model[model["class"]](view, model.options);
-              if (inst_nm in oModel) {
-                oModel[inst_nm].restoreState(oModel[inst_nm]);
+              if (inst_nm in modelState) {
+                oModel[inst_nm].restoreState(modelState[inst_nm]);
               }
             }
             oM = oModel[inst_nm];
@@ -3378,6 +3378,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         spec_action = spec_type;
         spec_type = 'click';
       }
+      _log2(f, 'check', spec_type, type, spec_type === type ? 'YES' : 'NO');
       if (spec_type === 'event') {
         E.event(spec_action, type, group, item, interesting, data_params);
       }
@@ -3557,7 +3558,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         case 'touchstart':
           touch = event.targetTouches[0];
           this.touchEndIsClick = [touch.pageX, touch.pageY];
-          break;
+          return true;
         case 'touchmove':
           if (this.touchEndIsClick !== false) {
             ref = this.touchEndIsClick, x = ref[0], y = ref[1];
@@ -3875,6 +3876,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         extract: function(xhr, options) {
           status.code = xhr.status;
           status.text = xhr.statusText;
+          status.xhr = xhr;
           if (xhr.status === 200) {
             status.ok = true;
           }
