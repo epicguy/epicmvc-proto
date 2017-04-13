@@ -80,7 +80,7 @@
         case 'touchstart':
           touch = event.targetTouches[0];
           this.touchEndIsClick = [touch.pageX, touch.pageY];
-          break;
+          return true;
         case 'touchmove':
           if (this.touchEndIsClick !== false) {
             ref = this.touchEndIsClick, x = ref[0], y = ref[1];

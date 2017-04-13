@@ -8,7 +8,7 @@ dataAction= (type, data_action, data_params) ->
 	for one_spec in action_specs
 		[spec_type, spec_action, group, item, interesting]= one_spec.split ':'
 		(spec_action= spec_type; spec_type= 'click') if not spec_action
-		#_log2 f, 'check', spec_type, type, if spec_type is type then 'YES' else 'NO'
+		_log2 f, 'check', spec_type, type, if spec_type is type then 'YES' else 'NO'
 		if spec_type is 'event' # Any event will get passed to caller
 			E.event spec_action, type, group, item, interesting, data_params
 		if do_action and spec_type is type # The event-type (click/dblclick/etc.) matches user's spec

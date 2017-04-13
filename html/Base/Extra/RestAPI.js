@@ -77,6 +77,7 @@
         extract: function(xhr, options) {
           status.code = xhr.status;
           status.text = xhr.statusText;
+          status.xhr = xhr;
           if (xhr.status === 200) {
             status.ok = true;
           }

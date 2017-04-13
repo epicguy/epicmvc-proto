@@ -58,6 +58,7 @@ class RenderStrategy$Base
 			when 'touchstart'
 				touch = event.targetTouches[ 0]
 				@touchEndIsClick=[ touch.pageX, touch.pageY]
+				return true
 			when 'touchmove'
 				if @touchEndIsClick isnt false
 					[x, y]= @touchEndIsClick

@@ -19,6 +19,7 @@
         spec_action = spec_type;
         spec_type = 'click';
       }
+      _log2(f, 'check', spec_type, type, spec_type === type ? 'YES' : 'NO');
       if (spec_type === 'event') {
         E.event(spec_action, type, group, item, interesting, data_params);
       }

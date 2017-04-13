@@ -50,6 +50,7 @@ class RestAPI
 			extract: (xhr, options)->
 				status.code= xhr.status
 				status.text= xhr.statusText
+				status.xhr= xhr
 				status.ok= true if xhr.status is 200
 				if not xhr.responseText.length and xhr.readyState is 4 # 4: XHR DONE
 					status.text= 'NetworkError'

@@ -379,8 +379,8 @@
             if (!(inst_nm in oModel)) {
               option.m1(view, model);
               oModel[inst_nm] = new E.Model[model["class"]](view, model.options);
-              if (inst_nm in oModel) {
-                oModel[inst_nm].restoreState(oModel[inst_nm]);
+              if (inst_nm in modelState) {
+                oModel[inst_nm].restoreState(modelState[inst_nm]);
               }
             }
             oM = oModel[inst_nm];

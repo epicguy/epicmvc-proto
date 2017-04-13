@@ -247,7 +247,7 @@ app= (window, undef) ->
 					if inst_nm not of oModel
 						option.m1 view, model #if not E.Model[ model.class]? #%#
 						oModel[ inst_nm]= new E.Model[ model.class] view, model.options
-						oModel[ inst_nm].restoreState oModel[inst_nm] if inst_nm of oModel
+						oModel[ inst_nm].restoreState modelState[inst_nm] if inst_nm of modelState
 					oM= oModel[ inst_nm]
 					return oM if table_or_ctx is undef # Wanted an instance
 					return oM.getTable table_or_ctx if act_if_action is undef # Wanted a vew-table
