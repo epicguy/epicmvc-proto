@@ -110,7 +110,11 @@ window.EpicMvc.app$Dev=
 					err "Missing Fist Filter (E.#{filt}) #{str}", {field}
 			err "'type' attribute missing #{str}" unless 'type' of field
 			err "'db_nm' attribute missing #{str}" unless 'db_nm' of field
-			familiar_types= ['radio','pulldown','text','textarea','password','hidden','yesno']
+			familiar_types= [
+				'radio','pulldown','text','textarea','password','hidden','yesno'
+				'search','email','url','tel','number','range','color' # New HTML5 form field tags
+				'date','month','week','datetime','datetime-local'
+			]
 			warn "Unfamiliar 'type' attribute #{str}" unless (field.type.split ':')[0] in familiar_types
 			if field.confirm?
 				err "Missing Confirm FIELD (#{field.confirm}) in FIST FIELDS #{str}" unless field.confirm in fist.sp.FIELDS

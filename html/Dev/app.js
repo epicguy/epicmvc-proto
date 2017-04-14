@@ -172,7 +172,7 @@
         if (!('db_nm' in field)) {
           err("'db_nm' attribute missing " + str);
         }
-        familiar_types = ['radio', 'pulldown', 'text', 'textarea', 'password', 'hidden', 'yesno'];
+        familiar_types = ['radio', 'pulldown', 'text', 'textarea', 'password', 'hidden', 'yesno', 'search', 'email', 'url', 'tel', 'number', 'range', 'color', 'date', 'month', 'week', 'datetime', 'datetime-local'];
         if (ref1 = (field.type.split(':'))[0], indexOf.call(familiar_types, ref1) < 0) {
           warn("Unfamiliar 'type' attribute " + str);
         }

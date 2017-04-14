@@ -299,8 +299,6 @@ ParseFile= (file_stats, file_contents) ->
 		'form','fieldset','legend','label','input','button' # Forms
 		'select','datalist','optgroup','option','textarea'
 		'keygen','output','progress','meter'
-		'search','email','url','tel','number','range','color' # New HTML5 form field tags
-		'date','month','week','datetime','datetime-local' # TODO Test the tag-name that has a dash in it
 
 		'details','summary','menuitem','menu' # Interactive Elements
 
