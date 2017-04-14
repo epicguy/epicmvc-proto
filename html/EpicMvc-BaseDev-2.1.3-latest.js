@@ -4143,7 +4143,7 @@ Part: {
         if (!('db_nm' in field)) {
           err("'db_nm' attribute missing " + str);
         }
-        familiar_types = ['radio', 'pulldown', 'text', 'textarea', 'password', 'hidden', 'yesno'];
+        familiar_types = ['radio', 'pulldown', 'text', 'textarea', 'password', 'hidden', 'yesno', 'search', 'email', 'url', 'tel', 'number', 'range', 'color', 'date', 'month', 'week', 'datetime', 'datetime-local'];
         if (ref1 = (field.type.split(':'))[0], indexOf.call(familiar_types, ref1) < 0) {
           warn("Unfamiliar 'type' attribute " + str);
         }
@@ -5503,7 +5503,7 @@ Part: {
       defer: 0
     };
     dom_pre_tags = ['pre', 'code'];
-    dom_nms = ['style', 'section', 'header', 'nav', 'article', 'aside', 'footer', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'address', 'main', 'hgroup', 'div', 'p', 'hr', 'pre', 'blockquote', 'ol', 'ul', 'li', 'dl', 'dt', 'dd', 'figure', 'figcaption', 'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr', 'ins', 'del', 'img', 'iframe', 'embed', 'oject', 'param', 'video', 'audio', 'source', 'track', 'canvas', 'map', 'area', 'svg', 'math', 'table', 'tbody', 'thead', 'tfoot', 'tr', 'td', 'th', 'caption', 'colgroup', 'col', 'form', 'fieldset', 'legend', 'label', 'input', 'button', 'select', 'datalist', 'optgroup', 'option', 'textarea', 'keygen', 'output', 'progress', 'meter', 'search', 'email', 'url', 'tel', 'number', 'range', 'color', 'date', 'month', 'week', 'datetime', 'datetime-local', 'details', 'summary', 'menuitem', 'menu', 'g', 'title', 'defs', 'rect', 'tspan', 'line', 'ellipse', 'path', 'text', 'polygon', 'circle'];
+    dom_nms = ['style', 'section', 'header', 'nav', 'article', 'aside', 'footer', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'address', 'main', 'hgroup', 'div', 'p', 'hr', 'pre', 'blockquote', 'ol', 'ul', 'li', 'dl', 'dt', 'dd', 'figure', 'figcaption', 'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr', 'ins', 'del', 'img', 'iframe', 'embed', 'oject', 'param', 'video', 'audio', 'source', 'track', 'canvas', 'map', 'area', 'svg', 'math', 'table', 'tbody', 'thead', 'tfoot', 'tr', 'td', 'th', 'caption', 'colgroup', 'col', 'form', 'fieldset', 'legend', 'label', 'input', 'button', 'select', 'datalist', 'optgroup', 'option', 'textarea', 'keygen', 'output', 'progress', 'meter', 'details', 'summary', 'menuitem', 'menu', 'g', 'title', 'defs', 'rect', 'tspan', 'line', 'ellipse', 'path', 'text', 'polygon', 'circle'];
     dom_close = ['img', 'br', 'input', 'hr'];
     after_comment = file_contents.replace(/-->/gm, '\x02').replace(/<!--[^\x02]*\x02/gm, function(m) {
       return m.replace(/[^\n]+/gm, '');
