@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 # Sample how to create a minimized deploy html dir from development
 
 # Assume our project is called $HERE, with one Package '$PKG', and using 'bootstrap', and development is at htmlroot/EpicMvc
