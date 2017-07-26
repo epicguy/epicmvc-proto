@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 # JCS: Added |sort to make order of files deterministic so I can diff the results
 
 DevHtmlPkg=$1
