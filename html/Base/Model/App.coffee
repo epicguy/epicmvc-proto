@@ -57,7 +57,8 @@ class App$Base extends E.ModelJS
 					path= E.appSearchAttr 'route', route
 					if path is false
 						r.success= 'FAIL'
-					else E.merge r, {type: 'path', path: path.join '/'}
+						E.merge r, {type: 'route', route} # For chaining to other logic (navhash #login checking)
+					else E.merge r, {type: 'path', route, path: path.join '/'}
 			else super ctx, act, p
 	setIssues: (issue_obj) ->
 		@issues.addObj issue_obj if issue_obj?.count() isnt 0

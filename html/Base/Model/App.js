@@ -116,10 +116,15 @@
           } else {
             path = E.appSearchAttr('route', route);
             if (path === false) {
-              return r.success = 'FAIL';
+              r.success = 'FAIL';
+              return E.merge(r, {
+                type: 'route',
+                route: route
+              });
             } else {
               return E.merge(r, {
                 type: 'path',
+                route: route,
                 path: path.join('/')
               });
             }
