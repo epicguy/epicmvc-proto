@@ -137,7 +137,7 @@ class RenderStrategy$Base
 			return
 		E.View().run().then (modal_content) =>
 			[modal, content]= modal_content
-			_log2 'DEFER-R', 'RESULTS: modal, content', @redraw_guard, modal, content
+			_log2 f, 'DEFER-R', 'RESULTS: modal, content', @redraw_guard, modal, content
 			# Assume @render call won't go async and we end up back in this module
 			@render modal, content # Do before decrement of guard, since 'blur' event fired during this
 			@redraw_guard--

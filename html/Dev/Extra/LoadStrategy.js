@@ -201,7 +201,8 @@
     };
 
     LoadStrategy.prototype.D_getFile = function(pkg, nm) {
-      var path;
+      var f, path;
+      f = 'D_getFile';
       path = (this.makePkgDir(pkg)) + '/';
       return (m.request({
         background: true,

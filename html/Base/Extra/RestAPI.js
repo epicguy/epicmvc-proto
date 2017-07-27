@@ -10,7 +10,8 @@
         port: '',
         prefix: '',
         version: '',
-        proto: '//'
+        proto: '//',
+        app_headers: {}
       };
       for (nm in opts) {
         val = opts[nm];
@@ -42,8 +43,9 @@
       this.token = token1;
     };
 
-    RestAPI.prototype.D_Request = function(method, route, data, header_obj) {
-      var status;
+    RestAPI.prototype.D_Request = function(method, route, data, header_obj_in) {
+      var header_obj, status;
+      header_obj = E.merge({}, this.opts.app_headers, header_obj_in != null ? header_obj_in : {});
       status = {
         code: false,
         text: false,
@@ -108,8 +110,8 @@
       return this.D_RequestAuth('PUT', route, data);
     };
 
-    RestAPI.prototype.D_RequestAuth = function(method, route, data, header_obj) {
-      var d, token;
+    RestAPI.prototype.D_RequestAuth = function(method, route, data, header_obj_in) {
+      var d, header_obj, token;
       token = this.GetToken();
       if (token === false) {
         setTimeout(function() {
@@ -128,9 +130,7 @@
         });
         return d.promise;
       }
-      if (header_obj == null) {
-        header_obj = {};
-      }
+      header_obj = E.merge({}, this.opts.app_headers, header_obj_in != null ? header_obj_in : {});
       header_obj.Authorization = token.token_type + " " + token.access_token;
       return (this.D_Request(method, route, data, header_obj)).then((function(_this) {
         return function(status_n_data) {

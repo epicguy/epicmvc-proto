@@ -231,7 +231,7 @@
         return function(modal_content) {
           var content, modal;
           modal = modal_content[0], content = modal_content[1];
-          _log2('DEFER-R', 'RESULTS: modal, content', _this.redraw_guard, modal, content);
+          _log2(f, 'DEFER-R', 'RESULTS: modal, content', _this.redraw_guard, modal, content);
           _this.render(modal, content);
           _this.redraw_guard--;
           if (_this.redraw_guard !== 0) {

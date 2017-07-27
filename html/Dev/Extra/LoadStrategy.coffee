@@ -111,7 +111,7 @@ class LoadStrategy
 				throw new Error "Unable to locate View file (#{full_nm})."
 				console.error 'ERROR', 'NO FILE FOUND! ', full_nm
 				parsed= false
-			#_log2 'DEFER-L', '>results parsed>', result, parsed
+			#_log2 f, 'DEFER-L', '>results parsed>', result, parsed
 			@cache[ full_nm]= parsed
 			return parsed
 		promise.then null, (error) -> throw error
@@ -119,6 +119,7 @@ class LoadStrategy
 		return promise
 
 	D_getFile: (pkg,nm) -> # Must return a deferred
+		f= 'D_getFile'
 		path= (@makePkgDir pkg)+ '/'
 		(m.request
 			background: true # Don't want 'm' to redraw the view
@@ -130,7 +131,7 @@ class LoadStrategy
 				xhr
 			deserialize: (x)->x
 		).then null, (error) ->
-			#_log2 'AJAX ERROR ' #, error
+			#_log2 f, 'AJAX ERROR ' #, error
 			false # Signal to try again
 	d_layout: (nm) -> @d_get 'Layout', nm
 	d_page:   (nm) -> @d_get 'Page', nm

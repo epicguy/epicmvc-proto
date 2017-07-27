@@ -10,10 +10,11 @@
 #			Number port (e.g 9500)
 #			String prefix  (e.g api)
 #			String version (e.g v1)
+#			Hash app_headers (e.g. "X-DVB-VERISON": "ConsumerWeb~Production~1.1.9a83e22~20170321" [Added to each request]
 
 class RestAPI
 	constructor: (opts)->
-		@opts= port: '', prefix: '', version: '', proto: '//'
+		@opts= port: '', prefix: '', version: '', proto: '//', app_headers: {}
 		@opts[nm]= val for nm,val of opts
 		port= String @opts.port
 		port= ':'+ port if port.length
@@ -36,7 +37,8 @@ class RestAPI
 	# @param route -  http url
 	# @param data -   data to be sent with request
 	# @param header_obj - hashed by header name
-	D_Request: (method, route, data, header_obj)->
+	D_Request: (method, route, data, header_obj_in)->
+		header_obj= E.merge {}, @opts.app_headers,( header_obj_in ? {})
 		status= code: false, text: false, ok: false
 		(m.request
 			background: true # Don't want 'm' to redraw the view
@@ -73,7 +75,7 @@ class RestAPI
 	# @param route 		- uri resource
 	# @param data 		- request body data
 	# @param header_obj - headers to add, hashed by header name
-	D_RequestAuth: (method, route, data, header_obj)->
+	D_RequestAuth: (method, route, data, header_obj_in)->
 		token= @GetToken()
 		if token is false
 			setTimeout ()->
@@ -83,7 +85,7 @@ class RestAPI
 			d.resolve status: {code: 401, text: 'NO_TOKEN', ok: false}, data: error:'TOKEN'
 			return d.promise
 		# Set Authorization Header
-		header_obj?= {}
+		header_obj= E.merge {}, @opts.app_headers,( header_obj_in ? {})
 		header_obj.Authorization= "#{token.token_type} #{token.access_token}"
 		(@D_Request method, route, data, header_obj)
 		.then (status_n_data)=>
