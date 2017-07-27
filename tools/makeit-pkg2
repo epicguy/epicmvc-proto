@@ -37,7 +37,7 @@ do
   echo -n "$A_FILE "
   E_FILE=`echo $ONE_FILE | cut -d/ -f3-`
   echo -ne "/*$E_FILE*/" >> $MinOut
-  cat $ONE_FILE >> $MinOut # Don't skip copyright notice, at the top, as a comment (i.e. not -nc)
+  uglifyjs --comments all $ONE_FILE >> $MinOut # Don't skip copyright notice, at the top, as a comment (i.e. not -nc)
   echo >> $MinOut
 done
 echo done.
@@ -49,7 +49,7 @@ do
   echo -n "$A_FILE "
   E_FILE=`echo $ONE_FILE | cut -d/ -f3-`
   echo -ne "/*$E_FILE*/" >> $MinOut
-  cat $ONE_FILE | coffee --compile --stdio >> $MinOut
+  cat $ONE_FILE | grep -vE "\s(f= ['\"])|(_log. f)" |grep -v "#%#" | coffee --compile --stdio |uglifyjs >> $MinOut
   echo >> $MinOut
 done
 echo done.

@@ -17,7 +17,7 @@ cat copyright.js > $OneEpic
 
 PKG=Base
 echo "Building:    $PKG"
-./makeit-pkg $EpicDir/$PKG $OneEpic
+./makeit-pkg2 $EpicDir/$PKG $OneEpic
 echo "Compressing: $PKG/view"
 ./makeit-view $EpicDir $EpicDir $PKG >> $OneEpic
 

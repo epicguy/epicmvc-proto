@@ -17,13 +17,13 @@ cat copyright.js > $OneEpic
 
 PKG=Base
 echo "Building:    $PKG"
-./makeit-pkg2 $EpicDir/$PKG $OneEpic
+./makeit-pkg $EpicDir/$PKG $OneEpic
 echo "Compressing: $PKG/view"
 ./makeit-view $EpicDir $EpicDir $PKG >> $OneEpic
 
 PKG=Dev
 echo "Building:    $PKG"
-./makeit-pkg2 $EpicDir/$PKG $OneEpic
+./makeit-pkg $EpicDir/$PKG $OneEpic
 echo "Compressing: $PKG/view"
 ./makeit-view $EpicDir $EpicDir $PKG >> $OneEpic
 
