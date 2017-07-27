@@ -1,4 +1,4 @@
-/* Copyright 2007-2016 by James Shelby, shelby (at:) dtsol.com; All rights reserved. */
+/* Copyright 2007-2017 by James Shelby, shelby (at:) dtsol.com; All rights reserved. */
 // JCS: Version http://lhorie.github.io/mithril/archive/v0.2.0/
 
 var m = (function app(window, undefined) {
@@ -2011,10 +2011,15 @@ else if (typeof define === "function" && define.amd) define(function() {return m
           } else {
             path = E.appSearchAttr('route', route);
             if (path === false) {
-              return r.success = 'FAIL';
+              r.success = 'FAIL';
+              return E.merge(r, {
+                type: 'route',
+                route: route
+              });
             } else {
               return E.merge(r, {
                 type: 'path',
+                route: route,
                 path: path.join('/')
               });
             }
@@ -3709,7 +3714,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         return function(modal_content) {
           var content, modal;
           modal = modal_content[0], content = modal_content[1];
-          _log2('DEFER-R', 'RESULTS: modal, content', _this.redraw_guard, modal, content);
+          _log2(f, 'DEFER-R', 'RESULTS: modal, content', _this.redraw_guard, modal, content);
           _this.render(modal, content);
           _this.redraw_guard--;
           if (_this.redraw_guard !== 0) {
@@ -3809,7 +3814,8 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         port: '',
         prefix: '',
         version: '',
-        proto: '//'
+        proto: '//',
+        app_headers: {}
       };
       for (nm in opts) {
         val = opts[nm];
@@ -3841,8 +3847,9 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       this.token = token1;
     };
 
-    RestAPI.prototype.D_Request = function(method, route, data, header_obj) {
-      var status;
+    RestAPI.prototype.D_Request = function(method, route, data, header_obj_in) {
+      var header_obj, status;
+      header_obj = E.merge({}, this.opts.app_headers, header_obj_in != null ? header_obj_in : {});
       status = {
         code: false,
         text: false,
@@ -3907,8 +3914,8 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       return this.D_RequestAuth('PUT', route, data);
     };
 
-    RestAPI.prototype.D_RequestAuth = function(method, route, data, header_obj) {
-      var d, token;
+    RestAPI.prototype.D_RequestAuth = function(method, route, data, header_obj_in) {
+      var d, header_obj, token;
       token = this.GetToken();
       if (token === false) {
         setTimeout(function() {
@@ -3927,9 +3934,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         });
         return d.promise;
       }
-      if (header_obj == null) {
-        header_obj = {};
-      }
+      header_obj = E.merge({}, this.opts.app_headers, header_obj_in != null ? header_obj_in : {});
       header_obj.Authorization = token.token_type + " " + token.access_token;
       return (this.D_Request(method, route, data, header_obj)).then((function(_this) {
         return function(status_n_data) {
@@ -5094,7 +5099,8 @@ Part: {
     };
 
     LoadStrategy.prototype.D_getFile = function(pkg, nm) {
-      var path;
+      var f, path;
+      f = 'D_getFile';
       path = (this.makePkgDir(pkg)) + '/';
       return (m.request({
         background: true,
