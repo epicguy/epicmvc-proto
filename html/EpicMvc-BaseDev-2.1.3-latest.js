@@ -1648,6 +1648,8 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       for (j = 0, len = ref.length; j < len; j++) {
         issue = ref[j];
         final.push({
+          view: issue.t_view,
+          action: issue.t_action,
           token: issue.token,
           title: issue.t_view + "#" + issue.t_action + "#" + issue.token + "#" + (issue.more.join(',')),
           issue: this.map(issue.t_view, issue.t_action, issue.token, issue.more)
@@ -1916,9 +1918,15 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     }
 
     App$Base.prototype.clear = function() {
-      this.issues = new E.Issue(this.view_nm);
-      this.messages = new E.Issue(this.view_nm);
-      return this.invalidateTables(['Issue', 'Message']);
+      var ref, ref1;
+      if (((ref = this.issues) != null ? ref.count : void 0) !== 0) {
+        this.issues = new E.Issue(this.view_nm);
+        this.invalidateTables(['Issue']);
+      }
+      if (((ref1 = this.messages) != null ? ref1.count : void 0) !== 0) {
+        this.messages = new E.Issue(this.view_nm);
+        return this.invalidateTables(['Message']);
+      }
     };
 
     App$Base.prototype.goTo = function(flow, t, s) {

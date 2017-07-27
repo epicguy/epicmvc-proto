@@ -437,6 +437,8 @@ class Issue
 		final= []
 		for issue in @issue_list
 			final.push
+				view: issue.t_view
+				action: issue.t_action
 				token: issue.token
 				title: "#{issue.t_view}##{issue.t_action}##{issue.token}##{issue.more.join ','}"
 				issue: @map issue.t_view, issue.t_action, issue.token, issue.more

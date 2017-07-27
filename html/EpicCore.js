@@ -745,6 +745,8 @@
       for (j = 0, len = ref.length; j < len; j++) {
         issue = ref[j];
         final.push({
+          view: issue.t_view,
+          action: issue.t_action,
           token: issue.token,
           title: issue.t_view + "#" + issue.t_action + "#" + issue.token + "#" + (issue.more.join(',')),
           issue: this.map(issue.t_view, issue.t_action, issue.token, issue.more)

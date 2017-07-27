@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2017 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 class App$Base extends E.ModelJS
 	constructor: (view_nm, options) ->
@@ -7,9 +7,13 @@ class App$Base extends E.ModelJS
 		super view_nm, options, ss
 		@clear()
 	clear: ->
-		@issues= new E.Issue @view_nm
-		@messages= new E.Issue @view_nm
-		@invalidateTables ['Issue', 'Message']
+		# First time in needs to create @issues/messages (for constructor)
+		if @issues?.count isnt 0
+			@issues= new E.Issue @view_nm
+			@invalidateTables ['Issue']
+		if @messages?.count isnt 0
+			@messages= new E.Issue @view_nm
+			@invalidateTables ['Message']
 	goTo: (flow,t,s) ->
 		f= 'goTo'
 		was= "#{@f}/#{@t}/#{@s}"

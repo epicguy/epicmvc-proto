@@ -21,9 +21,15 @@
     }
 
     App$Base.prototype.clear = function() {
-      this.issues = new E.Issue(this.view_nm);
-      this.messages = new E.Issue(this.view_nm);
-      return this.invalidateTables(['Issue', 'Message']);
+      var ref, ref1;
+      if (((ref = this.issues) != null ? ref.count : void 0) !== 0) {
+        this.issues = new E.Issue(this.view_nm);
+        this.invalidateTables(['Issue']);
+      }
+      if (((ref1 = this.messages) != null ? ref1.count : void 0) !== 0) {
+        this.messages = new E.Issue(this.view_nm);
+        return this.invalidateTables(['Message']);
+      }
     };
 
     App$Base.prototype.goTo = function(flow, t, s) {
