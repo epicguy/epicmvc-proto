@@ -3707,6 +3707,9 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         }
         m.startComputation();
         m.endComputation();
+        E.action('browser_navhash', {
+          hash: location.hash.substr(1)
+        });
       }
     };
 

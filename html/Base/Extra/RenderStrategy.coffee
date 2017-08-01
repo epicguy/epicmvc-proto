@@ -127,6 +127,7 @@ class RenderStrategy$Base
 			E.setModelState event.state if event.state
 			m.startComputation() # Optionally call @m_redraw
 			m.endComputation()
+			E.action 'browser_navhash', hash: location.hash.substr 1
 		return
 
 	m_redraw: =>
