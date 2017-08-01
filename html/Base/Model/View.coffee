@@ -173,7 +173,7 @@ class View$Base extends E.ModelJS
 					[left,right]= spec.slice(1).split '?'
 					(if val then left else right ? '')
 						.replace( (new RegExp '[%]', 'g'), val)
-				else E.option.v1 val, spec
+				else E.option.v1 val, spec #%#
 	v3: (view_nm, tbl_nm, key, format_spec, custom_spec) ->
 		row=( E[ view_nm] tbl_nm)[ 0] # TODO NOT USING @_accessModelTable SO NO DYNAMIC PARTIAL UPDATE SUPPORTED
 		val= row[ key]

@@ -198,7 +198,7 @@ class Fist extends E.ModelJS
 				{options,values}
 			when 'custom'
 				E[ E.appFist fist.nm]().fistGetChoices fist.nm, field.nm, fist.row
-			else E.option.fi4 type, fist, field # No such 'type' for pulldown/radio list
+			else E.option.fi4 type, fist, field # No such 'type' for pulldown/radio list #%#
 
 E.fistH2H= (field,val) ->
 	val= E.fistH2H$pre field,val # Master pre-filter

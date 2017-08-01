@@ -9,7 +9,7 @@ class Wist extends E.ModelJS
 		@Table[ tbl_nm]=( @_getWist tbl_nm).table
 	_getWist: (wistNm) ->
 		if wistNm not of @wist
-			E.option.w1 wistNm
+			E.option.w1 wistNm #%#
 			hash= E.wistDef[ wistNm]
 			table= []
 			(rec.token=( String nm); table.push rec) for nm,rec of hash
