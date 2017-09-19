@@ -10,7 +10,7 @@ ECHO() {
 
 EpicDir=../html
 # OneEpic=../EpicMvc-One-2.0.0-%MD5_EPICMVC%.js
-OneEpic=$EpicDir/EpicMvc-BaseDev-2.1.3-latest.js
+OneEpic=$EpicDir/EpicMvc-BaseDev-2.2.0-latest.js
 
 cat copyright.js > $OneEpic
 ./makeit2 DevEpic $OneEpic
