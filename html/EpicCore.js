@@ -441,7 +441,7 @@
         return [master_issue, master_message];
       }
       d_doLeftSide = function(action_node) {
-        var ans, copy_to, ctx, d, d_cb, fist, fist_model, i, is_macro, ix, l, len1, len2, mg, n, name, nms, r, ref1, ref2, ref3, ref4, ref5, val, view_act, view_nm, what;
+        var ans, copy_to, ctx, d_cb, fist, fist_model, i, is_macro, ix, l, len1, len2, mg, n, name, nms, p, r, ref1, ref2, ref3, ref4, ref5, val, view_act, view_nm, what;
         ref1 = ['fist', 'clear'];
         for (l = 0, len1 = ref1.length; l < len1; l++) {
           what = ref1[l];
@@ -494,12 +494,12 @@
           }
           ref5 = action_node["do"].split('.'), view_nm = ref5[0], view_act = ref5[1];
           view_act = view_act ? view_act : action_token;
-          d = new m.Deferred();
+          p = Promise.resolve();
           r = {};
           i = new E.Issue(view_nm, view_act);
           mg = new E.Issue(view_nm, view_act);
           ctx = {
-            d: d,
+            p: p,
             r: r,
             i: i,
             m: mg

@@ -44,53 +44,54 @@
     };
 
     RestAPI.prototype.D_Request = function(method, route, data, header_obj_in) {
-      var header_obj, status;
+      var f, header_obj, promise, status;
+      f = 'E/RestAPI$Base.D_Request';
       header_obj = E.merge({}, this.opts.app_headers, header_obj_in != null ? header_obj_in : {});
       status = {
         code: false,
         text: false,
         ok: false
       };
-      return (m.request({
-        background: true,
-        method: method,
-        url: this.route_prefix + route,
-        data: data,
-        config: function(xhr) {
-          var nm, ref, val;
-          ref = header_obj != null ? header_obj : {};
-          for (nm in ref) {
-            val = ref[nm];
+      promise = new Promise((function(_this) {
+        return function(resolve, reject) {
+          var formData, nm, val, xhr;
+          xhr = new XMLHttpRequest();
+          xhr.onloadend = function(event) {
+            var jResponse, response;
+            status.code = xhr.status;
+            status.text = xhr.statusText;
+            status.xhr = xhr;
+            if (xhr.status === 200) {
+              status.ok = true;
+            }
+            if (!xhr.responseText.length) {
+              status.text = 'NetworkError';
+              response = '{"error":"NETWORK_ERROR"}';
+            } else {
+              response = xhr.responseText;
+            }
+            jResponse = JSON.parse(response);
+            return resolve({
+              status: status,
+              data: jResponse
+            });
+          };
+          xhr.open(method, _this.route_prefix + route);
+          for (nm in header_obj) {
+            val = header_obj[nm];
             xhr.setRequestHeader(nm, val);
           }
-        },
-        unwrapSuccess: function(response) {
-          return {
-            status: status,
-            data: response
-          };
-        },
-        unwrapError: function(response) {
-          return {
-            status: status,
-            data: response
-          };
-        },
-        extract: function(xhr, options) {
-          status.code = xhr.status;
-          status.text = xhr.statusText;
-          status.xhr = xhr;
-          if (xhr.status === 200) {
-            status.ok = true;
+          formData = new FormData();
+          for (nm in data) {
+            val = data[nm];
+            formData.append(nm, val);
           }
-          if (!xhr.responseText.length && xhr.readyState === 4) {
-            status.text = 'NetworkError';
-            return '{"error":"NETWORK_ERROR"}';
-          }
-          return xhr.responseText;
-        }
-      })).then(null, function(e_with_status_n_data) {
-        return e_with_status_n_data;
+          return xhr.send(formData);
+        };
+      })(this));
+      return promise.then(function(result) {
+        console.log(f, result);
+        return result;
       });
     };
 
@@ -111,14 +112,13 @@
     };
 
     RestAPI.prototype.D_RequestAuth = function(method, route, data, header_obj_in) {
-      var d, header_obj, token;
+      var header_obj, token;
       token = this.GetToken();
       if (token === false) {
         setTimeout(function() {
           return E.action('Request.no_token');
         }, 0);
-        d = new m.Deferred();
-        d.resolve({
+        return Promise.resolve({
           status: {
             code: 401,
             text: 'NO_TOKEN',
@@ -128,13 +128,12 @@
             error: 'TOKEN'
           }
         });
-        return d.promise;
       }
       header_obj = E.merge({}, this.opts.app_headers, header_obj_in != null ? header_obj_in : {});
       header_obj.Authorization = token.token_type + " " + token.access_token;
       return (this.D_Request(method, route, data, header_obj)).then((function(_this) {
         return function(status_n_data) {
-          if (status.code === 401) {
+          if (status_n_data.status.code === 401) {
             setTimeout(function() {
               return E.action('Request.bad_token');
             }, 0);

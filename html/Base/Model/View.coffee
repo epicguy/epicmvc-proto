@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2014-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2014-2017 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 class View$Base extends E.ModelJS
 	constructor: (view_nm, options) ->
@@ -20,7 +20,8 @@ class View$Base extends E.ModelJS
 			@in_run= true
 			@start= new Date().getTime() #%#
 			#_log2 f, 'START RUN', @frames, @start
-			@defer_it= new m.Deferred()
+			@defer_it= promise: null, resolve: null # Old style Promise.deferred()
+			@defer_it.promise= new Promise (resolve, reject)=> @defer_it.resolve= resolve
 		@defer_it_cnt++
 	nest_dn: (who) ->
 		f= 'nest_dn:'+ who
@@ -201,7 +202,7 @@ class View$Base extends E.ModelJS
 		f= 'kids'
 		who= 'K'
 		#_log2 f, 'top', kids.length
-		# Build a new array, with either a copy if 'object' or 'text', else array is T_ funcs w/deferreds
+		# Build a new array, with either a copy if 'object' or 'text', else array is T_ funcs w/promises
 		out= []
 		for kid,ix in kids
 			#_log2 f, new Date().getTime()- @start
@@ -209,7 +210,7 @@ class View$Base extends E.ModelJS
 				out.push ix #['TBD',kid[ 0],kid[ 1]] # Place holder in 'out' for later population
 				ans= @['T_'+ kid[ 0]] kid[ 1], kid[ 2]
 				#_log2 f, 'CHECK FOR THEN', (if ans?.then then 'YES' else 'NO'), ans
-				if ans?.then # A deferred object, eh?
+				if ans?.then # A promise eh?
 					@nest_up who
 					do (ix) => ans.then (result) =>
 						#_log2 f, 'THEN', result

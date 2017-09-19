@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2014-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2014-2017 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 #TODO Grab 'title' from Tag.head, and inject it?
 

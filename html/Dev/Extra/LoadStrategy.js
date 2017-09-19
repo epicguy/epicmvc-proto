@@ -29,7 +29,7 @@
     };
 
     LoadStrategy.prototype.D_loadAsync = function() {
-      var def, el, f, file, file_list, j, k, l, len, len1, len2, len3, n, next, pkg, promise, ref, ref1, ref2, ref3, ref4, ref5, sub, type, url, work;
+      var el, f, file, file_list, j, k, l, len, len1, len2, len3, m, pkg, ref, ref1, ref2, ref3, ref4, ref5, sub, type, url, work;
       f = 'Dev:E/LoadStrategy.loadAsync';
       ref = this.appconfs;
       for (j = 0, len = ref.length; j < len; j++) {
@@ -54,8 +54,6 @@
         }
       }
       work = [];
-      def = new m.Deferred();
-      promise = def.promise;
       ref3 = this.appconfs;
       for (l = 0, len2 = ref3.length; l < len2; l++) {
         pkg = ref3[l];
@@ -66,8 +64,8 @@
         for (type in ref5) {
           file_list = ref5[type];
           if (type !== 'css') {
-            for (n = 0, len3 = file_list.length; n < len3; n++) {
-              file = file_list[n];
+            for (m = 0, len3 = file_list.length; m < len3; m++) {
+              file = file_list[m];
               sub = type === 'root' ? '' : type + '/';
               url = (this.makePkgDir(pkg)) + '/' + sub + file + '.js';
               work.push(url);
@@ -75,23 +73,25 @@
           }
         }
       }
-      next = function(ix) {
-        if (ix >= work.length) {
-          _log2(f, ix, 'done.');
-          def.resolve(null);
-          return;
-        }
-        _log2(f, 'doing', ix, work[ix]);
-        el = document.createElement('script');
-        el.setAttribute('type', 'text/javascript');
-        el.setAttribute('src', work[ix]);
-        el.onload = function() {
-          return next(ix + 1);
+      return new Promise(function(resolve, reject) {
+        var next;
+        next = function(ix) {
+          if (ix >= work.length) {
+            _log2(f, ix, 'done.');
+            resolve(null);
+            return;
+          }
+          _log2(f, 'doing', ix, work[ix]);
+          el = document.createElement('script');
+          el.setAttribute('type', 'text/javascript');
+          el.setAttribute('src', work[ix]);
+          el.onload = function() {
+            return next(ix + 1);
+          };
+          document.head.appendChild(el);
         };
-        document.head.appendChild(el);
-      };
-      next(0);
-      return promise;
+        return next(0);
+      });
     };
 
     LoadStrategy.prototype.inline = function(type, nm) {
@@ -122,7 +122,7 @@
     };
 
     LoadStrategy.prototype.d_get = function(type, nm) {
-      var def, f, fn, full_nm, full_nm_alt, j, k, len, len1, pkg, promise, ref, ref1, type_alt, uncompiled;
+      var f, fn, full_nm, full_nm_alt, j, k, len, len1, pkg, promise, ref, ref1, type_alt, uncompiled;
       f = 'd_get';
       full_nm = type + '/' + nm + '.html';
       if (this.cache[full_nm] != null) {
@@ -131,9 +131,7 @@
       if (uncompiled = this.inline(type, nm)) {
         return this.compile(full_nm, uncompiled);
       }
-      def = new m.Deferred();
-      def.resolve(false);
-      promise = def.promise;
+      promise = Promise.resolve(false);
       type_alt = type === 'Layout' ? 'tmpl' : type.toLowerCase();
       full_nm_alt = type + '/' + nm + '.' + type_alt + '.html';
       if (E.option.compat_path) {
@@ -204,22 +202,18 @@
       var f, path;
       f = 'D_getFile';
       path = (this.makePkgDir(pkg)) + '/';
-      return (m.request({
-        background: true,
-        method: 'GET',
-        url: path + nm,
-        data: {
-          _: (new Date).valueOf()
-        },
-        config: function(xhr, options) {
-          xhr.setRequestHeader("Content-Type", "text/plain; charset=utf-8");
-          return xhr;
-        },
-        deserialize: function(x) {
-          return x;
-        }
-      })).then(null, function(error) {
-        return false;
+      return new Promise(function(resolve, reject) {
+        var xhr;
+        xhr = new XMLHttpRequest();
+        xhr.onloadend = function(event) {
+          if (xhr.status !== 200) {
+            resolve(false);
+          }
+          return resolve(xhr.response);
+        };
+        xhr.open('GET', path + nm + '?_=' + new Date().valueOf());
+        xhr.setRequestHeader("Content-Type", "text/plain; charset=utf-8");
+        return xhr.send();
       });
     };
 

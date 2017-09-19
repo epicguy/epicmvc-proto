@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2017 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 class LoadStrategy
 	constructor: (@appconfs) ->
@@ -24,8 +24,6 @@ class LoadStrategy
 					el.setAttribute 'href', url
 					document.head.appendChild el
 		work= []
-		def= new m.Deferred()
-		promise= def.promise
 		for pkg in @appconfs
 			continue if pkg not of E.option.loadDirs
 			for type,file_list of E[ 'manifest$'+ pkg] ? {} when type isnt 'css'
@@ -35,21 +33,20 @@ class LoadStrategy
 					work.push url
 					#_log2 f, 'to do ', url
 
-		next= (ix) ->
-			if ix>= work.length
-				_log2 f, ix, 'done.'
-				def.resolve null
+		new Promise (resolve, reject)->
+			next= (ix) ->
+				if ix>= work.length
+					_log2 f, ix, 'done.'
+					resolve null
+					return
+				_log2 f, 'doing', ix, work[ ix]
+				el= document.createElement 'script'
+				el.setAttribute 'type', 'text/javascript'
+				el.setAttribute 'src', work[ ix]
+				el.onload= -> next ix+ 1
+				document.head.appendChild el
 				return
-			_log2 f, 'doing', ix, work[ ix]
-			el= document.createElement 'script'
-			el.setAttribute 'type', 'text/javascript'
-			el.setAttribute 'src', work[ ix]
-			el.onload= -> next ix+ 1
-			document.head.appendChild el
-			return
-		next 0
-		# Note: caller should release the thread to allow browser to load the scripts
-		promise
+			next 0
 	inline: (type,nm) ->
 		f= 'inline'
 		el= document.getElementById id= 'view-'+ type+ '-'+ nm
@@ -76,9 +73,7 @@ class LoadStrategy
 		# Inline overrides everything (not pkg specific)
 		return @compile full_nm, uncompiled if uncompiled= @inline type, nm
 
-		def= new m.Deferred()
-		def.resolve false
-		promise= def.promise
+		promise= Promise.resolve false
 
 		# TODO COMPATABILITY MODE, EH?
 		type_alt= if type is 'Layout' then 'tmpl' else type.toLowerCase()
@@ -118,21 +113,18 @@ class LoadStrategy
 		@cache[ full_nm]= promise
 		return promise
 
-	D_getFile: (pkg,nm) -> # Must return a deferred
+	D_getFile: (pkg,nm) -> # Must return a promise
 		f= 'D_getFile'
 		path= (@makePkgDir pkg)+ '/'
-		(m.request
-			background: true # Don't want 'm' to redraw the view
-			method: 'GET'
-			url: path+ nm
-			data: _: (new Date).valueOf() # Like jQuery's no_cache
-			config: (xhr,options) ->
-				xhr.setRequestHeader "Content-Type", "text/plain; charset=utf-8"
-				xhr
-			deserialize: (x)->x
-		).then null, (error) ->
-			#_log2 f, 'AJAX ERROR ' #, error
-			false # Signal to try again
+		new Promise (resolve, reject)->
+			xhr= new XMLHttpRequest()
+			xhr.onloadend= (event)->
+				resolve false unless xhr.status is 200
+				resolve xhr.response
+			xhr.open 'GET', path+ nm+ '?_='+ new Date().valueOf()
+			xhr.setRequestHeader "Content-Type", "text/plain; charset=utf-8"
+			xhr.send()
+
 	d_layout: (nm) -> @d_get 'Layout', nm
 	d_page:   (nm) -> @d_get 'Page', nm
 	d_part:   (nm) -> @d_get 'Part', nm

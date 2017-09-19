@@ -1,4 +1,5 @@
-# Copyright 2007-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+'use strict'
+# Copyright 2007-2017 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 # This 'Base' load strategy expects all assests to be in memory variables (E.* namespace)
 class LoadStrategy$Base
@@ -11,10 +12,7 @@ class LoadStrategy$Base
 			break if results isnt false
 		console.log 'NO FILE FOUND! '+ nm if results is false
 		results
-	D_loadAsync: ->
-		def= new m.Deferred()
-		def.resolve()
-		def.promise
+	D_loadAsync: -> Promise.resolve()
 	d_layout: (nm) ->
 		@getArtifact nm, 'Layout'
 	d_page: (nm) ->

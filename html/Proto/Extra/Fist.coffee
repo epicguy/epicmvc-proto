@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2017 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 E.fistH2H$pre= (field,val) -> val.replace /[<>]/g, ''
 

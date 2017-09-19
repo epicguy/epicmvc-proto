@@ -1,3 +1,6 @@
+'use strict'
+# Copyright 2007-2017 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+
 # Return true to preventDefault
 dataAction= (type, data_action, data_params) ->
 	f= 'Base:E/dataAction:on[data-e-action]'+ type

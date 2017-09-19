@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2017 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 # To transform EpicMvc tags and HTML for Mithril:
 #  1) Remove all <!-- comments

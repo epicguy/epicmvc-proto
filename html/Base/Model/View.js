@@ -52,7 +52,15 @@
         }
         this.in_run = true;
         this.start = new Date().getTime();
-        this.defer_it = new m.Deferred();
+        this.defer_it = {
+          promise: null,
+          resolve: null
+        };
+        this.defer_it.promise = new Promise((function(_this) {
+          return function(resolve, reject) {
+            return _this.defer_it.resolve = resolve;
+          };
+        })(this));
       }
       return this.defer_it_cnt++;
     };

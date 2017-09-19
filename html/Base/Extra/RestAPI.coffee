@@ -1,8 +1,8 @@
 'use strict'
 #	Base/E/RestAPI
-# 	Copyright 2007-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# 	Copyright 2007-2017 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 #
-#	A Simple REST Module that integrates with m.request (Mithril.js).
+#	A Simple REST Module that returns promises and supports both global headers and OAuth request headers
 #
 #	constructor: (@opts)->
 #		@opts:
@@ -38,27 +38,32 @@ class RestAPI
 	# @param data -   data to be sent with request
 	# @param header_obj - hashed by header name
 	D_Request: (method, route, data, header_obj_in)->
+		f= 'E/RestAPI$Base.D_Request'
 		header_obj= E.merge {}, @opts.app_headers,( header_obj_in ? {})
 		status= code: false, text: false, ok: false
-		(m.request
-			background: true # Don't want 'm' to redraw the view
-			method: method
-			url: @route_prefix + route
-			data: data
-			config: (xhr)->
-				xhr.setRequestHeader nm,val for nm,val of header_obj ? {}; return
-			unwrapSuccess: (response)-> {status, data: response}
-			unwrapError: (response)-> {status, data: response}
-			extract: (xhr, options)->
+		promise= new Promise (resolve, reject)=>
+			xhr= new XMLHttpRequest()
+			xhr.onloadend= (event)=>
 				status.code= xhr.status
 				status.text= xhr.statusText
 				status.xhr= xhr
 				status.ok= true if xhr.status is 200
-				if not xhr.responseText.length and xhr.readyState is 4 # 4: XHR DONE
+				if not xhr.responseText.length
 					status.text= 'NetworkError'
-					return '{"error":"NETWORK_ERROR"}'
-				xhr.responseText
-		).then null, (e_with_status_n_data)-> e_with_status_n_data # Will be {status, data}
+					response= '{"error":"NETWORK_ERROR"}'
+				else
+					response= xhr.responseText
+				jResponse= JSON.parse response # TODO FIGURE OUT WHEN THIS MAKES SENSE
+				resolve {status, data: jResponse} # We don't reject
+
+			xhr.open method, @route_prefix + route
+			xhr.setRequestHeader nm,val for nm,val of header_obj # Must come after 'open'
+			formData= new FormData()
+			formData.append nm, val for nm,val of data
+			xhr.send formData # TODO Someday figure out when to do JSON, and when to do FormData (using e.g. header_obj ?)
+		promise.then (result)->
+			console.log f, result
+			result
 
 	# Shortcuts that populate the Authrorization header
 	# Returns {status, data} for both success and error
@@ -81,22 +86,18 @@ class RestAPI
 			setTimeout ()->
 				E.action 'Request.no_token'
 			, 0
-			d= new m.Deferred()
-			d.resolve status: {code: 401, text: 'NO_TOKEN', ok: false}, data: error:'TOKEN'
-			return d.promise
+			return Promise.resolve status: {code: 401, text: 'NO_TOKEN', ok: false}, data: error:'TOKEN'
 		# Set Authorization Header
 		header_obj= E.merge {}, @opts.app_headers,( header_obj_in ? {})
 		header_obj.Authorization= "#{token.token_type} #{token.access_token}"
 		(@D_Request method, route, data, header_obj)
 		.then (status_n_data)=>
-			if status.code is 401
+			if status_n_data.status.code is 401
 				setTimeout ()->
 					E.action 'Request.bad_token'
 				, 0
 				return status: {code: 401, text: 'BAD_TOKEN', ok: false}, data: error:'TOKEN'
 			status_n_data
-
-
 
 E.Extra.RestAPI$Base= RestAPI
 

@@ -1,3 +1,6 @@
+'use strict'
+# Copyright 2007-2017 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+
 class Tab extends E.ModelJS
 	constructor: (view_nm, options) ->
 		super view_nm, options

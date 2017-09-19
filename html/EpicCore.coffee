@@ -1,5 +1,5 @@
 'use strict'
-# Copyright 2007-2015 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
+# Copyright 2007-2017 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 #
 #
 # TODO LOGGING
@@ -329,8 +329,8 @@ app= (window, undef) ->
 					return d_doActionNode aMacros[action_node.do]
 				[view_nm,view_act]= action_node.do.split '.'
 				view_act= if view_act then view_act else action_token
-				d= new m.Deferred(); r= {}; i= new E.Issue view_nm, view_act; mg= new E.Issue view_nm ,view_act
-				ctx= {d,r,i,m:mg}
+				p= Promise.resolve(); r= {}; i= new E.Issue view_nm, view_act; mg= new E.Issue view_nm ,view_act
+				ctx= {p,r,i,m:mg}
 				ans= E[ view_nm] ctx, view_act, master_data # TODO: Process d_cb
 				d_cb= ()->
 					#_log2 f, 'd_doLeftSide: d_cb:', {ctx}
