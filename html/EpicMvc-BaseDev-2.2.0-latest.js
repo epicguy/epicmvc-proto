@@ -1778,7 +1778,10 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       if (name !== 'Fist') {
         BLOWUP();
       }
-      fist = this._getFist(fistNm, p.row);
+      fist = this._getFist(fistNm, p.row, true);
+      if (fist === false) {
+        return;
+      }
       if (fieldNm) {
         field = fist.ht[fieldNm];
       }
@@ -2004,11 +2007,14 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       return fl;
     };
 
-    Fist.prototype._getFist = function(p_fist, p_row) {
+    Fist.prototype._getFist = function(p_fist, p_row, from_event) {
       var db_value_hash, f, field, fieldNm, fist, i, len, nm, rec, ref, ref1, ref2, ref3, rnm;
       f = '_getFist:' + p_fist + (p_row != null ? ':' + p_row : '');
       rnm = p_fist + (p_row ? ':' + p_row : '');
       if (!(rnm in this.fist)) {
+        if (from_event === true) {
+          return false;
+        }
         fist = {
           rnm: rnm,
           nm: p_fist,

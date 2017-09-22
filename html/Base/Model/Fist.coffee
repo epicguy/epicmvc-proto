@@ -14,7 +14,8 @@ class Fist extends E.ModelJS
 		_log2 f, p
 		BLOWUP() if name isnt 'Fist' # Only handle 'fist' type events
 		# Expect p.fist, optional p.field, optional p.row
-		fist= @_getFist fistNm, p.row
+		fist= @_getFist fistNm, p.row, true # true= this is an event
+		return if fist is false # Did not exist, so don't create a form just for events (i.e. blur after mouseup-click-action)
 		field= fist.ht[ fieldNm] if fieldNm
 		switch act
 			when 'keyup', 'change' # User has changed a field's value possibly
@@ -153,13 +154,14 @@ class Fist extends E.ModelJS
 				rows.push option: choices.options[ ix], value: choices.values[ ix], selected: s
 				fl.Choice= rows
 		fl
-	_getFist: (p_fist, p_row) ->
+	_getFist: (p_fist, p_row, from_event) ->
 		f= '_getFist:'+ p_fist+ if p_row? then ':'+ p_row else ''
 		# Return fist as record
 		# 'fist' rec is: nm:fistNm, rnm:fistNm+row, row:row, st:state, sp:spec
 		#   ht:{field recs by html name}, db:{field recs by db_nm}
 		rnm= p_fist+ if p_row then ':'+ p_row else ''
 		if rnm not of @fist
+			return false if from_event is true # Don't create a fist on an event (e.g. blur after mouse-up click action)
 			fist= {rnm, nm: p_fist, row: p_row, ht: {}, db: {}, st: 'new', sp: E.fistDef[ p_fist]}
 			_log2 f, 'new fist', fist
 			E.option.fi1 fist # Guard e.g. E[ E.appFist fistNm]() #%#
