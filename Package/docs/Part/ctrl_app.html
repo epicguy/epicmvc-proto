@@ -1,6 +1,6 @@
 <h3>App File</h3>
 <p>
-Every EpicMvc package included in the application will have some file where it will attach the controller's configuration structure on to the <code>window.EpicMvc.app$</code> namespace as <code>window.EpicMvc.app$pkgNm</code> where <code>pkgNm</code> is the name of the package it is associated with. Typically this file will be called <mark>app.coffee</mark> and located at the top level of the package's directory.
+Every EpicMvc package included in the application will have some file where it will attach the controller's configuration structure on to the <code>E.app$</code> namespace as <code>E.app$pkgNm</code> where <code>pkgNm</code> is the name of the package it is associated with. Typically this file will be called <mark>app.coffee</mark> and located at the top level of the package's directory.
 </p>
 
 <p>
@@ -8,12 +8,10 @@ A minimal <mark>app.coffee</mark> file will have the following structure and ins
 </p>
 
 <pre>
-window.EpicMvc.app$myPkg=
-	OPTIONS:
-		login: 		flow: "starter_flow"
-		template: 	default: "default_template"
+E.app$myPkg=
+	SETTINGS: go: 'starter_flow//', layout: 'default_layout'
 	MODELS:
-		MyModel: class: "MyModel",   inst: "mM"
+		MyModel: class: 'MyModel', inst: 'mM', fists: [ 'login']
 	FLOWS:
 		starter_flow:
 			start: "starter_track"

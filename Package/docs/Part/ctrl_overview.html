@@ -1,10 +1,10 @@
 <h3>Overview</h3>
 <p>
-EpicMvc implements the 'C' of MVC as a configuration controller in a JSON like JavaScript object. At run time, EpicMvc will load and merge together every package's application configuration file in to a single App Controller. This 'Controller' is responsible for defining various application settings (OPTIONS), business logic (MODELS), how to handle certain actions that take place in the app (MACROS, CLICKS), how the User will move through the application (FLOWS, TRACKS, STEPS), and how to handle a response from a Model (RESULTS).
+EpicMvc implements the 'C' of MVC as a configuration controller in a JSON like JavaScript object. At run time, EpicMvc will load and merge together every package's application configuration file in to a single App Controller. This 'Controller' is responsible for defining various application settings (SETTINGS), business logic (MODELS), how to handle certain actions that take place in the app (MACROS, ACTIONS), how the User will move through the application (FLOWS, TRACKS, STEPS), and how to handle a response from a Model (when:).
 </p>
 <p>
-The main concept is that the Controller is not dependent on the HTML or business logic of Models. It is the middle man between the two. Pages and clicks are created in the HTML, while actions are implemented by the Model, and the Controller just connects the two however it sees fit.
+The main concept is that the Controller is not dependent on the HTML or business logic of Models. It is the middle man between the two. Pages and actions are created in the HTML, then traslated to actions implemented by the Model, and the Controller just connects the two however it sees fit.
 </p>
 <p>
-The Controller maintains the Flow of the application and tells the View what page to render. The View displays what the Controller tells it to and will emit 'clicks' back to the Controller. When recognizing a 'click', the Controller can modify the Flow so the View draws a different page, or it can call some Model to perform an action. When the Controller calls a Model action, it expects some kind of response, and based on the response it can modify the Flow and let the View know what page it should now be rendering.
+The Controller maintains the Flow of the application and tells the View what page to render. The View displays what the Controller tells it to and will emit 'actions' back to the Controller. When recognizing an 'action', the Controller can modify the Flow so the View draws a different page, or it can call some Model to perform an action. When the Controller calls a Model action, it expects some kind of response, and based on the response it can modify the Flow and let the View know what page it should now be rendering.
 </p>

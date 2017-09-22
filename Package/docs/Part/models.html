@@ -1,25 +1,27 @@
-<div class="code-section">EpicMvc implements application business logic through use of JavaScript Classes. This logic is used to support the 'Views' and 'Controller' by making data available to them as a 'Model'. The 'Model' data is made available to the 'View' via 'tables' and accessed by the 'View' using epic HTML tags. 'Model' data can be manipulated by the 'Controller' via exposed 'actions'. Each 'Model' can also maintain it's state information, and save that info in the forward and back buttons in the browser.</div>
+<div class="code-section">EpicMvc implements application business logic through use of JavaScript Classes which implement specific methods that EpicMvc will call for various reasons. This logic is used to support the 'Views' and 'Controller' by making data available to them as a 'Model'. The 'Model' data is made available to the 'View' via 'tables' and accessed by the 'View' using special HTML tags. 'Model' data can be manipulated by the 'Controller' via exposed 'actions'. Each 'Model' can also maintain it's state information, and save that info in the forward and back buttons in the browser.</div>
 <div class="clearfix" id="models_create"></div>
 <div class="code-section">
 	<h3>Creating a Model</h3>
 	<p>To create a new Model Class simply extend the EpicMvc ModelJS class and attach to the EpicMvc Model property.</p>
 	<h4>Example</h4>
 	<pre class="coffeescript">
-    class League extends window.EpicMvc.ModelJS
-        constructor: (Epic, view_nm)->
-            ss= {}
-            super Epic, view_nm, ss
+    class League extends E.ModelJS
+        constructor: (view_nm, options)-&gt;
+            ss= {
+				current_player= false
+			}
+            super view_nm, ss
 
-    window.EpicMvc.Model.League
+    E.Model.League= League		# Put the class into the EpicMvc namespace
     </pre>
 	<p>
-		The Model constructor takes the running instance of Epic (
-		<code>Epic</code>
-		) and the name (
+		The Model constructor takes a (
 		<code>view_nm</code>
-		) that the View and Controller will reference. The Model constructor must call the super constructor with the same instance of Epic and view_nm. The super constructor accepts an optional parameter that is a hash object representing the saved state of the model. The
+		) that the View and Controller will reference, and an (
+		<code>options</code>
+		) hash. The Model constructor must call the super constructor with the same view_nm. The super constructor accepts an optional parameter that is a hash object representing the saved state of the model. The
 		<code>ss</code>
-		variable is used to maintatin state between the forward and back buttons.
+		hash is used indicate which instace variables to maintatin in the browser history state between the forward and back buttons, and can be used to initialize default values for these variables.
 	</p>
 </div>
 <div class="clearfix" id="models_install"></div>
@@ -28,23 +30,25 @@
 	<p>
 		To make the Model available to the Views and Controller, the Model must be installed within the
 		<code>MODELS</code>
-		section of the Controller file (app.coffee).
+		section of the Controller file (e.g. app.coffee).
 	</p>
 	<h4>Example</h4>
 	<pre>
-    window.EpicMvc.app$fantasy=
-        OPTIONS:
-            login:     flow: 'anon'
+    E.app$fantasy=
+        SETTINGS:
+            go:     'anon//'
         MODELS:
-            League:   class: 'League',  inst: 'fLeague'
+			League:   class: 'League',  inst: 'fLeague', options: mixed_players: true
     </pre>
 	<p>
 		<code>League:</code>
-		is the name to be used by the Views and Controller for this Model.
+		is the name to be used by the Views and Controller for this Model (passed as 'view_nm' to your Model.)
 		<code>class: 'League'</code>
-		is the name of the class you want a new instance of.
+		is the name of the class you want a new instance of (looked for as E.Model.League.)
 		<code>inst: 'fLeague'</code>
-		is the name of the instance that will be used by the Epic Run Time Engine.
+		is the name of the instance that will be used by the EpicMvc Run Time Engine.
+		<code>options: mixed_players: true</code>
+		contains any values you wish to send to the Model's constructor.
 	</p>
 </div>
 <div class="clearfix" id="models_state"></div>
@@ -55,24 +59,24 @@
 		<code>ss</code>
 		variable within the Model constructor. The 'ss' object gets saved within the back and forward buttons of the browser and all keys on the ss object are attached to the Model's
 		<code>this (@)</code>
-		variable and can be referenced by any other Model method such as action() or loadTable().
+		variable and can be referenced by any other Model method such as action() or loadTable(). You can look at the code in html/EpicCore.coffee for E.ModelJS to see how it works.
 	</p>
 	<h4>Example</h4>
 	<pre>
-    class League extends window.EpicMvc.ModelJS
-    constructor: (Epic, view_nm)->
+    class League extends E.ModelJS
+    constructor: (view_nm, options)-&gt;
         ss=
             selected_player: false
             sort_order: 'descending'
-        super Epic, view_nm, ss
+        super view_nm, ss
     </pre>
 </div>
 <div class="clearfix" id="models_tables"></div>
 <div class="code-section">
 	<h3>Exposing Model Data - View Tables</h3>
-	<p>The Model exposes it's data through structures called 'Tables' via the loadTable() function. Whenever the 'View' wants to render data within a table, EpicMvc will call the Model's loadTable() function with the name of the table it is trying to draw. It is the responsibility of the Model to return a valid table structure.</p>
+	<p>The Model exposes it's data through structures called 'Tables' via the loadTable() function. Whenever the 'View' wants to render data within a table, EpicMvc will call the Model's loadTable() method (via ModelJS) with the name of the table it is trying to draw. It is the responsibility of the Model to set its @Table hash for this table-name to a valid table structure.</p>
 	<h4>Table Structure</h4>
-	<p>A table is a list of rows. A row is a hash of key/value pairs. A sub-table can be added to a row as another key/value pair.</p>
+	<p>A table is a list of rows (i.e. an Array of Hashes.) A row is a hash of key/value pairs. A sub-table can be provided by having a value which is another list of rows.</p>
 	<h4>Example</h4>
 	<pre>
     # Multiple Row Table w/o sub-table
@@ -82,7 +86,7 @@
         {player_name: 'Mike Trout',      hr: 40, sb: 25, rbi: 103 }
     ]
 
-    # Single row table
+    # Single row table, still an Array, but only one 'row'
     [
         {
             is_editing: 'yes'
@@ -92,12 +96,12 @@
         }
     ]
 
-    # Single row table w/ a sub-table
+    # Single row table w/ a sub-table of 3 rows
     [
         {
             league_name: 'My Cool Fantasy League',
             commish: 'Jamie',
-            teams: [
+            Teams: [
                 {team_name: 'Kershawshank Redemption', owner: 'Linda Cohn', points: 69 }
                 {team_name: 'The Biogenesis Clinic', owner: 'John Kruk', points: 60 }
                 {team_name: 'Precious Cargo', owner: 'Skip Balis', points: 55 }
@@ -110,21 +114,22 @@
 	<h4>Implementing the loadTable function</h4>
 	<p>
 		The loadTable method must be implemented within the Model with the following signature:
-		<code>loadTable: (tbl_nm)-></code>
-		. Epic will pass in the name of the table that is being requested. Typically a simple switch statement is used to determine which table to build. Once the table structure has been made, it is attached to the
+		<code>loadTable: (tbl_nm)-&gt;</code>
+		. EpicMvc will pass in the name of the table that is being requested. Typically a simple switch statement is used to determine which table to build. Once the table structure has been made, it is attached to the
 		<code>@Table</code>
 		hash using the name passed in to the function.
 	</p>
 	<h4>Example</h4>
 	<pre>
-    class League extends window.EpicMvc.ModelJS
-        constructor: (Epic, view_nm)->
+    class League extends E.ModelJS
+        constructor: (view_nm,options)-&gt;
             ss=
                 selected_player: false
                 sort_order: 'descending'
-            super Epic, view_nm, ss
-        loadTable: (tbl_nm) ->
-            f= "League:loadTable:#{tbl_nm}"
+            super view_nm, ss
+        loadTable: (tbl_nm) -&gt;
+            f= "League:loadTable:#{tbl_nm}" # For debugging
+			_log2 f
             switch tbl_nm
 
                 # Multiple Row Table w/o sub-table
@@ -158,34 +163,33 @@
                         new_team= $.extend {}, team                 # Create new object as to not step on cache object
                         row.teams.push new_team                     # Add new_team to the sub-table
                     @Table[tbl_nm]= [row]                           # Add the table to @Table hash
-                else return super tbl_nm                            # Call super if no match in switch statement
+
+                else return super tbl_nm    #%#                     # Call super if no match in switch statement, for a nice error msg
     </pre>
 </div>
 <div class="clearfix" id="models_actions"></div>
 <div class="code-section">
 	<h3>Model Actions</h3>
-	<p>A Model supports the Controller by implementing the 'action' method, which takes an 'action' variable, and a hash of arguments. It returns both an array-set list of results, and a list of issues found, if any. These actions are the main way to interact with the Model from the Controller. When an action is invoked, the Model then has the opportunity to modify it's state, invalidate any tables that need to be re-drawn and invoke any other custom logic that might be needed based on the action and parameters passed in.</p>
+	<p>A Model supports the Controller by implementing the 'action' method, which takes a 'context', an 'action' variable, and a hash of arguments. It mutates the 'context' hahs, and may return a promise. The 'context' contains 3 things: hash of results, a list of issues to be displayed, if any, and a list of non-issue type messages to display. The 'action's are the main way to interact with the Model from the Controller. When an action is invoked, the Model then has the opportunity to modify it's state, invalidate any tables that need to be re-drawn and invoke any other custom logic that might be needed based on the action and parameters passed in.</p>
 	<h4>Implementing the action method</h4>
 	<p>
 		The action method must be implemented within the Model with the following signature:
-		<code>action: (act, p)-></code>
-		. Epic will pass in the name of the action that is being requested, along with a hash of paramerters. The object returned from the action method must be an array that includes a result hash, issues object and messages object. The results hash can be referenced in the controller, and the issues/messages objects will be parsed and displayed in the view.
+		<code>action: (ctx, act, p)-&gt;</code>
+		. EpicMvc will pass in a pre-initilized context, the name of the action that is being requested, along with a hash of paramerters. The ctx.r object is for setting a result hash,  ctx.i issues object and ctx.m messages object is for issues and messages. The results hash can be referenced in the controller, and the issues/messages objects will be parsed and displayed in the view.
 	</p>
 	<h4>Example</h4>
 	<pre>
-    class League extends window.EpicMvc.ModelJS
-        constructor: (Epic, view_nm)->
+    class League extends E.ModelJS
+        constructor: (view_nm, options)-&gt;
             ss=
                 selected_player: false
                 sort_order: 'descending'
-            super Epic, view_nm, ss
+            super view_nm, ss
             @rest= window.restHandler
-        action: (act,p)->
+        action: (ctx,act,p)-&gt;
             f= 'League:action:'+act
             _log2 f, p                                          # Log the action / params
-            r= {}                                               # Create result object
-            i= new window.EpicMvc.Issue @Epic, @view_nm, act   # Create issues object
-            m= new window.EpicMvc.Issue @Epic, @view_nm, act   # Create messages object
+			{r,i,m}= ctx
             switch act
                 # The User selects a Player
                 when 'select_player' # p.id
@@ -212,110 +216,107 @@
                     else
                         @_sort_order= 'descending'              # Update the Model State
                     @invalidateTables ['League']                # Force a re-draw of League table
-                else return super act, p                      # Call super action method if no match
-            [r,i,m]                                             # Return result, issues and message objects in a list
+
+                else return super ctx, act, p  #%#              # Call super action method if no match
+                                                                # No return needed; Controller looks at mutated 'ctx' object
     </pre>
 	<br />
 </div>
 <div class="clearfix" id="models_forms"></div>
 <div class="code-section">
-	<h3>Using Forms</h3>
-	<p>A Form is defined within a fist file and displayed in the 'View' using HTML. The 'Controller' will ask the Model associated with the Form to:</p>
+	<h3>Using Forms (called Fist)</h3>
+	<p>A Fist is defined within e.g. a fist file and displayed in the 'View' using HTML. The 'Controller' will ask the Model associated with the Fist to:</p>
 	<ol>
-		<li>Populate the Form with information</li>
-		<li>Populate multiple choice Form Fields</li>
-		<li>Handle Form submission as a Model action</li>
+		<li>Populate the Fist with information/data, using Model method <code>fistGetValues</code></li>
+		<li>Populate multiple choice Fist Fields, using Model method <code>fistGetChoices</code></li>
+		<li>Handle Fist submission as a Model action, using Model method <code>action</code></li>
 	</ol>
-	<h4>Associate a Form with a Model</h4>
-	<p>In order for the Controller to know which Model is associated with a particular Form, the Form must be declared within app.coffee next to the Model responsible for that Form. Below is a code snippet from app.coffee, where the Forms 'AddPlayer' and 'EditPlayer' are attached to the 'League' model.</p>
+	<h4>Associate a Fist with a Model</h4>
+	<p>In order for the Controller to know which Model is associated with a particular Fist, the Fist must be declared within app.coffee next to the Model responsible for that Fist. Below is a code snippet from app.coffee, where the Fists 'AddPlayer' and 'EditPlayer' are attached to the 'League' model.</p>
 	<h4>Example</h4>
 	<pre class="coffeescript">
-    window.EpicMvc.app$fantasy=
-        OPTIONS:
-            login:     flow: 'anon'
+    E.app$fantasy=
+        SETTINGS:
+            go: 'anon//'
         MODELS:
-            League:   class: 'League',  inst: 'fLeague', forms: 'AddPlayer,EditPlayer'
+			League: class: 'League', inst: 'fLeague', fists: [ 'AddPlayer', 'EditPlayer', ]  # Alternatly as fists: 'AddPlayer,EditPlayer'
     </pre>
 	<br />
-	<h4>Populate a Form with information</h4>
+	<h4>Populate a Fist with information</h4>
 	<p>
-		When a Form is drawn in the view, Epic will call the Model that is associated with that Form to populate the Forms contents. The Model supports this by implementing a method with the following signature:
-		<code>fistLoadData: (oFist)-></code>
-		. Epic will pass in an instance of the Fist that is being drawn, and it is the methods responsibility to populate the Form with the correct data.
+		When a Fist is drawn in the view, EpicMvc will call the Model that is associated with that Fist to populate the Fist's contents. The Model supports this by implementing a method with the following signature:
+		<code>fistLoadData: (oFist)-&gt;</code>
+		. EpicMvc will pass in an instance of the Fist that is being drawn, and it is the methods responsibility to populate the Fist with the correct data.
 	</p>
 	<h4>Example</h4>
 	<pre class="coffeescript">
-    fistLoadData: (oFist) ->
-        name= oFist.getFistNm()                                 # Get the name of the Fist
-        f= "League:fistLoadData:#{name}:"
+    fistGetValues: (fist_nm, row) -&gt;
+        f= "League:fistGetValues:#{fist_nm}:"
         switch name
-            when 'AddPlayer' then null                         # Blank Form; Just return null
+            when 'AddPlayer' return {}                          # No values for 'add'
             when 'EditPlayer'
-                oFist.clearValues()                             # Clear previous stored values in Form
-                if @selected_player isnt false                 # If we are editing a player
-                    player= @players_by_id[@selected_player]    # Grab player info from cache
-                    oFist.setFromDbValues player                # Populate the Form w/ info from player object
-            else return super oFist                           # Call super if no match found
+TODO            oFist.clearValues()                             # Clear previous stored values in Fist
+                if @selected_player isnt false                  # If we are editing a player
+                    return @players_by_id[ @selected_player]    # Grab player info from cache
+				return {}
+            else return super fist_nm, row  #%#                 # Call super if no match found for nice dev warning message
     </pre>
 	<br />
-	<h4>Populate multiple choice Form Fields</h4>
+	<h4>Populate multiple choice Fist Fields</h4>
 	<p>
-		If a Form has a field that has multiple choice options, like a
-		<code>&ltselect&gt</code>
-		pulldown, Epic will call the Model to populate the pulldown with names to be displayed (options) and their values (values). To support this the Model must implement a method with the following signature:
-		<code>fistGetFieldChoices: (oFist,field_nm)-></code>
-		. The method should accept the instance of the Fist (oFist) being drawn and the field name (field_nm) being requested. The method must return a hash of two lists, the first being the names to display in the pulldown, and the second being the values associated with the names.
+		If a Fist has a field that has multiple choice options, like a
+		<code>&lt;select&gt;</code>
+		pulldown, EpicMvc will call the Model to populate the pulldown with names to be displayed (options) and their values (values). To support this the Model must implement a method with the following signature:
+		<code>fistGetChoices: (fist_nm,field_nm,row)-&gt;</code>
+		. The method should accept the fist_nm being drawn and the field name (field_nm) being requested. The method must return a hash of two Arrays, 'options:' being the names to display in the pulldown, and 'values:' being the values associated with the names.
 	</p>
 	<h4>Example</h4>
-	<pre class="coffeescript">
-    fistGetFieldChoices: (oFist,field_nm) ->
+	<pre class="coffeescript"> # TODO FINISH THIS METHOD, NEED TO GET HOW TO GET FIELD DEF (E.Fist( fist_nm) MAYBE?
+    fistGetChoices: (fist_nm,field_nm,row) -&gt;
         options= []; values= []                             # Create options, values arrays
         fdef= oFist.getFieldAttributes field_nm             # Grab the field definition from the fist instance
-        if 'choice' of fdef                                # Look for a default choice value
+        if 'choice' of fdef                                 # Look for a default choice value
             options.push fdef.choice; values.push ''
-        switch field_nm                                    # Switch on the field name
+        switch field_nm                                     # Switch on the field name
             when 'PositionPull'
                 positions= @getPositions()                  # Grab positions from the cache
-                for id,pos of positions                    # Loop through the positions
+                for id,pos of positions                     # Loop through the positions
                     options.push pos.nice                   # Push the nice name on to options
                     values.push id                          # Push the value on to values
             when 'ContractPull'
                 options= [ 'Guaranteed', 'Not-Guranteed']   # Harcode the options array
                 values= [ '1', '0']                         # Hardcode the values array
-            else super oFist, field_nm                     # Call super if no match
+
+            else super fist_nm, field_nm, row               # Call super if no match
+
         { options, values}                                  # Return the options and values arrays to the caller
     </pre>
 	<br />
-	<h4>Handle Form submission as a Model action</h4>
-	<p>A Form is submitted to the 'Controller' via a 'click', and the 'Controller' will pass all of the Form information as paramerters to a 'Model' action. From there, the 'Model' can call a REST server, modify it's state, invalidate any view-tables or perform any other custom logic based on the Form submission.</p>
+	<h4>Handle Fist submission as a Model action</h4>
+	<p>A Fist is submitted to the 'Controller' via an 'action', and the 'Controller' can validate the Fist, then pass all of the Fist information as paramerters to a 'Model' action. From there, the 'Model' can call a REST server, modify it's state, invalidate any view-tables or perform any other custom logic based on the Fist submission.</p>
 	<h4>Example</h4>
 	<pre class="coffeescript">
-    class League extends window.EpicMvc.ModelJS
-        constructor: (Epic, view_nm)->
+    class League extends E.ModelJS
+        constructor: (view_nm)-&gt;
             ss=
                 selected_player: false
                 sort_order: 'descending'
-            super Epic, view_nm, ss
-            @rest= window.restHandler
-        action: (act,p)->
+            super view_nm, ss
+            @rest= window.restHandler                               # Ficticious rest handling class
+
+        action: (ctx,act,p)-&gt;
             f= 'League:action:'+act
-            _log2 f, p                                          # Log the action / params
-            r= {}                                               # Create result object
-            i= new window.EpicMvc.Issue @Epic, @view_nm, act    # Create issues object
-            m= new window.EpicMvc.Issue @Epic, @view_nm, act    # Create messages object
+            _log2 f, p                                              # Log the action / params
+            {r,i,m}= ctx
             switch act
-            when 'player_add'
-                oF= @Epic.getFistInstance 'PlayerAdd'           # Grab the instance of the form (fist)
-                i.call oF.fieldLevelValidate p                  # Validate fields; Populate populate DB variables
-                if i.count() > 0
-                    r.success= 'FAIL'; return [r, i, m]         # Return 'FAIL' if fields don't validate
-                fv= oF.getDbFieldValues()                       # Grab the DB values from the PlayerAdd Form
-                result= @rest.post 'Player', f, fv                # Post to the server
-                if result.success is true
-                    r.success= 'SUCCESS'                        # Successful POST
-                    @invalidateTables ['Players']               # Force re-draw of players table
-                else
-                    @rest.makeIssue i, result                   # Unsuccessful POST
-                    r.success= 'FAIL'
+                when 'player_add' # p.PlayerAdd
+                    fv= p.PlayerAdd
+                    result= @rest.post 'Player', fv                 # Post to the server
+                    if result.success is true
+                        r.success= 'SUCCESS'                        # Successful POST
+                        @invalidateTables ['Players']               # Force re-draw of players table
+                    else
+                        @rest.makeIssue i, result                   # Unsuccessful POST
+                        r.success= 'FAIL'
     </pre>
 </div>

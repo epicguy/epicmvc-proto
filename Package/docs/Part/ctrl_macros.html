@@ -1,33 +1,33 @@
 <h3>MACROS</h3>
 <p>
-	<code>MACROS</code> are simply shortcuts or aliases that are defined by the 'Controller' to simplify programming. They have the exact same syntax and follow the same rules as 'CLICKS'. Macros are especially useful if you have to perform the same logic in multiple places throughout the application. They are defined once at the top of the 'Controller' and can be referenced as a <code>macro</code> anywhere else.
+	<code>MACROS</code> are simply shortcuts or aliases that are defined in your 'app' file to simplify programming. They have the exact same syntax and follow the same rules as 'ACTIONS'. Macros are especially useful if you have to perform the same logic in multiple places throughout the application. They are defined once at the top of the 'Controller' and can be referenced as a <code>do:</code> (wihtout a period) anywhere a Model.action can be called. Not using a period (dot) indicates this is a macro and not a Model.action call.
 </p>
 
 <h4>Example</h4>
 <pre class="coffeescript">
-window.EpicMvc.app$docs=
-	OPTIONS:
+E.app$docs=
+	ACTION:
 		...
 	MODELS:
 		...
 	MACROS:
-		start: call: 'User/check', RESULTS: [
-			{ r:{ valid: 'no'},	go: 'logged_out//' }
-			{ r:{ valid: 'yes'}, 	go: 'logged_in//' }
+		start: do: 'User.check', next: [
+			{ when:{ valid: 'no'},	go: 'logged_out//' }
+			{ when:{ valid: 'yes'}, go: 'logged_in//' }
 		]
-		go_billing_select: call: 'Billing/select_plan_default', go: 'myprofile/bill/select'
-		close_modal: call:'Pageflow/restore_path'
+		go_billing_select: do: 'Billing.select_plan_default', go: 'myprofile/bill/select'
+		close_modal: do: 'Pageflow.restore_path'
 	FLOWS:
 		...
 		TRACKS:
 			...
 			STEPS:
 				...
-				privacy: page: 'privacy_policy', CLICKS:
-					close_modal:	macro: 'close_modal'
-					cancel:		macro: 'close_modal'
-				terms: page: 'terms_of_use', CLICKS:
-					close_modal:	macro: 'close_modal'
-					cancel:		macro: 'close_modal'
+				privacy: page: 'privacy_policy', ACTIONS:
+					close_modal:	do: 'close_modal'
+					cancel:			do: 'close_modal'
+				terms: page: 'terms_of_use', ACTIONS:
+					close_modal:	do: 'close_modal'
+					cancel:			do: 'close_modal'
 				...
 </pre>

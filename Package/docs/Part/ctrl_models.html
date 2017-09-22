@@ -4,9 +4,9 @@
 
 <h4>Example</h4>
 <pre>
-window.EpicMvc.app$myPkg=
+E.app$myPkg=
 	MODELS:
-		League:		class: 'League',	inst: 'mpLg', forms: 'EditPlayer,AddPlayer'
+		League:		class: 'League',	inst: 'mpLg', fists: 'EditPlayer,AddPlayer'
 		Wist:		class: 'Wist',		inst: 'mpW'
 		Self:		class: 'Self',		inst: 'mpU'
 		User:		class: 'Self',		inst: 'mpU' # Alias for Self Model
@@ -17,9 +17,9 @@ window.EpicMvc.app$myPkg=
 A Model is made available by defining it as a key under MODELS. This key is the name that will be used by the View and Controller when referencing the Model e.g <code>League</code> or <code>User</code>. The <code>class:</code> attribute is the name of the Javascript Class in code where the business logic resides, and the <code>inst:</code> attribute is the name of the instance created after calling <code>new</code> on the Javascript class.
 </p>
 
-<h4>Associate Forms to a Model</h4>
+<h4>Associate Forms (Fists) to a Model</h4>
 <p>
-Forms are associated with a Model by using the <code>forms:</code> attribute and declaring the names of the Forms in a comma separated string. When a form needs to be posted or populated, the controller will ask the Model associated with the form to do the work.
+Forms (actually a 'list of fields' called a 'fist') are associated with a Model by using the <code>fists:</code> attribute and declaring the names of the Fists in a comma separated string. When a form needs to be posted or populated, the controller will ask the Model associated with the form to do the work.
 </p>
 
 <h4>Creating a Model Alias</h4>
@@ -31,10 +31,11 @@ It is possible to create an Alias name for a Model. In the example above, <code>
 <p>EpicMvc has a few built-in Models that are made available to you. They are defined in the Base Package app.coffee file and are merged in to the App Controller at run time.
 </p>
 <pre>
-window.EpicMvc.app$Base=
+E.app$Base=
 	MODELS:
-		Pageflow: class: "Pageflow$Base",   inst: "bP"
-		Security: class: "NoSecurity$Base", inst: "bS"
-		Property: class: "Property$Base",   inst: "bPr"
-		Tag:      class: "TagExe$Base",     inst: "bT"
+		App:  class: "App$Base",  inst: "iBaseApp"		# Exposes controller values to the Views, and actions to control page-flow
+		View: class: "View$Base", inst: "iBaseView"		# Implements the logic associated with all the special html tags and vars
+		Fist: class: "Fist$Base", inst: "iBaseFist"		# 'Field list' business logic for e.g. 2-way binding and validation
+		Tab:  class: "Tab$Base",  inst: "iBaseTab"		# View-state for Bootstrap type HTML things, such as Tabs, dropdowns, popups
+		Wist: class: "Wist$Base", inst: "iBaseWist"		# 'Word list' model to read a static file of data and expose as view-tables
 </pre>

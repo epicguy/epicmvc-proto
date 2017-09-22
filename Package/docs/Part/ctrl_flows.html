@@ -1,6 +1,6 @@
 <h3>FLOWS, TRACKS, STEPS</h3>
 <p>
-Flows, Tracks and Steps are the main method for grouping pages together that share similar attributes such as templates and clicks. Flows contain Tracks, and Tracks contain Steps. Since it is a hierarchy, Steps will inherit Track attributes, Tracks will inherit Flow attributes and Flows will inherit Global attributes and defaults. For example, if a template is defined in a Flow, all Tracks and Steps within that Flow will have that template.
+Flows, Tracks and Steps are the main method for grouping pages together that share similar attributes such as layouts and actions. Flows contain Tracks, and Tracks contain Steps. Since it is a hierarchy, Steps will inherit Track attributes, Tracks will inherit Flow attributes and Flows will inherit Global attributes and defaults. For example, if a layout is defined in a Flow, all Tracks and Steps within that Flow will have that layout.
 </p>
 <p>
 The best example of where this is useful is when you have a set of pages and functionality for a User that is logged out of the web-app and another set of pages and functionailty for when the User is securely logged in.
@@ -8,57 +8,56 @@ The best example of where this is useful is when you have a set of pages and fun
 
 <h4>Flows</h4>
 <p>
-A FLOW is a collection of Tracks. A Flow defines a starting Track using the <code>start:</code> attribute. A Flow can optionally define other attributes, such as <code>template:</code>, that will be inherited by all Tracks in that Flow.
+A FLOW is a collection of Tracks. A Flow defines a starting Track using the <code>start:</code> attribute. A Flow can optionally define other attributes, such as <code>layout:</code>, that will be inherited by all Tracks in that Flow.
 </p>
 
 <h4>Tracks</h4>
 <p>
-A TRACK is a collection of Steps. A Track defines a starting Step using the <code>start:</code> attribute. A Track can optionally define other attributes, such as <code>template</code>, that will be inherited by all Steps in that Track.
+A TRACK is a collection of Steps. A Track defines a starting Step using the <code>start:</code> attribute. A Track can optionally define other attributes, such as <code>layout</code>, that will be inherited by all Steps in that Track.
 </p>
 
 <h4>Steps</h4>
 <p>
-A STEP defines the HTML that should be displayed in the View, along with any other attributes specific to that step. The View will render the page that is defined for that step and it will wrap it in the template that the step inherits or defines.
+A STEP defines the HTML that should be displayed in the View, along with any other attributes specific to that step. The View will render the page that is defined for that step and it will wrap it in the layout that the step inherits or defines.
 </p>
 
 <h4>Example</h4>
 <p>
-In the following example, there are two flows, 'logged_out' and 'logged_in'. The 'logged_out' Flow uses the default template defined in OPTIONS, while the 'logged_in' Flow uses the 'logged_in' template defined only for that Flow. The 'logged_in' Flow also defines a Track 'draft' that uses its own template 'draft'.
+In the following example, there are two flows, 'logged_out' and 'logged_in'. The 'logged_out' Flow uses the default layout defined in SETTINGS, while the 'logged_in' Flow uses the 'logged_in' layout defined only for that Flow. The 'logged_in' Flow also defines a Track 'draft' that uses its own layout 'draft'.
 </p>
 <pre>
-window.EpicMvc.app$fantasy=
-	OPTIONS:
-		login:		flow: logged_out
-		template:	default: 'logged_out'
-		settings:	group: 'fantasy'
+E.app$fantasy=
+	SETTINGS:
+		go:		'logged_out//'
+		layout:	'logged_out'
 	MODELS:
-		League: class: 'League', 	inst: 'tlcLeague', 	forms: 'EditPlayer,AddPlayer'
-		Draft:  class: 'DraftRoom',	inst: 'tlcDraft', 	forms: 'Chat'
+		League: class: 'League', 	inst: 'tlcLeague', 	fists: 'EditPlayer,AddPlayer'
+		Draft:  class: 'DraftRoom',	inst: 'tlcDraft', 	fists: 'Chat'
 
 	FLOWS:
-		logged_out:								# Flow name
+		logged_out:									# Flow name
 			start: 'view_only'						# Starting Track for this Flow
 			TRACKS:
-				view_only:						# Track name
+				view_only:								# Track name
 					start: 'league_home'				# Starting Step for this Track
 					STEPS:
 						league_home: 	page: 'league_home' 	# Step name and page to display
-						standings:	page: 'standings'
+						standings:		page: 'standings'
 						free_agents: 	page: 'free_agents'
-						login:		page: 'login'
-		logged_in:								# Flow name
+						login:			page: 'login'
+		logged_in:									# Flow name
 			start: 'main'							# Starting Track for this Flow
-			template: 'logged_in'						# Flow specific tempalte
+			layout: 'logged_in'						# Flow specific tempalte
 			TRACKS:
 				main:
 					start: 'roster'					# Starting Step for this Flow
 					STEPS:
-						roster:		page: 'roster'
+						roster:			page: 'roster'
 						league_home: 	page: 'league_home'
-						standings:	page: 'standings'
+						standings:		page: 'standings'
 						free_agents:	page: 'free_agents'
 				draft:
-					template: 'draft'				# Track specific template
+					layout: 'draft'					# Track specific layout
 					start: 'draft_room'				# Starting Step for this Flow
 					STEPS:
 						draft_room:  	page: 'draft_room'
