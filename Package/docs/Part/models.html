@@ -1,15 +1,15 @@
 <div class="code-section">EpicMvc implements application business logic through use of JavaScript Classes which implement specific methods that EpicMvc will call for various reasons. This logic is used to support the 'Views' and 'Controller' by making data available to them as a 'Model'. The 'Model' data is made available to the 'View' via 'tables' and accessed by the 'View' using special HTML tags. 'Model' data can be manipulated by the 'Controller' via exposed 'actions'. Each 'Model' can also maintain it's state information, and save that info in the forward and back buttons in the browser.</div>
 <div class="clearfix" id="models_create"></div>
 <div class="code-section">
-	<h3>Creating a Model</h3>
-	<p>To create a new Model Class simply extend the EpicMvc ModelJS class and attach to the EpicMvc Model property.</p>
-	<h4>Example</h4>
-	<pre class="coffeescript">
+    <h3>Creating a Model</h3>
+    <p>To create a new Model Class simply extend the EpicMvc ModelJS class and attach to the EpicMvc Model property.</p>
+    <h4>Example</h4>
+    <pre class="coffeescript">
     class League extends E.ModelJS
         constructor: (view_nm, options)-&gt;
             ss= {
-				current_player= false
-			}
+                current_player= false
+            }
             super view_nm, ss
 
     E.Model.League= League		# Put the class into the EpicMvc namespace
@@ -38,7 +38,7 @@
         SETTINGS:
             go:     'anon//'
         MODELS:
-			League:   class: 'League',  inst: 'fLeague', options: mixed_players: true
+            League:   class: 'League',  inst: 'fLeague', options: mixed_players: true
     </pre>
 	<p>
 		<code>League:</code>
@@ -129,7 +129,7 @@
             super view_nm, ss
         loadTable: (tbl_nm) -&gt;
             f= "League:loadTable:#{tbl_nm}" # For debugging
-			_log2 f
+            _log2 f
             switch tbl_nm
 
                 # Multiple Row Table w/o sub-table
@@ -189,7 +189,7 @@
         action: (ctx,act,p)-&gt;
             f= 'League:action:'+act
             _log2 f, p                                          # Log the action / params
-			{r,i,m}= ctx
+            {r,i,m}= ctx
             switch act
                 # The User selects a Player
                 when 'select_player' # p.id
@@ -239,7 +239,7 @@
         SETTINGS:
             go: 'anon//'
         MODELS:
-			League: class: 'League', inst: 'fLeague', fists: [ 'AddPlayer', 'EditPlayer', ]  # Alternatly as fists: 'AddPlayer,EditPlayer'
+            League: class: 'League', inst: 'fLeague', fists: [ 'AddPlayer', 'EditPlayer', ]  # Alternatly as fists: 'AddPlayer,EditPlayer'
     </pre>
 	<br />
 	<h4>Populate a Fist with information</h4>
@@ -258,7 +258,7 @@
 TODO            oFist.clearValues()                             # Clear previous stored values in Fist
                 if @selected_player isnt false                  # If we are editing a player
                     return @players_by_id[ @selected_player]    # Grab player info from cache
-				return {}
+                return {}
             else return super fist_nm, row  #%#                 # Call super if no match found for nice dev warning message
     </pre>
 	<br />
