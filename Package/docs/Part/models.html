@@ -21,7 +21,7 @@
 		<code>options</code>
 		) hash. The Model constructor must call the super constructor with the same view_nm. The super constructor accepts an optional parameter that is a hash object representing the saved state of the model. The
 		<code>ss</code>
-		hash is used indicate which instace variables to maintatin in the browser history state between the forward and back buttons, and can be used to initialize default values for these variables.
+		hash is used to indicate which instance variables to maintain in the browser history state between the forward and back buttons, and can be used to initialize default values for these variables.
 	</p>
 </div>
 <div class="clearfix" id="models_install"></div>
@@ -170,7 +170,7 @@
 <div class="clearfix" id="models_actions"></div>
 <div class="code-section">
 	<h3>Model Actions</h3>
-	<p>A Model supports the Controller by implementing the 'action' method, which takes a 'context', an 'action' variable, and a hash of arguments. It mutates the 'context' hahs, and may return a promise. The 'context' contains 3 things: hash of results, a list of issues to be displayed, if any, and a list of non-issue type messages to display. The 'action's are the main way to interact with the Model from the Controller. When an action is invoked, the Model then has the opportunity to modify it's state, invalidate any tables that need to be re-drawn and invoke any other custom logic that might be needed based on the action and parameters passed in.</p>
+	<p>A Model supports the Controller by implementing the 'action' method, which takes a 'context', an 'action' variable, and a hash of arguments. It mutates the 'context' hash, and may return a promise. The 'context' contains 3 things: hash of results, a list of issues to be displayed, if any, and a list of non-issue type messages to display. The 'action's are the main way to interact with the Model from the Controller. When an action is invoked, the Model then has the opportunity to modify it's state, invalidate any tables that need to be re-drawn and invoke any other custom logic that might be needed based on the action and parameters passed in.</p>
 	<h4>Implementing the action method</h4>
 	<p>
 		The action method must be implemented within the Model with the following signature:
@@ -245,8 +245,8 @@
 	<h4>Populate a Fist with information</h4>
 	<p>
 		When a Fist is drawn in the view, EpicMvc will call the Model that is associated with that Fist to populate the Fist's contents. The Model supports this by implementing a method with the following signature:
-		<code>fistLoadData: (oFist)-&gt;</code>
-		. EpicMvc will pass in an instance of the Fist that is being drawn, and it is the methods responsibility to populate the Fist with the correct data.
+		<code>fistGetValues: (fist_nm, row)-&gt;</code>
+		. EpicMvc will pass in the Fist name and row-instance (if any) of the Fist who's data is being requested, and it is the method's responsibility to return a hash of values (using the db_nm as the hash name.)
 	</p>
 	<h4>Example</h4>
 	<pre class="coffeescript">
@@ -255,7 +255,6 @@
         switch name
             when 'AddPlayer' return {}                          # No values for 'add'
             when 'EditPlayer'
-TODO            oFist.clearValues()                             # Clear previous stored values in Fist
                 if @selected_player isnt false                  # If we are editing a player
                     return @players_by_id[ @selected_player]    # Grab player info from cache
                 return {}
@@ -293,7 +292,7 @@ TODO            oFist.clearValues()                             # Clear previous
     </pre>
 	<br />
 	<h4>Handle Fist submission as a Model action</h4>
-	<p>A Fist is submitted to the 'Controller' via an 'action', and the 'Controller' can validate the Fist, then pass all of the Fist information as paramerters to a 'Model' action. From there, the 'Model' can call a REST server, modify it's state, invalidate any view-tables or perform any other custom logic based on the Fist submission.</p>
+	<p>A Fist is manipulated by the 'Controller' when handling an 'action'. The 'Controller' can validate the Fist, then pass all of the Fist information as paramerters to a 'Model' action. From there, the 'Model' can call a REST server, modify it's state, invalidate any view-tables or perform any other custom logic based on the Fist submission. The 'Controller' can also 'clear' the Fist, such that the next time is must be displayed, will re-request data from the Model to populate it.</p>
 	<h4>Example</h4>
 	<pre class="coffeescript">
     class League extends E.ModelJS

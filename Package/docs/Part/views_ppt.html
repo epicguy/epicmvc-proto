@@ -4,25 +4,26 @@
 </p>
 <h4>Parts</h4>
 <p>
-	EpicMvc 'Parts' are the most basic components of the 'View'. A 'Part' could comtain as little as a single <code>&lt;br/&gt;</code> element, or include most of the HTML for the application. However, the idea is to design 'Parts' as meaningful and modularized pieces of the HTML that can be included or looped on elsewhere in the 'View'.
+	EpicMvc 'Parts' are the most basic components of the 'View'. A 'Part' could contain as little as a single <code>&lt;br/&gt;</code> element, or include most of the HTML for the application. However, the idea is to design 'Parts' as meaningful and modularized pieces of the HTML that can be included or looped on elsewhere in the 'View'.
 </p>
 <p>
-	To include the HTML defined in the 'Part' simply use the element <code>&lt;e-part part="part_file_name_without_the_html_extension"&gt;</code>. For example <code>part="login"</code> corresponds to the Part/login.html file on disk. EpicMvc will then replace that element with the actual HTML from the Part during render. The 'Part' element can be included in any 'Page', 'Element', 'Frame' or even another 'Part'.
+	To include the HTML defined in the 'Part' simply use the element <code>&lt;e-part part="part_file_name_without_the_html_extension"&gt;</code>. For example <code>part="login"</code> corresponds to the <mark>Part/login.html</mark> file on disk. EpicMvc will then replace that element with the actual HTML from the Part during render. The 'Part' element can be included in any 'Page', 'Element', 'Frame' or even another 'Part'.
 </p>
 
 <h4>Pages</h4>
 <p>
-	An EpicMvc 'Page' is the main component of the 'View'. Only one 'Page' is displayed at a time, (although, with a popup a previous page may appear in the backgound) and it is composed of HTML and any 'Parts' that are included using the <code>&lt;e-page /&gt;</code> element.
+	An EpicMvc 'Page' is the main component of the 'View' and is specified using the <code>&lt;e-page /&gt;</code> element.
+	Only one 'Page' is displayed at a time, (although, with a popup a previous page may appear in the backgound) and it is composed of HTML and any 'Parts' that are included.
 </p>
 
 <h4>Layouts</h4>
 <p>
-	An EpicMvc 'Layout' is HTML that includes a single EpicMvc 'Page' using the HTML element <code>&lt;e-page /&gt;</code> along with any number 'Parts' and any amount of HTML.
+	An EpicMvc 'Layout' is HTML that includes a single EpicMvc 'Page' using the HTML element <code>&lt;e-page /&gt;</code> along with any number 'Parts' and any amount of HTML. It will be rendered "around" the Page, based on where you plae the <mark>e-page</mark> element in this HTML file. Layouts are specified in the Controller file using the hash <code>layout: 'layout-name'</code> placed at any level (SETTINGS, globaly, Flow, Track, or Step) where SETTINGS is the default, and Step being the most specific will override the others.
 </p>
 
 <h4>Frames</h4>
 <p>
-	Any number 'Frames' will permenantly be part of the outer HTML of any rendered web page. Each successive Frame is embedded wherever a single EpicMvc HTML element <code>&lt;e-page /&gt;</code> occurs, and can also include any number 'Parts' and any amount of HTML. Frames are designated in the Controller (app.coffee) using <mark>SETTINGS: frames:</mark>. The hash string is used to sort the order of the frames. For example the Dev packages uses <code>frames: MMM_dev: 'bdevl'</code>. This allows developers to place another frame either before or after, using e.g. AAA_something: 'frame-name' or ZZZ_something. The file would be found as Layout/*.html.
+	Any number 'Frames' will permenantly be part of the outer HTML of any rendered web page. Each successive Frame is embedded wherever a single EpicMvc HTML element <code>&lt;e-page /&gt;</code> occurs, and can also include any number 'Parts' and any amount of HTML. Frames are designated in the Controller (app.coffee) using <mark>SETTINGS: frames:</mark>. The hash string is used to sort the order of the frames. For example the Dev packages uses <code>frames: MMM_dev: 'bdevl'</code>. This allows developers to place another frame either before or after, using e.g. AAA_something: 'frame-name' or ZZZ_something. The file would be found as Layout/*.html. Although the <mark>e-page</mark> element is used, it refers to either the next Frame, or lastly, the Layout.
 </p>
 
 <p>Here is visually how EpicMvc will glue together all of the pieces:</p>
