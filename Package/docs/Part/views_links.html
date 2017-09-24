@@ -50,7 +50,7 @@ So, for example: &lt;div data-e-action="event:activity:section:a:any" would invo
 <p>The function called is set in the Controller OPTIONS (or passed as second param to E.run or via E.opt function) using the <mark>event:</mark> hash. The signature for this function is: <code>event( name, type, group, item, params)</code> which partly map to the string passed in your <mark>data-e-action</mark> attribute: <code>&lt;li data-e-action="event:NAME:GROUP:ITEM:(INTERESTING)"></code> where '(interesting)' is either 'all'or a dash separated list of event-types you are interested in
 (for example "event:Fist:Login:Password:blur-focus"). The 'params' are any data-e-(name)="value" attributes, along with additional values that might exist based on the element itself (for example 'Input' elements might include a 'target.value', '_file' for the target.files value, and these values when they exist in the event object: 'touches','changedTouches','targetTouches'.
 </p>
-<p>A deprecated way to pass paramaters to events or actions is the <mark>data-params</mark> attribute, which should contain JSON encoded hash of values. Example: <code>data-params='{"id":"&Player/id;"}'</code>
+<p>A deprecated way to pass paramaters to events or actions is the <mark>data-params</mark> attribute, which should contain JSON encoded hash of values. Example: <code>data-params='{"id":"&amp;Player/id;"}'</code>
 </p>
 <p>Allowed <b>attribute</b> shortcuts (does not work on element names)... You can use just e-* and it will translate to data-e-*. You can place the browser-like-event names into the attribute name, such as <code>e-click="choose_recipient" e-id="&amp;Recipient/id"</code>.
 </p>
