@@ -3,9 +3,9 @@
 <p>EpicMvc is a revolutionary architecture that allows non-programmers control over the "flow" of web pages within a Web-based application. This is achived by making the 'Controller' data-driven (no code) which implements a 'Router' as a hierarchical state machine. The 'View' HTML clickable artifacts are simple lables, which the Controller will 'map' to actual JavaScript business logic calls (in the Models.) Responses from the Model actions allows the Controller to determine the next 'web page' to display based on these events. All JavaScript logic is now a list of 'actions' that can be invoked by the 'Controller', and can be separatly auto-unit-tested without a browser instance. All DOM updates are accomplished via the Mithril difference engine, as is done with React and Angular 4. Models are where the JavaScript lives, and are implemented as a Class with specific methods required by EpicMvc; The concept for these is similar to CQRS - the Views make the queries, and the Controller invokes the commands.</p>
 <h4>Summary:</h4>
 <table>
-<tr><th>Controller</th><td>Data-driven Router as hierarchical state machine. Maps View's actions to Model business logic</td>
-<tr><th>View</th><td>Fully templated HTML, which gets data from 'tables' exposed by the Models.</td>
-<tr><th>Model</th><td>All JavaScript - holds data, exposes to Views as 'tables' and allows changes via 'actions' invoked by the controller.</td>
+<tr><th>Controller</th><td>Data-driven Router as hierarchical state machine. Maps View's actions to Model business logic</td></tr>
+<tr><th>View</th><td>Fully templated HTML, which gets data from 'tables' exposed by the Models.</td></tr>
+<tr><th>Model</th><td>All JavaScript - holds data, exposes to Views as 'tables' and allows changes via 'actions' invoked by the controller.</td></tr>
 </table>
 
 <h3>Motivation</h3>
