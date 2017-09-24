@@ -1,36 +1,93 @@
 <h3>Links and Navigation</h3>
 <p>
-This section explains how to make clickable links throughout your app.  Simply add the attribute "data-e-action" to any HTML element to allow it to generate actions for the controller to act on.<br/>
-The HTML must be aware of the values needed to process an action, so you provide these on the element using attributes in addition to the action label.
+This section explains how to make clickable links throughout your app.  Simply add the attribute <mark>data-e-action</mark> to any HTML element to allow it to generate actions for the controller to act on. Provide an event name such as <code>click</code> and a descriptive label <code>cancel</code>. Example: <code>&lt;data-e-action="click:cancel"></code>
+</p>
+<p>
+The HTML must be aware of the values needed to process an action, so you provide these on the element using data attributes in addition to the <mark>data-e-action</mark> attribute. Example: <code>data-e-direction="up"</code>
 For fields of a Fist, those values are automatically bound such that the controller can get those without additional attributes added. (For Fist and fields information, see: <a class="link" data-action="click:go_views_forms" href="#forms_fields_buttons">Forms, and form fields.</a>)
 </p>
 <p>
-The <code>&lt;data-e-action&gt;</code> attribute does <span style="text-decoration: underline;">not</span> allow you to specify which page to display next.
-The only information needed is (a) the type of event that should cause this action, (b) a unique name for this action used later by the controller to connect to the business logic, and (c) any values to pass to that action.
-Suppose you wish to send the contoller an action-label upon a user clicking on an element, which will log the user out. This may be done like so:
-<code>&lt;data-e-action="click:logout" /&gt;</code> - the app.coffee file will contain an ACTIONS entry that maps your action called 'logout' to the proper JavaScript logic module used to effect a logout. Alternatively, the controller could simply move to a page which pops up a confirmation to log out, and only actually log out when that pop-up is confirmed.
+The <code>&lt;data-e-action&gt;</code> attribute does <span style="text-decoration: underline;">not</span> allow you to specify which page to display next; the Controller makes those descisions.
+The only information needed is:
+<ul>
+<li>(a) the type of event that should cause this action
+</li>
+<li>(b) a unique name for this action used later by the Controller to connect to the business logic
+</li>
+<li>(c) any values to pass to that action.
+</li>
+Suppose you wish to send the Contoller an action-label upon a user clicking on an element, on a button labled 'log out'. This may be done like so:
+<code>&lt;button data-e-action="click:logout" lable="Log out" /&gt;</code> - the app.coffee file will contain an ACTIONS entry that maps your action called 'logout' to the proper JavaScript logic module used to effect a logout. Alternatively, the Controller could simply move to a page which pops up a confirmation to log out, and only actually log out when that pop-up is confirmed.
 Additionally, the app.coffee file will determine which page would naturally be displayed next, after this occurred.
 </p>
 <p>
-Typically, an action appears inside an <code>&lt;e-foreach&gt;</code> loop, such that each action is supposed to reference a different row of data.
+Typically, an action appears inside the <code>&lt;e-foreach&gt;</code> loop, such that the same action-label is supposed to reference a different row of data.
 For example, suppose you have a list of people to send an email to, and the action is designed to send an email to just one of those addresses that was atually clicked on.
-A combination of the <code>&lt;e-foreach&gt;</code> and elements having a <code>&lt;data-e-action&gt;</code> attribute would be used, however this time a parameter must be included, which names the recipient.
+A combination of the <code>&lt;e-foreach&gt;</code> and elements having a <mark>data-e-action</mark> attribute would be used, however this time a parameter must be included, which names the recipient.
 The HTML might look like this:
 </p>
 <pre>
 &lt;h3&gt;Send email to one of the following:&lt;/h3&gt;
 &lt;e-foreach table="ListMaintainer/Recipients"&gt;
-	&lt;p data-e-action="click:send_email" e-id="&amp;Recipients/id;"&gt;&amp;Recipients/email;&lt;/p&gt;
+	&lt;p data-e-action="click:choose_recipient" e-id="&amp;Recipients/id;"&gt;&amp;Recipients/email;&lt;/p&gt;
 &lt;/e-foreach&gt;
 </pre>
-<p>Later in the app.coffee file, there would be instructions such as:</p>
+<p>(You could have used <code>data-e-action="click:send_email</code>, however, it is best to lable your actions with what the user is doing vs. what that system should do - let the Controller make that connection.)
+</p>
+<p>Later in the Controller <code>app.coffee</code> file, there would be instructions such as:</p>
 <pre>
 ACTIONS:
-	send_email:	do: 'ListMaintainer/send', pass: 'id', next: go: 'home/main/send_confirm'
+	choose_recipient:	do: 'ListMaintainer.', pass: 'id', next: go: 'home/main/send_confirm' # Confirm before actual send
 </pre>
 
-<p>A mouse 'click' is only one of the types of "events" or gestures that users might make, that you can capture as an 'action', the others are: 'dblclick', 'rclick', 'enter', 'escape', (and typically on INPUT elements) 'blur', 'focus', 'change'.
+<p>A mouse <mark>click</mark> is only one of the types of browser-type-events or "gestures" that users might make, that you can capture as an 'action', the others are: <mark>dblclick</mark> <mark>rclick</mark> <mark>enter</mark> <mark>escape</mark> (and typically on INPUT elements) <mark>blur</mark> <mark>focus</mark> <mark>change</mark>
 </p>
-<p>Additionally, EpicMvc has a lighter weight processing loop for something called 'event' (vs. an 'actction') that can be invoked as 'event' for the event-type. So, for example: &lt;div data-e-action="event:something_happened" would invoke the event function on any of the above events. The function called is set in the Controller OPTIONS (or passed as second param to E.run or via E.opt function) using the 'event:' hash. The signature for this function is: <code>event( name, type, group, item, params)</code> which partly map to the string passed in your <mark>data-e-action</mark> attribute: <code>&lt;li data-e-action="event:NAME:GROUP:ITEM:(INTERESTING)"></code> where '(interesting)' is either 'all'or a dash separated list of event-types you are interested in
+<p>Additionally, EpicMvc has a lighter weight processing loop for something it also calls <mark>event</mark> (vs. an 'action') that can be invoked as 'event' for the event-type.
+It will avoid the step of doing the DOM diff since it rarely will change the view state.
+So, for example: &lt;div data-e-action="event:activity:section:a:any" would invoke the event function on any of the above listed events, when inside that <code>&lt;div></code> container.
+</p>
+<p>The function called is set in the Controller OPTIONS (or passed as second param to E.run or via E.opt function) using the <mark>event:</mark> hash. The signature for this function is: <code>event( name, type, group, item, params)</code> which partly map to the string passed in your <mark>data-e-action</mark> attribute: <code>&lt;li data-e-action="event:NAME:GROUP:ITEM:(INTERESTING)"></code> where '(interesting)' is either 'all'or a dash separated list of event-types you are interested in
 (for example "event:Fist:Login:Password:blur-focus"). The 'params' are any data-e-(name)="value" attributes, along with additional values that might exist based on the element itself (for example 'Input' elements might include a 'target.value', '_file' for the target.files value, and these values when they exist in the event object: 'touches','changedTouches','targetTouches'.
 </p>
+<p>A deprecated way to pass paramaters to events or actions is the <mark>data-params</mark> attribute, which should contain JSON encoded hash of values. Example: <code>data-params='{"id":"&Player/id;"}'</code>
+</p>
+<p>Allowed <b>attribute</b> shortcuts (does not work on element names)... You can use just e-* and it will translate to data-e-*. You can place the browser-like-event names into the attribute name, such as <code>e-click="choose_recipient" e-id="&amp;Recipient/id"</code>.
+</p>
+<p>Other 'special' data-e-* attributes. The following are used as shortcuts to implement bootstrap type functionality in conjunction with the <mark>Tab</mark> model within the <mark>Base</mark> package: <mark>modal</mark>, <mark>collapse</mark>, <mark>drop</mark>, and <mark>tab</mark> as well as the same names with a postfix of <mark>-pane</mark> to designate the corresponding content part of the control container.
+</p>
+<pre>
+# TABS
+before: &lt;li e-tab="Home:news">
+after:  &lt;li class="&Tab/Home/news#?active;" data-e-action="event:Tab:Home:news:click">
+
+before: &lt;div e-tab-pane="Home:news">
+after:  &lt;div class="&Tab/Home/news#?active;">
+
+# COLLAPSE
+before: &lt;li e-collapse="Head:nav">
+after:  &lt;li data-e-action="event:Tab:Head:nav:click">
+
+before: &lt;div e-collapse-pane="Head:nav">
+after:  &lt;div class="&Tab/Head/nav#?in;">
+
+# DROPDOWNS
+before: &lt;div e-drop-pane="A1">
+after: &lt;div class="&Tab/Drop/A1#?open;">
+
+before: &lt;li e-drop="A1">
+after:  &lt;li data-e-action="event:Tab:Drop:A1:click">
+
+# MODALS
+before: &lt;div e-modal-pane="A1">
+after: &lt;div class="&Tab/Modal/A1#?in?hide;">
+
+before: &lt;li e-modal="A1">
+after:  &lt;li data-e-action="event:Tab:Modal:A1:click">
+</pre>
+<p>Mitril allows you to manage your own containers w/o the DOM difference engine getting in the way or getting confused. This is done with a <code>data-ex-(name-p1-p2)="value"</code> attribute-value. You place a function into the EpicMvc namespace as E.ex$name, and it is called via a proxy from Mithril implemented in the Base's View model as: E.ex$name element, isInit, context, p1, p2, value (see Mithril for explaination of those first three params.
+</p>
+<pre>
+# ex-USER-DEFINED="anything"
+before: &lt;input ex-some-odd="thing">
+after: &lt;input data-ex-some-odd="thing" config=oE.ex> (Calls E.ex$some(el, isInit, ctx, 'thing', 'odd', undefined))
+</pre>
