@@ -16,6 +16,7 @@ The only information needed is:
 </li>
 <li>(c) any values to pass to that action.
 </li>
+</ul>
 Suppose you wish to send the Contoller an action-label upon a user clicking on an element, on a button labled 'log out'. This may be done like so:
 <code>&lt;button data-e-action="click:logout" lable="Log out" /&gt;</code> - the app.coffee file will contain an ACTIONS entry that maps your action called 'logout' to the proper JavaScript logic module used to effect a logout. Alternatively, the Controller could simply move to a page which pops up a confirmation to log out, and only actually log out when that pop-up is confirmed.
 Additionally, the app.coffee file will determine which page would naturally be displayed next, after this occurred.
