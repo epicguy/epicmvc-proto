@@ -1,36 +1,42 @@
-<h3>Templates, Pages, and Parts</h3>
+<h3>Frames, Layouts, Pages, and Parts</h3>
 <p>
-	'Templates', 'Pages', and 'Parts' are HTML files located on disk, that contain valid HTML excluding the traditional <code>&lt;!DOCTYPE html&gt;</code>,<code>&lt;html&gt;</code>, <code>&lt;head&gt;</code>, <code>&lt;meta&gt;</code> and <code>&lt;body&gt;</code> tags. 'Templates' are saved with the extension <code>.tmpl.html</code>, 'Pages' are saved with the extension <code>.page.html</code> and 'Parts' are saved with the extension <code>.part.html</code>.
+	'Frames', 'Layouts', 'Pages', and 'Parts' are HTML files located on disk, that contain valid HTML excluding the traditional <code>&lt;!DOCTYPE html&gt;</code>,<code>&lt;html&gt;</code>, <code>&lt;head&gt;</code>, <code>&lt;meta&gt;</code> and <code>&lt;body&gt;</code> tags. 'Frames' and 'Layouts' are saved as <code>Layout/*.html</code>, 'Pages' as <code>Page/*.html</code> and 'Parts' as <code>Part/*.html</code>.
 </p>
 <h4>Parts</h4>
 <p>
-	EpicMvc 'Parts' are the most basic components of the 'View'. A 'Part' could be as simple as a single <code>&lt;p&gt;</code> tag, or include most of the HTML for the application. However, the idea is to design 'Parts' as meaningful and modularized pieces of the HTML that can be included or looped on elsewhere in the 'View'.
+	EpicMvc 'Parts' are the most basic components of the 'View'. A 'Part' could comtain as little as a single <code>&lt;br/&gt;</code> element, or include most of the HTML for the application. However, the idea is to design 'Parts' as meaningful and modularized pieces of the HTML that can be included or looped on elsewhere in the 'View'.
 </p>
 <p>
-	To include the HTML defined in the 'Part' simply use the tag <code>&lt;epic:page_part part="part_file_name"&gt;</code>. The 'part=' attribute is the name of .part.html file on disk. EpicMvc will then replace that tag with the actual HTML from the Part during render. The 'Part' tag can be included in any 'Page', 'Template' or even another 'Part'.
+	To include the HTML defined in the 'Part' simply use the element <code>&lt;e-part part="part_file_name_without_the_html_extension"&gt;</code>. For example <code>part="login"</code> corresponds to the Part/login.html file on disk. EpicMvc will then replace that element with the actual HTML from the Part during render. The 'Part' element can be included in any 'Page', 'Element', 'Frame' or even another 'Part'.
 </p>
 
 <h4>Pages</h4>
 <p>
-	An EpicMvc 'Page' is the main component of the 'View'. Only one 'Page' is displayed at a time, and it is composed of HTML and any 'Parts' that are included using the page_part tag.
+	An EpicMvc 'Page' is the main component of the 'View'. Only one 'Page' is displayed at a time, (although, with a popup a previous page may appear in the backgound) and it is composed of HTML and any 'Parts' that are included using the <code>&lt;e-page /&gt;</code> element.
 </p>
 
-<h4>Templates</h4>
+<h4>Layouts</h4>
 <p>
-	An EpicMvc 'Template' is HTML that includes a single EpicMvc 'Page' using the HTML tag <code>&lt;epic:page /&gt;</code> along with any other 'Parts'.
+	An EpicMvc 'Layout' is HTML that includes a single EpicMvc 'Page' using the HTML element <code>&lt;e-page /&gt;</code> along with any number 'Parts' and any amount of HTML.
+</p>
+
+<h4>Frames</h4>
+<p>
+	Any number 'Frames' will permenantly be part of the outer HTML of any rendered web page. Each successive Frame is embedded wherever a single EpicMvc HTML element <code>&lt;e-page /&gt;</code> occurs, and can also include any number 'Parts' and any amount of HTML. Frames are designated in the Controller (app.coffee) using <mark>SETTINGS: frames:</mark>. The hash string is used to sort the order of the frames. For example the Dev packages uses <code>frames: MMM_dev: 'bdevl'</code>. This allows developers to place another frame either before or after, using e.g. AAA_something: 'frame-name' or ZZZ_something. The file would be found as Layout/*.html.
 </p>
 
 <p>Here is visually how EpicMvc will glue together all of the pieces:</p>
+<div style="text-align: center; margin: 10px;">Layout/update_your_app.html</div>
 <div class="container-fluid">
 	<div class="row" style="background-color: #CCC; border-radius: 10px; border: 2px solid #888;">
-		<div style="text-align: center; margin: 10px;">main.tmpl.html</div>
+		<div style="text-align: center; margin: 10px;">Layout/main.html</div>
 		<div class="container-fluid">
 			<div class="row" style="text-align: center; margin: 5px; padding: 10px; background-color: #DDD; border-radius: 10px; border: 2px solid #999;">
-				<div style="padding: 0 0 5px;">example.page.html</div>
+				<div style="padding: 0 0 5px;">Page/example.html</div>
 				<div class="container-fluid">
-					<div class="row" style="text-align: center; margin: 5px; padding: 10px; background-color: #EEE; border-radius: 10px; border: 2px solid #AAA;">header.part.html</div>
-					<div class="row" style="text-align: center; margin: 5px; padding: 10px; background-color: #EEE; border-radius: 10px; border: 2px solid #AAA;">body.part.html</div>
-					<div class="row" style="text-align: center; margin: 5px; padding: 10px; background-color: #EEE; border-radius: 10px; border: 2px solid #AAA;">footer.part.html</div>
+					<div class="row" style="text-align: center; margin: 5px; padding: 10px; background-color: #EEE; border-radius: 10px; border: 2px solid #AAA;">Part/header.html</div>
+					<div class="row" style="text-align: center; margin: 5px; padding: 10px; background-color: #EEE; border-radius: 10px; border: 2px solid #AAA;">Part/body.html</div>
+					<div class="row" style="text-align: center; margin: 5px; padding: 10px; background-color: #EEE; border-radius: 10px; border: 2px solid #AAA;">Part/footer.html</div>
 				</div>
 			</div>
 		</div>
@@ -40,53 +46,62 @@
 <h4>Example</h4>
 <blockquote>
 	<p>
-		The <b>Template</b> HTML for main.tmpl.html would be:
+		The <b>Frame</b> HTML for Layout/update_your_app.html would be:
+	</p>
+	<pre>
+	&lt;div style="text-align: center; margin: 10px;">Time to Update your app&lt;/div>
+	&lt;e-page /&gt;
+	</pre>
+
+	<p>
+		The <b>Layout</b> HTML for Layout/main.html would be:
 	</p>
 	<pre>
 	&lt;div class="container-fluid"&gt;
-		&lt;epic:page /&gt;
+		&lt;e-page /&gt;
 	&lt;/div&gt;
 	</pre>
 
 	<p>
-		The <b>Page</b> HTML for example.page.html would be:
+		The <b>Page</b> HTML for Page/example.html would be:
 	</p>
 	<pre>
 	&lt;div class="row"&gt;
-		&lt;epic:page_part part="header" /&gt;
+		&lt;e-page_part part="header" /&gt;
 	&lt;/div&gt;
 	&lt;hr&gt;
 	&lt;div class="row"&gt;
-		&lt;epic:page_part part="body" /&gt;
+		&lt;e-page_part part="body" /&gt;
 	&lt;/div&gt;
 	&lt;hr&gt;
 	&lt;div class="row"&gt;
-		&lt;epic:page_part part="footer" /&gt;
+		&lt;e-page_part part="footer" /&gt;
 	&lt;/div&gt;
 	</pre>
 
 	<p>
-		The <b>Part</b> HTML for header.part.html could be:
+		The <b>Part</b> HTML for Part/header.html could be:
 	</p>
 	<pre>
 	&lt;p&gt;Header Info&lt;/p&gt;
 	</pre>
 
 	<p>
-		The <b>Part</b> HTML for body.part.html could be:
+		The <b>Part</b> HTML for Part/body.html could be:
 	</p>
 	<pre>
 	&lt;p&gt;Hello World!&lt;/p&gt;
 	</pre>
 
 	<p>
-		The <b>Part</b> HTML for footer.part.html could be:
+		The <b>Part</b> HTML for Part/footer.html could be:
 	</p>
 	<pre>
 	&lt;p&gt;Footer Info&lt;/p&gt;
 	</pre>
 
 	<p>The following would render:</p>
+	<div style="text-align: center; margin: 10px;">Time to Update your app</div>
 	<div class="container-fluid">
 		<div style="padding: 10px; border: 1px solid #ccc; border-radius: 10px;">
 			<div class="container-fluid">

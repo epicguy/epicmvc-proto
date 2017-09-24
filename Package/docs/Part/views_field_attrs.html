@@ -14,7 +14,7 @@
 			<td><mark>db_nm</mark></td>
 			<td>yes</td>
 			<td>'username'</td>
-			<td>The database name of a field</td>
+			<td>The database column name or REST endpoint hash name</td>
 		</tr>
 		<tr>
 			<td><mark>type</mark></td>
@@ -59,22 +59,16 @@
 			<td>The text to display if there is an error validating the field</td>
 		</tr>
 		<tr>
-			<td><mark>max_len</mark></td>
-			<td>no</td>
-			<td>8</td>
-			<td>Return an error if the field value is larger than the max_len</td>
-		</tr>
-		<tr>
 			<td><mark>h2h</mark></td>
 			<td>no</td>
 			<td>'trimspaces:lower_case'</td>
-			<td>The spec that is passed to the H2H Pre-filter and H2H Generic Filter. See below for options.</td>
+			<td>Html-to-html filter specification. Applied to this field after the user has entered text to "clean" up the diplay. Can be array of filter names, or as a colon or comma separated list. See below for options.</td>
 		</tr>
 		<tr>
 			<td><mark>d2h</mark></td>
 			<td>no</td>
 			<td>'phone'</td>
-			<td>The name of the D2H filter to run. See below for options.</td>
+			<td>Data-to-Html translation: The name of the D2H filter to run. See below for options.</td>
 		</tr>
 		<tr>
 			<td><mark>d2h_expr</mark></td>
@@ -86,7 +80,7 @@
 			<td><mark>h2d</mark></td>
 			<td>no</td>
 			<td>'date'</td>
-			<td>The name of the H2D filter to run. See below for options</td>
+			<td>Html-to-data translation: The name of the H2D filter to run. See below for options</td>
 		</tr>
 		<tr>
 			<td><mark>h2d_expr</mark></td>
@@ -98,7 +92,7 @@
 			<td><mark>cdata</mark></td>
 			<td>no</td>
 			<td>[1,2,3,4,5,6,7]</td>
-			<td>Data used to populate multiple choice field values. e.g. pulldown:array</td>
+			<td>Control-data: Data that is control specific (ex: to populate multiple choice field values when type=pulldown:array)</td>
 		</tr>
 	</tbody>
 </table>
@@ -121,11 +115,11 @@
 		</tr>
 		<tr>
 			<td><code>radio:custom</code></td>
-			<td>Radio buttons populated by the Model's fistGetFieldChoices() method</td>
+			<td>Radio buttons populated by the Model's fistGetChoices() method</td>
 		</tr>
 		<tr>
 			<td><code>yesno</code></td>
-			<td>Checkbox</td>
+			<td>Checkbox - cdata contains checked and unchecked values</td>
 		</tr>
 		<tr>
 			<td><code>pulldown:array</code></td>
@@ -133,16 +127,12 @@
 		</tr>
 		<tr>
 			<td><code>pulldown:custom</code></td>
-			<td>Pulldown populated by the Model's fistGetFieldChoices() method</td>
+			<td>Pulldown populated by the Model's fistGetChoices() method</td>
 		</tr>
 		<tr>
 			<td><code>pulldown:wist</code></td>
-			<td>Pulldown populated by the Wist Model; See cdata for details.
+			<td>Pulldown populated by the Wist Model; See cdata contains 'Wist_table_name:value_column:option_column'.
 			</td>
-		</tr>
-		<tr>
-			<td><code>pulldown:json_like</code></td>
-			<td>Pulldown populated with a JSON like key/value structure from the cdata atrribute.</td>
 		</tr>
 	</tbody>
 </table>
@@ -152,19 +142,19 @@
 		<tr>
 			<td rowspan="3" class="col-md-1"><mark>cdata</mark></td>
 			<td class="col-md-2"><code>[val1, val2,...]</code></td>
-			<td class="col-md-9">Used by pulldown:array and radio:array. List of values that will be used as the db value and display in the HTML</td>
+			<td class="col-md-9">Used by pulldown:array and radio:array. List of values that will be used as the db value <b>and</b> display in the HTML. With this layout val1 will be both the first option displayed, and the value posted.</td>
 		</tr>
 		<tr>
 			<td><code>[[val, opt],[val2,opt2]...]</code></td>
 			<td>Used by pulldown:array and radio:array. List of lists. Each sub-list will have a val that is used for the db, and an opt to display in the HTML</td>
 		</tr>
 		<tr>
-			<td><code>'wist_grp:wist_nm:val_nm:opt_nm'</code></td>
-			<td>Used with pulldown:wist type. Epic will call the 'Wist' Model with a table name of 'wist_grp:wist_nm' and use the 'val_nm' and 'opt_nm' of the Wist data to populate the options and values for a multiple choice input. </td>
+			<td><code>'Wist_table_name:value_column:option_column'</code></td>
+			<td>Used with pulldown:wist type. Epic will call the 'Wist' Model with a table name of 'Wist_table_nm' and use the 'value_column' and 'option_column' of the Wist data to populate the options and values for a multiple choice input. </td>
 		</tr>
 		<tr>
-			<td><code>'yes_value'</code></td>
-			<td>Used with yesno type. Epic will assign the 'yes_value' when the checkbox is checked. Defaults to 1</td>
+			<td><code>[ 'yes-value', 'no-value' ]</code></td>
+			<td>Used with yesno type. EpicMvc will assign the 'yes_value' when the checkbox is checked. Defaults to [ '1', '0'].</td>
 		</tr>
 	</tbody>
 </table>
@@ -173,28 +163,12 @@
 	<tbody>
 		<tr>
 			<td rowspan="6" class="col-md-1"><mark>validate</mark></td>
-			<td class="col-md-2"><code>phone</code></td>
-			<td class="col-md-9">Validates the value has exactly 10 digits</td>
-		</tr>
-		<tr>
-			<td><code>zip</code></td>
-			<td>Using: <code>validate_expr: '5or9'</code> validates the value is 5 or 9 digits</td>
-		</tr>
-		<tr>
-			<td><code>choice</code></td>
-			<td>Validates the value is a valid choice. If <code>validate_expr:true</code>, then the value must not be the first choice.</td>
+			<td class="col-md-2"><code>test</code></td>
+			<td class="col-md-9">Validates any regular expression placed into <mark>validate_expr</mark> as String '^[0-9]{10}$' or RE /^[a-z_]+$/</td>
 		</tr>
 		<tr>
 			<td><code>email</code></td>
-			<td>Validates a valid email format</td>
-		</tr>
-		<tr>
-			<td><code>regexp</code></td>
-			<td>Validate value matches the regexp on the <mark>validate_expr</mark> attribute</td>
-		</tr>
-		<tr>
-			<td><code>confirm</code></td>
-			<td>Validate value matches the field name defined in the <mark>validate_expr</mark> attribute</td>
+			<td>[Proto] Validates a valid email format</td>
 		</tr>
 	</tbody>
 </table>
@@ -203,20 +177,40 @@
 	<tbody>
 		<tr>
 			<td rowspan="4" class="col-md-1"><mark>h2h</mark></td>
-			<td class="col-md-2"><code>trim_spaces</code></td>
-			<td class="col-md-9">Removes all whitespace</td>
+			<td class="col-md-2"><code>pre</code></td>
+			<td class="col-md-9">Always run on each field, no-op in Base package; Proto provides: E.fistH2H$pre= (field,val) -> val.replace /[&lt;>]/g, ''</td>
 		</tr>
 		<tr>
-			<td><code>digits_only</code></td>
-			<td>Removes non-digit characters</td>
+			<td><code>trim</code></td>
+			<td>[Proto] E.fistH2H$trim=  (field,val) -> (String val).trim()</td>
 		</tr>
 		<tr>
-			<td><code>lower_case</code></td>
-			<td>Converts to lower case</td>
+			<td><code>lower</code></td>
+			<td>[Proto] E.fistH2H$lower= (field,val) -> (String val).toLowerCase()</td>
 		</tr>
 		<tr>
-			<td><code>upper_case</code></td>
-			<td>Converts to upper case</td>
+			<td><code>upper</code></td>
+			<td>[Proto] E.fistH2H$upper= (field,val) -> (String val).toUpperCase()</td>
+		</tr>
+		<tr>
+			<td><code>zero</code></td>
+			<td>[Proto] E.fistH2H$zero=  (field,val) -> val ? 0</td>
+		</tr>
+		<tr>
+			<td><code>null</code></td>
+			<td>[Proto] E.fistH2H$null=  (field,val) -> val ? null</td>
+		</tr>
+		<tr>
+			<td><code>empty</code></td>
+			<td>[Proto] E.fistH2H$empty= (field,val) -> val ? ''</td>
+		</tr>
+		<tr>
+			<td><code>digits</code></td>
+			<td>[Proto] E.fistH2H$digits=(field,val) -> val.replace /[^0-9]/g, ''</td>
+		</tr>
+		<tr>
+			<td><code>chars</code></td>
+			<td>[Proto] E.fistH2H$chars=(field,val) -> val.replace /[^a-z]/ig, ''</td>
 		</tr>
 	</tbody>
 </table>
@@ -225,16 +219,10 @@
 	<tbody>
 		<tr>
 			<td rowspan="3" class="col-md-1"><mark>d2h</mark></td>
-			<td class="col-md-2"><code>phone</code></td>
-			<td class="col-md-9">Removes non-digits; Converts to format <mark>(xxx) xxx-xxxx</mark></td>
 		</tr>
 		<tr>
-			<td><code>date</code></td>
-			<td>Converts to format <mark>m/d/y</mark></td>
-		</tr>
-		<tr>
-			<td><code>blank_is_zero</code></td>
-			<td>Converts to 0 if value is empty</td>
+			<td><code>sliceIt</code></td>
+			<td>[Proto] E.fistD2H$sliceIt= (field, val) -> expr= field.d2h_expr; (String val).slice expr[ 0], expr[ 1]</td>
 		</tr>
 	</tbody>
 </table>
@@ -243,12 +231,16 @@
 	<tbody>
 		<tr>
 			<td rowspan="2" class="col-md-1"><mark>h2d</mark></td>
-			<td class="col-md-2"><code>phone</code></td>
-			<td class="col-md-9">Removes non-digits</td>
 		</tr>
 		<tr>
-			<td><code>zero_is_blank</code></td>
-			<td>Converts to empty string if value is blank</td>
+			<td class="col-md-2"><code>zero</code></td>
+			<td class="col-md-9">[Proto] E.fistH2D$zero= (field,val) -> val ? 0
+			</td>
+		</tr>
+		<tr>
+			<td><code>upper</code></td>
+			<td>[Proto] E.fistH2D$upper= (field,val) -> (String val).toUpperCase()
+			</td>
 		</tr>
 	</tbody>
 </table>

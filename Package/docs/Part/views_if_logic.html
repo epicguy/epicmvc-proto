@@ -1,70 +1,59 @@
 <h3>Conditional Logic Using IF Statements</h3>
 <p>
-	<code>&lt;epic:if&gt;</code>
+	<code>&lt;e-if&gt;</code>
 	tags are used to surround a set of markup/content lines so that they may only be included on certain conditions. Frequently the conditions are buried in some complex logic, and this causes a few issues. One issue is that the various conditions being checked are spread throughout the HTML. EpicMvc allows you to collect all this logic at the top of a file, and supply names for them, to be used by name later in the file. This way you also only need to modify the condition in one place for it to be used elsewhere. Also, you can refer to the same name more than once, which cuts down on complexity, and lets the computer calculate the result only one time, for use multiple times in the same http request.
 </p>
 <p>
-	There are five tags dealing with different types of logical situations:
-	<code>&lt;epic:if&gt;</code>
+	There are the tags dealing with different types of logical situations:
+	<code>&lt;e-if&gt;</code>
 	,
-	<code>&lt;epic:if_any&gt;</code>
+	<code>&lt;e-if_true&gt;</code>
 	,
-	<code>&lt;epic:if_all&gt;</code>
-	,
-	<code>&lt;epic:if_true&gt;</code>
-	,
-	<code>&lt;epic:if_false&gt;</code>
+	<code>&lt;e-if_false&gt;</code>
 </p>
-<p>Typically, a comparison has two operands. If you want to know if a variable is equal to a certain value, then you have (a) a left side, (b) an operator, and (c) a right side: left='variable' op='eq' 'right='string value'.
+<p>Typically, a comparison has two operands. If you want to know if a variable is equal to a certain value, then you have (a) a left side, (b) an operator, and (c) a right side: val='left-side' eq='right-side'.
 </p>
 <p>
 In EpicMvc this is done as follows:
 </p>
 <pre>
-&lt;epic:if left="&amp;Items/quantity;" op="eq" right="1"&gt;
+&lt;e-if val="&amp;Items/quantity;" eq="1"&gt;
 	&lt;div&gt;This quantity is 1!&lt;/div&gt; # This HTML would be output
 &lt;/if&gt;</pre>
 <p>
-	Suppose you need to know if the quantity is both &gt;1 and &lt;5? You might be interested to know that the tag
-	<code>&lt;epic:if&gt;</code>
-	is really a synonym for
-	<code>&lt;epic:if_all&gt;</code>
-	. There is a corresponding
-	<code>&lt;epic:if_any&gt;</code>
-	.
-</p>
-<p>
-	Therefore, to code for &gt;1 <u>and</u> &lt;5, &nbsp;you would do this:
+	Suppose you need to know if the quantity is neither 1 nor 5? You need two nested tags.
+	Therefore, to code for not-equal to 1 <u>and</u> not-equal to 5, &nbsp;you would do this:
 </p>
 <pre>
-&lt;epic:if_all left="&amp;Items/quantity;" right="1" op="gt" right="5" op="lt"&gt;
-	&lt;div&gt;This quantity is between 2 and 5!&lt;/div&gt; # This HTML would be output
-&lt;/epic:if_all&gt;
-</pre>
+&lt;e-if val="&amp;Items/quantity;" ne="1"&gt; &lt;e-if val="&amp;Items/quantity;" ne="5"&gt;
+	&lt;div&gt;This quantity is neither 1 nor 5!&lt;/div&gt; # This HTML would be output
+&lt;/if&gt; &lt;/if&gt;</pre>
+<p>
+</p>
 <p>Many times, one wishes to do one thing when true, and another when the 'if' is false (much like the if-then-else type logic.) The best way to effect this, is to create a label for the operation, and then use the label in an if_true and if_false fashion, like this:
 </p>
 <pre>
-&lt;epic:if_all name="one_to_five" left="&amp;Items/quantity;" right="1" op="ge" right="5" op="le" /&gt;
+&lt;e-if name="one_or_five" val="&amp;Items/quantity;" in_list="1,5" /&gt;
 </pre>
 <p>
-Now, you can use the 'name' of 'one_to_five' in these two tags:
+Now, you can use the 'name' of 'one_or_five' in these two tags:
 </p>
 <pre>
-&lt;epic:if_true name="one_to_five"&gt;
-	&lt;p>There are one to five items here&lt;/p>
-&lt;/epic:if_true&gt;
+&lt;e-if_true name="one_or_five"&gt;
+	&lt;p>There are one or five items here&lt;/p>
+&lt;/e-if_true&gt;
 
-&lt;epic:if_false name="one_to_five"&gt;
-	&lt;p>There are not one-to-five items here.&lt;/p>
-&lt;/epic:if_false&gt;
+&lt;e-if_false name="one_or_five"&gt;
+	&lt;p>There are not one-or-five items here.&lt;/p>
+&lt;/e-if_false&gt;
 </pre>
-<p>The operators that you can use are as follows:</p>
+<p>The comparisons that you can perform in conjunction with 'val="left-side"' operator (for two value type operations) are as follows:</p>
 <div>
 	<table class="table table-striped">
 		<tbody>
 			<tr>
 				<td class="col-md-2" valign="top" style="text-align: center;">
-					<span style="font-weight: bold;">Operator</span>
+					<span style="font-weight: bold;">Comparison</span>
 					<br>
 				</td>
 				<td class="col-md-10" valign="top">
@@ -85,20 +74,34 @@ Now, you can use the 'name' of 'one_to_five' in these two tags:
 				<td>greater than</td>
 			</tr>
 			<tr>
-				<td style="text-align: center;">ge</td>
-				<td>greater than or equal to</td>
+				<td style="text-align: center;">in_list</td>
+				<td>(as comma separated values) is the left side equal to any one of these values?</td>
 			</tr>
 			<tr>
-				<td style="text-align: center;">lt</td>
-				<td>less than</td>
+				<td style="text-align: center;">not_in_list</td>
+				<td>(as comma separated values) is the left side not equal to any of these values?</td>
 			</tr>
+		</tbody>
+	</table>
+</div>
+
+<p>The operators that you can use instead of 'val=""' (for single value operations) are as follows:</p>
+<div>
+	<table class="table table-striped">
+		<tbody>
 			<tr>
-				<td style="text-align: center;">le</td>
-				<td>less than or equal to</td>
+				<td class="col-md-2" valign="top" style="text-align: center;">
+					<span style="font-weight: bold;">Operator</span>
+					<br>
+				</td>
+				<td class="col-md-10" valign="top">
+					<span style="font-weight: bold;">Meaning</span>
+					<br>
+				</td>
 			</tr>
 			<tr>
 				<td style="text-align: center;">set</td>
-				<td>is this variable set with a non-empty value?</td>
+				<td>is this variable set with a non-truthy value?</td>
 			</tr>
 			<tr>
 				<td style="text-align: center;">not_set</td>
@@ -106,11 +109,11 @@ Now, you can use the 'name' of 'one_to_five' in these two tags:
 			</tr>
 			<tr>
 				<td style="text-align: center;">table_is_empty</td>
-				<td>does this table have no rows?</td>
+				<td>(Using "Model/Table" without the ampersand) does this table have no rows?</td>
 			</tr>
 			<tr>
 				<td style="text-align: center;">table_is_not_empty</td>
-				<td>does this table have at least one row?</td>
+				<td>(Using "Model/Table" without the ampersand) does this table have at least one row?</td>
 			</tr>
 		</tbody>
 	</table>

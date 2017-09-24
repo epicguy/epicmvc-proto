@@ -1,16 +1,14 @@
-<h3>Other Tags</h3>
-<p>The following additional tags are available:</p>
+<h3>Summay of custom elements</h3>
+<p>The following custom elements are available:</p>
 <pre>
-&lt;epic:defer&gt; 
-	# put your javascript in here. You can include EpicMvc tags (such as &lt;epic:foreach&gt;) and variable references.
-	$('body').scrollspy({ target: '.nav' });
-&lt;/epic:defer&gt;
+&lt;e-page /&gt;
+&lt;e-part part="PART_NAME" /&gt;
 
-&lt;epic:comment&gt; 
-	# Comments normally are stripped before sending to the customer. Use this tag to send the text between the tags. 
-&lt;/epic:comment&gt;
+&lt;e-if name="IF_NAME" set="VALUE_TO_CHECK"&gt;
+&lt;e-if_true  name=="PREVIOUS_IF_NAME"&gt;
+&lt;e-if_false name=="PREVIOUS_IF_NAME"&gt;
 
-&lt;epic:define name="cool"&gt;Wow, &nbsp;you just created a new epic tag called 'cool'. Use it anywhere you use other tags.&lt;/epic:define&gt;
+&lt;e-foreach table="MODEL/TABLE"&gt;
 
-&lt;epic:tag name="cool"/&gt;
+&lt;e-fist fist="FIST_NAME" part="PART_NAME" via="Field" /&gt;
 </pre>

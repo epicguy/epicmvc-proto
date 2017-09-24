@@ -8,13 +8,16 @@ The map for this issue in the <mark>issues.coffee</mark> file might be: "Sorry <
 </p>
 
 <p>
-Issues can also be specialized by application, such that the same 'OUT_OF_STOCK' token can have its own text, when it occurs while placing an item in a wish-list vs. putting the item in the cart - or when the item goes out of stock after the user is in the checkout process.
+Issues can also be specialized by application, such that the same 'OUT_OF_STOCK' token can have its own text, when it occurs while placing an item in a wish-list vs. putting the item in the cart - or when the item goes out of stock after the user is in the checkout process. Issues are placed into the 'map' using the Model-name and the action-name. If the model+action is found, it is used, otherwise if model+default, then default+action, finally default+default is looked at - in that order.
 </p>
-<p>Issues and Messages are organized in a filed named issues.coffee</p>
+<p>Issues and Messages are typically organized in a file named issues.coffee</p>
 
 <legend>issues.coffee <span style="font-size: 11px; font-weight: normal;" class="label label-primary">coffeescript</span></legend>
 <pre class="coffeescript">
-window.EpicMvc.issues$app=
+E.issues$app=
+	WishList: # The name of the Model
+		place_in_list: # The name of the Model's action
+			[ /OUT_OF_STOCK/, 'Sorry %1% this item is not available currently.']
 	default:
 		default: [
 
@@ -36,3 +39,48 @@ window.EpicMvc.issues$app=
 			[ /.*/, 'Unknown error (Error: 900).']
 		]
 </pre>
+
+<p>Messages are handled the same way as 'Issues'. They occur separatly so that the end user can see them as either a problem where something is wrong or has failed (Issues) vs. something was completed successfully (a positive response) 'Messages'</p>
+
+<p>The resulting issue or message is placed into the Base-package's "App" model under the table called 'Issue' or 'Message'. To show them in the view, you may wish to use something like this html-part, and place it in your layouts or in each page, or a frame. (see Proto/Part/issues.html)</p>
+
+<pre>
+&lt;style>
+.alert {
+  text-align: left;
+  padding: 10px 30px 8px 10px;
+  width: 40%;
+  border-width: 5px;
+  font-weight: bold;
+  box-shadow: 0px 4px 8px #999;
+  position: absolute;
+  z-index: 99999;
+  margin-top: -1px;
+}
+&lt;/style>
+
+&lt;div>
+  &lt;e-if table_is_not_empty="App/Message">
+    &lt;div class="alert alert-success alert-dismissable fade in">
+      &lt;button class="close" type="button" e-click="app_clear">
+        &lt;i class="glyphicon glyphicon-remove">&lt;/i>
+      &lt;/button>
+      &lt;e-foreach table="App/Message">
+        &lt;p title="&Message/title;">&Message/issue;&lt;/p>
+      &lt;/e-foreach>
+    &lt;/div>
+  &lt;/e-if>
+
+  &lt;e-if table_is_not_empty="App/Issue">
+    &lt;div class="alert alert-danger alert-dismissable fade in">
+      &lt;button type="button" class="close" e-click="app_clear">
+        &lt;i class="glyphicon glyphicon-remove">&lt;/i>
+      &lt;/button>
+      &lt;e-foreach table="App/Issue">
+        &lt;p title="&Issue/title;">&Issue/issue;&lt;/p>
+      &lt;/e-foreach>
+    &lt;/div>
+  &lt;/e-if>
+&lt;/div>
+</pre>
+<p>... and in your app.coffee, map the 'app_clear' click-action-lable like so: ACTIONS: app_clear: do: 'App.clear'</p>

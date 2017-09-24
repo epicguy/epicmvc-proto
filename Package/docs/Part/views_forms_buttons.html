@@ -1,64 +1,62 @@
-<h3>Forms, Form Fields, and Buttons</h3>
+<h3>Form Fields and collections of fields (or Field-list called a Fist)</h3>
 <p>
-	Forms are created using a standard <code>&lt;form&gt;</code> tag. The HTML for Form Fields and thier attributes are created using the tag: <code>&lt;epic:form_part form="FormName"&gt;</code>. By default, EpicMvc will attempt to draw each field defined for the form using a generic HTML part that is included with EpicMvc.
+	HTML5 no longer requires the <code>&lt;form&gt;</code> tag, and is not used in EpicMvc. A quick HTML tag to display a collection of Fields and thier attributes is the tag: <code>&lt;e-fist fist="FistName"&gt;</code>. By default, EpicMvc will attempt to draw each field defined for the Fist using the part name 'fist_default' (a generic HTML part that is included with EpicMvc is in the Proto package: Proto/Part/fist_default.html.
 </p>
 <p>
-	Within a form, the clickable buttons are created by using the tag <code>&lt;epic:form_action action="my_action"&gt;</code>, or via data attributes on a valid HTML element using the syntax: <code>data-action="click:my_action:true"</code>.
+	These fields, when properly built as fist_default.html does, are 2-way bound to the Base Model called 'Fist' which implements all of the validation and filtering. When a clickable action occurs, the Controller can ask for this Fist to be validated, and pass those fields to a Model.action.
 </p>
-<p>Assuming you have created a form called 'Login' with any number of fields, and wish to create a button ("Login") the HTML might look like this:</p>
+<p>Assuming you have created a fist called 'Login' with any number of fields, and wish to create a button ("Login") the HTML might look like this:</p>
 <blockquote>
-<h5>login.page.html</h5>
+<h5>Page/login.html</h5>
 <pre>
-&lt;form&gt;
 	&lt;div class="container"&gt;
-		&lt;epic:form_part form="Login"/&gt;
+		&lt;e-fist fist="Login"/&gt;
 	&lt;/div&gt;
-	&lt;epic:form_action action="login" 	value="Login" class="btn btn-primary" /&gt; &lt;!-- via Tag --&gt;
-	&lt;button data-action="click:login:true" value="Login" class="btn btn-primary" /&gt; &lt;!-- via data attributes --&gt;
-&lt;/form&gt;
+	&lt;button e-click="login" value="Login" class="btn btn-primary" /&gt;
+&lt;/fist&gt;
 </pre>
 </blockquote>
 
-<p><b>Notes:</b> &lt;form&gt; method will default to POST.</p>
+<p>To create a fist and its fields or edit attributes of those fields, see the topic: <a class="link" data-action="click:go_views_fists" href="#forms_fists">Creating Forms and Editing FISTs</a>.</p>
 
-<p>To create a form and form fields or edit attributes of those fields, see the topic: <a class="link" data-action="click:go_views_fists" href="#forms_fists">Creating Forms and Editing FISTs</a>.</p>
-
-<h4>Custom Form HTML</h4>
+<h4>Custom HTML</h4>
 <p>
-	Custom HTML for a Form can be used by specifying the HTML View Part within the attribute: <code>part=""</code> on the <code>&lt;epic:form_part/&gt;</code> tag. When using a custom View Part to display a Form, EpicMvc will use the "Tag" Model to populate the Field information. The "Tag" Model exposes 'Control' and 'Field' tables that can be looped on to display every Control or Field that is defined for that Form.
+	Custom HTML for a Fist can be used by specifying the HTML View Part within the attribute: <code>part=""</code> on the <code>&lt;e-fist/&gt;</code> tag or the <mark>part:</mark> attribute on the FIST definition. When using a custom View Part to display a Fist, EpicMvc will use the "View" Model to populate the Field information. The "View" Model exposes 'Control' and 'Field' tables that can be looped on to display every Control or Field that is defined for that Form. The default is to expose 'Control' but can be changed with <code>via="Field"</code> or <mark>via:</mark>. Control will invoke your 'part' for each field in the order listed in the FIST definition, whereas Field will call the part once and each field is accessable by name to allow manual placement with any other HTML in any place desired.
 </p>
 <p>
-	Using a custom View Part to display the Form, the above example could be written as follows:
+	Using a custom View Part to display the Fist, the above example could be written as follows:
 </p>
 
 <h4>Example</h4>
 <blockquote>
-<h5>login.page.html</h5>
+<h5>Page/login.html</h5>
 <pre>
-&lt;form&gt;
-	&lt;epic:form_part form="Login" part="fist_login"/&gt; &lt;!-- uses the part called fist_login.part.html --&gt;
-	&lt;epic:form_action action="login" value="Login" class="btn btn-primary" /&gt;
-&lt;/form&gt;
+	&lt;e-fist fist="Login" part="fist_login" via="Field" /&gt; &lt;!-- uses Part/fist_login.html --&gt;
+	&lt;e-form_action action="login" value="Login" class="btn btn-primary" /&gt;
 </pre>
-<h5>fist_login.part.html</h5>
+<h5>Part/fist_login.html</h5>
 <pre>
-&lt;epic:foreach table="Tag/Field">
 	&lt;div>
-		&lt;epic:foreach table="Field/UserName">
-			&lt;input type="&amp;UserName/type;"
+		&lt;e-foreach table="Field/UserName">
+			&lt;input
+				e-event="Fist:&UserName/fistNm;:&UserName/fieldNm;:keyup-focus-blur-change"
+				type="&amp;UserName/type;"
 				name="&amp;UserName/name;"
 				value="&amp;UserName/value;"
+				?required="&UserName/req#?%;
 				placeholder="&amp;UserName/label;">
-		&lt;/epic:foreach>
+		&lt;/e-foreach>
 	&lt;/div>
 	&lt;div>
-		&lt;epic:foreach table="Field/Password">
-			&lt;input type="&amp;Password/type;"
+		&lt;e-foreach table="Field/Password">
+			&lt;input
+				e-event="Fist:&UserName/fistNm;:&UserName/fieldNm;:keyup-focus-blur-change"
+				type="&amp;Password/type;"
 				name="&amp;Password/name;"
 				value="&amp;Password/value;"
+				?required="&UserName/req#?%;
 				placeholder="&amp;Password/label;">
-		&lt;/epic:foreach>
+		&lt;/e-foreach>
 	&lt;/div>
-&lt;/epic:foreach>
 </pre>
 </blockquote>
