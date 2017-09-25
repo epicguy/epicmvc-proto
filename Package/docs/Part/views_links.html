@@ -45,10 +45,10 @@ ACTIONS:
 </p>
 <p>Additionally, EpicMvc has a lighter weight processing loop for something it also calls <mark>event</mark> (vs. an 'action') that can be invoked as 'event' for the event-type.
 It will avoid the step of doing the DOM diff since it rarely will change the view state.
-So, for example: &lt;div data-e-action="event:activity:section:a:any" would invoke the event function on any of the above listed events, when inside that <code>&lt;div></code> container.
+So, for example: <code>&lt;div data-e-action="event:activity:section:a:any"</code> would invoke the event function on any of the above listed events, when inside that <code>&lt;div></code> container.
 </p>
 <p>The function called is set in the Controller OPTIONS (or passed as second param to E.run or via E.opt function) using the <mark>event:</mark> hash. The signature for this function is: <code>event( name, type, group, item, params)</code> which partly map to the string passed in your <mark>data-e-action</mark> attribute: <code>&lt;li data-e-action="event:NAME:GROUP:ITEM:(INTERESTING)"></code> where '(interesting)' is either 'all'or a dash separated list of event-types you are interested in
-(for example "event:Fist:Login:Password:blur-focus"). The 'params' are any data-e-(name)="value" attributes, along with additional values that might exist based on the element itself (for example 'Input' elements might include a 'target.value', '_file' for the target.files value, and these values when they exist in the event object: 'touches','changedTouches','targetTouches'.
+(for example <code>data-e-action="event:Fist:Login:Password:blur-focus"</code>). The 'params' are any data-e-(name)="value" attributes, along with additional values that might exist based on the element itself (for example 'Input' elements might include a 'target.value', '_file' for the target.files value, and these values when they exist in the event object: 'touches','changedTouches','targetTouches'.
 </p>
 <p>A deprecated way to pass paramaters to events or actions is the <mark>data-params</mark> attribute, which should contain JSON encoded hash of values. Example: <code>data-params='{"id":"&amp;Player/id;"}'</code>
 </p>
@@ -85,7 +85,7 @@ after: &lt;div class="&Tab/Modal/A1#?in?hide;">
 before: &lt;li e-modal="A1">
 after:  &lt;li data-e-action="event:Tab:Modal:A1:click">
 </pre>
-<p>Mitril allows you to manage your own containers w/o the DOM difference engine getting in the way or getting confused. This is done with a <code>data-ex-(name-p1-p2)="value"</code> attribute-value. You place a function into the EpicMvc namespace as E.ex$name, and it is called via a proxy from Mithril implemented in the Base's View model as: E.ex$name element, isInit, context, p1, p2, value (see Mithril for explaination of those first three params.
+<p>Mitril allows you to manage your own containers w/o the DOM difference engine getting in the way or getting confused. This is done with a <code>data-ex-(name)-(p1)-(p2)="value"</code> attribute-value. (p1 and p2 are optional and are 'undefined' when not specified.) You place a function into the EpicMvc namespace as <code>E.ex$name</code>, and it is called via a proxy from Mithril implemented in the Base's View model as: <code>E.ex$name( element, isInit, context, p1, p2, value</code> (see Mithril for explaination of those first three params.
 </p>
 <pre>
 # ex-USER-DEFINED="anything"

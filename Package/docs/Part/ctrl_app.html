@@ -9,15 +9,15 @@ A minimal <mark>app.coffee</mark> file will have the following structure and ins
 
 <pre>
 E.app$myPkg=
-	SETTINGS: go: 'starter_flow//', layout: 'default_layout'
-	MODELS:
-		MyModel: class: 'MyModel', inst: 'mM', fists: [ 'login']
-	FLOWS:
-		starter_flow:
-			start: "starter_track"
-			TRACKS:
-				starter_track:
-					start: "starter_step"
-					STEPS:
-						starter_step: page: "my_cool_page"
+   SETTINGS: go: 'starter_flow//', layout: 'default_layout'
+   MODELS:
+      MyModel: class: 'MyModel', inst: 'mM', fists: [ 'login']
+   FLOWS:
+      starter_flow:
+         start: "starter_track"
+         TRACKS:
+            starter_track:
+               start: "starter_step"
+               STEPS:
+                  starter_step: page: "my_cool_page"
 </pre>

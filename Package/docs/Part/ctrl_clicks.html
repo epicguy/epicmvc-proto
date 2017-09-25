@@ -64,7 +64,7 @@ E.app$fantasy=
 
 <h4>Modifing Pageflow</h4>
 <p>
-	One of the most common uses of 'Actions' is to modify the pageflow of the application. For example, clicking on the main banner logo at the top of the application could take you the main landing page of the application. This is accomplished with the use of the <code>go: 'flow/track/step'</code> syntax attached to an ACTION.
+	One of the most common uses of 'Actions' is to modify the pageflow of the application. For example, clicking on the main banner logo at the top of the application could take you to the main landing page of the application. This is accomplished with the use of the <code>go: 'flow/track/step'</code> syntax attached to an ACTION.
 </p>
 <pre>
 	ACTIONS:
@@ -93,16 +93,16 @@ E.app$fantasy=
 
 <h5>Example</h5>
 <pre>
-	...
-	STEPS:
-		draft_room:  page: 'draft_room', ACTIONS:
-			select_player:		do: 'Draft.choose_player',	pass: 'id'
-			preview_player: 	do: 'Draft.choose_player',	pass: 'id', set: {preview:'true'}
-			draft_player:		do: 'Draft.',				pass: 'id'		# Equivelant to 'Draft.draft_player'
-			chat: 				do: 'Draft.send_msg',		fist: 'Chat'
+   ...
+   STEPS:
+      draft_room:  page: 'draft_room', ACTIONS:
+         draft_player:    do: 'Draft.',              pass: 'id'         # Equivelant to 'Draft.draft_player'
+         select_player:   do: 'Draft.choose_player', pass: 'player:id'  # Copy HTML param 'player' to p.id for the Model
+         preview_player:  do: 'Draft.choose_player', pass: 'id', set: {preview:'true'}   # Controller sets p.preview for Model
+         chat:            do: 'Draft.send_msg',      fist: 'Chat'       # Validate and pass fist (as p.Chat)
 </pre>
 <p>
-	The <code>do:</code> command will pass parameters to the 'Model' by using any of the attributes: <code>pass:</code>,<code>fist:</code> and <code>set:</code> that are attached to an 'ACTION'.
+	The <code>do:</code> command will pass parameters to the 'Model' by using any of the attributes: <code>pass:</code>, <code>fist:</code> and <code>set:</code> that are attached to an 'ACTION'.
 </p>
 
 <h5>Param Options</h5>
@@ -110,7 +110,9 @@ E.app$fantasy=
 	<tr>
 		<th> Command</th><th>Params</th><th>Description</th>
 	</tr>
-	<tr> <td><code>pass:	</code></td> <td> 'field1,field2,...'	</td><td>Comma separated list of field names coming from the View</td> </tr>
+	<tr> <td><code>pass:	</code></td> <td> 'field1,from:to,...'	</td><td>Comma separated list of field names coming from the View.
+A colon will copy a value from one hash to another (p.from copied to p.to). Also, the Dev package will console.warn if a field is missing from HTML.
+	</td> </tr>
 	<tr> <td><code>fist:	</code></td> <td> 'FistName'			</td><td>The Name of the Fist to validate and pass</td> </tr>
 	<tr> <td><code>set:		</code></td> <td> {p1:'val1',p2:'val2'} </td><td>Custom params</td> </tr>
 </table>
@@ -118,59 +120,59 @@ E.app$fantasy=
 <h4>Complete Example</h4>
 <pre>
 E.app$fantasy=
-	SETTINGS:
-		go:		'logged_out//'
-		layout:	'logged_out'
-	MODELS:
-		League: class: 'League', 	inst: 'tlcLeague', 	fists: 'EditPlayer,AddPlayer'
-		Draft:  class: 'DraftRoom',	inst: 'tlcDraft', 	fists: 'Chat'
+   SETTINGS:
+      go:      'logged_out//'
+      layout:  'logged_out'
+   MODELS:
+      League: class: 'League',    inst: 'tlcLeague',   fists: 'EditPlayer,AddPlayer'
+      Draft:  class: 'DraftRoom', inst: 'tlcDraft',    fists: 'Chat'
 
-	ACTIONS:											# Global Actions
-		banner_clicked:		go: '//league_home'			# Switch Step in current Flow/Track
-		goto_league_home: 	go: '//league_home'			# Switch Step in current Flow/Track
-		goto_standings:		go: '//standings'			# Switch Step in current Flow/Track
-		goto_free_agents:	go: '//free_agents'			# Switch Step in current Flow/Track
-	FLOWS:
-		logged_out:
-			start: 'view_only'
-			TRACKS:
-				view_only:
-					start: 'league_home'
-					ACTIONS:							# Track specific Actions
-						goto_login: go: '//login'		# Switch Step in current Flow/Track
-					STEPS:
-						league_home:	page: 'league_home'
-						standings:		page: 'standings'
-						free_agents:	page: 'free_agents'
-						login:
-							page: 'login'
-							ACTIONS:						# Step Specific Actions
-								submit: go: 'logged_in//'	# Switch Flow
-		logged_in:
-			start: 'main'
-			layout: 'logged_in'
-			ACTIONS:									# Flow specific Actions
-				logout: go: 'logged_out//'				# Switch Flow
-			TRACKS:
-				main:
-					start: 'roster'
-					ACTIONS:							# Track specific Actions
-						enter_draft: go: '/draft/'		# Switch Track in current Flow
-						goto_roster: go: '//roster'		# Switch Step in current Flow/Track
-					STEPS:
-						roster: 	 page: 'roster'
-						league_home: page: 'league_home'
-						standings:	 page: 'standings'
-						free_agents: page: 'free_agents'
-				draft:
-					layout: 'draft'
-					start: 'draft_room'
-					ACTIONS:							# Track specific Actions
-						leave_draft: go: '/main/'		# Switch Track in current Flow
-					STEPS:
-						draft_room:  page: 'draft_room', ACTIONS:
-							select_player:	do: 'Draft.choose_player', pass: 'id'
-							preview_player:	do: 'Draft.choose_player', pass: 'id',	set: {preview:'true'}
-							draft_player:	do: 'Draft.',              pass: 'id'
-							chat:			do: 'Draft.send_msg',					fist: 'Chat'
+   ACTIONS:                                         # Global Actions
+      banner_clicked:     go: '//league_home'       # Switch Step in current Flow/Track
+      goto_league_home:   go: '//league_home'       # Switch Step in current Flow/Track
+      goto_standings:     go: '//standings'         # Switch Step in current Flow/Track
+      goto_free_agents:   go: '//free_agents'       # Switch Step in current Flow/Track
+   FLOWS:
+      logged_out:
+         start: 'view_only'
+         TRACKS:
+            view_only:
+               start: 'league_home'
+               ACTIONS:                             # Track specific Actions
+                  goto_login: go: '//login'         # Switch Step in current Flow/Track
+               STEPS:
+                  league_home:   page: 'league_home'
+                  standings:     page: 'standings'
+                  free_agents:   page: 'free_agents'
+                  login:
+                     page: 'login'
+                     ACTIONS:                       # Step Specific Actions
+                        submit: go: 'logged_in//'   # Switch Flow
+      logged_in:
+         start: 'main'
+         layout: 'logged_in'
+         ACTIONS:                                   # Flow specific Actions
+            logout: go: 'logged_out//'              # Switch Flow
+         TRACKS:
+            main:
+               start: 'roster'
+               ACTIONS:                             # Track specific Actions
+                  enter_draft: go: '/draft/'        # Switch Track in current Flow
+                  goto_roster: go: '//roster'       # Switch Step in current Flow/Track
+               STEPS:
+                  roster:      page: 'roster'
+                  league_home: page: 'league_home'
+                  standings:   page: 'standings'
+                  free_agents: page: 'free_agents'
+            draft:
+               layout: 'draft'
+               start: 'draft_room'
+               ACTIONS:                             # Track specific Actions
+                  leave_draft: go: '/main/'         # Switch Track in current Flow
+               STEPS:
+                  draft_room:  page: 'draft_room', ACTIONS:
+                     select_player:  do: 'Draft.choose_player', pass: 'id'
+                     preview_player: do: 'Draft.choose_player', pass: 'id', set: {preview:'true'}
+                     draft_player:   do: 'Draft.',              pass: 'id'
+                     chat:           do: 'Draft.send_msg',      fist: 'Chat'
 </pre>

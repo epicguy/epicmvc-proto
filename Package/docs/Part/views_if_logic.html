@@ -4,14 +4,14 @@
 	tags are used to surround a set of markup/content lines so that they may only be included on certain conditions. Frequently the conditions are buried in some complex logic, and this causes a few issues. One issue is that the various conditions being checked are spread throughout the HTML. EpicMvc allows you to collect all this logic at the top of a file, and supply names for them, to be used by name later in the file. This way you also only need to modify the condition in one place for it to be used elsewhere. Also, you can refer to the same name more than once, which cuts down on complexity, and lets the computer calculate the result only one time, for use multiple times in the same http request.
 </p>
 <p>
-	There are the tags dealing with different types of logical situations:
+	These are the elements dealing with different types of logical situations:
 	<code>&lt;e-if&gt;</code>
 	,
 	<code>&lt;e-if_true&gt;</code>
 	,
 	<code>&lt;e-if_false&gt;</code>
 </p>
-<p>Typically, a comparison has two operands. If you want to know if a variable is equal to a certain value, then you have (a) a left side, (b) an operator, and (c) a right side: val='left-side' eq='right-side'.
+<p>Typically, a comparison has two operands. If you want to know if a variable is equal to a certain value, then you have (a) a left side, (b) an operator, and (c) a right side: val='left-side' operator='right-side'.
 </p>
 <p>
 In EpicMvc this is done as follows:

@@ -6,28 +6,29 @@
 <h4>Example</h4>
 <pre class="coffeescript">
 E.app$docs=
-	ACTION:
-		...
-	MODELS:
-		...
-	MACROS:
-		start: do: 'User.check', next: [
-			{ when:{ valid: 'no'},	go: 'logged_out//' }
-			{ when:{ valid: 'yes'}, go: 'logged_in//' }
-		]
-		go_billing_select: do: 'Billing.select_plan_default', go: 'myprofile/bill/select'
-		close_modal: do: 'Pageflow.restore_path'
-	FLOWS:
-		...
-		TRACKS:
-			...
-			STEPS:
-				...
-				privacy: page: 'privacy_policy', ACTIONS:
-					close_modal:	do: 'close_modal'
-					cancel:			do: 'close_modal'
-				terms: page: 'terms_of_use', ACTIONS:
-					close_modal:	do: 'close_modal'
-					cancel:			do: 'close_modal'
-				...
+   ACTION:
+      ...
+   MODELS:
+      ...
+   <mark>MACROS:</mark>
+      start: do: 'User.check', next: [
+         { when:{ valid: 'no'},   go: 'logged_out//' }
+         { when:{ valid: 'yes'},  go: 'logged_in//' }
+      ]
+      go_billing_select: do: 'Billing.select_plan_default', go: 'myprofile/bill/select'
+      <mark>close_modal:</mark>      do: 'Pageflow.restore_path'
+   FLOWS:
+      ...
+      TRACKS:
+         ...
+         STEPS:
+            ...
+            privacy: page: 'privacy_policy', ACTIONS:
+               close_modal:   do: <mark>'close_modal'</mark>
+               cancel:        do: 'close_modal'
+
+            terms: page: 'terms_of_use', ACTIONS:
+               close_modal:   do: 'close_modal'
+               cancel:        do: 'close_modal'
+            ...
 </pre>

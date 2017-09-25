@@ -19,7 +19,7 @@ A Model is made available by defining it as a key under MODELS. This key is the 
 
 <h4>Associate Forms (Fists) to a Model</h4>
 <p>
-Forms (actually a 'list of fields' called a 'fist') are associated with a Model by using the <code>fists:</code> attribute and declaring the names of the Fists in a comma separated string. When a form needs to be posted or populated, the controller will ask the Model associated with the form to do the work.
+Forms (actually a 'list of fields' called a 'fist') are associated with a Model by using the <code>fists:</code> attribute and declaring the names of the Fists in a comma separated string or as an array of strings. When a form needs to be posted or populated, the controller will ask the Model associated with the form to (a) load field values initially or (b) populate dynamic choices such as for a pulldown, if needed.
 </p>
 
 <h4>Creating a Model Alias</h4>

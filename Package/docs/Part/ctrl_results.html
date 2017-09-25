@@ -1,22 +1,22 @@
 <h3>The next: when: flow logic</h3>
 <p>
-	When a 'Model' is called with an action, the 'Controller' might be interested in the result and want to perform additional 'Model' actions or modify the pageflow based on the result. This is accomplished by using the <code>next:[ when: ]</code> attribute when calling a Model. When a 'Model' has completed an 'action', EpicMvc will return a result object back to the 'Controller'. The 'Controller' can then look for specific values attached to this result object to decide what should happen next.
+	When a 'Model' is called with an action, the 'Controller' might be interested in the result and want to perform additional 'Model' actions or modify the pageflow based on the result. This is accomplished by using the <code>next:[ {when: }... ]</code> attribute when calling a Model. When a 'Model' has completed an 'action', EpicMvc will return a result object back to the 'Controller'. The 'Controller' can then look for specific values attached to this result object to decide what should happen next.
 </p>
 <p>
-	The <code>next:</code> attribute is a list of instructions, where each instruction contains the key <code>when:</code> which in turn has a set of key/value pairs defined. The 'Controller' will walk through the array attempting to find a matching instruction for the result object that came back from the 'Model' based on the key/value pairs defined in 'when:' for an instruction. Once an insruction is found to have a match, it will execute the instruction as if it were an 'ACTION'. If <code>when:</code> missing or is defined as an empty object, the 'Controller' will execute that instruction no matter what the result of the Model is.
+	The <code>next:</code> attribute is an array of instructions, where each instruction contains the key <code>when:</code> which in turn has a set of key/value pairs defined. The 'Controller' will walk through the array attempting to find a matching instruction for the result object that came back from the 'Model' based on the key/value pairs defined in 'when:' for an instruction. Once an insruction is found to have a match, it will execute that line as if it were an 'ACTION'. If <code>when:</code> is missing or is defined as an empty object or the string 'default', the 'Controller' will execute that instruction no matter what the result of the Model is when it reaches this line. If it is set to a string value, it is compared to success: or ok: (whichever exists.) Otherwise each hash value must match the corresponding response hash value.
 </p>
 <p>
-	An instruction object can contain <code>go:</code> commands as well as <code>do:</code> commands that contain nested 'next:' arrays. Using this method, the 'Controller' can execute multiple 'ACTIONS' chained together on behalf of the User without the User having to do any work at all.
+	A next: line object can contain <code>go:</code> commands as well as <code>do: fist: clear: set:</code> etc. commands and can contain nested 'next:' arrays. Using this method, the 'Controller' can execute multiple 'ACTIONS' chained together on behalf of the User without the User having to do any work at all. When only one line exists, next: can be just that line object w/o the array, i.e. <code>next: when: true, go: '//main'</code>
 </p>
 <h4>Example</h4>
 <pre>
-	ACTIONS:
-		login: do: 'User.', fist: 'Login', next: [
-			{ when:{success:'SUCCESS'},			go: 'logged_in//' }
-			{ when:{success:'FAIL', is_registered: 'NO'},	go: 'logged_out/sign_up/'}
-			{ when:{success:'FAIL', is_registered: 'YES'},	go: 'logged_out/forgot_password/'}
-		]
-		logout: do: 'User.', next: [			# Could also be... logout: do: 'User.' next: go: 'logged_out//'
-			{ when:{}, go: 'logged_out//' }
-		]
+   ACTIONS:
+      login: do: 'User.', fist: 'Login', next: [
+         { when:{success:'SUCCESS'},                     go: 'logged_in//' }    # Or... when: 'SUCCESS'
+         { when:{success:'FAIL', is_registered: 'NO'},   go: 'logged_out/sign_up/'}
+         { when:{success:'FAIL', is_registered: 'YES'},  go: 'logged_out/forgot_password/'}
+      ]
+      logout: do: 'User.', next: [           # Could also be... logout: do: 'User.' next: go: 'logged_out//'
+         { when:{}, go: 'logged_out//' }
+      ]
 </pre>
