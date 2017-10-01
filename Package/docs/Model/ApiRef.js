@@ -49,8 +49,8 @@
         ],
         Return: [
           {
-            type: 'object',
-            details: 'Hashed by attribute names'
+            type: 'void',
+            details: ''
           }
         ]
       },

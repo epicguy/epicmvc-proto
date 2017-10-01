@@ -20,7 +20,7 @@ ref_data=
 				{ param: 'fist_nm', type: 'string', details: 'Name of the fist which appears in your fist.coffee file'}
 			]
 			Return: [
-				type: 'object', details: 'Hashed by attribute names'
+				type: 'void', details: ''
 			]
 		fistValidate:
 			func_name: 'fistValidate'
