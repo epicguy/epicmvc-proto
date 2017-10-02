@@ -34,14 +34,14 @@
       case 'int':
         value = parseInt(value);
     }
-    _log2("ex$attr: attr_nm=", attr_nm, " cast_to=", cast_to, " value=", value);
+    E.log("ex$attr: attr_nm=", attr_nm, " cast_to=", cast_to, " value=", value);
     el[attr_nm] = value;
   };
 
   E.ex$scroll = function(el, isInit, ctx, val, p1, p2) {
     var direction, f;
     f = 'E.ex$scroll:';
-    _log2(f, {
+    E.log(f, {
       isInit: isInit,
       val: val,
       p1: p1,

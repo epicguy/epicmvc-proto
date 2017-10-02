@@ -1,4 +1,6 @@
 'use strict'
+E= if exports? then require 'E' else (window.E={}) # Everyone does this (without the ={}) to allow nodejs type namespacing for unit testing
+
 # Copyright 2007-2017 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 #
 #
@@ -29,7 +31,7 @@
 # B) CONSDIER HOW TABLE REQUESTS MIGHT BE ASYNC ALSO (MAYBE PARTIAL RENDER, THEN ABORT OR CONSDIER EMPTY UNTIL REQUEST COMPELTE)
 
 
-app= (window, undef) ->
+app= (undef) ->
 	inAction= false
 	counter= 0
 	Model= {} # Namespace for others to populate with class implementations of Models
@@ -49,7 +51,6 @@ app= (window, undef) ->
 		'w1', 'ex1' #%#
 	] #%#
 
-	E= {}
 	E.nextCounter= -> ++counter
 	E.opt= (object) -> merge option, object
 	# //stackoverflow.com/questions/10425287/convert-string-to-camelcase-with-regular-expression
@@ -72,7 +73,7 @@ app= (window, undef) ->
 		func= {}
 		func[ otype]= (dest,source)-> # Dest is an object, source must also be
 			f= 'func:O'
-			#_log2 f+ depth, {dest,source}
+			#E.log f+ depth, {dest,source}
 			return undef if (type_oau source) isnt otype
 			for snm of source
 				ans= dup dest[ snm], source[ snm]
@@ -80,7 +81,7 @@ app= (window, undef) ->
 			undef
 		func[ atype]= (dest,source)-> # Update 'dest' as an array
 			f= 'func:A'
-			#_log2 f+ depth, {dest,source}
+			#E.log f+ depth, {dest,source}
 			return undef if (type_oau source) isnt atype # only copy if same type
 			for s,inx in source
 				ans= dup dest[ inx], s
@@ -88,12 +89,12 @@ app= (window, undef) ->
 			undef
 		func[ utype]= (was,want)-> # Return new value, caller will assign
 			f= 'func:U'
-			#_log2 f+ depth, 'before', {dest,source}
+			#E.log f+ depth, 'before', {dest,source}
 			switch type_oau want
 				when otype then become= {}; func[ otype] become, want
 				when atype then become= []; func[ atype] become, want
 				else become= want # if not undefined, will assign
-			#_log2 f+ depth, 'after', {become}
+			#E.log f+ depth, 'after', {become}
 			become
 		func[ stype]= (was,want) -> # Copy if source isnt o/a/U
 			return want if (type_oau want) isnt utype #TODO of func
@@ -107,15 +108,15 @@ app= (window, undef) ->
 			r
 		for source in sources
 			f= ':merge:source-loop'
-			#_log2 f+ depth, 'before', {dest, source}
+			#E.log f+ depth, 'before', {dest, source}
 			dup dest, source
-			#_log2 f+ depth, 'after', {dest, source}
+			#E.log f+ depth, 'after', {dest, source}
 		return dest
 
 	# Caller indicates a login event, let interested models know
 	E.login= ->
 		f= ':login'
-		_log2 f, oModel
+		E.log f, oModel
 		o.eventLogin?() for k,o of oModel
 
 	# Caller indicates a logout event, let interested models know
@@ -153,7 +154,7 @@ app= (window, undef) ->
 	setModelState= (s) ->
 		f= ':setModelState'
 		modelState= s if s?
-		#_log2 f, s, modelState
+		#E.log f, s, modelState
 		for inst_nm of oModel
 			oModel[ inst_nm].restoreState? modelState[ inst_nm]
 
@@ -223,7 +224,7 @@ app= (window, undef) ->
 	appGetVars= (flow,track,step) ->
 		f= ':appGetVars'
 		vars= merge {}, aFlows[ flow].v, aFlows[ flow].TRACKS[ track].v, aFlows[ flow].TRACKS[ track].STEPS[ step].v
-		#_log2 f, ( "#{k}:#{v}" for own k,v of vars).join ', '
+		#E.log f, ( "#{k}:#{v}" for own k,v of vars).join ', '
 		vars
 
 	appSearchAttr= (attrNm, val)->
@@ -256,14 +257,14 @@ app= (window, undef) ->
 	# Caller has requested processing a action event w/data
 	action= (action_token,data) ->
 		f= ':action:'+action_token
-		_log2 f, data
+		E.log f, data
 		option.c1 inAction # if inAction isnt false #%#
 		inAction= action_token
 		m.startComputation()
 		final= () ->
 			m.endComputation() # Causes a render
 		more= (action_result) ->
-			_log2 f, 'cb:', action_result[ 0], action_result[ 1]
+			E.log f, 'cb:', action_result[ 0], action_result[ 1]
 			E.App().setIssues action_result[ 0]
 			E.App().setMessages action_result[ 1]
 			inAction= false
@@ -282,30 +283,30 @@ app= (window, undef) ->
 
 	_d_doAction= (action_token, data, original_path) ->
 		f= ":_d_doAction(#{action_token})"
-		#_log2 f, data, original_path
+		#E.log f, data, original_path
 		master_issue= new Issue 'App'
 		master_message= new Issue 'App'
 		master_data= merge {}, data
 		action_node= appFindAction original_path, action_token
-		_log2 f, 'got node:', action_node
+		E.log f, 'got node:', action_node
 		# WARNING: "No app. entry for action_token (#{action_token}) on path (#{original_path})"
 		option.ca1 action_token, original_path, action_node #if not action_node? #%#
 		return [master_issue, master_message] if not action_node? # No recognized action
 
 		d_doLeftSide= (action_node)->
-			#_log2 f, 'd_doLeftSide:', {action_node}
+			#E.log f, 'd_doLeftSide:', {action_node}
 			# Process 'fist:' or 'clear:'
 			for what in ['fist','clear'] # TODO CONSIDER HANDLING clear: AS A doRightSide ACTIVITY, SO AFER do: PROCESING
 				continue if what not of action_node
 				option.ca4 action_token, original_path, action_node, what #%#
 				fist= action_node[ what]
 				fist_model= E.fistDef[ fist].event ? 'Fist'
-				#_log2 f, 'd_doLeftSide:', {what, fist, fist_model, master_data}
+				#E.log f, 'd_doLeftSide:', {what, fist, fist_model, master_data}
 				if what is 'clear'
 					E[fist_model]().fistClear fist, master_data.row
 				else
 					E[fist_model]().fistValidate r= {}, fist, master_data.row
-					#_log2 f, 'd_doLeftSide:', {what,r}
+					#E.log f, 'd_doLeftSide:', {what,r}
 					E.merge master_data, r
 					return unless r.fist$success is 'SUCCESS'
 			# Process 'pass:' (just a syntax check)
@@ -333,11 +334,11 @@ app= (window, undef) ->
 				ctx= {p,r,i,m:mg}
 				ans= E[ view_nm] ctx, view_act, master_data # TODO: Process d_cb
 				d_cb= ()->
-					#_log2 f, 'd_doLeftSide: d_cb:', {ctx}
+					#E.log f, 'd_doLeftSide: d_cb:', {ctx}
 					master_data[ nm]= val for nm,val of ctx.r # We just polute the one object
 					master_issue.addObj ctx.i
 					master_message.addObj ctx.m
-				_log2 f, 'd_doLeftSide: after model called:', {view_nm,view_act,master_data,ans,r:ctx.r}
+				E.log f, 'd_doLeftSide: after model called:', {view_nm,view_act,master_data,ans,r:ctx.r}
 				return if ans?.then? then ans.then d_cb else d_cb ans
 
 		d_doRightSide= (action_node)->
@@ -348,7 +349,7 @@ app= (window, undef) ->
 			action_node.next?= []
 			action_node.next= [action_node.next] unless 'A' is type_oau action_node.next
 			for choice in action_node.next
-				#_log2 f+ '-d_doRightSide', 'choice', choice, master_data
+				#E.log f+ '-d_doRightSide', 'choice', choice, master_data
 				(next_node= choice; break) if 'when' not of choice
 				(next_node= choice; break) if choice.when is 'default'
 				(next_node= choice; break) if (typeof choice.when) is 'string' and choice.when is (master_data.success ? master_data.ok)
@@ -357,7 +358,7 @@ app= (window, undef) ->
 					(matches= false; break;) if master_data[k] isnt val
 				(next_node= choice; break) if matches
 			if next_node
-				#_log2 f, 'd_doRightSide:', {next_node}
+				#E.log f, 'd_doRightSide:', {next_node}
 				return d_doActionNode next_node
 			return
 
@@ -406,7 +407,7 @@ app= (window, undef) ->
 		fieldDef, fistDef, issueMap, wistDef
 		oModel, appconfs, aFlows # Just for internal checking / testing #%#
 	}
-	return E
+	return
 
 class Issue
 	constructor: (@t_view, @t_action) -> @issue_list= [] # Instance member
@@ -416,7 +417,7 @@ class Issue
 		issue
 	add: (token, msgs) ->
 		f= ':Issue.add:'+@t_view+':'+@t_action
-		_log2 f, 'params:type/msgs', token, msgs
+		E.log f, 'params:type/msgs', token, msgs
 		switch typeof msgs
 			when 'undefined' then msgs= []
 			when 'string' then msgs= [ msgs ]
@@ -424,7 +425,7 @@ class Issue
 	addObj: (issue_obj) ->
 		f= ':Issue.addObj:'+ @t_view+'#'+@t_action
 		return if typeof issue_obj isnt 'object' or not ('issue_list' of issue_obj)
-		#_log2 f, 'issue_list', issue_obj.issue_list
+		#E.log f, 'issue_list', issue_obj.issue_list
 		for issue in issue_obj.issue_list
 			new_issue= E.merge {}, issue
 			new_issue.t_view?= @t_view
@@ -433,7 +434,7 @@ class Issue
 		return
 	count: -> @issue_list.length
 	asTable: () ->
-		#_log2 'asTable: issue_list,map', @issue_list
+		#E.log 'asTable: issue_list,map', @issue_list
 		final= []
 		for issue in @issue_list
 			final.push
@@ -457,17 +458,17 @@ class Issue
 				map_list.push map.default[t_action]
 			if 'default' of map.default
 				map_list.push map.default.default
-		#_log2 'map:tv,ta,token,more,map_list.length', t_view, t_action, token, more, map_list.length
+		#E.log 'map:tv,ta,token,more,map_list.length', t_view, t_action, token, more, map_list.length
 		for sub_map in map_list
 			for spec in (sub_map or [])
-				#_log2 'map:spec', spec
+				#E.log 'map:spec', spec
 				if token.match spec[0]
 					return @doMap token, spec[1], more, token
 		"(no match)#{t_view}##{t_action}##{token}##{more.join ','}"
 	doMap: (token, pattern,vals) ->
-		#_log2 'doMap', token, pattern, vals
+		#E.log 'doMap', token, pattern, vals
 		new_str= pattern.replace /%([0-9])(?::([0-9]))?%/g, (str,i1,i2,more) ->
-			#_log2 str:str, i1:i1, i2:i2, more:more
+			#E.log str:str, i1:i1, i2:i2, more:more
 			return token if i1 is '0'
 			return if i2 then (vals[i1-1] or vals[i2-1] or '') else (vals[i1-1] or '')
 		new_str
@@ -495,7 +496,7 @@ class ModelJS
 		E.merge {}, st # clone and return
 	invalidateTables: (tbl_nms,not_tbl_names) -> # Use true for all
 		f= ':ModelJS.invalidateTables~'+ @view_nm
-		#_log2 f, tbl_nms, not_tbl_names
+		#E.log f, tbl_nms, not_tbl_names
 		not_tbl_names?= []
 		tbl_nms= (nm for nm of @Table when not (nm in not_tbl_names)) if tbl_nms is true
 		deleted_tbl_nms= []
@@ -510,12 +511,7 @@ class ModelJS
 	fistGetChoices: (fistNm,fieldNm,row) -> E.option.m6 @view_nm, fistNm, fieldNm, row #%#
 	route: (options) ->                     E.option.m7 @view_nm, options #%#
 
-w= if typeof window isnt "undefined" then window else {}
-w.EpicMvc= w.E= new app w
-w.E[ nm]= klass for nm,klass of {Issue, ModelJS}
-# TODO NOTE This was needed, so EpicMvc-One has _log2 available as e.g. app.js's load
-w._log2= ->
-w._log2= Function.prototype.bind.call console.log, console #%#
-
-if typeof module isnt "undefined" and module isnt null then module.exports = w.E #%#
-if typeof define is "function" and define.amd then define () -> w.E #%#
+app()
+E[ nm]= klass for nm,klass of {Issue, ModelJS}
+E.log= ->
+E.log= Function.prototype.bind.call console.log, console #%#

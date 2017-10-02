@@ -51,7 +51,9 @@
             <!-- Check Box -->
             <e-if val="&Control/type#lc;" eq="yesno">
                 <label for="&Control/id;" class="control-label">
-                    <input  type="checkbox"
+                    <input  e-event="Fist:&Control/fistNm;:&Control/fieldNm;:change"
+                            type="checkbox"
+                            ?data-e-row="&Control/row#?%;"
                             name="&Control/name;"
                             id="&Control/id;"
                             value="&Control/yes_val;"

@@ -1,10 +1,11 @@
 'use strict'
 # Copyright 2007-2017 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
-warn= (str,o) -> console.warn "WARNING", str, o ? ''
+cache= {}
+warn= (str,o) -> if str of cache then return else (cache[ str]=true; console.warn "WARNING", str, o ? '')
 err=  (str,o) -> console.error "ERROR", str, o ? ''; throw new Error "ERROR: "+ str
 
-window.EpicMvc.app$Dev=
+E.app$Dev=
 	OPTIONS:
 		warn: warn
 		err: err

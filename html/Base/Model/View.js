@@ -38,7 +38,9 @@
       this.frames.push('X');
       this.did_run = false;
       this.in_run = false;
-      window.oE = this;
+      if (typeof window !== "undefined" && window !== null) {
+        window.oE = this;
+      }
       this.defer_it_cnt = 0;
       this.start = false;
     }
@@ -72,7 +74,7 @@
         this.defer_it_cnt--;
       }
       if (this.defer_it_cnt === 0) {
-        _log2(f, 'END RUN', this.defer_content, new Date().getTime() - this.start);
+        E.log(f, 'END RUN', this.defer_content, new Date().getTime() - this.start);
         this.in_run = false;
         return this.defer_it.resolve([this.modal, this.defer_content]);
       }
@@ -160,7 +162,7 @@
           }
           return [rVal];
         default:
-          return [];
+          return E.option.m3(this.view_nm, nm);
       }
     };
 
@@ -185,7 +187,7 @@
     			attrs.config= (element, isInit, context) =>
     				f= 'Base:M/View..config:'+ view
     				for defer in inside
-    					_log2 f, defer
+    					E.log f, defer
     					@doDefer defer, element, isInit, context
     		if 'dynamic' of attrs # Always render the container, even if content is null
     			tag: attrs.dynamic, attrs: attrs, children: content
@@ -193,7 +195,7 @@
     			return '' unless content
     			if has_root
     				 * TODO WHAT IS GOING ON WITH attrs TO wrap IF CONTENT HAS ATTRS? (part=)
-    				_log2 f, 'has-root-content', {view,attrs,content,defer,has_root}
+    				E.log f, 'has-root-content', {view,attrs,content,defer,has_root}
     				BLOWUP() if 'A' isnt E.type_oau content
     				 * TODO E2 FIGURE OUT WHY I COMMENTED THIS OUT; ALSO, PLAN IS TO USE DATA-EX-* ATTRS PER ELEMENT, NOT <E-DEFER
     				#content[0].attrs.config= attrs.config # Pass the defer logic to the part's div
@@ -202,7 +204,7 @@
     				tag: 'div', attrs: attrs, children: content
     	doDefer: (defer_obj, element, isInit, context) =>
     		if 'A' is E.type_oau defer_obj.defer
-    			_log2 'WARNING', 'Got an array for defer', defer_obj.defer
+    			E.log 'WARNING', 'Got an array for defer', defer_obj.defer
     			return 'WAS-ARRAY'
     		defer_obj.func element, isInit, context, defer_obj.attrs if defer_obj.func
     	T_defer: ( attrs, content) -> # TODO IMPLEMENT DEFER LOGIC ATTRS?
@@ -252,8 +254,6 @@
           } else {
             return false;
           }
-        case 'bytes':
-          return window.bytesToSize(Number(val));
         case 'uriencode':
           return encodeURIComponent(val);
         case 'quo':
@@ -401,14 +401,14 @@
 
       /* JCS:DEFER:DYNAMIC 
       		defer= @D.pop()
-      		#_log2 f, 'defer', view, defer
+      		#E.log f, 'defer', view, defer
       		if can_componentize or not is_part or attrs.dynamic or defer.length
-      			#_log2 f, 'defer YES', view, defer
+      			#E.log f, 'defer YES', view, defer
       			if defer.length and not can_componentize and not attrs.dynamic
-      				_log2 "WARNING: DEFER logic in (#{view}); wrapping DIV tag."
+      				E.log "WARNING: DEFER logic in (#{view}); wrapping DIV tag."
       			result= @wrap view, attrs, content, defer, can_componentize
       		else
-      			#_log2 f, 'defer NO!', view, defer
+      			#E.log f, 'defer NO!', view, defer
       			result= content
       		result
        */
@@ -556,7 +556,6 @@
       limit = 'limit' in attrs ? Number(attrs.limit) - 1 : tbl.length;
       for (count = i = 0, len = tbl.length; i < len; count = ++i) {
         row = tbl[count];
-        row = tbl[count];
         row._ = {
           count: count,
           first: count === 0,
@@ -573,20 +572,20 @@
     };
 
     View$Base.prototype.T_fist = function(attrs, content_f) {
-      var ans, content, f, fist, foreach_attrs, masterAlias, model, part, ref, ref1, ref2, ref3, ref4, ref5, ref6, rh_1, rh_alias, subTable, table, tbl;
+      var ans, content, f, fist, foreach_attrs, masterAlias, model, part, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, rh_1, rh_alias, subTable, table, tbl;
       f = 'T_fist';
-      _log2(f, attrs, content_f);
+      E.log(f, attrs, content_f);
       fist = E.fistDef[attrs.fist];
       model = (ref = fist.event) != null ? ref : 'Fist';
-      table = attrs.fist + (attrs.row != null ? ':' + attrs.row : '');
-      subTable = (ref1 = (ref2 = attrs.via) != null ? ref2 : fist.via) != null ? ref1 : 'Control';
-      masterAlias = 'Fist';
-      ref3 = this._accessModelTable(model + '/' + table, masterAlias), tbl = ref3[0], rh_alias = ref3[1];
-      _log2(f, 'tbl,rh_alias (master)', tbl, rh_alias);
+      table = attrs.fist + (((ref1 = attrs.row) != null ? ref1.length : void 0) ? ':' + attrs.row : '');
+      subTable = (ref2 = (ref3 = attrs.via) != null ? ref3 : fist.via) != null ? ref2 : 'Control';
+      masterAlias = '__Fist';
+      ref4 = this._accessModelTable(model + '/' + table, masterAlias), tbl = ref4[0], rh_alias = ref4[1];
+      E.log(f, 'tbl,rh_alias (master)', tbl, rh_alias);
       this.R[rh_alias] = tbl[0];
       this.I[rh_alias].c = 0;
       rh_1 = rh_alias;
-      content = content_f ? content_f : (part = (ref4 = (ref5 = attrs.part) != null ? ref5 : fist.part) != null ? ref4 : 'fist_default', attrs.part != null ? attrs.part : attrs.part = (ref6 = fist.part) != null ? ref6 : 'fist_default', (function(_this) {
+      content = content_f ? content_f : (part = (ref5 = (ref6 = attrs.part) != null ? ref6 : fist.part) != null ? ref5 : 'fist_default', attrs.part != null ? attrs.part : attrs.part = (ref7 = fist.part) != null ? ref7 : 'fist_default', (function(_this) {
         return function() {
           return _this.kids([
             [
@@ -620,7 +619,7 @@
         }
         ref1 = attrs[ix].name.split('-'), d = ref1[0], e = ref1[1], nm = ref1[2], p1 = ref1[3], p2 = ref1[4];
         val = attrs[ix].value;
-        _log2(f, attrs[ix].name, val, p1, p2);
+        E.log(f, attrs[ix].name, val, p1, p2);
         E.option.ex1(nm, attrs[ix].name);
         results.push(E['ex$' + nm](el, isInit, ctx, val, p1, p2));
       }

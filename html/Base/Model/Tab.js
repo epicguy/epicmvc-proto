@@ -20,7 +20,7 @@
     Tab.prototype.event = function(name, type, groupNm, itemNm, data) {
       var changed, f, group, ref;
       f = 'event';
-      _log2(f, {
+      E.log(f, {
         name: name,
         type: type,
         groupNm: groupNm,
@@ -111,7 +111,7 @@
       if (itemNm === '_CLEARED') {
         change = false;
         for (nm in group) {
-          if ((nm !== 'backdrop' && nm !== itemNm) && group[nm] === true) {
+          if (nm !== 'backdrop' && group[nm] === true) {
             change = true;
             group.backdrop = group[nm] = false;
           }
@@ -133,7 +133,7 @@
       if (itemNm === '_CLEARED') {
         change = false;
         for (nm in group) {
-          if (nm !== itemNm && group[nm] === true) {
+          if (group[nm] === true) {
             change = true;
             group[nm] = false;
           }
@@ -174,14 +174,14 @@
     var f, g, height, i, ref;
     f = 'A_ex_collapse';
     ref = val.split(':'), g = ref[0], i = ref[1];
-    _log2(f, {
+    E.log(f, {
       g: g,
       i: i,
       sH: el.scrollHeight,
       g_row: (E.Tab(g))[0]
     });
     height = (E.Tab(g))[0][i] ? el.scrollHeight : 0;
-    return el.style.height = (String(height)) + 'px';
+    return el.style.maxHeight = (String(height)) + 'px';
   };
 
 }).call(this);

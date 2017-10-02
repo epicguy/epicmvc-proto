@@ -3,7 +3,7 @@
 <head>
   <title>Hello Dude Demo (Dev)</title>
   <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"/>
-  <script type="text/javascript" src="EpicMvc-BaseDev-2.1.0-latest.js"></script>
+  <script type="text/javascript" src="EpicMvc-BaseDev-latest.js"></script>
   <script type="text/javascript" src="coffee-script.js"> </script>
 
 <script type="text/coffeescript">
@@ -11,7 +11,7 @@ E.app$World=
 	MODELS: Thing: class:'Thing', inst:'world_thing'
 	ACTIONS: toggle: do: 'Thing.toggle'
 
-class Thing extends window.E.ModelJS
+class Thing extends E.ModelJS
 	constructor: ( view_nm, options) ->
 		ss= world: true
 		super view_nm, options, ss

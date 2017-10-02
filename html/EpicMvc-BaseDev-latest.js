@@ -542,14 +542,7 @@ var m = (function app(window, undefined) {
 		return prop
 	}
 
-	m.prop = function (store) {
-		//note: using non-strict equality check here because we're checking if store is null OR undefined
-		if (((store != null && type.call(store) === OBJECT) || typeof store === FUNCTION) && typeof store.then === FUNCTION) {
-			return propify(store)
-		}
-
-		return gettersetter(store)
-	};
+	m.prop = gettersetter
 
 	var roots = [], components = [], controllers = [], lastRedrawId = null, lastRedrawCallTime = 0, computePreRedrawHook = null, computePostRedrawHook = null, prevented = false, topComponent, unloaders = [];
 	m.redraw = function(force) {}
@@ -569,331 +562,12 @@ var m = (function app(window, undefined) {
 		else m.endComputation();
 	}
 
-	function buildQueryString(object, prefix) {
-		var duplicates = {}
-		var str = []
-		for (var prop in object) {
-			var key = prefix ? prefix + "[" + prop + "]" : prop
-			var value = object[prop]
-			var valueType = type.call(value)
-			var pair = (value === null) ? encodeURIComponent(key) :
-				valueType === OBJECT ? buildQueryString(value, key) :
-				valueType === ARRAY ? value.reduce(function(memo, item) {
-					if (!duplicates[key]) duplicates[key] = {}
-					if (!duplicates[key][item]) {
-						duplicates[key][item] = true
-						return memo.concat(encodeURIComponent(key) + "=" + encodeURIComponent(item))
-					}
-					return memo
-				}, []).join("&") :
-				encodeURIComponent(key) + "=" + encodeURIComponent(value)
-			if (value !== undefined) str.push(pair)
-		}
-		return str.join("&")
-	}
-	function parseQueryString(str) {
-		if (str.charAt(0) === "?") str = str.substring(1);
-		
-		var pairs = str.split("&"), params = {};
-		for (var i = 0, len = pairs.length; i < len; i++) {
-			var pair = pairs[i].split("=");
-			var key = decodeURIComponent(pair[0])
-			var value = pair.length == 2 ? decodeURIComponent(pair[1]) : null
-			if (params[key] != null) {
-				if (type.call(params[key]) !== ARRAY) params[key] = [params[key]]
-				params[key].push(value)
-			}
-			else params[key] = value
-		}
-		return params
-	}
-	
 	function reset(root) {
 		var cacheKey = getCellCacheKey(root);
 		clear(root.childNodes, cellCache[cacheKey]);
 		cellCache[cacheKey] = undefined
 	}
 
-	m.deferred = function () {
-		var deferred = new Deferred();
-		deferred.promise = propify(deferred.promise);
-		return deferred
-	};
-	function propify(promise, initialValue) {
-		var prop = m.prop(initialValue);
-		promise.then(prop);
-		prop.then = function(resolve, reject) {
-			return propify(promise.then(resolve, reject), initialValue)
-		};
-		return prop
-	}
-	//Promiz.mithril.js | Zolmeister | MIT
-	//a modified version of Promiz.js, which does not conform to Promises/A+ for two reasons:
-	//1) `then` callbacks are called synchronously (because setTimeout is too slow, and the setImmediate polyfill is too big
-	//2) throwing subclasses of Error cause the error to be bubbled up instead of triggering rejection (because the spec does not account for the important use case of default browser error handling, i.e. message w/ line number)
-	function Deferred(successCallback, failureCallback) {
-		var RESOLVING = 1, REJECTING = 2, RESOLVED = 3, REJECTED = 4;
-		var self = this, state = 0, promiseValue = 0, next = [];
-
-		self["promise"] = {};
-
-		self["resolve"] = function(value) {
-			if (!state) {
-				promiseValue = value;
-				state = RESOLVING;
-
-				fire()
-			}
-			return this
-		};
-
-		self["reject"] = function(value) {
-			if (!state) {
-				promiseValue = value;
-				state = REJECTING;
-
-				fire()
-			}
-			return this
-		};
-
-		self.promise["then"] = function(successCallback, failureCallback) {
-			var deferred = new Deferred(successCallback, failureCallback);
-			if (state === RESOLVED) {
-				deferred.resolve(promiseValue)
-			}
-			else if (state === REJECTED) {
-				deferred.reject(promiseValue)
-			}
-			else {
-				next.push(deferred)
-			}
-			return deferred.promise
-		};
-
-		function finish(type) {
-			state = type || REJECTED;
-			next.map(function(deferred) {
-				state === RESOLVED && deferred.resolve(promiseValue) || deferred.reject(promiseValue)
-			})
-		}
-
-		function thennable(then, successCallback, failureCallback, notThennableCallback) {
-			if (((promiseValue != null && type.call(promiseValue) === OBJECT) || typeof promiseValue === FUNCTION) && typeof then === FUNCTION) {
-				try {
-					// count protects against abuse calls from spec checker
-					var count = 0;
-					then.call(promiseValue, function(value) {
-						if (count++) return;
-						promiseValue = value;
-						successCallback()
-					}, function (value) {
-						if (count++) return;
-						promiseValue = value;
-						failureCallback()
-					})
-				}
-				catch (e) {
-					m.deferred.onerror(e);
-					promiseValue = e;
-					failureCallback()
-				}
-			} else {
-				notThennableCallback()
-			}
-		}
-
-		function fire() {
-			// check if it's a thenable
-			var then;
-			try {
-				then = promiseValue && promiseValue.then
-			}
-			catch (e) {
-				m.deferred.onerror(e);
-				promiseValue = e;
-				state = REJECTING;
-				return fire()
-			}
-			thennable(then, function() {
-				state = RESOLVING;
-				fire()
-			}, function() {
-				state = REJECTING;
-				fire()
-			}, function() {
-				try {
-					if (state === RESOLVING && typeof successCallback === FUNCTION) {
-						promiseValue = successCallback(promiseValue)
-					}
-					else if (state === REJECTING && typeof failureCallback === "function") {
-						promiseValue = failureCallback(promiseValue);
-						state = RESOLVING
-					}
-				}
-				catch (e) {
-					m.deferred.onerror(e);
-					promiseValue = e;
-					return finish()
-				}
-
-				if (promiseValue === self) {
-					promiseValue = TypeError();
-					finish()
-				}
-				else {
-					thennable(then, function () {
-						finish(RESOLVED)
-					}, finish, function () {
-						finish(state === RESOLVING && RESOLVED)
-					})
-				}
-			})
-		}
-	}
-	m.deferred.onerror = function(e) {
-		if (type.call(e) === "[object Error]" && !e.constructor.toString().match(/ Error/)) throw e
-	};
-
-	function identity(value) {return value}
-
-	function ajax(options) {
-		if (options.dataType && options.dataType.toLowerCase() === "jsonp") {
-			var callbackKey = "mithril_callback_" + new Date().getTime() + "_" + (Math.round(Math.random() * 1e16)).toString(36);
-			var script = $document.createElement("script");
-
-			window[callbackKey] = function(resp) {
-				script.parentNode.removeChild(script);
-				options.onload({
-					type: "load",
-					target: {
-						responseText: resp
-					}
-				});
-				window[callbackKey] = undefined
-			};
-
-			script.onerror = function(e) {
-				script.parentNode.removeChild(script);
-
-				options.onerror({
-					type: "error",
-					target: {
-						status: 500,
-						responseText: JSON.stringify({error: "Error making jsonp request"})
-					}
-				});
-				window[callbackKey] = undefined;
-
-				return false
-			};
-
-			script.onload = function(e) {
-				return false
-			};
-
-			script.src = options.url
-				+ (options.url.indexOf("?") > 0 ? "&" : "?")
-				+ (options.callbackKey ? options.callbackKey : "callback")
-				+ "=" + callbackKey
-				+ "&" + buildQueryString(options.data || {});
-			$document.body.appendChild(script)
-		}
-		else {
-			var xhr = new window.XMLHttpRequest;
-			xhr.open(options.method, options.url, true, options.user, options.password);
-			xhr.onreadystatechange = function() {
-				if (xhr.readyState === 4) {
-					if (xhr.status >= 200 && xhr.status < 300) options.onload({type: "load", target: xhr});
-					else options.onerror({type: "error", target: xhr})
-				}
-			};
-			if (options.serialize === JSON.stringify && options.data && options.method !== "GET") {
-				xhr.setRequestHeader("Content-Type", "application/json; charset=utf-8")
-			}
-			if (options.deserialize === JSON.parse) {
-				xhr.setRequestHeader("Accept", "application/json, text/*");
-			}
-			if (typeof options.config === FUNCTION) {
-				var maybeXhr = options.config(xhr, options);
-				if (maybeXhr != null) xhr = maybeXhr
-			}
-
-			var data = options.method === "GET" || !options.data ? "" : options.data
-			if (data && (type.call(data) != STRING && data.constructor != window.FormData)) {
-				throw "Request data should be either be a string or FormData. Check the `serialize` option in `m.request`";
-			}
-			xhr.send(data);
-			return xhr
-		}
-	}
-	function bindData(xhrOptions, data, serialize) {
-		if (xhrOptions.method === "GET" && xhrOptions.dataType != "jsonp") {
-			var prefix = xhrOptions.url.indexOf("?") < 0 ? "?" : "&";
-			var querystring = buildQueryString(data);
-			xhrOptions.url = xhrOptions.url + (querystring ? prefix + querystring : "")
-		}
-		else xhrOptions.data = serialize(data);
-		return xhrOptions
-	}
-	function parameterizeUrl(url, data) {
-		var tokens = url.match(/:[a-z]\w+/gi);
-		if (tokens && data) {
-			for (var i = 0; i < tokens.length; i++) {
-				var key = tokens[i].slice(1);
-				url = url.replace(tokens[i], data[key]);
-				delete data[key]
-			}
-		}
-		return url
-	}
-
-	m.request = function(xhrOptions) {
-		if (xhrOptions.background !== true) m.startComputation();
-		var deferred = new Deferred();
-		var isJSONP = xhrOptions.dataType && xhrOptions.dataType.toLowerCase() === "jsonp";
-		var serialize = xhrOptions.serialize = isJSONP ? identity : xhrOptions.serialize || JSON.stringify;
-		var deserialize = xhrOptions.deserialize = isJSONP ? identity : xhrOptions.deserialize || JSON.parse;
-		var extract = isJSONP ? function(jsonp) {return jsonp.responseText} : xhrOptions.extract || function(xhr) {
-			return xhr.responseText.length === 0 && deserialize === JSON.parse ? null : xhr.responseText
-		};
-		xhrOptions.method = (xhrOptions.method || 'GET').toUpperCase();
-		xhrOptions.url = parameterizeUrl(xhrOptions.url, xhrOptions.data);
-		xhrOptions = bindData(xhrOptions, xhrOptions.data, serialize);
-		xhrOptions.onload = xhrOptions.onerror = function(e) {
-			try {
-				e = e || event;
-				var unwrap = (e.type === "load" ? xhrOptions.unwrapSuccess : xhrOptions.unwrapError) || identity;
-				var response = unwrap(deserialize(extract(e.target, xhrOptions)), e.target);
-				if (e.type === "load") {
-					if (type.call(response) === ARRAY && xhrOptions.type) {
-						for (var i = 0; i < response.length; i++) response[i] = new xhrOptions.type(response[i])
-					}
-					else if (xhrOptions.type) response = new xhrOptions.type(response)
-				}
-				deferred[e.type === "load" ? "resolve" : "reject"](response)
-			}
-			catch (e) {
-				m.deferred.onerror(e);
-				deferred.reject(e)
-			}
-			if (xhrOptions.background !== true) m.endComputation()
-		};
-		ajax(xhrOptions);
-		deferred.promise = propify(deferred.promise, xhrOptions.initialValue);
-		return deferred.promise
-	};
-
-	//testing API
-	m.deps = function(mock) {
-		initialize(window = mock || window);
-		return window;
-	};
-	//for internal testing only, do not use `m.deps.factory`
-	m.deps.factory = app;
-
-	//JCS: Expose base Deferred object
-	m.Deferred= Deferred
 	return m
 })(typeof window != "undefined" ? window : {});
 
@@ -904,12 +578,14 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 /*EpicCore*/// Generated by CoffeeScript 1.9.2
 (function() {
   'use strict';
-  var Issue, ModelJS, app, klass, nm, ref, w,
+  var E, Issue, ModelJS, app, klass, nm, ref,
     slice = [].slice,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  app = function(window, undef) {
-    var E, Extra, Model, _d_doAction, aActions, aFists, aFlows, aMacros, aModels, aSetting, action, appFindAction, appFindAttr, appFindNode, appFist, appGetF, appGetS, appGetSetting, appGetT, appGetVars, appInit, appLoadFormsIf, appModel, appSearchAttr, appStartS, appStartT, appconfs, counter, fieldDef, finish_logout, fistDef, fistInit, getModelState, inAction, issueInit, issueMap, j, len, make_model_functions, merge, modelState, nm, oModel, obj, option, ref, ref1, setModelState, type_oau, wistDef, wistInit;
+  E = typeof exports !== "undefined" && exports !== null ? require('E') : (window.E = {});
+
+  app = function(undef) {
+    var Extra, Model, _d_doAction, aActions, aFists, aFlows, aMacros, aModels, aSetting, action, appFindAction, appFindAttr, appFindNode, appFist, appGetF, appGetS, appGetSetting, appGetT, appGetVars, appInit, appLoadFormsIf, appModel, appSearchAttr, appStartS, appStartT, appconfs, counter, fieldDef, finish_logout, fistDef, fistInit, getModelState, inAction, issueInit, issueMap, j, len, make_model_functions, merge, modelState, nm, oModel, obj, option, ref, ref1, setModelState, type_oau, wistDef, wistInit;
     inAction = false;
     counter = 0;
     Model = {};
@@ -926,7 +602,6 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       nm = ref[j];
       option[nm] = (function() {});
     }
-    E = {};
     E.nextCounter = function() {
       return ++counter;
     };
@@ -1026,7 +701,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     E.login = function() {
       var f, k, o, results;
       f = ':login';
-      _log2(f, oModel);
+      E.log(f, oModel);
       results = [];
       for (k in oModel) {
         o = oModel[k];
@@ -1302,7 +977,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     action = function(action_token, data) {
       var ans, f, final, more;
       f = ':action:' + action_token;
-      _log2(f, data);
+      E.log(f, data);
       option.c1(inAction);
       inAction = action_token;
       m.startComputation();
@@ -1310,7 +985,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         return m.endComputation();
       };
       more = function(action_result) {
-        _log2(f, 'cb:', action_result[0], action_result[1]);
+        E.log(f, 'cb:', action_result[0], action_result[1]);
         E.App().setIssues(action_result[0]);
         E.App().setMessages(action_result[1]);
         return inAction = false;
@@ -1338,13 +1013,13 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       master_message = new Issue('App');
       master_data = merge({}, data);
       action_node = appFindAction(original_path, action_token);
-      _log2(f, 'got node:', action_node);
+      E.log(f, 'got node:', action_node);
       option.ca1(action_token, original_path, action_node);
       if (action_node == null) {
         return [master_issue, master_message];
       }
       d_doLeftSide = function(action_node) {
-        var ans, copy_to, ctx, d, d_cb, fist, fist_model, i, is_macro, ix, l, len1, len2, mg, n, name, nms, r, ref1, ref2, ref3, ref4, ref5, val, view_act, view_nm, what;
+        var ans, copy_to, ctx, d_cb, fist, fist_model, i, is_macro, ix, l, len1, len2, mg, n, name, nms, p, r, ref1, ref2, ref3, ref4, ref5, val, view_act, view_nm, what;
         ref1 = ['fist', 'clear'];
         for (l = 0, len1 = ref1.length; l < len1; l++) {
           what = ref1[l];
@@ -1397,12 +1072,12 @@ else if (typeof define === "function" && define.amd) define(function() {return m
           }
           ref5 = action_node["do"].split('.'), view_nm = ref5[0], view_act = ref5[1];
           view_act = view_act ? view_act : action_token;
-          d = new m.Deferred();
+          p = Promise.resolve();
           r = {};
           i = new E.Issue(view_nm, view_act);
           mg = new E.Issue(view_nm, view_act);
           ctx = {
-            d: d,
+            p: p,
             r: r,
             i: i,
             m: mg
@@ -1418,7 +1093,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
             master_issue.addObj(ctx.i);
             return master_message.addObj(ctx.m);
           };
-          _log2(f, 'd_doLeftSide: after model called:', {
+          E.log(f, 'd_doLeftSide: after model called:', {
             view_nm: view_nm,
             view_act: view_act,
             master_data: master_data,
@@ -1581,7 +1256,6 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       obj = ref1[nm];
       E[nm] = obj;
     }
-    return E;
   };
 
   Issue = (function() {
@@ -1601,7 +1275,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     Issue.prototype.add = function(token, msgs) {
       var f;
       f = ':Issue.add:' + this.t_view + ':' + this.t_action;
-      _log2(f, 'params:type/msgs', token, msgs);
+      E.log(f, 'params:type/msgs', token, msgs);
       switch (typeof msgs) {
         case 'undefined':
           msgs = [];
@@ -1822,9 +1496,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
   })();
 
-  w = typeof window !== "undefined" ? window : {};
-
-  w.EpicMvc = w.E = new app(w);
+  app();
 
   ref = {
     Issue: Issue,
@@ -1832,27 +1504,18 @@ else if (typeof define === "function" && define.amd) define(function() {return m
   };
   for (nm in ref) {
     klass = ref[nm];
-    w.E[nm] = klass;
+    E[nm] = klass;
   }
 
-  w._log2 = function() {};
+  E.log = function() {};
 
-  w._log2 = Function.prototype.bind.call(console.log, console);
-
-  if (typeof module !== "undefined" && module !== null) {
-    module.exports = w.E;
-  }
-
-  if (typeof define === "function" && define.amd) {
-    define(function() {
-      return w.E;
-    });
-  }
+  E.log = Function.prototype.bind.call(console.log, console);
 
 }).call(this);
 
 /*Base/app.coffee*/// Generated by CoffeeScript 1.9.2
 (function() {
+  'use strict';
   var tell_Tab;
 
   tell_Tab = function(type, event_obj, target, data_action) {
@@ -1936,7 +1599,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       this.f = flow;
       this.t = t;
       this.s = s;
-      _log2(f, {
+      E.log(f, {
         was: was,
         is: this.f + "/" + this.t + "/" + this.s
       });
@@ -1962,7 +1625,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       if (!s) {
         s = E.appStartS(flow, t);
       }
-      _log2(f, {
+      E.log(f, {
         flow: flow,
         t: t,
         s: s
@@ -2082,7 +1745,8 @@ else if (typeof define === "function" && define.amd) define(function() {return m
   'use strict';
   var Fist,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
+    hasProp = {}.hasOwnProperty,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   Fist = (function(superClass) {
     extend(Fist, superClass);
@@ -2092,18 +1756,17 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       Fist.__super__.constructor.call(this, view_nm, options);
     }
 
-    Fist.prototype.eventLogout = function() {
-      return true;
-    };
-
     Fist.prototype.event = function(name, act, fistNm, fieldNm, p) {
       var f, field, fist, had_issue, invalidate, invalidate2, tmp_val, was_issue, was_val;
       f = 'event:' + act + '-' + fistNm + '/' + fieldNm;
-      _log2(f, p);
+      E.log(f, p);
       if (name !== 'Fist') {
         BLOWUP();
       }
-      fist = this._getFist(fistNm, p.row);
+      fist = this._getFist(fistNm, p.row, true);
+      if (fist === false) {
+        return;
+      }
       if (fieldNm) {
         field = fist.ht[fieldNm];
       }
@@ -2132,7 +1795,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
           was_issue = field.issue;
           field.hval = E.fistH2H(field, field.hval);
           E.fistVAL(field, field.hval);
-          _log2(f, 'invalidate?', was_val, field.hval, was_issue, field.issue);
+          E.log(f, 'invalidate?', was_val, field.hval, was_issue, field.issue);
           if (was_val !== field.hval || was_issue !== field.issue) {
             invalidate = true;
           }
@@ -2195,9 +1858,26 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       return field.issue.add(token[0], token.slice(1));
     };
 
+    Fist.prototype.fistWipe = function(fistBaseNms) {
+      var deleted, fnm, ref;
+      if ('A' !== E.type_oua(fistBaseNms)) {
+        fistBaseNms = fistBaseNms.split(',');
+      }
+      deleted = false;
+      for (fnm in this.fist) {
+        if (ref = (fnm.split(':'))[0], indexOf.call(fistBaseNms, ref) >= 0) {
+          deleted = true;
+          delete this.fist[fnm];
+        }
+      }
+      if (deleted) {
+        return this.invalidateTables(true);
+      }
+    };
+
     Fist.prototype.fistClear = function(fistNm, row) {
       var rnm;
-      rnm = fistNm + (row ? ':' + row : '');
+      rnm = fistNm + ((row != null ? row.length : void 0) ? ':' + row : '');
       if (rnm in this.fist) {
         delete this.fist[rnm];
         return this.invalidateTables([rnm]);
@@ -2206,8 +1886,8 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     Fist.prototype.fistValidate = function(ctx, fistNm, row) {
       var ans, errors, f, field, fieldNm, fist, hval, invalidate, nm, r, ref, ref1, ref2;
-      f = 'fistValidate:' + fistNm + (row != null ? ':' + row : '');
-      _log2(f);
+      f = 'fistValidate:' + fistNm + ((row != null ? row.length : void 0) ? ':' + row : '');
+      E.log(f);
       r = ctx;
       fist = this._getFist(fistNm, row);
       errors = 0;
@@ -2245,16 +1925,16 @@ else if (typeof define === "function" && define.amd) define(function() {return m
           ans[nm] = E.fistH2D(field, field.hval);
         }
       }
-      _log2(f, 'result', r, ans);
+      E.log(f, 'result', r, ans);
       if (invalidate === true) {
         this.invalidateTables([fist.rnm]);
       }
     };
 
     Fist.prototype.loadTable = function(tbl_nm) {
-      var Control, Field, any_req, baseFistNm, field, fieldNm, fist, i, ix, len, ref, ref1, row;
-      ref = tbl_nm.split(':'), baseFistNm = ref[0], row = ref[1];
-      fist = this._getFist(baseFistNm, row);
+      var Control, Field, any_req, baseFistNm, baseRow, field, fieldNm, fist, i, ix, len, ref, ref1, row;
+      ref = tbl_nm.split(':'), baseFistNm = ref[0], baseRow = ref[1];
+      fist = this._getFist(baseFistNm, baseRow);
       Field = {};
       Control = [];
       any_req = false;
@@ -2296,12 +1976,8 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       };
       fl = E.merge(defaults, field);
       ref = fl.type.split(':'), fl.type = ref[0], choice_type = ref[1];
-      fl.id = 'U' + E.nextCounter();
       fl.value = field.hval;
       if (fl.type === 'yesno') {
-        if (fl.cdata == null) {
-          fl.cdata = ['1', '0'];
-        }
         fl.yes_val = String(fl.cdata[0]);
         if (fl.value === fl.yes_val) {
           fl.selected = true;
@@ -2329,11 +2005,14 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       return fl;
     };
 
-    Fist.prototype._getFist = function(p_fist, p_row) {
+    Fist.prototype._getFist = function(p_fist, p_row, from_event) {
       var db_value_hash, f, field, fieldNm, fist, i, len, nm, rec, ref, ref1, ref2, ref3, rnm;
-      f = '_getFist:' + p_fist + (p_row != null ? ':' + p_row : '');
-      rnm = p_fist + (p_row ? ':' + p_row : '');
+      f = '_getFist:' + p_fist + ((p_row != null ? p_row.length : void 0) ? ':' + p_row : '');
+      rnm = p_fist + ((p_row != null ? p_row.length : void 0) ? ':' + p_row : '');
       if (!(rnm in this.fist)) {
+        if (from_event === true) {
+          return false;
+        }
         fist = {
           rnm: rnm,
           nm: p_fist,
@@ -2343,7 +2022,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
           st: 'new',
           sp: E.fistDef[p_fist]
         };
-        _log2(f, 'new fist', fist);
+        E.log(f, 'new fist', fist);
         E.option.fi1(fist);
         ref = fist.sp.FIELDS;
         for (i = 0, len = ref.length; i < len; i++) {
@@ -2351,8 +2030,17 @@ else if (typeof define === "function" && define.amd) define(function() {return m
           field = E.merge({}, E.fieldDef[fieldNm], {
             nm: fieldNm,
             fistNm: p_fist,
-            row: p_row
+            row: p_row,
+            id: 'U' + E.nextCounter()
           });
+          if (field.type === 'yesno') {
+            if (field.cdata == null) {
+              field.cdata = ['Y', ''];
+            }
+            if (field["default"] == null) {
+              field["default"] = field.cdata[1];
+            }
+          }
           field.h2h = (function() {
             switch (E.type_oau(field.h2h)) {
               case 'S':
@@ -2508,6 +2196,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
 /*Base/Model/Tab.coffee*/// Generated by CoffeeScript 1.9.2
 (function() {
+  'use strict';
   var Tab,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
@@ -2527,7 +2216,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     Tab.prototype.event = function(name, type, groupNm, itemNm, data) {
       var changed, f, group, ref;
       f = 'event';
-      _log2(f, {
+      E.log(f, {
         name: name,
         type: type,
         groupNm: groupNm,
@@ -2618,7 +2307,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       if (itemNm === '_CLEARED') {
         change = false;
         for (nm in group) {
-          if ((nm !== 'backdrop' && nm !== itemNm) && group[nm] === true) {
+          if (nm !== 'backdrop' && group[nm] === true) {
             change = true;
             group.backdrop = group[nm] = false;
           }
@@ -2640,7 +2329,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       if (itemNm === '_CLEARED') {
         change = false;
         for (nm in group) {
-          if (nm !== itemNm && group[nm] === true) {
+          if (group[nm] === true) {
             change = true;
             group[nm] = false;
           }
@@ -2681,14 +2370,14 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     var f, g, height, i, ref;
     f = 'A_ex_collapse';
     ref = val.split(':'), g = ref[0], i = ref[1];
-    _log2(f, {
+    E.log(f, {
       g: g,
       i: i,
       sH: el.scrollHeight,
       g_row: (E.Tab(g))[0]
     });
     height = (E.Tab(g))[0][i] ? el.scrollHeight : 0;
-    return el.style.height = (String(height)) + 'px';
+    return el.style.maxHeight = (String(height)) + 'px';
   };
 
 }).call(this);
@@ -2733,7 +2422,9 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       this.frames.push('X');
       this.did_run = false;
       this.in_run = false;
-      window.oE = this;
+      if (typeof window !== "undefined" && window !== null) {
+        window.oE = this;
+      }
       this.defer_it_cnt = 0;
       this.start = false;
     }
@@ -2747,7 +2438,15 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         }
         this.in_run = true;
         this.start = new Date().getTime();
-        this.defer_it = new m.Deferred();
+        this.defer_it = {
+          promise: null,
+          resolve: null
+        };
+        this.defer_it.promise = new Promise((function(_this) {
+          return function(resolve, reject) {
+            return _this.defer_it.resolve = resolve;
+          };
+        })(this));
       }
       return this.defer_it_cnt++;
     };
@@ -2759,7 +2458,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         this.defer_it_cnt--;
       }
       if (this.defer_it_cnt === 0) {
-        _log2(f, 'END RUN', this.defer_content, new Date().getTime() - this.start);
+        E.log(f, 'END RUN', this.defer_content, new Date().getTime() - this.start);
         this.in_run = false;
         return this.defer_it.resolve([this.modal, this.defer_content]);
       }
@@ -2847,7 +2546,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
           }
           return [rVal];
         default:
-          return [];
+          return E.option.m3(this.view_nm, nm);
       }
     };
 
@@ -2872,7 +2571,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     			attrs.config= (element, isInit, context) =>
     				f= 'Base:M/View..config:'+ view
     				for defer in inside
-    					_log2 f, defer
+    					E.log f, defer
     					@doDefer defer, element, isInit, context
     		if 'dynamic' of attrs # Always render the container, even if content is null
     			tag: attrs.dynamic, attrs: attrs, children: content
@@ -2880,7 +2579,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     			return '' unless content
     			if has_root
     				 * TODO WHAT IS GOING ON WITH attrs TO wrap IF CONTENT HAS ATTRS? (part=)
-    				_log2 f, 'has-root-content', {view,attrs,content,defer,has_root}
+    				E.log f, 'has-root-content', {view,attrs,content,defer,has_root}
     				BLOWUP() if 'A' isnt E.type_oau content
     				 * TODO E2 FIGURE OUT WHY I COMMENTED THIS OUT; ALSO, PLAN IS TO USE DATA-EX-* ATTRS PER ELEMENT, NOT <E-DEFER
     				#content[0].attrs.config= attrs.config # Pass the defer logic to the part's div
@@ -2889,7 +2588,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     				tag: 'div', attrs: attrs, children: content
     	doDefer: (defer_obj, element, isInit, context) =>
     		if 'A' is E.type_oau defer_obj.defer
-    			_log2 'WARNING', 'Got an array for defer', defer_obj.defer
+    			E.log 'WARNING', 'Got an array for defer', defer_obj.defer
     			return 'WAS-ARRAY'
     		defer_obj.func element, isInit, context, defer_obj.attrs if defer_obj.func
     	T_defer: ( attrs, content) -> # TODO IMPLEMENT DEFER LOGIC ATTRS?
@@ -2939,8 +2638,6 @@ else if (typeof define === "function" && define.amd) define(function() {return m
           } else {
             return false;
           }
-        case 'bytes':
-          return window.bytesToSize(Number(val));
         case 'uriencode':
           return encodeURIComponent(val);
         case 'quo':
@@ -3088,14 +2785,14 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
       /* JCS:DEFER:DYNAMIC 
       		defer= @D.pop()
-      		#_log2 f, 'defer', view, defer
+      		#E.log f, 'defer', view, defer
       		if can_componentize or not is_part or attrs.dynamic or defer.length
-      			#_log2 f, 'defer YES', view, defer
+      			#E.log f, 'defer YES', view, defer
       			if defer.length and not can_componentize and not attrs.dynamic
-      				_log2 "WARNING: DEFER logic in (#{view}); wrapping DIV tag."
+      				E.log "WARNING: DEFER logic in (#{view}); wrapping DIV tag."
       			result= @wrap view, attrs, content, defer, can_componentize
       		else
-      			#_log2 f, 'defer NO!', view, defer
+      			#E.log f, 'defer NO!', view, defer
       			result= content
       		result
        */
@@ -3243,7 +2940,6 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       limit = 'limit' in attrs ? Number(attrs.limit) - 1 : tbl.length;
       for (count = i = 0, len = tbl.length; i < len; count = ++i) {
         row = tbl[count];
-        row = tbl[count];
         row._ = {
           count: count,
           first: count === 0,
@@ -3260,20 +2956,20 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     };
 
     View$Base.prototype.T_fist = function(attrs, content_f) {
-      var ans, content, f, fist, foreach_attrs, masterAlias, model, part, ref, ref1, ref2, ref3, ref4, ref5, ref6, rh_1, rh_alias, subTable, table, tbl;
+      var ans, content, f, fist, foreach_attrs, masterAlias, model, part, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, rh_1, rh_alias, subTable, table, tbl;
       f = 'T_fist';
-      _log2(f, attrs, content_f);
+      E.log(f, attrs, content_f);
       fist = E.fistDef[attrs.fist];
       model = (ref = fist.event) != null ? ref : 'Fist';
-      table = attrs.fist + (attrs.row != null ? ':' + attrs.row : '');
-      subTable = (ref1 = (ref2 = attrs.via) != null ? ref2 : fist.via) != null ? ref1 : 'Control';
-      masterAlias = 'Fist';
-      ref3 = this._accessModelTable(model + '/' + table, masterAlias), tbl = ref3[0], rh_alias = ref3[1];
-      _log2(f, 'tbl,rh_alias (master)', tbl, rh_alias);
+      table = attrs.fist + (((ref1 = attrs.row) != null ? ref1.length : void 0) ? ':' + attrs.row : '');
+      subTable = (ref2 = (ref3 = attrs.via) != null ? ref3 : fist.via) != null ? ref2 : 'Control';
+      masterAlias = '__Fist';
+      ref4 = this._accessModelTable(model + '/' + table, masterAlias), tbl = ref4[0], rh_alias = ref4[1];
+      E.log(f, 'tbl,rh_alias (master)', tbl, rh_alias);
       this.R[rh_alias] = tbl[0];
       this.I[rh_alias].c = 0;
       rh_1 = rh_alias;
-      content = content_f ? content_f : (part = (ref4 = (ref5 = attrs.part) != null ? ref5 : fist.part) != null ? ref4 : 'fist_default', attrs.part != null ? attrs.part : attrs.part = (ref6 = fist.part) != null ? ref6 : 'fist_default', (function(_this) {
+      content = content_f ? content_f : (part = (ref5 = (ref6 = attrs.part) != null ? ref6 : fist.part) != null ? ref5 : 'fist_default', attrs.part != null ? attrs.part : attrs.part = (ref7 = fist.part) != null ? ref7 : 'fist_default', (function(_this) {
         return function() {
           return _this.kids([
             [
@@ -3307,7 +3003,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         }
         ref1 = attrs[ix].name.split('-'), d = ref1[0], e = ref1[1], nm = ref1[2], p1 = ref1[3], p2 = ref1[4];
         val = attrs[ix].value;
-        _log2(f, attrs[ix].name, val, p1, p2);
+        E.log(f, attrs[ix].name, val, p1, p2);
         E.option.ex1(nm, attrs[ix].name);
         results.push(E['ex$' + nm](el, isInit, ctx, val, p1, p2));
       }
@@ -3324,6 +3020,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
 /*Base/Model/Wist.coffee*/// Generated by CoffeeScript 1.9.2
 (function() {
+  'use strict';
   var Wist,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
@@ -3339,7 +3036,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     Wist.prototype.loadTable = function(tbl_nm) {
       var f;
       f = "Wist:loadTable:" + tbl_nm;
-      _log2(f);
+      E.log(f);
       return this.Table[tbl_nm] = (this._getWist(tbl_nm)).table;
     };
 
@@ -3372,6 +3069,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
 /*Base/Extra/dataAction.coffee*/// Generated by CoffeeScript 1.9.2
 (function() {
+  'use strict';
   var dataAction,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -3391,7 +3089,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         spec_action = spec_type;
         spec_type = 'click';
       }
-      _log2(f, 'check', spec_type, type, spec_type === type ? 'YES' : 'NO');
+      E.log(f, 'check', spec_type, type, spec_type === type ? 'YES' : 'NO');
       if (spec_type === 'event') {
         E.event(spec_action, type, group, item, interesting, data_params);
       }
@@ -3426,6 +3124,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
 /*Base/Extra/LoadStrategy.coffee*/// Generated by CoffeeScript 1.9.2
 (function() {
+  'use strict';
   var LoadStrategy$Base;
 
   LoadStrategy$Base = (function() {
@@ -3459,10 +3158,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     };
 
     LoadStrategy$Base.prototype.D_loadAsync = function() {
-      var def;
-      def = new m.Deferred();
-      def.resolve();
-      return def.promise;
+      return Promise.resolve();
     };
 
     LoadStrategy$Base.prototype.d_layout = function(nm) {
@@ -3538,7 +3234,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     RenderStrategy$Base.prototype.handleEvent = function(event_obj) {
       var attrs, data_action, data_params, f, files, i, ix, j, len, nm, old_params, prevent, rec, ref, ref1, ref2, ref3, target, touch, type, val, x, y;
       f = 'E/RenderStrategy.handleEvent: ';
-      _log2(f, 'top', this.redraw_guard, (event_obj != null ? event_obj : window.event).type);
+      E.log(f, 'top', this.redraw_guard, (event_obj != null ? event_obj : window.event).type);
       if (event_obj == null) {
         event_obj = window.event;
       }
@@ -3614,7 +3310,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         val = false;
       }
       files = target.files;
-      _log2(f, 'event', {
+      E.log(f, 'event', {
         type: type,
         data_action: data_action,
         data_params: data_params,
@@ -3682,7 +3378,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     RenderStrategy$Base.prototype.onPopState = function(event) {
       var f;
       f = 'E/RenderStrategy.onPopState: ';
-      _log2(f, {
+      E.log(f, {
         was_popped: this.was_popped,
         very_first: this.very_first
       }, true, {
@@ -3718,14 +3414,14 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       f = 'E/RenderStrategy.m_redraw: ';
       this.redraw_guard++;
       if (this.redraw_guard !== 1) {
-        _log2(f, 'GUARD REDRAW', this.redraw_guard);
+        E.log(f, 'GUARD REDRAW', this.redraw_guard);
         return;
       }
       return E.View().run().then((function(_this) {
         return function(modal_content) {
           var content, modal;
           modal = modal_content[0], content = modal_content[1];
-          _log2(f, 'DEFER-R', 'RESULTS: modal, content', _this.redraw_guard, modal, content);
+          E.log(f, 'DEFER-R', 'RESULTS: modal, content', _this.redraw_guard, modal, content);
           _this.render(modal, content);
           _this.redraw_guard--;
           if (_this.redraw_guard !== 0) {
@@ -3746,7 +3442,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       var container, f, start;
       f = 'E/RenderStrategy.render: ';
       start = new Date().getTime();
-      _log2(f, 'START RENDER', start, modal);
+      E.log(f, 'START RENDER', start, modal);
       if (modal) {
         m.render((container = document.getElementById(this.modalId)), content);
       } else {
@@ -3755,7 +3451,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         }
         m.render((container = document.getElementById(this.baseId)), m('div', {}, content));
       }
-      _log2(f, 'END RENDER', new Date().getTime() - start);
+      E.log(f, 'END RENDER', new Date().getTime() - start);
       if (!modal) {
         this.handleRenderState();
       }
@@ -3770,7 +3466,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       str_path = path.join('/');
       history = str_path === this.last_path ? 'replace' : true;
       f = 'E/RenderStrategy.handleRenderState:' + history + ':' + str_path;
-      _log2(f, {
+      E.log(f, {
         vf: this.very_first,
         wp: this.was_popped
       });
@@ -3859,53 +3555,54 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     };
 
     RestAPI.prototype.D_Request = function(method, route, data, header_obj_in) {
-      var header_obj, status;
+      var f, header_obj, promise, status;
+      f = 'E/RestAPI$Base.D_Request';
       header_obj = E.merge({}, this.opts.app_headers, header_obj_in != null ? header_obj_in : {});
       status = {
         code: false,
         text: false,
         ok: false
       };
-      return (m.request({
-        background: true,
-        method: method,
-        url: this.route_prefix + route,
-        data: data,
-        config: function(xhr) {
-          var nm, ref, val;
-          ref = header_obj != null ? header_obj : {};
-          for (nm in ref) {
-            val = ref[nm];
+      promise = new Promise((function(_this) {
+        return function(resolve, reject) {
+          var formData, nm, val, xhr;
+          xhr = new XMLHttpRequest();
+          xhr.onloadend = function(event) {
+            var jResponse, response;
+            status.code = xhr.status;
+            status.text = xhr.statusText;
+            status.xhr = xhr;
+            if (xhr.status === 200) {
+              status.ok = true;
+            }
+            if (!xhr.responseText.length) {
+              status.text = 'NetworkError';
+              response = '{"error":"NETWORK_ERROR"}';
+            } else {
+              response = xhr.responseText;
+            }
+            jResponse = JSON.parse(response);
+            return resolve({
+              status: status,
+              data: jResponse
+            });
+          };
+          xhr.open(method, _this.route_prefix + route);
+          for (nm in header_obj) {
+            val = header_obj[nm];
             xhr.setRequestHeader(nm, val);
           }
-        },
-        unwrapSuccess: function(response) {
-          return {
-            status: status,
-            data: response
-          };
-        },
-        unwrapError: function(response) {
-          return {
-            status: status,
-            data: response
-          };
-        },
-        extract: function(xhr, options) {
-          status.code = xhr.status;
-          status.text = xhr.statusText;
-          status.xhr = xhr;
-          if (xhr.status === 200) {
-            status.ok = true;
+          formData = new FormData();
+          for (nm in data) {
+            val = data[nm];
+            formData.append(nm, val);
           }
-          if (!xhr.responseText.length && xhr.readyState === 4) {
-            status.text = 'NetworkError';
-            return '{"error":"NETWORK_ERROR"}';
-          }
-          return xhr.responseText;
-        }
-      })).then(null, function(e_with_status_n_data) {
-        return e_with_status_n_data;
+          return xhr.send(formData);
+        };
+      })(this));
+      return promise.then(function(result) {
+        console.log(f, result);
+        return result;
       });
     };
 
@@ -3926,14 +3623,13 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     };
 
     RestAPI.prototype.D_RequestAuth = function(method, route, data, header_obj_in) {
-      var d, header_obj, token;
+      var header_obj, token;
       token = this.GetToken();
       if (token === false) {
         setTimeout(function() {
           return E.action('Request.no_token');
         }, 0);
-        d = new m.Deferred();
-        d.resolve({
+        return Promise.resolve({
           status: {
             code: 401,
             text: 'NO_TOKEN',
@@ -3943,13 +3639,12 @@ else if (typeof define === "function" && define.amd) define(function() {return m
             error: 'TOKEN'
           }
         });
-        return d.promise;
       }
       header_obj = E.merge({}, this.opts.app_headers, header_obj_in != null ? header_obj_in : {});
       header_obj.Authorization = token.token_type + " " + token.access_token;
       return (this.D_Request(method, route, data, header_obj)).then((function(_this) {
         return function(status_n_data) {
-          if (status.code === 401) {
+          if (status_n_data.status.code === 401) {
             setTimeout(function() {
               return E.action('Request.bad_token');
             }, 0);
@@ -3987,11 +3682,19 @@ Part: {
 
 /*Dev/app.coffee*/// Generated by CoffeeScript 1.9.2
 (function() {
-  var err, warn,
+  'use strict';
+  var cache, err, warn,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
+  cache = {};
+
   warn = function(str, o) {
-    return console.warn("WARNING", str, o != null ? o : '');
+    if (str in cache) {
+
+    } else {
+      cache[str] = true;
+      return console.warn("WARNING", str, o != null ? o : '');
+    }
   };
 
   err = function(str, o) {
@@ -3999,7 +3702,7 @@ Part: {
     throw new Error("ERROR: " + str);
   };
 
-  window.EpicMvc.app$Dev = {
+  E.app$Dev = {
     OPTIONS: {
       warn: warn,
       err: err,
@@ -4266,6 +3969,7 @@ Part: {
 
 /*Dev/Model/Devl.coffee*/// Generated by CoffeeScript 1.9.2
 (function() {
+  'use strict';
   var Devl,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
@@ -4360,7 +4064,7 @@ Part: {
         case 'table_left':
         case 'table_right':
           incr = act === 'table_left' ? -1 : 1;
-          _log2(f, act, incr, this.table_row_cnt);
+          E.log(f, act, incr, this.table_row_cnt);
           this.table_row_cnt += incr;
           return this.invalidateTables(['Model']);
         default:
@@ -4496,7 +4200,7 @@ Part: {
               }
             });
           }
-          _log2(f, 'final', table);
+          E.log(f, 'final', table);
           return this.Table[tbl_nm] = table;
         default:
           return Devl.__super__.loadTable.call(this, tbl_nm);
@@ -4547,10 +4251,10 @@ Part: {
         this.errors_cache[type][key] = e;
         this.errors_cache._COUNT++;
         if (this.errors_cache._COUNT < 5) {
-          _log2('### _Error type/key/e', type, key, e);
+          E.log('### _Error type/key/e', type, key, e);
           msg = (((key + "\n\n" + e.message).replace(/&lt;/g, '<')).replace(/&gt;/g, '>')).replace(/&amp;/g, '&');
           prefix = type === 'v2' || type === 'v3' ? 'Variable reference' : 'Tag';
-          return _log2("ERROR", prefix + " error (" + type + "):\n\n" + msg);
+          return E.log("ERROR", prefix + " error (" + type + "):\n\n" + msg);
         }
       }
     };
@@ -4645,7 +4349,7 @@ Part: {
         }
       } catch (_error) {
         e = _error;
-        _log2('##### Error in form-part', (ref = oPt.attrs.part) != null ? ref : 'fist_default', e, e.stack);
+        E.log('##### Error in form-part', (ref = oPt.attrs.part) != null ? ref : 'fist_default', e, e.stack);
         this._Error('form', this._TagText(oPt, true), e);
         return this._Err('tag', 'fist', attrs, e);
       }
@@ -4663,7 +4367,7 @@ Part: {
         if (this.Epic.isSecurityError(e)) {
           throw e;
         }
-        _log2('##### Error in form-part', (ref2 = oPt.attrs.part) != null ? ref2 : 'fist_default', e, e.stack);
+        E.log('##### Error in form-part', (ref2 = oPt.attrs.part) != null ? ref2 : 'fist_default', e, e.stack);
         this._Error('form_part', this._TagText(oPt, true), e);
         return this._Err('tag', 'fist', attrs, e);
       }
@@ -4682,7 +4386,7 @@ Part: {
         ];
       } catch (_error) {
         e = _error;
-        _log2('##### Error in page-part', attrs.part, e);
+        E.log('##### Error in page-part', attrs.part, e);
         return m('pre', {}, ["<e-part part=\"Part/" + attrs.part + "\">", m('br'), e, m('br'), e.stack]);
       }
     };
@@ -4735,7 +4439,7 @@ Part: {
         ];
       } catch (_error) {
         e = _error;
-        _log2('##### Error in T_page', attrs, e);
+        E.log('##### Error in T_page', attrs, e);
         this._Error('page', this._TagText({
           tag: 'page',
           attrs: attrs
@@ -4762,7 +4466,7 @@ Part: {
         t_format_spec = format_spec || custom_spec ? '#' + format_spec : '';
         t_custom_spec = custom_spec ? '#' + custom_spec : '';
         key = '&' + view_nm + '/' + tbl_nm + '/' + col_nm + t_format_spec + t_custom_spec + ';';
-        _log2('##### Error in v3 key=', key, e);
+        E.log('##### Error in v3 key=', key, e);
         this._Error('v3', key, e);
         throw e;
       }
@@ -4781,7 +4485,7 @@ Part: {
         val = View.__super__.v2.call(this, tbl_nm, col_nm, format_spec, custom_spec, sub_nm);
       } catch (_error) {
         e = _error;
-        _log2('##### v2', "&" + tbl_nm + "/" + col_nm + ";", e, e.stack);
+        E.log('##### v2', "&" + tbl_nm + "/" + col_nm + ";", e, e.stack);
         val = "&" + tbl_nm + "/" + col_nm + ";[" + e.message + "] <pre>" + e.stack + "</pre>";
       }
       if (val === void 0) {
@@ -4878,7 +4582,7 @@ Part: {
 
     View.prototype._Err = function(type, tag, attrs, e) {
       var stack, title;
-      _log2('### _Err type/tag/attrs/e', type, tag, attrs, {
+      E.log('### _Err type/tag/attrs/e', type, tag, attrs, {
         e: e,
         m: e.message,
         s: e.stack
@@ -4938,7 +4642,7 @@ Part: {
     };
 
     LoadStrategy.prototype.D_loadAsync = function() {
-      var def, el, f, file, file_list, j, k, l, len, len1, len2, len3, n, next, pkg, promise, ref, ref1, ref2, ref3, ref4, ref5, sub, type, url, work;
+      var el, f, file, file_list, j, k, l, len, len1, len2, len3, m, pkg, ref, ref1, ref2, ref3, ref4, ref5, sub, type, url, work;
       f = 'Dev:E/LoadStrategy.loadAsync';
       ref = this.appconfs;
       for (j = 0, len = ref.length; j < len; j++) {
@@ -4963,8 +4667,6 @@ Part: {
         }
       }
       work = [];
-      def = new m.Deferred();
-      promise = def.promise;
       ref3 = this.appconfs;
       for (l = 0, len2 = ref3.length; l < len2; l++) {
         pkg = ref3[l];
@@ -4975,8 +4677,8 @@ Part: {
         for (type in ref5) {
           file_list = ref5[type];
           if (type !== 'css') {
-            for (n = 0, len3 = file_list.length; n < len3; n++) {
-              file = file_list[n];
+            for (m = 0, len3 = file_list.length; m < len3; m++) {
+              file = file_list[m];
               sub = type === 'root' ? '' : type + '/';
               url = (this.makePkgDir(pkg)) + '/' + sub + file + '.js';
               work.push(url);
@@ -4984,23 +4686,25 @@ Part: {
           }
         }
       }
-      next = function(ix) {
-        if (ix >= work.length) {
-          _log2(f, ix, 'done.');
-          def.resolve(null);
-          return;
-        }
-        _log2(f, 'doing', ix, work[ix]);
-        el = document.createElement('script');
-        el.setAttribute('type', 'text/javascript');
-        el.setAttribute('src', work[ix]);
-        el.onload = function() {
-          return next(ix + 1);
+      return new Promise(function(resolve, reject) {
+        var next;
+        next = function(ix) {
+          if (ix >= work.length) {
+            E.log(f, ix, 'done.');
+            resolve(null);
+            return;
+          }
+          E.log(f, 'doing', ix, work[ix]);
+          el = document.createElement('script');
+          el.setAttribute('type', 'text/javascript');
+          el.setAttribute('src', work[ix]);
+          el.onload = function() {
+            return next(ix + 1);
+          };
+          document.head.appendChild(el);
         };
-        document.head.appendChild(el);
-      };
-      next(0);
-      return promise;
+        return next(0);
+      });
     };
 
     LoadStrategy.prototype.inline = function(type, nm) {
@@ -5031,7 +4735,7 @@ Part: {
     };
 
     LoadStrategy.prototype.d_get = function(type, nm) {
-      var def, f, fn, full_nm, full_nm_alt, j, k, len, len1, pkg, promise, ref, ref1, type_alt, uncompiled;
+      var f, fn, full_nm, full_nm_alt, j, k, len, len1, pkg, promise, ref, ref1, type_alt, uncompiled;
       f = 'd_get';
       full_nm = type + '/' + nm + '.html';
       if (this.cache[full_nm] != null) {
@@ -5040,9 +4744,7 @@ Part: {
       if (uncompiled = this.inline(type, nm)) {
         return this.compile(full_nm, uncompiled);
       }
-      def = new m.Deferred();
-      def.resolve(false);
-      promise = def.promise;
+      promise = Promise.resolve(false);
       type_alt = type === 'Layout' ? 'tmpl' : type.toLowerCase();
       full_nm_alt = type + '/' + nm + '.' + type_alt + '.html';
       if (E.option.compat_path) {
@@ -5113,22 +4815,18 @@ Part: {
       var f, path;
       f = 'D_getFile';
       path = (this.makePkgDir(pkg)) + '/';
-      return (m.request({
-        background: true,
-        method: 'GET',
-        url: path + nm,
-        data: {
-          _: (new Date).valueOf()
-        },
-        config: function(xhr, options) {
-          xhr.setRequestHeader("Content-Type", "text/plain; charset=utf-8");
-          return xhr;
-        },
-        deserialize: function(x) {
-          return x;
-        }
-      })).then(null, function(error) {
-        return false;
+      return new Promise(function(resolve, reject) {
+        var xhr;
+        xhr = new XMLHttpRequest();
+        xhr.onloadend = function(event) {
+          if (xhr.status !== 200) {
+            resolve(false);
+          }
+          return resolve(xhr.response);
+        };
+        xhr.open('GET', path + nm + '?_=' + new Date().valueOf());
+        xhr.setRequestHeader("Content-Type", "text/plain; charset=utf-8");
+        return xhr.send();
       });
     };
 
@@ -5159,12 +4857,10 @@ Part: {
 /*Dev/Extra/ParseFile.coffee*/// Generated by CoffeeScript 1.9.2
 (function() {
   'use strict';
-  var E, FindAttrVal, FindAttrs, ParseFile, _log2, doError, entities, findStyleVal, findStyles, findVars, mkNm, mkObj, nm_map, sq,
+  var E, FindAttrVal, FindAttrs, ParseFile, doError, entities, findStyleVal, findStyles, findVars, mkNm, mkObj, nm_map, sq,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  E = {};
-
-  _log2 = function() {};
+  E = typeof exports !== "undefined" && exports !== null ? require('E') : window.E;
 
   mkNm = function(nm) {
     if (nm.match(/^[a-zA-Z_]*$/)) {
@@ -5710,17 +5406,7 @@ Part: {
     };
   };
 
-  if (typeof window !== "undefined" && window !== null) {
-    _log2 = window._log2;
-    E = window.E;
-    E.Extra.ParseFile = ParseFile;
-  } else {
-    module.exports = function(w) {
-      _log2 = w._log2;
-      E = w.E;
-      return E.Extra.ParseFile = ParseFile;
-    };
-  }
+  E.Extra.ParseFile = ParseFile;
 
 }).call(this);
 

@@ -3,7 +3,7 @@
 # (In your HTML file, inside $())
 #
 #	pre_flight_check= (action,vals) ->
-#		_log2 'pre_flight_check', action, vals.to, vals.at, vals.from
+#		E.log 'pre_flight_check', action, vals.to, vals.at, vals.from
 #		return vals.to isnt vals.at and vals.to isnt vals.from
 #
 #	var drop= new E.Extra.GlobalDrag( pre_flight_check);
@@ -20,13 +20,13 @@
 #   data-drop-folder="copy_folder" # These are your click-event names to put into app.coffee
 #   data-drop-Files="os_upload_drop" # Special '-Files' is outside-of-browser source (unknown what it is until it's dropped)
 # (Optional, to make container clickable to also cause a click event on mouse-click:)
-#   onclick="window.EpicMvc.Epic.makeClick(false,'go_add_new_item',{id:'&Directory/PRIVATE/active_folder;'},true)"
+#   e-click="go_add_new_item" e-id="&Directory/PRIVATE/active_folder;"
 #
 
 class GlobalDrag
 	constructor: (@pre_flight) ->
-		#@log3= window.Function.prototype.bind.call window.console.log, window.console
 		@log3= ->
+		#@log3= E.log
 		@count_enter= 0
 		@count_leave= 0
 		@count_target= 0
@@ -119,7 +119,7 @@ class GlobalDrag
 		drop_data= @data $e, 'drop'
 		params= $.extend {}, @src_data, drop_data, event: e
 		@src_end() # If external and so no 'end' event
-		window.EpicMvc.Epic.makeClick false, action, params, true
+		E.action action, params
 		return false
 
 	src_start: ($e) -> # Enter/Leave events don't have access to setData info, so internal drags put it here

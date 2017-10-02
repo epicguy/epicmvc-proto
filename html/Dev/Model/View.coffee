@@ -15,14 +15,14 @@ class View extends E.Model.View$Base
 			@errors_cache[type][key]= e
 			@errors_cache._COUNT++
 			if @errors_cache._COUNT< 5
-				_log2 '### _Error type/key/e', type, key, e
+				E.log '### _Error type/key/e', type, key, e
 				msg= (("#{key}\n\n#{e.message}"
 					.replace /&lt;/g, '<')
 					.replace /&gt;/g, '>')
 					.replace /&amp;/g, '&'
 				prefix= if type is 'v2' or type is 'v3' then 'Variable reference' else 'Tag'
 				#alert "#{prefix} error (#{type}):\n\n#{msg}" #TODO CHROME BUG NOT SHOWING POPUP
-				_log2 "ERROR", "#{prefix} error (#{type}):\n\n#{msg}" #TODO CHROME BUG NOT SHOWING POPUP
+				E.log "ERROR", "#{prefix} error (#{type}):\n\n#{msg}" #TODO CHROME BUG NOT SHOWING POPUP
 	invalidateTables: (view_nm, tbl_list, deleted_tbl_nms) ->
 		E.Devl().tableChange view_nm, tbl_list, deleted_tbl_nms if deleted_tbl_nms.length
 		super view_nm, tbl_list, deleted_tbl_nms
@@ -48,11 +48,11 @@ class View extends E.Model.View$Base
 				for k,nm of m: 'model', p:'parent', c:'count' when i[ k]?
 					i_info+= nm+ ':'+ i[ k]
 				err= "No such sub-table (#{rh}) in (#{lh}) R(#{row_info}) I(#{i_info}})"
-				#_log2 'ERROR', err
+				#E.log 'ERROR', err
 				throw new Error err
 		else if lh not of E
 			err= "No such Model (#{lh}) for model/table (#{lh}/#{rh})"
-			#_log2 'ERROR', err
+			#E.log 'ERROR', err
 			throw new Error err
 		#return super at_table, alias
 	xT_fist: (oPt) -> # TODO REWROTE THIS BELOW WITH JAMIE, BUT MAY WANT TO BORROW FROM HERE SOME MORE
@@ -64,7 +64,7 @@ class View extends E.Model.View$Base
 			throw Error "app.conf requires MODELS: ... forms=\"...,#{c}\"" if not v
 			throw Error "Your model (#{v}) must have a method fistLoadData" if not ('fistLoadData' of @Epic.getInstance v)
 		catch e
-			_log2 '##### Error in form-part', oPt.attrs.part ? 'fist_default', e, e.stack
+			E.log '##### Error in form-part', oPt.attrs.part ? 'fist_default', e, e.stack
 			@_Error 'form',( @_TagText oPt, true), e
 			return @_Err 'tag', 'fist', attrs, e
 		try
@@ -74,7 +74,7 @@ class View extends E.Model.View$Base
 			super oPt
 		catch e
 			throw e if @Epic.isSecurityError e
-			_log2 '##### Error in form-part', oPt.attrs.part ? 'fist_default', e, e.stack
+			E.log '##### Error in form-part', oPt.attrs.part ? 'fist_default', e, e.stack
 			@_Error 'form_part',( @_TagText oPt, true), e
 			@_Err 'tag', 'fist', attrs, e
 
@@ -87,7 +87,7 @@ class View extends E.Model.View$Base
 				super attrs
 			]
 		catch e
-			_log2 '##### Error in page-part', attrs.part, e
+			E.log '##### Error in page-part', attrs.part, e
 			return m 'pre',{},["<e-part part=\"Part/#{attrs.part}\">",(m 'br'), e, (m 'br'), e.stack]
 
 	getLetTypPag: () ->
@@ -107,8 +107,8 @@ class View extends E.Model.View$Base
 				super attrs # TODO BREAKS IN EpicMvc-One SINCE @kids EXPECTS A PROMISE AS RETURN VALUE
 			]
 		catch e
-			#_log2 '##### Error in ', type, page, e, e.stack
-			_log2 '##### Error in T_page', attrs, e
+			#E.log '##### Error in ', type, page, e, e.stack
+			E.log '##### Error in T_page', attrs, e
 			@_Error 'page',( @_TagText {tag:'page',attrs}, true), e
 			@_Err 'page', 'page', attrs, e
 			#return """<pre>&lt;epic:page page:#{@bd_page}&gt;<br>#{e}<br>#{e.stack}</pre>"""
@@ -127,7 +127,7 @@ class View extends E.Model.View$Base
 			t_format_spec= if format_spec or custom_spec then '#'+ format_spec else ''
 			t_custom_spec= if custom_spec then '#'+ custom_spec else ''
 			key= '&'+ view_nm+ '/'+ tbl_nm+ '/'+ col_nm+ t_format_spec+ t_custom_spec+ ';'
-			_log2 '##### Error in v3 key=', key, e
+			E.log '##### Error in v3 key=', key, e
 			@_Error 'v3', key, e
 			throw e
 		#"<span title='&#{view_nm}/#{tbl_nm}/#{col_nm}#{t_format_spec}#{t_custom_spec};'>#{val}</span>"
@@ -141,7 +141,7 @@ class View extends E.Model.View$Base
 		try
 			val= super tbl_nm, col_nm, format_spec, custom_spec, sub_nm
 		catch e
-			_log2 '##### v2', "&#{tbl_nm}/#{col_nm};", e, e.stack
+			E.log '##### v2', "&#{tbl_nm}/#{col_nm};", e, e.stack
 			val= "&#{tbl_nm}/#{col_nm};[#{e.message}] <pre>#{e.stack}</pre>" # Give back a visual of what is in the HTML
 		if val is undefined
 			t_format_spec= if format_spec or custom_spec then '#'+ format_spec else ''
@@ -200,7 +200,7 @@ class View extends E.Model.View$Base
 		after?= ''
 		[( m 'div', {className: "dbg-#{type}-box"}, "#{@_TagText attrs}#{inside}"), after]
 	_Err:( type, tag, attrs, e) ->
-		_log2 '### _Err type/tag/attrs/e', type, tag, attrs, e: e, m: e.message, s: e.stack, (e.stack.split '\n')[1]
+		E.log '### _Err type/tag/attrs/e', type, tag, attrs, e: e, m: e.message, s: e.stack, (e.stack.split '\n')[1]
 		title= (e.stack.split '\n')[1]
 		stack= if @Opts().stack then (m 'pre',{},"\n#{e.stack}") else title
 		tag: 'div'

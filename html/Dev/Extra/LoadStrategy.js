@@ -77,11 +77,11 @@
         var next;
         next = function(ix) {
           if (ix >= work.length) {
-            _log2(f, ix, 'done.');
+            E.log(f, ix, 'done.');
             resolve(null);
             return;
           }
-          _log2(f, 'doing', ix, work[ix]);
+          E.log(f, 'doing', ix, work[ix]);
           el = document.createElement('script');
           el.setAttribute('type', 'text/javascript');
           el.setAttribute('src', work[ix]);

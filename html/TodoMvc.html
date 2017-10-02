@@ -96,8 +96,8 @@
 			</footer>
 </script>
 <!-- Scripts here. Don't remove ? -->
-<script type="text/javascript" src="EpicMvc-BaseDev-2.1.0-latest.js"></script>
-<script type="text/javascript" src="EpicMvc-Extra-2.1.0-latest.js"></script>
+<script type="text/javascript" src="EpicMvc-BaseDev-latest.js"></script>
+<script type="text/javascript" src="EpicMvc-Extra-latest.js"></script>
 <script type="text/javascript" src="coffee-script.js"> </script>
 <script type="text/coffeescript">
 E.fist$TODO=
@@ -125,7 +125,10 @@ E.app$TODO=
 		browser_rehash:  do: 'TODO.', pass:'hash'
 	FLOWS: default: route: model: 'TODO', option: '.list-filter'
 
-class TODO extends window.E.ModelJS
+# Note, in Chrome incognito, this may error; might need stronger check, like try/catch.
+E.localStorage= window.localStorage ? -> # We place things into 'E' namespace for models, so models can be run in nodejs for unit-testing
+
+class TODO extends E.ModelJS
 	constructor: ( view_nm, options) ->
 		f= 'TODO.constructor'
 		ss=
@@ -135,23 +138,23 @@ class TODO extends window.E.ModelJS
 	saveState: ->
 		# Put in localStorage
 		new_list=( id:l.id, title:l.title, completed:l.completed for l in @list)
-		window.localStorage?.setItem @options.key, JSON.stringify new_list
+		E.localStorage.setItem @options.key, JSON.stringify new_list
 		super() # Returns a snapshot of the 'ss' state
 	restoreState: (copy_of_state) ->
 		f= 'TODO::restoreState'
 		super copy_of_state
 		@nextId= 0
 		# Pull from localStorage if it existed there
-		saved= window.localStorage?.getItem @options.key
+		saved= E.localStorage.getItem @options.key
 		@list= if typeof saved isnt 'string' then [] else JSON.parse saved
 		for l in @list
 			@nextId= l.id if l.id> @nextId
-		_log2 f, 'list', @list
+		E.log f, 'list', @list
 	_nextId: -> ++@nextId
 	route: (options) ->	return '/'+ if @show is 'all' then '' else @show
 	action: (ctx, act, p) ->
 		f= 'M:TODO::action'
-		_log2 f, 'act:', act, 'p:', p
+		E.log f, 'act:', act, 'p:', p
 		{r,i,m}= ctx
 		switch act
 			when 'browser_hash' #p.hash as /,/active,/completed

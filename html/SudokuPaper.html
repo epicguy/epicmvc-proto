@@ -3,9 +3,9 @@
 <head>
   <title>SudokuPaper on EpicMvc (Dev)</title>
   <link rel="stylesheet" type="text/css" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"/>
-  <script type="text/javascript" src="http://rawgit.com/epicguy/epicmvc-proto/version2/html/EpicMvc-BaseDev-2.1.0-latest.js"></script>
-  <script type="text/javascript" src="http://rawgit.com/epicguy/epicmvc-proto/version2/html/EpicMvc-Extra-2.1.0-latest.js"></script>
-  <script type="text/javascript" src="http://rawgit.com/epicguy/epicmvc-proto/version2/html/coffee-script.js"> </script>
+  <script type="text/javascript" src="EpicMvc-BaseDev-latest.js"></script>
+  <script type="text/javascript" src="EpicMvc-Extra-latest.js"></script>
+  <script type="text/javascript" src="coffee-script.js"> </script>
 
 <style type="text/css">
 span.Puz table { border-spacing: 0px; padding: 0px; border-color: black; text-align: center }
@@ -41,7 +41,7 @@ E.app$Sudoku=
 		solve:        do: 'Board.solve',        pass: 'id,label'
 		toggle_maybe: do: 'Board.toggle_maybe', pass: 'id,label'
 
-class Board extends window.E.ModelJS
+class Board extends E.ModelJS
 	constructor: ( view_nm, options) ->
 		ss=
 			sudoku: true

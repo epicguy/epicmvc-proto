@@ -16,7 +16,7 @@
     Wist.prototype.loadTable = function(tbl_nm) {
       var f;
       f = "Wist:loadTable:" + tbl_nm;
-      _log2(f);
+      E.log(f);
       return this.Table[tbl_nm] = (this._getWist(tbl_nm)).table;
     };
 

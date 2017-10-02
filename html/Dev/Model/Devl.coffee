@@ -61,7 +61,7 @@ class Devl extends E.ModelJS
 				@invalidateTables ['Model']
 			when 'table_left', 'table_right'
 				incr= if act is 'table_left' then -1 else 1
-				_log2 f, act, incr, @table_row_cnt
+				E.log f, act, incr, @table_row_cnt
 				@table_row_cnt+= incr
 				@invalidateTables ['Model']
 			else return super ctx, act, p
@@ -124,7 +124,7 @@ class Devl extends E.ModelJS
 						else if a.inst> b.inst then 1
 						else -1
 
-				_log2 f, 'final', table
+				E.log f, 'final', table
 				@Table[tbl_nm]= table
 			else super tbl_nm
 

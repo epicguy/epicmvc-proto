@@ -1,9 +1,9 @@
 # Generate a compressed version of compiled view files
 #
-window= {}
+#window= {}
 _log= ->
 #_log= console.log
-window._log2= ->
+#window._log2= ->
 #window._log2= console.log
 
 fs= require 'fs'
@@ -12,9 +12,9 @@ fs= require 'fs'
 dev_dir= '../'+ process.argv[ 3]
 epic_path= '../'+ process.argv[ 2]
 #window= E: Extra: {}, Model: {}
-window.E= require epic_path+ '/EpicCore.js'
-E= window.E # So it looks like it's in the global namespace, when used as closure below
-(require epic_path+ '/Dev/Extra/ParseFile.js') window
+E= require 'E'
+require epic_path+ '/EpicCore.js'
+require epic_path+ '/Dev/Extra/ParseFile.js'
 
 class MockLoadStrategy
 	constructor: (dev_dir,pkg_nm) ->

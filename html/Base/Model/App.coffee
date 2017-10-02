@@ -18,7 +18,7 @@ class App$Base extends E.ModelJS
 		f= 'goTo'
 		was= "#{@f}/#{@t}/#{@s}"
 		@f= flow; @t= t; @s= s
-		_log2 f, {was,is: "#{@f}/#{@t}/#{@s}"}
+		E.log f, {was,is: "#{@f}/#{@t}/#{@s}"}
 		if was isnt "#{@f}/#{@t}/#{@s}"
 			@invalidateTables ['V'] # This table is specific to the 'path'
 	go: (path) ->
@@ -31,7 +31,7 @@ class App$Base extends E.ModelJS
 		E.option.ap1 path, flow, t, s # Verify 2 slashes, and valid path #%#
 		if not t then t= E.appStartT flow
 		if not s then s= E.appStartS flow, t
-		_log2 f, {flow,t,s}, @f, @t, @s
+		E.log f, {flow,t,s}, @f, @t, @s
 		@goTo flow, t, s
 	appGet: (attr) -> E.appGetSetting attr, @f, @t, @s
 	getStepPath: -> [@f, @t, @s]

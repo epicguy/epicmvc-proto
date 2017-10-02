@@ -37,7 +37,7 @@ class RenderStrategy$Base
 		true
 	handleEvent: (event_obj) =>
 		f= 'E/RenderStrategy.handleEvent: '
-		_log2 f, 'top', @redraw_guard, (event_obj ? window.event).type
+		E.log f, 'top', @redraw_guard, (event_obj ? window.event).type
 		# Getting all events, need to weed out to 'data-e-action' nodes
 		event_obj?= window.event # IE < 9
 		type= event_obj.type
@@ -76,7 +76,7 @@ class RenderStrategy$Base
 		while target.tagName isnt 'BODY' and not data_action= target.getAttribute 'data-e-action'
 			target= target.parentElement
 		E.option.event type, event_obj, target, data_action
-		#_log2 f, 'event', {type, data_action}
+		#E.log f, 'event', {type, data_action}
 		return false if not data_action
 		data_params= {}; attrs= target.attributes
 		for ix in [0...attrs.length] when 'data-e-' is attrs[ ix].name.slice 0, 7
@@ -85,7 +85,7 @@ class RenderStrategy$Base
 		val= target.value
 		val= false if target.type is 'checkbox' and target.checked is false
 		files= target.files
-		_log2 f, 'event', {type, data_action, data_params, val, files}, target
+		E.log f, 'event', {type, data_action, data_params, val, files}, target
 		data_params.val= val
 		data_params._files= files
 		# Support for Touch Events
@@ -115,7 +115,7 @@ class RenderStrategy$Base
 		window.onbeforeunload= -> new_msg
 	onPopState: (event) =>
 		f= 'E/RenderStrategy.onPopState: '
-		_log2 f, was_popped: @was_popped, very_first: @very_first, true, state: if event is true then 'X' else event.state
+		E.log f, was_popped: @was_popped, very_first: @very_first, true, state: if event is true then 'X' else event.state
 		if event is true or not event.state # Special processing - making sure this logic happens in FF as initial load
 			if @was_popped or not @very_first # We did handle it already
 				E.action 'browser_rehash', hash: location.hash.substr 1
@@ -134,11 +134,11 @@ class RenderStrategy$Base
 		f= 'E/RenderStrategy.m_redraw: '
 		@redraw_guard++
 		if @redraw_guard isnt 1
-			_log2 f, 'GUARD REDRAW', @redraw_guard
+			E.log f, 'GUARD REDRAW', @redraw_guard
 			return
 		E.View().run().then (modal_content) =>
 			[modal, content]= modal_content
-			_log2 f, 'DEFER-R', 'RESULTS: modal, content', @redraw_guard, modal, content
+			E.log f, 'DEFER-R', 'RESULTS: modal, content', @redraw_guard, modal, content
 			# Assume @render call won't go async and we end up back in this module
 			@render modal, content # Do before decrement of guard, since 'blur' event fired during this
 			@redraw_guard--
@@ -152,7 +152,7 @@ class RenderStrategy$Base
 	render: (modal, content) ->
 		f= 'E/RenderStrategy.render: '
 		start= new Date().getTime() #%#
-		_log2 f, 'START RENDER', start, modal
+		E.log f, 'START RENDER', start, modal
 		if modal
 			# Note, Can put backdrop in layout if desired, with .modal-backdrop and optional e-action
 			m.render (container= document.getElementById @modalId), content
@@ -160,7 +160,7 @@ class RenderStrategy$Base
 			if @was_modal # Get rid of what was there
 				m.render (document.getElementById @modalId), []
 			m.render (container= document.getElementById @baseId), m 'div', {}, content
-		_log2 f, 'END RENDER', new Date().getTime()- start
+		E.log f, 'END RENDER', new Date().getTime()- start
 		@handleRenderState() if not modal # Let's not bother with modals and history, for now
 		@was_modal= modal
 		@was_popped= false
@@ -174,7 +174,7 @@ class RenderStrategy$Base
 		# History can be: true, false, 'replace'
 		f= 'E/RenderStrategy.handleRenderState:'+ history+ ':'+ str_path
 		# Put a 'hash' into location bar, to match our current app location, for history
-		_log2 f, vf: @very_first, wp: @was_popped
+		E.log f, vf: @very_first, wp: @was_popped
 		return if not history
 		displayHash= '' # if @very_first then '' else 'action-'+ action
 		# Does the current flow-path contain a 'route' value?
@@ -184,7 +184,7 @@ class RenderStrategy$Base
 		new_hash= route if typeof route is 'string'
 		displayHash= new_hash if new_hash isnt false
 		model_state= E.getModelState()
-		#_log2 f, ms: model_state, ha: displayHash, cvw: [action, @very_first, @was_popped]
+		#E.log f, ms: model_state, ha: displayHash, cvw: [action, @very_first, @was_popped]
 		# iOS/phonegap did not like file:// URLS being pushed/replaced
 		if window.location.protocol isnt 'file:'
 			if @very_first or history is 'replace'

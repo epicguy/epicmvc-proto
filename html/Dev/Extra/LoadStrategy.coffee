@@ -31,15 +31,15 @@ class LoadStrategy
 					sub= if type is 'root' then '' else type+ '/'
 					url= (@makePkgDir pkg)+ '/'+ sub+ file+ '.js'
 					work.push url
-					#_log2 f, 'to do ', url
+					#E.log f, 'to do ', url
 
 		new Promise (resolve, reject)->
 			next= (ix) ->
 				if ix>= work.length
-					_log2 f, ix, 'done.'
+					E.log f, ix, 'done.'
 					resolve null
 					return
-				_log2 f, 'doing', ix, work[ ix]
+				E.log f, 'doing', ix, work[ ix]
 				el= document.createElement 'script'
 				el.setAttribute 'type', 'text/javascript'
 				el.setAttribute 'src', work[ ix]
@@ -50,14 +50,14 @@ class LoadStrategy
 	inline: (type,nm) ->
 		f= 'inline'
 		el= document.getElementById id= 'view-'+ type+ '-'+ nm
-		#_log2 f, 'inline el=', id, el
+		#E.log f, 'inline el=', id, el
 		return el.innerHTML if el
 		null
 	preLoaded: (pkg,type,nm) ->
 		f= 'preLoaded'
-		#_log2 f, 'looking for ', pkg, type, nm
+		#E.log f, 'looking for ', pkg, type, nm
 		r= E['view$'+pkg]?[type]?[nm]
-		#_log2 f, 'found', (if r?.preloaded then 'PRELOADED' else 'broken'), r
+		#E.log f, 'found', (if r?.preloaded then 'PRELOADED' else 'broken'), r
 		r
 	compile: (name,uncompiled) ->
 		parsed= E.Extra.ParseFile name, uncompiled
@@ -82,20 +82,20 @@ class LoadStrategy
 			for pkg in @reverse_packages when pkg not in ['Base', 'Dev', 'Proto'] and type isnt 'Layout'
 				do (pkg) =>
 					promise= promise.then (result) =>
-						#_log2 f, 'THEN-'+ pkg, full_nm_alt, if 'S' is E.type_oau result then (result.slice 0, 40) else result
+						#E.log f, 'THEN-'+ pkg, full_nm_alt, if 'S' is E.type_oau result then (result.slice 0, 40) else result
 						return result if result isnt false # No need to hit network again
 						return false if pkg not of E.option.loadDirs
 						@D_getFile pkg, full_nm_alt
 		for pkg in @reverse_packages
 			do (pkg) =>
 				promise= promise.then (result) =>
-					#_log2 f, 'THEN-'+ pkg, full_nm, if 'S' is E.type_oau result then (result.slice 0, 40) else result
+					#E.log f, 'THEN-'+ pkg, full_nm, if 'S' is E.type_oau result then (result.slice 0, 40) else result
 					return result if result isnt false # No need to hit network again
 					return compiled if compiled= @preLoaded pkg, type, nm
 					return false if pkg not of E.option.loadDirs
 					@D_getFile pkg, full_nm
 		promise= promise.then (result) => # False if no file ever found
-			#_log2 f, 'THEN-COMPILE', full_nm, result
+			#E.log f, 'THEN-COMPILE', full_nm, result
 			if result isnt false
 				# Could have been precompiled content
 				# return result if result?.preloaded  # TODO FIGURE OUT WHAT GOES HERE TO DETECT PRECOMPILED CONTENT
@@ -106,7 +106,7 @@ class LoadStrategy
 				throw new Error "Unable to locate View file (#{full_nm})."
 				console.error 'ERROR', 'NO FILE FOUND! ', full_nm
 				parsed= false
-			#_log2 f, 'DEFER-L', '>results parsed>', result, parsed
+			#E.log f, 'DEFER-L', '>results parsed>', result, parsed
 			@cache[ full_nm]= parsed
 			return parsed
 		promise.then null, (error) -> throw error

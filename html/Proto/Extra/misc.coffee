@@ -22,7 +22,7 @@ E.ex$attr= (el, beenHere, ctx, value, attr_nm, cast_to) ->
 			value= (new Function 'p1', 'p2', 'p3', value)
 		when 'int'
 			value= parseInt value
-	_log2 "ex$attr: attr_nm=", attr_nm, " cast_to=", cast_to, " value=", value
+	E.log "ex$attr: attr_nm=", attr_nm, " cast_to=", cast_to, " value=", value
 	el[ attr_nm]= value
 	return
 
@@ -30,7 +30,7 @@ E.ex$attr= (el, beenHere, ctx, value, attr_nm, cast_to) ->
 # Example: data-ex-scroll="Top" (will set element.scollTop= 0
 E.ex$scroll= (el, isInit, ctx, val, p1, p2)->
 	f= 'E.ex$scroll:'
-	_log2 f, {isInit, val, p1, p2}
+	E.log f, {isInit, val, p1, p2}
 
 	direction= 'scroll'+ val
 	el[direction]= 0

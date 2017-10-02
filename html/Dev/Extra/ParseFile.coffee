@@ -1,4 +1,5 @@
 'use strict'
+E= if exports? then require 'E' else window.E
 # Copyright 2007-2017 by James Shelby, shelby (at:) dtsol.com; All rights reserved.
 
 # To transform EpicMvc tags and HTML for Mithril:
@@ -18,8 +19,6 @@
 #  9) Style= attrs must not be strings but objects, with camelCase e.g. style={{fontSize:'1em'}}
 
 # Access to globals as closure, even from nodejs: (updated below)
-E= {}
-_log2= ->
 
 # Parse attribute list
 
@@ -211,12 +210,12 @@ FindAttrs= (file_info, str)->
 			className.push parts.join ''
 			continue
 		attrs_need_cleaning= true if nm[ 0] is '?'
-		#_log2 f, 'nm,fl', nm, attrs_need_cleaning
+		#E.log f, 'nm,fl', nm, attrs_need_cleaning
 		attr_obj[ nm]=( findVars parts.join '').join '+'
 	if className.length
 		attr_obj.className=( findVars className.join ' ').join '+'
 	attr_obj['data-e-action']=( findVars data_e_action.join()).join '+' if data_e_action.length
-	#_log2 f, 'bottom', str, attr_obj
+	#E.log f, 'bottom', str, attr_obj
 	# A string of JavaScript code representing an object, and empty (as '' or '/')
 	[ (mkObj attr_obj), empty, attrs_need_cleaning]
 
@@ -371,7 +370,7 @@ ParseFile= (file_stats, file_contents) ->
 			else if base_nm is 'style'
 				flavor= T_STYLE
 				whole_tag= [flavor, base_nm, attrs, children]
-				#_log2 f, 'style tag is special', whole_tag
+				#E.log f, 'style tag is special', whole_tag
 			else
 				whole_tag= [flavor, base_nm, attrs, children]
 				stats.dom++ unless tag_wait.length
@@ -397,7 +396,7 @@ ParseFile= (file_stats, file_contents) ->
 				if base_nm not in dom_nms
 					doError file_stats, 'Unknown tag name "'+ base_nm+ '" in '+ file_stats
 				if attr_clean
-					#_log2 f, 'attr_clean', attrs
+					#E.log f, 'attr_clean', attrs
 					flavor= T_M2
 			if empty is '/' # This tag is the child, no need to push things
 				stats.defer++ if base_nm is 'defer'
@@ -417,7 +416,7 @@ ParseFile= (file_stats, file_contents) ->
 	if text.length and text isnt ' ' and text isnt '  ' # Not just whitespace
 		children.push [T_M1, 'span', {}, (findVars text).join( '+')]
 		stats.text++
-	#_log2 f, 'before do', children.length, stats, children
+	#E.log f, 'before do', children.length, stats, children
 	# Give to loadStrategy (or compiler) to handle as in-browser or minimized JavaScript
 	# Caller expects: content,can_componentize,defer
 	#
@@ -453,9 +452,7 @@ ParseFile= (file_stats, file_contents) ->
 			stuff= '' if child_array.length is 0
 		stuff
 	content= 'return '+ doChildren children
-	#_log2 f, 'final', content
+	#E.log f, 'final', content
 	return  content: content, defer: stats.defer, can_componentize: children.length is 1 and stats.epic is 0
 
-# Public API
-if window? then _log2= window._log2; E= window.E; E.Extra.ParseFile= ParseFile
-else module.exports= (w)-> _log2= w._log2; E= w.E; E.Extra.ParseFile= ParseFile
+E.Extra.ParseFile= ParseFile

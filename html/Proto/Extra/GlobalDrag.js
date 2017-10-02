@@ -157,7 +157,7 @@
         event: e
       });
       this.src_end();
-      window.EpicMvc.Epic.makeClick(false, action, params, true);
+      E.action(action, params);
       return false;
     };
 

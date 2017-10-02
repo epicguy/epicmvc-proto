@@ -8,22 +8,21 @@ class Fist extends E.ModelJS
 		# E.fistDef and E.fieldDef contain combined fists info from all pacakges
 		@fist= {} # Hash by fist-name-with-row-number, of hash of field-names, holding e.g. db/html values, issues
 		super view_nm, options
-	eventLogout: -> true # To be safe with data, as the default, blow us away
 	event: (name,act,fistNm,fieldNm,p) ->
 		f= 'event:'+ act+ '-'+ fistNm+ '/'+ fieldNm
-		_log2 f, p
+		E.log f, p
 		BLOWUP() if name isnt 'Fist' # Only handle 'fist' type events
 		# Expect p.fist, optional p.field, optional p.row
-		fist= @_getFist fistNm, p.row, true # true= this is an event
+		fist= @_getFist fistNm, p.row, true # true= this is an event # TODO CONSIDER TRUE ONLY IF act==='blur' 
 		return if fist is false # Did not exist, so don't create a form just for events (i.e. blur after mouseup-click-action)
 		field= fist.ht[ fieldNm] if fieldNm
 		switch act
 			when 'keyup', 'change' # User has changed a field's value possibly
 				# p.val
 				if field.type is 'yesno'
-					if p.val is false # Toggle value
-					then p.val= field.cdata[ 1]
-					else p.val= field.cdata[ 0]
+					if p.val is false # Renderstrategy.handleEvent gives false when 'checkbox' not 'selected'
+					then p.val= field.cdata[ 1] # The 'no' value
+					else p.val= field.cdata[ 0] # The 'yes' value
 				if field.hval isnt p.val # Update our html-value state with el.value
 					had_issue= field.issue
 					field.hval= p.val
@@ -35,7 +34,7 @@ class Fist extends E.ModelJS
 				was_issue= field.issue
 				field.hval= E.fistH2H field, field.hval # Initial cleanup
 				E.fistVAL field, field.hval # Validate (sets/clears .issue)
-				_log2 f, 'invalidate?', was_val, field.hval, was_issue, field.issue
+				E.log f, 'invalidate?', was_val, field.hval, was_issue, field.issue
 				invalidate= true if was_val isnt field.hval or was_issue isnt field.issue
 			when 'focus'
 				if fist.fnm isnt fieldNm
@@ -69,6 +68,7 @@ class Fist extends E.ModelJS
 
 		was_issue isnt src.issue
 
+	# TODO Open this up to the public, so field level issues can be set by custom models when handling e.g. POST actions
 	_makeIssue: (check, field)->
 		# 'check' can be a token-array or single-token (so add some extra info if needed)
 		token= check
@@ -77,16 +77,23 @@ class Fist extends E.ModelJS
 		field.issue= new E.Issue field.fistNm, field.nm
 		field.issue.add token[0], token.slice 1
 
+	# Wipe a list of fists and any related 'row's (for e.g. logout of a Model needs to remove associated fist data)
+	fistWipe: (fistBaseNms) ->
+		fistBaseNms= fistBaseNms.split ',' unless 'A' is E.type_oua fistBaseNms # Either an array or a comma separated list
+		deleted= false
+		(deleted= true; delete @fist[ fnm]) for fnm of @fist when (fnm.split ':')[ 0] in fistBaseNms
+		@invalidateTables true if deleted
+
 	# Controller wants a fist's fields/errors cleared
 	fistClear: (fistNm, row) ->
-		rnm= fistNm+ if row then ':'+ row else ''
+		rnm= fistNm+ if row?.length then ':'+ row else ''
 		if rnm of @fist
 			delete @fist[ rnm] # May be a little heavy handed
 			@invalidateTables [ rnm] # Update the views with the cleared form
 	# Controller wants a fist's db values, after whole-form-validation
 	fistValidate: (ctx, fistNm, row) ->
-		f= 'fistValidate:'+ fistNm+ if row? then ':'+ row else ''
-		_log2 f
+		f= 'fistValidate:'+ fistNm+ if row?.length then ':'+ row else ''
+		E.log f
 		r= ctx
 		fist= @_getFist fistNm, row
 		errors= 0
@@ -106,7 +113,7 @@ class Fist extends E.ModelJS
 			r.fist$success= 'SUCCESS'
 			ans= r[ fist.nm]= {}
 			ans[ nm]= E.fistH2D field, field.hval for nm,field of fist.db
-		_log2 f, 'result', r, ans
+		E.log f, 'result', r, ans
 		@invalidateTables [ fist.rnm] if invalidate is true
 		return
 	loadTable: (tbl_nm)->
@@ -114,8 +121,8 @@ class Fist extends E.ModelJS
 		# (a) Field - which is a hash of each field, separatly addressable i.e. &Fist/UserLogin/AuthName;
 		# (b) Control - an array of (rows of) the fields, in the order they were speced.
 		# TODO TEST ROW SUPPORT (table="Fist/UserLogin:2"
-		[ baseFistNm, row]= tbl_nm.split ':'
-		fist= @_getFist baseFistNm, row
+		[ baseFistNm, baseRow]= tbl_nm.split ':'
+		fist= @_getFist baseFistNm, baseRow
 		Field= {}
 		Control= []
 		any_req= false
@@ -128,7 +135,7 @@ class Fist extends E.ModelJS
 		@Table[ tbl_nm]=[ {Field: [Field], Control, any_req}]
 	_makeField: (fist,field,ix,row)->
 		f= '_makeField'
-		#_log2 f, {fist, field, ix}
+		#E.log f, {fist, field, ix}
 		# TODO FIX E-IF SO WE DON'T NEED 'yes' else '' ANYMORE!
 		defaults= {
 			is_first: ix is 0, focus: fist.fnm is field.nm, yes_val: 'X', req: false
@@ -136,10 +143,8 @@ class Fist extends E.ModelJS
 		}
 		fl= E.merge defaults, field
 		[fl.type, choice_type]= fl.type.split ':'
-		fl.id= 'U'+ E.nextCounter()
 		fl.value= field.hval
 		if fl.type is 'yesno'
-			fl.cdata?= ['1','0']
 			fl.yes_val=( String fl.cdata[ 0])
 			if fl.value is fl.yes_val
 				fl.selected= true
@@ -155,19 +160,23 @@ class Fist extends E.ModelJS
 				fl.Choice= rows
 		fl
 	_getFist: (p_fist, p_row, from_event) ->
-		f= '_getFist:'+ p_fist+ if p_row? then ':'+ p_row else ''
+		f= '_getFist:'+ p_fist+ if p_row?.length then ':'+ p_row else ''
 		# Return fist as record
 		# 'fist' rec is: nm:fistNm, rnm:fistNm+row, row:row, st:state, sp:spec
 		#   ht:{field recs by html name}, db:{field recs by db_nm}
-		rnm= p_fist+ if p_row then ':'+ p_row else ''
+		rnm= p_fist+ if p_row?.length then ':'+ p_row else ''
 		if rnm not of @fist
 			return false if from_event is true # Don't create a fist on an event (e.g. blur after mouse-up click action)
 			fist= {rnm, nm: p_fist, row: p_row, ht: {}, db: {}, st: 'new', sp: E.fistDef[ p_fist]}
-			_log2 f, 'new fist', fist
+
+			E.log f, 'new fist', fist
 			E.option.fi1 fist # Guard e.g. E[ E.appFist fistNm]() #%#
 			for fieldNm in fist.sp.FIELDS
-				#_log2 f, 'new field', p_fist, fieldNm, E.fieldDef[ fieldNm]
-				field= E.merge {}, E.fieldDef[ fieldNm], nm: fieldNm, fistNm: p_fist, row: p_row
+				#E.log f, 'new field', p_fist, fieldNm, E.fieldDef[ fieldNm]
+				field= E.merge {}, E.fieldDef[ fieldNm], nm: fieldNm, fistNm: p_fist, row: p_row, id:'U'+ E.nextCounter()
+				if field.type is 'yesno'
+					field.cdata?= ['Y','']
+					field.default?= field.cdata[ 1] # Default to 'no' value if user did not specify
 				field.h2h= switch E.type_oau field.h2h
 					when 'S' then field.h2h.split /[:,]/
 					when 'A' then field.h2h

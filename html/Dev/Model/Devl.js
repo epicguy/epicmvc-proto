@@ -95,7 +95,7 @@
         case 'table_left':
         case 'table_right':
           incr = act === 'table_left' ? -1 : 1;
-          _log2(f, act, incr, this.table_row_cnt);
+          E.log(f, act, incr, this.table_row_cnt);
           this.table_row_cnt += incr;
           return this.invalidateTables(['Model']);
         default:
@@ -231,7 +231,7 @@
               }
             });
           }
-          _log2(f, 'final', table);
+          E.log(f, 'final', table);
           return this.Table[tbl_nm] = table;
         default:
           return Devl.__super__.loadTable.call(this, tbl_nm);

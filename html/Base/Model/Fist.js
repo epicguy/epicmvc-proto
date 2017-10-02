@@ -3,7 +3,8 @@
   'use strict';
   var Fist,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
+    hasProp = {}.hasOwnProperty,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   Fist = (function(superClass) {
     extend(Fist, superClass);
@@ -13,14 +14,10 @@
       Fist.__super__.constructor.call(this, view_nm, options);
     }
 
-    Fist.prototype.eventLogout = function() {
-      return true;
-    };
-
     Fist.prototype.event = function(name, act, fistNm, fieldNm, p) {
       var f, field, fist, had_issue, invalidate, invalidate2, tmp_val, was_issue, was_val;
       f = 'event:' + act + '-' + fistNm + '/' + fieldNm;
-      _log2(f, p);
+      E.log(f, p);
       if (name !== 'Fist') {
         BLOWUP();
       }
@@ -56,7 +53,7 @@
           was_issue = field.issue;
           field.hval = E.fistH2H(field, field.hval);
           E.fistVAL(field, field.hval);
-          _log2(f, 'invalidate?', was_val, field.hval, was_issue, field.issue);
+          E.log(f, 'invalidate?', was_val, field.hval, was_issue, field.issue);
           if (was_val !== field.hval || was_issue !== field.issue) {
             invalidate = true;
           }
@@ -119,9 +116,26 @@
       return field.issue.add(token[0], token.slice(1));
     };
 
+    Fist.prototype.fistWipe = function(fistBaseNms) {
+      var deleted, fnm, ref;
+      if ('A' !== E.type_oua(fistBaseNms)) {
+        fistBaseNms = fistBaseNms.split(',');
+      }
+      deleted = false;
+      for (fnm in this.fist) {
+        if (ref = (fnm.split(':'))[0], indexOf.call(fistBaseNms, ref) >= 0) {
+          deleted = true;
+          delete this.fist[fnm];
+        }
+      }
+      if (deleted) {
+        return this.invalidateTables(true);
+      }
+    };
+
     Fist.prototype.fistClear = function(fistNm, row) {
       var rnm;
-      rnm = fistNm + (row ? ':' + row : '');
+      rnm = fistNm + ((row != null ? row.length : void 0) ? ':' + row : '');
       if (rnm in this.fist) {
         delete this.fist[rnm];
         return this.invalidateTables([rnm]);
@@ -130,8 +144,8 @@
 
     Fist.prototype.fistValidate = function(ctx, fistNm, row) {
       var ans, errors, f, field, fieldNm, fist, hval, invalidate, nm, r, ref, ref1, ref2;
-      f = 'fistValidate:' + fistNm + (row != null ? ':' + row : '');
-      _log2(f);
+      f = 'fistValidate:' + fistNm + ((row != null ? row.length : void 0) ? ':' + row : '');
+      E.log(f);
       r = ctx;
       fist = this._getFist(fistNm, row);
       errors = 0;
@@ -169,16 +183,16 @@
           ans[nm] = E.fistH2D(field, field.hval);
         }
       }
-      _log2(f, 'result', r, ans);
+      E.log(f, 'result', r, ans);
       if (invalidate === true) {
         this.invalidateTables([fist.rnm]);
       }
     };
 
     Fist.prototype.loadTable = function(tbl_nm) {
-      var Control, Field, any_req, baseFistNm, field, fieldNm, fist, i, ix, len, ref, ref1, row;
-      ref = tbl_nm.split(':'), baseFistNm = ref[0], row = ref[1];
-      fist = this._getFist(baseFistNm, row);
+      var Control, Field, any_req, baseFistNm, baseRow, field, fieldNm, fist, i, ix, len, ref, ref1, row;
+      ref = tbl_nm.split(':'), baseFistNm = ref[0], baseRow = ref[1];
+      fist = this._getFist(baseFistNm, baseRow);
       Field = {};
       Control = [];
       any_req = false;
@@ -220,12 +234,8 @@
       };
       fl = E.merge(defaults, field);
       ref = fl.type.split(':'), fl.type = ref[0], choice_type = ref[1];
-      fl.id = 'U' + E.nextCounter();
       fl.value = field.hval;
       if (fl.type === 'yesno') {
-        if (fl.cdata == null) {
-          fl.cdata = ['1', '0'];
-        }
         fl.yes_val = String(fl.cdata[0]);
         if (fl.value === fl.yes_val) {
           fl.selected = true;
@@ -255,8 +265,8 @@
 
     Fist.prototype._getFist = function(p_fist, p_row, from_event) {
       var db_value_hash, f, field, fieldNm, fist, i, len, nm, rec, ref, ref1, ref2, ref3, rnm;
-      f = '_getFist:' + p_fist + (p_row != null ? ':' + p_row : '');
-      rnm = p_fist + (p_row ? ':' + p_row : '');
+      f = '_getFist:' + p_fist + ((p_row != null ? p_row.length : void 0) ? ':' + p_row : '');
+      rnm = p_fist + ((p_row != null ? p_row.length : void 0) ? ':' + p_row : '');
       if (!(rnm in this.fist)) {
         if (from_event === true) {
           return false;
@@ -270,7 +280,7 @@
           st: 'new',
           sp: E.fistDef[p_fist]
         };
-        _log2(f, 'new fist', fist);
+        E.log(f, 'new fist', fist);
         E.option.fi1(fist);
         ref = fist.sp.FIELDS;
         for (i = 0, len = ref.length; i < len; i++) {
@@ -278,8 +288,17 @@
           field = E.merge({}, E.fieldDef[fieldNm], {
             nm: fieldNm,
             fistNm: p_fist,
-            row: p_row
+            row: p_row,
+            id: 'U' + E.nextCounter()
           });
+          if (field.type === 'yesno') {
+            if (field.cdata == null) {
+              field.cdata = ['Y', ''];
+            }
+            if (field["default"] == null) {
+              field["default"] = field.cdata[1];
+            }
+          }
           field.h2h = (function() {
             switch (E.type_oau(field.h2h)) {
               case 'S':

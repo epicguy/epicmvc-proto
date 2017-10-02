@@ -34,10 +34,10 @@
         this.errors_cache[type][key] = e;
         this.errors_cache._COUNT++;
         if (this.errors_cache._COUNT < 5) {
-          _log2('### _Error type/key/e', type, key, e);
+          E.log('### _Error type/key/e', type, key, e);
           msg = (((key + "\n\n" + e.message).replace(/&lt;/g, '<')).replace(/&gt;/g, '>')).replace(/&amp;/g, '&');
           prefix = type === 'v2' || type === 'v3' ? 'Variable reference' : 'Tag';
-          return _log2("ERROR", prefix + " error (" + type + "):\n\n" + msg);
+          return E.log("ERROR", prefix + " error (" + type + "):\n\n" + msg);
         }
       }
     };
@@ -132,7 +132,7 @@
         }
       } catch (_error) {
         e = _error;
-        _log2('##### Error in form-part', (ref = oPt.attrs.part) != null ? ref : 'fist_default', e, e.stack);
+        E.log('##### Error in form-part', (ref = oPt.attrs.part) != null ? ref : 'fist_default', e, e.stack);
         this._Error('form', this._TagText(oPt, true), e);
         return this._Err('tag', 'fist', attrs, e);
       }
@@ -150,7 +150,7 @@
         if (this.Epic.isSecurityError(e)) {
           throw e;
         }
-        _log2('##### Error in form-part', (ref2 = oPt.attrs.part) != null ? ref2 : 'fist_default', e, e.stack);
+        E.log('##### Error in form-part', (ref2 = oPt.attrs.part) != null ? ref2 : 'fist_default', e, e.stack);
         this._Error('form_part', this._TagText(oPt, true), e);
         return this._Err('tag', 'fist', attrs, e);
       }
@@ -169,7 +169,7 @@
         ];
       } catch (_error) {
         e = _error;
-        _log2('##### Error in page-part', attrs.part, e);
+        E.log('##### Error in page-part', attrs.part, e);
         return m('pre', {}, ["<e-part part=\"Part/" + attrs.part + "\">", m('br'), e, m('br'), e.stack]);
       }
     };
@@ -222,7 +222,7 @@
         ];
       } catch (_error) {
         e = _error;
-        _log2('##### Error in T_page', attrs, e);
+        E.log('##### Error in T_page', attrs, e);
         this._Error('page', this._TagText({
           tag: 'page',
           attrs: attrs
@@ -249,7 +249,7 @@
         t_format_spec = format_spec || custom_spec ? '#' + format_spec : '';
         t_custom_spec = custom_spec ? '#' + custom_spec : '';
         key = '&' + view_nm + '/' + tbl_nm + '/' + col_nm + t_format_spec + t_custom_spec + ';';
-        _log2('##### Error in v3 key=', key, e);
+        E.log('##### Error in v3 key=', key, e);
         this._Error('v3', key, e);
         throw e;
       }
@@ -268,7 +268,7 @@
         val = View.__super__.v2.call(this, tbl_nm, col_nm, format_spec, custom_spec, sub_nm);
       } catch (_error) {
         e = _error;
-        _log2('##### v2', "&" + tbl_nm + "/" + col_nm + ";", e, e.stack);
+        E.log('##### v2', "&" + tbl_nm + "/" + col_nm + ";", e, e.stack);
         val = "&" + tbl_nm + "/" + col_nm + ";[" + e.message + "] <pre>" + e.stack + "</pre>";
       }
       if (val === void 0) {
@@ -365,7 +365,7 @@
 
     View.prototype._Err = function(type, tag, attrs, e) {
       var stack, title;
-      _log2('### _Err type/tag/attrs/e', type, tag, attrs, {
+      E.log('### _Err type/tag/attrs/e', type, tag, attrs, {
         e: e,
         m: e.message,
         s: e.stack

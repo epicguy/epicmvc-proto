@@ -2,13 +2,32 @@
 <html lang="en">
 <head>
   <title>UnitTest EpicMvc (Dev Dev)</title>
-  <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+  	integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+  <!-- <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"/> -->
 <style>
 [data-e-action] {
-    -webkit-user-select: none; /* webkit (safari, chrome) browsers */
-    -moz-user-select: none; /* mozilla browsers */
-    -khtml-user-select: none; /* webkit (konqueror) browsers */
-    -ms-user-select: none; /* IE10+ */
+  -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+  -moz-user-select: none; /* mozilla browsers */
+  -khtml-user-select: none; /* webkit (konqueror) browsers */
+  -ms-user-select: none; /* IE10+ */
+}
+.fist-outer, .outer {
+  border: solid thin blue;
+  border-radius: 5px;
+  margin: 8px;
+}
+.fist-inner {
+  border: solid thin red;
+  border-radius: 5px;
+  margin: 8px;
+}
+.my-collapse{
+  transition: max-height 1s;
+  background: #e5feff;
+  overflow: hidden;
+  // "height: 0" not work with css transitions
+  max-height: 0;
 }
 </style>
   <script type="text/javascript" src="mithril.js"></script>
@@ -20,25 +39,41 @@
 
 <script type="text/coffeescript">
 E.app$World=
-	MODELS: Thing: class:'Thing', inst:'world_thing'
+	MODELS:
+		Thing: class:'Thing', inst:'world_thing', fists: ['TestFist']
+		Tab: options:
+			Head: TYPE: 'collapse', nav1: true
+			Foot: TYPE: 'collapse'
 	ACTIONS:
 		toggle: do: 'Thing.toggle'
+		make_issues: do: 'Thing.'
 		update_time: do: 'Thing.'
+		post_test_fist: do: 'Thing.', fist: 'TestFist', pass: 'row'
 
-class Thing extends window.E.ModelJS
+class Thing extends E.ModelJS
 	constructor: ( view_nm, options) ->
 		ss= world: true
 		super view_nm, options, ss
 		#setInterval (=> @invalidateTables ['Time']), 200
-	action: (ctx, app, p) ->
-		switch app
+		@testFist= {} # No values initially
+	action: (ctx, act, p) ->
+		f= "M/Thing.action:#{act}:"
+		E.log f, p
+		switch act
 			when 'toggle'
 				@world= not @world
 				@invalidateTables ['Choices']
+			when 'make_issues'
+				ctx.i.add 'I_AM_A_MAPPED_ISSUE', ['a','b']
+				ctx.i.add 'I_AM_A_UNMAPPED_ISSUE', 'thing'
+				ctx.m.add 'I_AM_A_MAPPED_ISSUE', ['a','b']
+				ctx.m.add 'I_AM_A_UNMAPPED_ISSUE', 'thing'
 			when 'update_time'
-				ctx.i.add 'I_AM_A_MAPPED_ISSUE'
-				ctx.i.add 'I_AM_A_UNMAPPED_ISSUE'
 				@invalidateTables ['Time']
+			when 'post_test_fist' # p.TestFist (p.row?)
+				@testFist= p.TestFist
+				@invalidateTables ['TestFist']
+			else super ctx, act, p #%#
 	loadTable: (tbl_nm) ->
 		switch tbl_nm
 			when 'Choices'
@@ -47,6 +82,10 @@ class Thing extends window.E.ModelJS
 			when 'Time'
 				row= now: new Date().toString()
 				@Table[ tbl_nm]= [ row]
+			when 'TestFist'
+				@Table[ tbl_nm]= [@testFist]
+			else super tbl_nm #%#
+	fistGetValues: (fistNm)-> {}
 
 E.Model.Thing= Thing
 
@@ -55,23 +94,68 @@ E.issues$World=
 		default: [
 			[ /I_AM_A_MAPPED_ISSUE/, 'I am an issue' ]
 		]
+E.fist$World=
+	FIELDS:
+		YesNo: db_nm: 'yn', type: 'yesno', label: 'Yes-no', cdata: ['Y','N']
+	FISTS:
+		TestFist: FIELDS: [ 'YesNo', ]
 </script>
 
 <script type="x/template" id="view-Layout-default">
-	<e-part part="issues"/>
-	<h4>I am a layout</h4>
+	<e-part class="outer" part="issues"/>
+	<h4 e-click="make_issues">I am a layout [click to make issues]</h4>
 	<h2 e-click='toggle'>Hello &Thing/Choices/is_world#?World?Dude;. (normal click)</h2>
 	<e-page/>
 </script>
 <script type="x/template" id="view-Page-default">
 	<h4>I am a page.</h4>
 	<h2 ex-attr-scroll_top-int="1" e-click='toggle'>Hello again &Thing/Choices/is_world#?World?Dude;. (scroll top)</h2>
-	<e-part part="other">
+	<e-part part="collapse"/>
+	<e-part part="other"/>
+	<div class="fist-outer">&lt;e-part part="fist"/>
+	<e-part part="fist"/> <button e-click='post_test_fist'>post</button>
+	</div>
+	<div class="fist-outer">&lt;e-part part="fist" e-row="TestRow"/>
+	<e-part part="fist" e-row="TestRow"/> <button e-click='post_test_fist' e-row="TestRow">post-testRow</button>
+	(Posted value=&Thing/TestFist/yn;)
+	</div>
 </script>
 <script type="x/template" id="view-Part-other">
-	<h4 ex-attr-oncontextmenu-func="return false;">I am a part. (no context menu)</h4>
-	<h2 e-rclick='toggle'>Hello again and again <span>&Thing/Choices/is_world#?World?Dude; (right click)</span>.</h2>
+	<h4 ex-attr-oncontextmenu-func="return false;" >I am a part. (no context menu)</h4>
+	<h2 ex-attr-oncontextmenu-func="return false;" e-rclick='toggle'>
+	Hello again and again <span>&Thing/Choices/is_world#?World?Dude; (right click)</span>.</h2>
 	<e-part part="time">
+</script>
+<script type="x/template" id="view-Part-fist">
+	<div class="fist-inner">(This is view-Part-fist, V/P/row#?%=&View/Part/row#?%;)
+	<e-fist fist="TestFist" e-row="E_FIST_E_ROW=&View/Part/row#?;" row="&View/Part/row#?%;" data-e-row="E_F_D_E_R=&View/Part/row;" />
+	<span>{V/P/Row=&View/Part/row;}</span>
+	<e-foreach table="Fist/TestFist&View/Part/row#?:%;" alias="TheFist"><e-foreach table="TheFist/Control">
+	<div>
+	([id=&Control/id;]&Control/name;=&Control/value;)
+	(set/not_set=
+		[<e-if set="&Control/value;">SET,</e-if>]
+		[<e-if not_set="&Control/value;">NOT_SET,</e-if>]
+		)
+	(#?=[&Control/value#?TRUE?FALSE;])
+	</div>
+	</e-foreach></e-foreach>
+	</div>
+</script>
+<script type="x/template" id="view-Part-collapse">
+<div e-collapse="Head:nav1" class="card-header">Collapable Group Item #1</div>
+<div style="" class="my-collapse" e-collapse-pane="Head:nav1">This is some stuff abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 </div>
+<div e-collapse="Head:nav2" class="card-header">Collapable Group Item #2</div>
+<div style="" class="my-collapse" e-collapse-pane="Head:nav2">This is some stuff abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 </div>
+<div e-collapse="Head:nav3" class="card-header">Collapable Group Item #3</div>
+<div style="" class="my-collapse" e-collapse-pane="Head:nav3">This is some stuff abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 </div>
+<hr/>
+<div e-collapse="Foot:nav1" class="card-header">Collapable Group Item #1</div>
+<div style="" class="my-collapse" e-collapse-pane="Foot:nav1">This is some stuff abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 abcdef1 </div>
+<div e-collapse="Foot:nav2" class="card-header">Collapable Group Item #2</div>
+<div style="" class="my-collapse" e-collapse-pane="Foot:nav2">This is some stuff abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 abcdef2 </div>
+<div e-collapse="Foot:nav3" class="card-header">Collapable Group Item #3</div>
+<div style="" class="my-collapse" e-collapse-pane="Foot:nav3">This is some stuff abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 abcdef3 </div>
 </script>
 <script type="x/template" id="view-Part-time">
 <div e-click="update_time">Time is <span>&Thing/Time/now;</span></div>
@@ -80,10 +164,10 @@ E.issues$World=
 
 <body id="base-body">
 <script type="text/coffeescript">
-	# If this isnt coffeescript, it runs too soon, such that E.Thing is not defined (E.app$World not yet set)
-	E.run ['Base', 'Dev', 'Proto', 'World'], loadDirs: Base: './', Dev: './', Proto: './'
+# If this isnt coffeescript, it runs too soon, such that E.Thing is not defined (E.app$World not yet set)
+E.run ['Base', 'Dev', 'Proto', 'World'], loadDirs: Base: './', Dev: './', Proto: './'
 </script>
-  <script type="text/javascript" src="coffee-script.js"> </script>
+<script type="text/javascript" src="coffee-script.js"> </script>
 </body>
 </html>
 

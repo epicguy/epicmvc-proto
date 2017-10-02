@@ -39,7 +39,7 @@
       this.f = flow;
       this.t = t;
       this.s = s;
-      _log2(f, {
+      E.log(f, {
         was: was,
         is: this.f + "/" + this.t + "/" + this.s
       });
@@ -65,7 +65,7 @@
       if (!s) {
         s = E.appStartS(flow, t);
       }
-      _log2(f, {
+      E.log(f, {
         flow: flow,
         t: t,
         s: s

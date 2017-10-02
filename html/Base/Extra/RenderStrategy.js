@@ -47,7 +47,7 @@
     RenderStrategy$Base.prototype.handleEvent = function(event_obj) {
       var attrs, data_action, data_params, f, files, i, ix, j, len, nm, old_params, prevent, rec, ref, ref1, ref2, ref3, target, touch, type, val, x, y;
       f = 'E/RenderStrategy.handleEvent: ';
-      _log2(f, 'top', this.redraw_guard, (event_obj != null ? event_obj : window.event).type);
+      E.log(f, 'top', this.redraw_guard, (event_obj != null ? event_obj : window.event).type);
       if (event_obj == null) {
         event_obj = window.event;
       }
@@ -123,7 +123,7 @@
         val = false;
       }
       files = target.files;
-      _log2(f, 'event', {
+      E.log(f, 'event', {
         type: type,
         data_action: data_action,
         data_params: data_params,
@@ -191,7 +191,7 @@
     RenderStrategy$Base.prototype.onPopState = function(event) {
       var f;
       f = 'E/RenderStrategy.onPopState: ';
-      _log2(f, {
+      E.log(f, {
         was_popped: this.was_popped,
         very_first: this.very_first
       }, true, {
@@ -227,14 +227,14 @@
       f = 'E/RenderStrategy.m_redraw: ';
       this.redraw_guard++;
       if (this.redraw_guard !== 1) {
-        _log2(f, 'GUARD REDRAW', this.redraw_guard);
+        E.log(f, 'GUARD REDRAW', this.redraw_guard);
         return;
       }
       return E.View().run().then((function(_this) {
         return function(modal_content) {
           var content, modal;
           modal = modal_content[0], content = modal_content[1];
-          _log2(f, 'DEFER-R', 'RESULTS: modal, content', _this.redraw_guard, modal, content);
+          E.log(f, 'DEFER-R', 'RESULTS: modal, content', _this.redraw_guard, modal, content);
           _this.render(modal, content);
           _this.redraw_guard--;
           if (_this.redraw_guard !== 0) {
@@ -255,7 +255,7 @@
       var container, f, start;
       f = 'E/RenderStrategy.render: ';
       start = new Date().getTime();
-      _log2(f, 'START RENDER', start, modal);
+      E.log(f, 'START RENDER', start, modal);
       if (modal) {
         m.render((container = document.getElementById(this.modalId)), content);
       } else {
@@ -264,7 +264,7 @@
         }
         m.render((container = document.getElementById(this.baseId)), m('div', {}, content));
       }
-      _log2(f, 'END RENDER', new Date().getTime() - start);
+      E.log(f, 'END RENDER', new Date().getTime() - start);
       if (!modal) {
         this.handleRenderState();
       }
@@ -279,7 +279,7 @@
       str_path = path.join('/');
       history = str_path === this.last_path ? 'replace' : true;
       f = 'E/RenderStrategy.handleRenderState:' + history + ':' + str_path;
-      _log2(f, {
+      E.log(f, {
         vf: this.very_first,
         wp: this.was_popped
       });

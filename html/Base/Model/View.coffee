@@ -9,28 +9,28 @@ class View$Base extends E.ModelJS
 		@frames.push 'X' # Placeholder for layout
 		@did_run= false
 		@in_run= false
-		window.oE= @ # Used by parser for e.g. oE.kids/v2/v3/weed
+		window.oE= @ if window? # Used by parser for e.g. oE.kids/v2/v3/weed
 		@defer_it_cnt= 0
 		@start= false #A global timestamp for run:
 	nest_up: (who) ->
 		f= 'nest_up:'+ who
-		#_log2 f, @defer_it_cnt
+		#E.log f, @defer_it_cnt
 		if @defer_it_cnt is 0
 			BLOWUP() if @in_run
 			@in_run= true
 			@start= new Date().getTime() #%#
-			#_log2 f, 'START RUN', @frames, @start
+			#E.log f, 'START RUN', @frames, @start
 			@defer_it= promise: null, resolve: null # Old style Promise.deferred()
 			@defer_it.promise= new Promise (resolve, reject)=> @defer_it.resolve= resolve
 		@defer_it_cnt++
 	nest_dn: (who) ->
 		f= 'nest_dn:'+ who
-		#_log2 f, @defer_it_cnt
+		#E.log f, @defer_it_cnt
 		@defer_it_cnt-- if @defer_it_cnt > 0
 		if @defer_it_cnt is 0
-			_log2 f, 'END RUN', @defer_content, new Date().getTime()- @start
+			E.log f, 'END RUN', @defer_content, new Date().getTime()- @start
 			@in_run= false
-			#_log2 f, 'RESOLVE', @modal, @defer_content
+			#E.log f, 'RESOLVE', @modal, @defer_content
 			@defer_it.resolve [@modal, @defer_content]
 	run: ->
 		f= 'run'
@@ -48,7 +48,7 @@ class View$Base extends E.ModelJS
 		@resetInfo()
 		@nest_up who
 		@defer_content= @kids [['page',{}]]
-		#_log2 f, 'after @kids, @defer_content=', @defer_content
+		#E.log f, 'after @kids, @defer_content=', @defer_content
 		@nest_dn who
 		@defer_it.promise
 	resetInfo: () ->
@@ -61,26 +61,26 @@ class View$Base extends E.ModelJS
 	saveInfo: () ->
 		f= 'saveInfo'
 		saved_info= E.merge {}, I: @I, P: @P
-		#_log2 f, saved_info
+		#E.log f, saved_info
 		saved_info
 	restoreInfo: (saved_info) ->
 		f= 'restoreInfo'
-		#_log2 f, 'saved_info', saved_info
+		#E.log f, 'saved_info', saved_info
 		@resetInfo()
 		@P= saved_info.P # TODO IS THIS SAFE?
 		@I= saved_info.I # TODO IS THIS SAFE?
 		# Rebuild 'R'
 		@R[ nm]= @_getMyRow @I[ nm] for nm of @I when nm not of @R
-		#_log2 f, 'restored:P,I,R', @P, @I, @R
+		#E.log f, 'restored:P,I,R', @P, @I, @R
 	_getMyRow: (I) ->
 		f= '_getMyRow'
-		#_log2 f, I
+		#E.log f, I
 		return (E[ I.m] I.o)[ I.c] if I.m? # I'm a top level table, get from model
 		@R[ I.p]= @_getMyRow @I[ I.p] if I.p not of @R # Load parent if needed
 		return @R[ I.p][ I.o][ I.c] if I.p and I.p of @R # Parent already loaded, return it's row
 	getTable: (nm) ->
 		f= 'Base:M/View.getTable:'+ nm
-		#_log2 f, @P if nm is 'Part'
+		#E.log f, @P if nm is 'Part'
 		switch nm
 			when 'If' then [@N]
 			when 'Part'
@@ -88,11 +88,11 @@ class View$Base extends E.ModelJS
 				rVal= {}
 				E.merge rVal, p for p in @P
 				[rVal]
-			else []
+			else E.option.m3 @view_nm , nm #%#
 	invalidateTables: (view_nm, tbl_nms, deleted_tbl_nms) ->
 		return unless @did_run and deleted_tbl_nms.length
 		f= 'Base:M/View.invalidateTables'
-		#_log2 f, view_nm, tbl_nms, deleted_tbl_nms #, (if E.inClick then 'IN')
+		#E.log f, view_nm, tbl_nms, deleted_tbl_nms #, (if E.inClick then 'IN')
 		m.startComputation()
 		m.endComputation()
 		return
@@ -106,7 +106,7 @@ class View$Base extends E.ModelJS
 			attrs.config= (element, isInit, context) =>
 				f= 'Base:M/View..config:'+ view
 				for defer in inside
-					_log2 f, defer
+					E.log f, defer
 					@doDefer defer, element, isInit, context
 		if 'dynamic' of attrs # Always render the container, even if content is null
 			tag: attrs.dynamic, attrs: attrs, children: content
@@ -114,7 +114,7 @@ class View$Base extends E.ModelJS
 			return '' unless content
 			if has_root
 				# TODO WHAT IS GOING ON WITH attrs TO wrap IF CONTENT HAS ATTRS? (part=)
-				_log2 f, 'has-root-content', {view,attrs,content,defer,has_root}
+				E.log f, 'has-root-content', {view,attrs,content,defer,has_root}
 				BLOWUP() if 'A' isnt E.type_oau content
 				# TODO E2 FIGURE OUT WHY I COMMENTED THIS OUT; ALSO, PLAN IS TO USE DATA-EX-* ATTRS PER ELEMENT, NOT <E-DEFER
 				#content[0].attrs.config= attrs.config # Pass the defer logic to the part's div
@@ -123,7 +123,7 @@ class View$Base extends E.ModelJS
 				tag: 'div', attrs: attrs, children: content
 	doDefer: (defer_obj, element, isInit, context) =>
 		if 'A' is E.type_oau defer_obj.defer
-			_log2 'WARNING', 'Got an array for defer', defer_obj.defer
+			E.log 'WARNING', 'Got an array for defer', defer_obj.defer
 			return 'WAS-ARRAY'
 		defer_obj.func element, isInit, context, defer_obj.attrs if defer_obj.func
 	T_defer: ( attrs, content) -> # TODO IMPLEMENT DEFER LOGIC ATTRS?
@@ -145,13 +145,13 @@ class View$Base extends E.ModelJS
 	###
 	handleIt: (content) =>
 		f= 'handleIt'
-		#_log2 f, 'top',( typeof content) #, content
+		#E.log f, 'top',( typeof content) #, content
 		content= content() if typeof content is 'function'
-		#_log2 f, 'bottom',( typeof content), content
+		#E.log f, 'bottom',( typeof content), content
 		content
 	formatFromSpec: (val, spec, custom_spec) ->
 		f= 'formatFromSpec'
-		#_log2 f, val, spec, custom_spec
+		#E.log f, val, spec, custom_spec
 		switch spec
 			when ''
 				if custom_spec
@@ -160,7 +160,6 @@ class View$Base extends E.ModelJS
 					else val
 			when 'count' then val?.length
 			when 'bool' then (if val then true else false)
-			when 'bytes' then window.bytesToSize Number val
 			when 'uriencode' then encodeURIComponent val
 			# Allows an item to be put inside single quotes
 			when 'quo' then ((val.replace /\\/g, '\\\\').replace /'/g, '\\\'').replace /"/g, '\\"'
@@ -196,24 +195,24 @@ class View$Base extends E.ModelJS
 				clean_attrs[ nm]= val
 			else
 				clean_attrs[ nm.slice 1]= val if val
-		#_log2 f, clean_attrs
+		#E.log f, clean_attrs
 		clean_attrs
 	kids: (kids) ->
 		f= 'kids'
 		who= 'K'
-		#_log2 f, 'top', kids.length
+		#E.log f, 'top', kids.length
 		# Build a new array, with either a copy if 'object' or 'text', else array is T_ funcs w/promises
 		out= []
 		for kid,ix in kids
-			#_log2 f, new Date().getTime()- @start
+			#E.log f, new Date().getTime()- @start
 			if 'A' is E.type_oau kid # Arrays are the parser's indication of an epic tag
 				out.push ix #['TBD',kid[ 0],kid[ 1]] # Place holder in 'out' for later population
 				ans= @['T_'+ kid[ 0]] kid[ 1], kid[ 2]
-				#_log2 f, 'CHECK FOR THEN', (if ans?.then then 'YES' else 'NO'), ans
+				#E.log f, 'CHECK FOR THEN', (if ans?.then then 'YES' else 'NO'), ans
 				if ans?.then # A promise eh?
 					@nest_up who
 					do (ix) => ans.then (result) =>
-						#_log2 f, 'THEN', result
+						#E.log f, 'THEN', result
 						out[ ix]= result; @nest_dn who
 					, (err)=>
 						console.error 'kids', err
@@ -233,7 +232,7 @@ class View$Base extends E.ModelJS
 		result
 	T_page: ( attrs) =>
 		f= 'T_page'
-		#_log2 f, attrs, new Date().getTime()- @start
+		#E.log f, attrs, new Date().getTime()- @start
 		if @frame_inx< @frames.length
 			d_load= E.oLoader.d_layout name= @frames[ @frame_inx++]
 			view= (if @frame_inx< @frames.length then 'Frame' else 'Layout')+ '/'+ name
@@ -245,18 +244,18 @@ class View$Base extends E.ModelJS
 	T_part: ( attrs) ->
 		view= attrs.part
 		f= 'T_part:'+ view
-		#_log2 f, new Date().getTime()- @start
+		#E.log f, new Date().getTime()- @start
 		d_load= E.oLoader.d_part view
 		@piece_handle 'Part/'+ view, attrs, d_load, true
 
 	# This step, may be happen in a .then, or immeadiate
 	piece_handle: (view, attrs, obj, is_part) ->
 		f= 'piece_handle'
-		#_log2 f, view, obj, "typeof content:", typeof obj.content, " has then?", (if obj?.then then 'yes' else 'no')
+		#E.log f, view, obj, "typeof content:", typeof obj.content, " has then?", (if obj?.then then 'yes' else 'no')
 		return @D_piece view, attrs, obj, is_part if obj?.then # Was a thenable
-		#_log2 f, view #, new Date().getTime()- @start #, obj
+		#E.log f, view #, new Date().getTime()- @start #, obj
 		{content,can_componentize}= obj
-		#_log2 f, 'AFTER ASSIGN', view, obj if obj is false
+		#E.log f, 'AFTER ASSIGN', view, obj if obj is false
 		saved_info= @saveInfo()
 		@P.push @loadPartAttrs attrs
 		# JCS:DEFER:DYNAMIC @D.push []
@@ -265,14 +264,14 @@ class View$Base extends E.ModelJS
 		content
 		### JCS:DEFER:DYNAMIC 
 		defer= @D.pop()
-		#_log2 f, 'defer', view, defer
+		#E.log f, 'defer', view, defer
 		if can_componentize or not is_part or attrs.dynamic or defer.length
-			#_log2 f, 'defer YES', view, defer
+			#E.log f, 'defer YES', view, defer
 			if defer.length and not can_componentize and not attrs.dynamic
-				_log2 "WARNING: DEFER logic in (#{view}); wrapping DIV tag."
+				E.log "WARNING: DEFER logic in (#{view}); wrapping DIV tag."
 			result= @wrap view, attrs, content, defer, can_componentize
 		else
-			#_log2 f, 'defer NO!', view, defer
+			#E.log f, 'defer NO!', view, defer
 			result= content
 		result
 		###
@@ -282,7 +281,7 @@ class View$Base extends E.ModelJS
 		@nest_up who+ view
 		saved_info= @saveInfo()
 		d_result= d_load.then (obj) =>
-			#_log2 f, 'THEN', obj
+			#E.log f, 'THEN', obj
 			try
 				BLOWUP() if obj?.then # THIS WOULD CAUSE A LOOP BACK TO  US
 				@restoreInfo saved_info
@@ -351,13 +350,12 @@ class View$Base extends E.ModelJS
 
 	T_foreach: (attrs, content_f) ->
 		f= 'T_foreach'
-		#_log2 f, attrs
+		#E.log f, attrs
 		[tbl, rh_alias]= @_accessModelTable attrs.table, attrs.alias
 		return '' if tbl.length is 0 # No rows means no output
 		result= []
 		limit= if 'limit' of attrs then Number( attrs.limit)- 1  else tbl.length
 		for row,count in tbl
-			row= tbl[ count]
 			row._= count: count, first: count is 0, last: count is limit- 1, break: false # break: TODO
 			@R[ rh_alias]= row
 			@I[ rh_alias].c= count
@@ -367,14 +365,14 @@ class View$Base extends E.ModelJS
 		return result
 	T_fist: (attrs, content_f) -> # Could have children, or a part=, or default to fist_default, (or E.fistDef[nm].part ?)
 		f= 'T_fist'
-		_log2 f, attrs, content_f
+		E.log f, attrs, content_f
 		fist= E.fistDef[ attrs.fist]
 		model= fist.event ? 'Fist'
-		table= attrs.fist+ if attrs.row? then ':'+ attrs.row else ''
+		table= attrs.fist+ if attrs.row?.length then ':'+ attrs.row else ''
 		subTable= attrs.via ? fist.via ? 'Control'
-		masterAlias= 'Fist'
+		masterAlias= '__Fist'
 		[tbl, rh_alias]= @_accessModelTable model+ '/'+ table, masterAlias
-		_log2 f, 'tbl,rh_alias (master)', tbl, rh_alias
+		E.log f, 'tbl,rh_alias (master)', tbl, rh_alias
 		@R[ rh_alias]= tbl[ 0]
 		@I[ rh_alias].c= 0 # For save info
 		rh_1= rh_alias
@@ -397,7 +395,7 @@ class View$Base extends E.ModelJS
 		for ix in [0...attrs.length] when 'data-ex-' is attrs[ ix].name.slice 0, 8
 			[d,e,nm,p1,p2]= attrs[ ix].name.split '-'
 			val= attrs[ ix].value
-			_log2 f, attrs[ ix].name, val, p1, p2
+			E.log f, attrs[ ix].name, val, p1, p2
 			E.option.ex1 nm, attrs[ ix].name #%#
 			E['ex$'+ nm] el, isInit, ctx, val, p1, p2
 
