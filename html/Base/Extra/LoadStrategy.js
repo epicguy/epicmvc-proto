@@ -28,7 +28,7 @@
         }
       }
       if (results === false) {
-        console.log('NO FILE FOUND! ' + nm);
+        console.error('NO FILE FOUND! ' + nm);
       }
       return results;
     };

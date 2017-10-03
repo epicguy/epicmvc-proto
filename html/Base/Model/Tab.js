@@ -19,7 +19,7 @@
 
     Tab.prototype.event = function(name, type, groupNm, itemNm, data) {
       var changed, f, group, ref;
-      f = 'event';
+      f = 'BM/Tab.event';
       E.log(f, {
         name: name,
         type: type,
@@ -172,7 +172,7 @@
 
   E.ex$collapse = function(el, isInit, ctx, val, p1, p2) {
     var f, g, height, i, ref;
-    f = 'A_ex_collapse';
+    f = 'BM/Tab:ex$collapse';
     ref = val.split(':'), g = ref[0], i = ref[1];
     E.log(f, {
       g: g,

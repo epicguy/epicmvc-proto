@@ -9,7 +9,7 @@ class Fist extends E.ModelJS
 		@fist= {} # Hash by fist-name-with-row-number, of hash of field-names, holding e.g. db/html values, issues
 		super view_nm, options
 	event: (name,act,fistNm,fieldNm,p) ->
-		f= 'event:'+ act+ '-'+ fistNm+ '/'+ fieldNm
+		f= 'BM/Fist.event:'+ act+ '-'+ fistNm+ '/'+ fieldNm
 		E.log f, p
 		BLOWUP() if name isnt 'Fist' # Only handle 'fist' type events
 		# Expect p.fist, optional p.field, optional p.row
@@ -92,7 +92,7 @@ class Fist extends E.ModelJS
 			@invalidateTables [ rnm] # Update the views with the cleared form
 	# Controller wants a fist's db values, after whole-form-validation
 	fistValidate: (ctx, fistNm, row) ->
-		f= 'fistValidate:'+ fistNm+ if row?.length then ':'+ row else ''
+		f= 'BM/Fist.fistValidate:'+ fistNm+ if row?.length then ':'+ row else ''
 		E.log f
 		r= ctx
 		fist= @_getFist fistNm, row
@@ -134,7 +134,7 @@ class Fist extends E.ModelJS
 			Control.push row
 		@Table[ tbl_nm]=[ {Field: [Field], Control, any_req}]
 	_makeField: (fist,field,ix,row)->
-		f= '_makeField'
+		f= 'BM/Fist._makeField'
 		#E.log f, {fist, field, ix}
 		# TODO FIX E-IF SO WE DON'T NEED 'yes' else '' ANYMORE!
 		defaults= {
@@ -160,7 +160,7 @@ class Fist extends E.ModelJS
 				fl.Choice= rows
 		fl
 	_getFist: (p_fist, p_row, from_event) ->
-		f= '_getFist:'+ p_fist+ if p_row?.length then ':'+ p_row else ''
+		f= 'BM/Fist._getFist:'+ p_fist+ if p_row?.length then ':'+ p_row else ''
 		# Return fist as record
 		# 'fist' rec is: nm:fistNm, rnm:fistNm+row, row:row, st:state, sp:spec
 		#   ht:{field recs by html name}, db:{field recs by db_nm}

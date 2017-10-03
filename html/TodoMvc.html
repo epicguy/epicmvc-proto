@@ -130,7 +130,7 @@ E.localStorage= window.localStorage ? -> # We place things into 'E' namespace fo
 
 class TODO extends E.ModelJS
 	constructor: ( view_nm, options) ->
-		f= 'TODO.constructor'
+		f= 'M/TODO.constructor'
 		ss=
 			show: 'all' # all, active, completed
 			editing: false # the 'id' being edited
@@ -141,7 +141,7 @@ class TODO extends E.ModelJS
 		E.localStorage.setItem @options.key, JSON.stringify new_list
 		super() # Returns a snapshot of the 'ss' state
 	restoreState: (copy_of_state) ->
-		f= 'TODO::restoreState'
+		f= 'M/TODO.restoreState'
 		super copy_of_state
 		@nextId= 0
 		# Pull from localStorage if it existed there
@@ -153,8 +153,8 @@ class TODO extends E.ModelJS
 	_nextId: -> ++@nextId
 	route: (options) ->	return '/'+ if @show is 'all' then '' else @show
 	action: (ctx, act, p) ->
-		f= 'M:TODO::action'
-		E.log f, 'act:', act, 'p:', p
+		f= 'M/TODO.action:'+ act
+		E.log f, {p}
 		{r,i,m}= ctx
 		switch act
 			when 'browser_hash' #p.hash as /,/active,/completed

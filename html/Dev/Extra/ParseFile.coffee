@@ -106,7 +106,7 @@ FindAttrVal= (i, a) -> # false if eof, 'string' if error, else [i, attr-name, qu
 
 # TODO TEST attr='"' attr="'" checked another== a=x/> or checked/>
 FindAttrs= (file_info, str)->
-	f= ':parse.FindAttrs:'
+	f= 'DE/ParseFile.FindAttrs:'
 	# For data-e-action="click:action-name"
 	event_attrs_shortcuts= [
 		'data-e-click', 'data-e-rclick', 'data-e-change', 'data-e-dblclick', 'data-e-enter'
@@ -261,7 +261,7 @@ doError= (file_stats, text) ->
 	#alert "#{file_stats}, #{text}"
 	throw Error text+ ' in '+ file_stats
 ParseFile= (file_stats, file_contents) ->
-	f= ':Dev.E/ParseFile.ParseFile~'+file_stats
+	f= 'DE/ParseFile:'+file_stats
 	counter= 0
 	nextCounter= -> ++counter
 	etags= ['page','part', 'if', 'if_true', 'if_false', 'foreach', 'fist', 'defer', 'comment']

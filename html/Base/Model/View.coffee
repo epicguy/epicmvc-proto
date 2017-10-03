@@ -13,7 +13,7 @@ class View$Base extends E.ModelJS
 		@defer_it_cnt= 0
 		@start= false #A global timestamp for run:
 	nest_up: (who) ->
-		f= 'nest_up:'+ who
+		f= 'BM/View.nest_up:'+ who
 		#E.log f, @defer_it_cnt
 		if @defer_it_cnt is 0
 			BLOWUP() if @in_run
@@ -24,7 +24,7 @@ class View$Base extends E.ModelJS
 			@defer_it.promise= new Promise (resolve, reject)=> @defer_it.resolve= resolve
 		@defer_it_cnt++
 	nest_dn: (who) ->
-		f= 'nest_dn:'+ who
+		f= 'BM/View.nest_dn:'+ who
 		#E.log f, @defer_it_cnt
 		@defer_it_cnt-- if @defer_it_cnt > 0
 		if @defer_it_cnt is 0
@@ -33,7 +33,7 @@ class View$Base extends E.ModelJS
 			#E.log f, 'RESOLVE', @modal, @defer_content
 			@defer_it.resolve [@modal, @defer_content]
 	run: ->
-		f= 'run'
+		f= 'BM/View.run'
 		who= 'R'
 		[flow, track, step]= E.App().getStepPath()
 		if modal= E.appFindAttr flow, track, step,  'modal'
@@ -59,12 +59,12 @@ class View$Base extends E.ModelJS
 		#JCS:DEFER:DYNAMIC @D= [[]] # 'Defer' Stack arrays of defers as we render parts
 		return
 	saveInfo: () ->
-		f= 'saveInfo'
+		f= 'BM/View.saveInfo'
 		saved_info= E.merge {}, I: @I, P: @P
 		#E.log f, saved_info
 		saved_info
 	restoreInfo: (saved_info) ->
-		f= 'restoreInfo'
+		f= 'BM/View.restoreInfo'
 		#E.log f, 'saved_info', saved_info
 		@resetInfo()
 		@P= saved_info.P # TODO IS THIS SAFE?
@@ -73,13 +73,13 @@ class View$Base extends E.ModelJS
 		@R[ nm]= @_getMyRow @I[ nm] for nm of @I when nm not of @R
 		#E.log f, 'restored:P,I,R', @P, @I, @R
 	_getMyRow: (I) ->
-		f= '_getMyRow'
+		f= 'BM/View._getMyRow'
 		#E.log f, I
 		return (E[ I.m] I.o)[ I.c] if I.m? # I'm a top level table, get from model
 		@R[ I.p]= @_getMyRow @I[ I.p] if I.p not of @R # Load parent if needed
 		return @R[ I.p][ I.o][ I.c] if I.p and I.p of @R # Parent already loaded, return it's row
 	getTable: (nm) ->
-		f= 'Base:M/View.getTable:'+ nm
+		f= 'BM/View.getTable:'+ nm
 		#E.log f, @P if nm is 'Part'
 		switch nm
 			when 'If' then [@N]
@@ -91,66 +91,19 @@ class View$Base extends E.ModelJS
 			else E.option.m3 @view_nm , nm #%#
 	invalidateTables: (view_nm, tbl_nms, deleted_tbl_nms) ->
 		return unless @did_run and deleted_tbl_nms.length
-		f= 'Base:M/View.invalidateTables'
+		f= 'BM/View.invalidateTables'
 		#E.log f, view_nm, tbl_nms, deleted_tbl_nms #, (if E.inClick then 'IN')
 		m.startComputation()
 		m.endComputation()
 		return
-	### JCS: TODO FIGURE OUT IF DYNAMIC OR DEFER IS REALLY EVER NEEDED AGAIN - MITHRIL MAKES EVERYTHING DYNAMIC, NO? AND DATA-EX-* ATTRS DO DEFER, YES?
-	#JCS:DEFER:DYNAMIC
-	# Wraper for page/part content which needs special treatment (dyanmic='div', epic:defer's, etc.)
-	wrap: (view, attrs, content, defer, has_root)->
-		f= 'wrap'
-		if defer.length
-			inside= E.merge [], defer
-			attrs.config= (element, isInit, context) =>
-				f= 'Base:M/View..config:'+ view
-				for defer in inside
-					E.log f, defer
-					@doDefer defer, element, isInit, context
-		if 'dynamic' of attrs # Always render the container, even if content is null
-			tag: attrs.dynamic, attrs: attrs, children: content
-		else
-			return '' unless content
-			if has_root
-				# TODO WHAT IS GOING ON WITH attrs TO wrap IF CONTENT HAS ATTRS? (part=)
-				E.log f, 'has-root-content', {view,attrs,content,defer,has_root}
-				BLOWUP() if 'A' isnt E.type_oau content
-				# TODO E2 FIGURE OUT WHY I COMMENTED THIS OUT; ALSO, PLAN IS TO USE DATA-EX-* ATTRS PER ELEMENT, NOT <E-DEFER
-				#content[0].attrs.config= attrs.config # Pass the defer logic to the part's div
-				content
-			else
-				tag: 'div', attrs: attrs, children: content
-	doDefer: (defer_obj, element, isInit, context) =>
-		if 'A' is E.type_oau defer_obj.defer
-			E.log 'WARNING', 'Got an array for defer', defer_obj.defer
-			return 'WAS-ARRAY'
-		defer_obj.func element, isInit, context, defer_obj.attrs if defer_obj.func
-	T_defer: ( attrs, content) -> # TODO IMPLEMENT DEFER LOGIC ATTRS?
-		f= 'Base:M/View.T_defer:'
-		f_content= @handleIt content
-		#_log f, content, f_content
-		# When epic tags are inside defer, you get nested arrays that need to be joined (w/o commas)
-		if 'A' is E.type_oau f_content
-			sep= ''
-			ans= ''
-			joiner= (a) ->
-				for e in a
-					if 'A' is E.type_oau e then joiner e else ans+= sep+ e
-			joiner f_content
-			#_log f, 'join', ans
-			f_content= ans
-		@D[ @D.length- 1].push {attrs, func: new Function 'element', 'isInit', 'context', 'attrs', f_content}
-		'' # No content to display for these
-	###
 	handleIt: (content) =>
-		f= 'handleIt'
+		f= 'BM/View.handleIt'
 		#E.log f, 'top',( typeof content) #, content
 		content= content() if typeof content is 'function'
 		#E.log f, 'bottom',( typeof content), content
 		content
 	formatFromSpec: (val, spec, custom_spec) ->
-		f= 'formatFromSpec'
+		f= 'BM/View.formatFromSpec'
 		#E.log f, val, spec, custom_spec
 		switch spec
 			when ''
@@ -188,7 +141,7 @@ class View$Base extends E.ModelJS
 		if format_spec? then @formatFromSpec ans, format_spec, custom_spec else ans
 	# When attrs may have leading '?' for special treatment
 	weed: (attrs) ->
-		f= 'weed'
+		f= 'BM/View.weed'
 		clean_attrs= {}
 		for nm,val of attrs
 			if nm[ 0] isnt '?'
@@ -198,7 +151,7 @@ class View$Base extends E.ModelJS
 		#E.log f, clean_attrs
 		clean_attrs
 	kids: (kids) ->
-		f= 'kids'
+		f= 'BM/View.kids'
 		who= 'K'
 		#E.log f, 'top', kids.length
 		# Build a new array, with either a copy if 'object' or 'text', else array is T_ funcs w/promises
@@ -224,14 +177,14 @@ class View$Base extends E.ModelJS
 
 	# Process data-e-any="value" into hash of 'any: value'
 	loadPartAttrs: (attrs,full) ->
-		f= 'Base:M/View.loadPartAttrs'
+		f= 'BM/View.loadPartAttrs'
 		result= {}
 		for attr,val of attrs
 			continue if 'data-e-' isnt attr.slice 0, 7
 			result[ if full then attr else attr.slice 7]= val
 		result
 	T_page: ( attrs) =>
-		f= 'T_page'
+		f= 'BM/View.T_page'
 		#E.log f, attrs, new Date().getTime()- @start
 		if @frame_inx< @frames.length
 			d_load= E.oLoader.d_layout name= @frames[ @frame_inx++]
@@ -243,14 +196,14 @@ class View$Base extends E.ModelJS
 
 	T_part: ( attrs) ->
 		view= attrs.part
-		f= 'T_part:'+ view
+		f= 'BM/View.T_part:'+ view
 		#E.log f, new Date().getTime()- @start
 		d_load= E.oLoader.d_part view
 		@piece_handle 'Part/'+ view, attrs, d_load, true
 
 	# This step, may be happen in a .then, or immeadiate
 	piece_handle: (view, attrs, obj, is_part) ->
-		f= 'piece_handle'
+		f= 'BM/View.piece_handle'
 		#E.log f, view, obj, "typeof content:", typeof obj.content, " has then?", (if obj?.then then 'yes' else 'no')
 		return @D_piece view, attrs, obj, is_part if obj?.then # Was a thenable
 		#E.log f, view #, new Date().getTime()- @start #, obj
@@ -276,7 +229,7 @@ class View$Base extends E.ModelJS
 		result
 		###
 	D_piece: (view, attrs, d_load, is_part) ->
-		f= 'D_piece'
+		f= 'BM/View.D_piece'
 		who= 'P'
 		@nest_up who+ view
 		saved_info= @saveInfo()
@@ -325,7 +278,7 @@ class View$Base extends E.ModelJS
 			tbl= @_accessModelTable attrs.table_is_not_empty, false
 			is_true= true if tbl.length
 		else issue= true
-		console.log 'ISSUE T_if', attrs if issue
+		console.error 'ISSUE T_if', attrs if issue
 		@N[ attrs.name]= is_true if 'name' of attrs
 		return if is_true and content
 			@handleIt content
@@ -349,7 +302,7 @@ class View$Base extends E.ModelJS
 		[tbl, rh_alias]
 
 	T_foreach: (attrs, content_f) ->
-		f= 'T_foreach'
+		f= 'BM/View.T_foreach'
 		#E.log f, attrs
 		[tbl, rh_alias]= @_accessModelTable attrs.table, attrs.alias
 		return '' if tbl.length is 0 # No rows means no output
@@ -364,7 +317,7 @@ class View$Base extends E.ModelJS
 		delete @R[ rh_alias]
 		return result
 	T_fist: (attrs, content_f) -> # Could have children, or a part=, or default to fist_default, (or E.fistDef[nm].part ?)
-		f= 'T_fist'
+		f= 'BM/View.T_fist'
 		E.log f, attrs, content_f
 		fist= E.fistDef[ attrs.fist]
 		model= fist.event ? 'Fist'
@@ -390,7 +343,7 @@ class View$Base extends E.ModelJS
 		ans
 	# Referenced by parser as: oE.ex
 	ex: (el, isInit, ctx) => # Mithril config function
-		f= 'ex'
+		f= 'BM/View.ex'
 		attrs= el.attributes
 		for ix in [0...attrs.length] when 'data-ex-' is attrs[ ix].name.slice 0, 8
 			[d,e,nm,p1,p2]= attrs[ ix].name.split '-'

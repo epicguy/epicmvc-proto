@@ -16,7 +16,7 @@
 
     Fist.prototype.event = function(name, act, fistNm, fieldNm, p) {
       var f, field, fist, had_issue, invalidate, invalidate2, tmp_val, was_issue, was_val;
-      f = 'event:' + act + '-' + fistNm + '/' + fieldNm;
+      f = 'BM/Fist.event:' + act + '-' + fistNm + '/' + fieldNm;
       E.log(f, p);
       if (name !== 'Fist') {
         BLOWUP();
@@ -144,7 +144,7 @@
 
     Fist.prototype.fistValidate = function(ctx, fistNm, row) {
       var ans, errors, f, field, fieldNm, fist, hval, invalidate, nm, r, ref, ref1, ref2;
-      f = 'fistValidate:' + fistNm + ((row != null ? row.length : void 0) ? ':' + row : '');
+      f = 'BM/Fist.fistValidate:' + fistNm + ((row != null ? row.length : void 0) ? ':' + row : '');
       E.log(f);
       r = ctx;
       fist = this._getFist(fistNm, row);
@@ -218,7 +218,7 @@
 
     Fist.prototype._makeField = function(fist, field, ix, row) {
       var choice_type, choices, defaults, f, fl, i, ref, ref1, rows, s;
-      f = '_makeField';
+      f = 'BM/Fist._makeField';
       defaults = {
         is_first: ix === 0,
         focus: fist.fnm === field.nm,
@@ -265,7 +265,7 @@
 
     Fist.prototype._getFist = function(p_fist, p_row, from_event) {
       var db_value_hash, f, field, fieldNm, fist, i, len, nm, rec, ref, ref1, ref2, ref3, rnm;
-      f = '_getFist:' + p_fist + ((p_row != null ? p_row.length : void 0) ? ':' + p_row : '');
+      f = 'BM/Fist._getFist:' + p_fist + ((p_row != null ? p_row.length : void 0) ? ':' + p_row : '');
       rnm = p_fist + ((p_row != null ? p_row.length : void 0) ? ':' + p_row : '');
       if (!(rnm in this.fist)) {
         if (from_event === true) {

@@ -15,14 +15,14 @@ class App$Base extends E.ModelJS
 			@messages= new E.Issue @view_nm
 			@invalidateTables ['Message']
 	goTo: (flow,t,s) ->
-		f= 'goTo'
+		f= 'BM/App.goTo'
 		was= "#{@f}/#{@t}/#{@s}"
 		@f= flow; @t= t; @s= s
 		E.log f, {was,is: "#{@f}/#{@t}/#{@s}"}
 		if was isnt "#{@f}/#{@t}/#{@s}"
 			@invalidateTables ['V'] # This table is specific to the 'path'
 	go: (path) ->
-		f= 'go:'+path
+		f= 'BM/App.go:'+path
 		[flow, t, s]= path.split '/'
 		if not flow
 			flow= @f
@@ -36,7 +36,7 @@ class App$Base extends E.ModelJS
 	appGet: (attr) -> E.appGetSetting attr, @f, @t, @s
 	getStepPath: -> [@f, @t, @s]
 	action: (ctx,act,p) ->
-		f= ":App.action:#{act}"
+		f= "BM/App.action:#{act}"
 		{r,i,m}= ctx
 		switch act
 			when 'path'      then @go p.path

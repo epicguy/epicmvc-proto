@@ -18,7 +18,7 @@ class Devl extends E.ModelJS
 		# TODO NOTE This next line is needed, since models might not populate Table until end of render
 		@timer= setTimeout (=> @timer= false; @invalidateTables ['Model']), 10
 	action: (ctx,act,p) ->
-		f= 'dM:Devl('+ act+ ')'
+		f= 'DM/Devl.action:'+ act
 		switch act
 			when 'toggle' # p.what(file,tag,form)
 				@opts[p.what]= not @opts[p.what]
@@ -66,7 +66,7 @@ class Devl extends E.ModelJS
 				@invalidateTables ['Model']
 			else return super ctx, act, p
 	loadTable: (tbl_nm) ->
-		f= 'dM:Devl.loadTable('+ tbl_nm+ ')'
+		f= 'DM/Devl.loadTable:'+ tbl_nm
 		switch tbl_nm
 			when 'Opts' then @Table[tbl_nm]= [@opts]
 			when 'Model'

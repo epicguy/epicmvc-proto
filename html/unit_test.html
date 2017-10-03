@@ -58,7 +58,7 @@ class Thing extends E.ModelJS
 		@testFist= {} # No values initially
 	action: (ctx, act, p) ->
 		f= "M/Thing.action:#{act}:"
-		E.log f, p
+		E.log f, {p}
 		switch act
 			when 'toggle'
 				@world= not @world

@@ -10,7 +10,7 @@ class LoadStrategy$Base
 		for pkg in @reverse_packages
 			results= E['view$'+ pkg]?[type]?[nm] ? false
 			break if results isnt false
-		console.log 'NO FILE FOUND! '+ nm if results is false
+		console.error 'NO FILE FOUND! '+ nm if results is false
 		results
 	D_loadAsync: -> Promise.resolve()
 	d_layout: (nm) ->

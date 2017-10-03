@@ -45,7 +45,7 @@
 
     RestAPI.prototype.D_Request = function(method, route, data, header_obj_in) {
       var f, header_obj, promise, status;
-      f = 'E/RestAPI$Base.D_Request';
+      f = 'BE/RestAPI.D_Request';
       header_obj = E.merge({}, this.opts.app_headers, header_obj_in != null ? header_obj_in : {});
       status = {
         code: false,
@@ -90,7 +90,9 @@
         };
       })(this));
       return promise.then(function(result) {
-        console.log(f, result);
+        E.log(f, {
+          result: result
+        });
         return result;
       });
     };

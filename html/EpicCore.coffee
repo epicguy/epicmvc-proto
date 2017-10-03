@@ -72,7 +72,7 @@ app= (undef) ->
 		depth= 0
 		func= {}
 		func[ otype]= (dest,source)-> # Dest is an object, source must also be
-			f= 'func:O'
+			f= 'EC/merge:O'
 			#E.log f+ depth, {dest,source}
 			return undef if (type_oau source) isnt otype
 			for snm of source
@@ -80,7 +80,7 @@ app= (undef) ->
 				dest[ snm]= ans if ans isnt undef
 			undef
 		func[ atype]= (dest,source)-> # Update 'dest' as an array
-			f= 'func:A'
+			f= 'EC/merge:A'
 			#E.log f+ depth, {dest,source}
 			return undef if (type_oau source) isnt atype # only copy if same type
 			for s,inx in source
@@ -88,7 +88,7 @@ app= (undef) ->
 				dest[ inx]= ans if ans isnt undef
 			undef
 		func[ utype]= (was,want)-> # Return new value, caller will assign
-			f= 'func:U'
+			f= 'EC/merge:U'
 			#E.log f+ depth, 'before', {dest,source}
 			switch type_oau want
 				when otype then become= {}; func[ otype] become, want
@@ -107,7 +107,7 @@ app= (undef) ->
 			depth--
 			r
 		for source in sources
-			f= ':merge:source-loop'
+			f= 'EC/merge:source-loop'
 			#E.log f+ depth, 'before', {dest, source}
 			dup dest, source
 			#E.log f+ depth, 'after', {dest, source}
@@ -115,7 +115,7 @@ app= (undef) ->
 
 	# Caller indicates a login event, let interested models know
 	E.login= ->
-		f= ':login'
+		f= 'EC/login'
 		E.log f, oModel
 		o.eventLogin?() for k,o of oModel
 
@@ -152,7 +152,7 @@ app= (undef) ->
 
 	# TODO FIGURE OUT IF RENDER USES THIS FOR THE BACK/FWD BUTTONS OF BROWSER HISTORY
 	setModelState= (s) ->
-		f= ':setModelState'
+		f= 'EC/setModelState'
 		modelState= s if s?
 		#E.log f, s, modelState
 		for inst_nm of oModel
@@ -222,7 +222,7 @@ app= (undef) ->
 		return aSetting[ setting_name] if not flow # Some settings are not down in the flow
 		( appFindAttr flow, track, (step ? false), setting_name ) ? aSetting[ setting_name]
 	appGetVars= (flow,track,step) ->
-		f= ':appGetVars'
+		f= 'EC/appGetVars'
 		vars= merge {}, aFlows[ flow].v, aFlows[ flow].TRACKS[ track].v, aFlows[ flow].TRACKS[ track].STEPS[ step].v
 		#E.log f, ( "#{k}:#{v}" for own k,v of vars).join ', '
 		vars
@@ -256,7 +256,7 @@ app= (undef) ->
 
 	# Caller has requested processing a action event w/data
 	action= (action_token,data) ->
-		f= ':action:'+action_token
+		f= 'EC/action:'+action_token
 		E.log f, data
 		option.c1 inAction # if inAction isnt false #%#
 		inAction= action_token
@@ -282,7 +282,7 @@ app= (undef) ->
 		return
 
 	_d_doAction= (action_token, data, original_path) ->
-		f= ":_d_doAction(#{action_token})"
+		f= "EC/_d_doAction(#{action_token})"
 		#E.log f, data, original_path
 		master_issue= new Issue 'App'
 		master_message= new Issue 'App'
@@ -416,14 +416,14 @@ class Issue
 		issue.add token, value_list
 		issue
 	add: (token, msgs) ->
-		f= ':Issue.add:'+@t_view+':'+@t_action
+		f= 'EC/Issue.add:'+@t_view+':'+@t_action
 		E.log f, 'params:type/msgs', token, msgs
 		switch typeof msgs
 			when 'undefined' then msgs= []
 			when 'string' then msgs= [ msgs ]
 		@issue_list.push token:token, more:msgs, t_view: @t_view, t_action: @t_action
 	addObj: (issue_obj) ->
-		f= ':Issue.addObj:'+ @t_view+'#'+@t_action
+		f= 'EC/Issue.addObj:'+ @t_view+'#'+@t_action
 		return if typeof issue_obj isnt 'object' or not ('issue_list' of issue_obj)
 		#E.log f, 'issue_list', issue_obj.issue_list
 		for issue in issue_obj.issue_list
@@ -495,7 +495,7 @@ class ModelJS
 		st[nm]= @[nm] for nm of ss when @[nm] isnt ss[nm]
 		E.merge {}, st # clone and return
 	invalidateTables: (tbl_nms,not_tbl_names) -> # Use true for all
-		f= ':ModelJS.invalidateTables~'+ @view_nm
+		f= 'EC/ModelJS.invalidateTables~'+ @view_nm
 		#E.log f, tbl_nms, not_tbl_names
 		not_tbl_names?= []
 		tbl_nms= (nm for nm of @Table when not (nm in not_tbl_names)) if tbl_nms is true

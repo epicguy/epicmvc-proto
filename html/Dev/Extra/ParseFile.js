@@ -164,7 +164,7 @@
 
   FindAttrs = function(file_info, str) {
     var attr_obj, attr_split, attrs_need_cleaning, className, data_e_action, empty, eq, event_attrs_shortcuts, f, good, grp, i, nm, pane, parts, quo, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, ref8, start, style_obj;
-    f = ':parse.FindAttrs:';
+    f = 'DE/ParseFile.FindAttrs:';
     event_attrs_shortcuts = ['data-e-click', 'data-e-rclick', 'data-e-change', 'data-e-dblclick', 'data-e-enter', 'data-e-escape', 'data-e-keyup', 'data-e-focus', 'data-e-blur', 'data-e-event'];
     str = ' ' + str;
     str = str.replace(/\se-/gm, ' data-e-');
@@ -342,7 +342,7 @@
 
   ParseFile = function(file_stats, file_contents) {
     var T_EPIC, T_M1, T_M2, T_STYLE, T_TEXT, after, after_comment, after_script, attr_clean, attrs, base_nm, children, content, counter, doChildren, dom_close, dom_nms, dom_pre_tags, empty, etags, f, flavor, i, nextCounter, oi, parts, pre_count, prev_children, ref, ref1, stats, t, tag_names_for_debugger, tag_wait, text, whole_tag;
-    f = ':Dev.E/ParseFile.ParseFile~' + file_stats;
+    f = 'DE/ParseFile:' + file_stats;
     counter = 0;
     nextCounter = function() {
       return ++counter;

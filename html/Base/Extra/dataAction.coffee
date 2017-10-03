@@ -3,7 +3,7 @@
 
 # Return true to preventDefault
 dataAction= (type, data_action, data_params) ->
-	f= 'Base:E/dataAction:on[data-e-action]'+ type
+	f= 'BE/dataAction:'+ type
 	E.option.activity? type
 	action_specs= data_action.split ','
 	do_action= true

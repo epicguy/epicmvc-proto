@@ -6,7 +6,7 @@ class Tab extends E.ModelJS
 		super view_nm, options
 		@tabs= E.merge {Modal: backdrop: false}, options # Hash by tab-group-name
 	event: (name,type,groupNm,itemNm,data) ->
-		f= 'event'
+		f= 'BM/Tab.event'
 		E.log f, {name,type,groupNm,itemNm,data}
 		group= @_getTab groupNm, itemNm # Pass 'item' since it may never have been seen before
 		type= group.TYPE ? groupNm
@@ -84,7 +84,7 @@ E.Model.Tab$Base= Tab
 
 # Mithril extension/config function referenced by ParseFile for user shortcut attribute 'data-e-collapse-pane'
 E.ex$collapse= (el, isInit, ctx, val, p1, p2) -> # set el's height using scrollHeight, if Tab/g/i is set, else 0
-	f= 'A_ex_collapse'
+	f= 'BM/Tab:ex$collapse'
 	[g,i]= val.split ':' # Group-name : Item-name
 	E.log f, {g,i,sH:el.scrollHeight,g_row:(E.Tab g)[ 0]}
 	height= if (E.Tab g)[ 0][ i] then el.scrollHeight else 0

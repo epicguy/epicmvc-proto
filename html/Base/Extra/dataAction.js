@@ -6,7 +6,7 @@
 
   dataAction = function(type, data_action, data_params) {
     var action_specs, base, do_action, f, group, i, interesting, item, len, one_spec, prevent, ref, spec_action, spec_type;
-    f = 'Base:E/dataAction:on[data-e-action]' + type;
+    f = 'BE/dataAction:' + type;
     if (typeof (base = E.option).activity === "function") {
       base.activity(type);
     }

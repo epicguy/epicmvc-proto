@@ -53,7 +53,7 @@
       func = {};
       func[otype] = function(dest, source) {
         var ans, f, snm;
-        f = 'func:O';
+        f = 'EC/merge:O';
         if ((type_oau(source)) !== otype) {
           return undef;
         }
@@ -67,7 +67,7 @@
       };
       func[atype] = function(dest, source) {
         var ans, f, inx, l, len1, s;
-        f = 'func:A';
+        f = 'EC/merge:A';
         if ((type_oau(source)) !== atype) {
           return undef;
         }
@@ -82,7 +82,7 @@
       };
       func[utype] = function(was, want) {
         var become, f;
-        f = 'func:U';
+        f = 'EC/merge:U';
         switch (type_oau(want)) {
           case otype:
             become = {};
@@ -116,14 +116,14 @@
       };
       for (l = 0, len1 = sources.length; l < len1; l++) {
         source = sources[l];
-        f = ':merge:source-loop';
+        f = 'EC/merge:source-loop';
         dup(dest, source);
       }
       return dest;
     };
     E.login = function() {
       var f, k, o, results;
-      f = ':login';
+      f = 'EC/login';
       E.log(f, oModel);
       results = [];
       for (k in oModel) {
@@ -184,7 +184,7 @@
     };
     setModelState = function(s) {
       var base, f, inst_nm, results;
-      f = ':setModelState';
+      f = 'EC/setModelState';
       if (s != null) {
         modelState = s;
       }
@@ -340,7 +340,7 @@
     };
     appGetVars = function(flow, track, step) {
       var f, vars;
-      f = ':appGetVars';
+      f = 'EC/appGetVars';
       vars = merge({}, aFlows[flow].v, aFlows[flow].TRACKS[track].v, aFlows[flow].TRACKS[track].STEPS[step].v);
       return vars;
     };
@@ -399,7 +399,7 @@
     };
     action = function(action_token, data) {
       var ans, f, final, more;
-      f = ':action:' + action_token;
+      f = 'EC/action:' + action_token;
       E.log(f, data);
       option.c1(inAction);
       inAction = action_token;
@@ -431,7 +431,7 @@
     };
     _d_doAction = function(action_token, data, original_path) {
       var action_node, ans, d_doActionNode, d_doLeftSide, d_doRightSide, done, err, f, master_data, master_issue, master_message;
-      f = ":_d_doAction(" + action_token + ")";
+      f = "EC/_d_doAction(" + action_token + ")";
       master_issue = new Issue('App');
       master_message = new Issue('App');
       master_data = merge({}, data);
@@ -697,7 +697,7 @@
 
     Issue.prototype.add = function(token, msgs) {
       var f;
-      f = ':Issue.add:' + this.t_view + ':' + this.t_action;
+      f = 'EC/Issue.add:' + this.t_view + ':' + this.t_action;
       E.log(f, 'params:type/msgs', token, msgs);
       switch (typeof msgs) {
         case 'undefined':
@@ -716,7 +716,7 @@
 
     Issue.prototype.addObj = function(issue_obj) {
       var f, issue, j, len, new_issue, ref;
-      f = ':Issue.addObj:' + this.t_view + '#' + this.t_action;
+      f = 'EC/Issue.addObj:' + this.t_view + '#' + this.t_action;
       if (typeof issue_obj !== 'object' || !('issue_list' in issue_obj)) {
         return;
       }
@@ -864,7 +864,7 @@
 
     ModelJS.prototype.invalidateTables = function(tbl_nms, not_tbl_names) {
       var deleted_tbl_nms, f, j, len, nm;
-      f = ':ModelJS.invalidateTables~' + this.view_nm;
+      f = 'EC/ModelJS.invalidateTables~' + this.view_nm;
       if (not_tbl_names == null) {
         not_tbl_names = [];
       }

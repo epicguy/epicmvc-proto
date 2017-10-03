@@ -46,7 +46,7 @@
 
     RenderStrategy$Base.prototype.handleEvent = function(event_obj) {
       var attrs, data_action, data_params, f, files, i, ix, j, len, nm, old_params, prevent, rec, ref, ref1, ref2, ref3, target, touch, type, val, x, y;
-      f = 'E/RenderStrategy.handleEvent: ';
+      f = 'BE/RenderStrategy.handleEvent: ';
       E.log(f, 'top', this.redraw_guard, (event_obj != null ? event_obj : window.event).type);
       if (event_obj == null) {
         event_obj = window.event;
@@ -190,7 +190,7 @@
 
     RenderStrategy$Base.prototype.onPopState = function(event) {
       var f;
-      f = 'E/RenderStrategy.onPopState: ';
+      f = 'BE/RenderStrategy.onPopState: ';
       E.log(f, {
         was_popped: this.was_popped,
         very_first: this.very_first
@@ -224,7 +224,7 @@
 
     RenderStrategy$Base.prototype.m_redraw = function() {
       var f;
-      f = 'E/RenderStrategy.m_redraw: ';
+      f = 'BE/RenderStrategy.m_redraw: ';
       this.redraw_guard++;
       if (this.redraw_guard !== 1) {
         E.log(f, 'GUARD REDRAW', this.redraw_guard);
@@ -253,7 +253,7 @@
 
     RenderStrategy$Base.prototype.render = function(modal, content) {
       var container, f, start;
-      f = 'E/RenderStrategy.render: ';
+      f = 'BE/RenderStrategy.render: ';
       start = new Date().getTime();
       E.log(f, 'START RENDER', start, modal);
       if (modal) {
@@ -278,7 +278,7 @@
       path = E.App().getStepPath();
       str_path = path.join('/');
       history = str_path === this.last_path ? 'replace' : true;
-      f = 'E/RenderStrategy.handleRenderState:' + history + ':' + str_path;
+      f = 'BE/RenderStrategy.handleRenderState:' + history + ':' + str_path;
       E.log(f, {
         vf: this.very_first,
         wp: this.was_popped

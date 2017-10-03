@@ -414,6 +414,8 @@
   };
 
   E.ex$attr = function(el, beenHere, ctx, value, attr_nm, cast_to) {
+    var f;
+    f = 'PE/ex$attr';
     if (beenHere) {
       return;
     }
@@ -425,13 +427,17 @@
       case 'int':
         value = parseInt(value);
     }
-    E.log("ex$attr: attr_nm=", attr_nm, " cast_to=", cast_to, " value=", value);
+    E.log(f, {
+      attr_nm: attr_nm,
+      cast_to: cast_to,
+      value: value
+    });
     el[attr_nm] = value;
   };
 
   E.ex$scroll = function(el, isInit, ctx, val, p1, p2) {
     var direction, f;
-    f = 'E.ex$scroll:';
+    f = 'PE/ex$scroll:';
     E.log(f, {
       isInit: isInit,
       val: val,

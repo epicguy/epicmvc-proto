@@ -630,7 +630,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       func = {};
       func[otype] = function(dest, source) {
         var ans, f, snm;
-        f = 'func:O';
+        f = 'EC/merge:O';
         if ((type_oau(source)) !== otype) {
           return undef;
         }
@@ -644,7 +644,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       };
       func[atype] = function(dest, source) {
         var ans, f, inx, l, len1, s;
-        f = 'func:A';
+        f = 'EC/merge:A';
         if ((type_oau(source)) !== atype) {
           return undef;
         }
@@ -659,7 +659,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       };
       func[utype] = function(was, want) {
         var become, f;
-        f = 'func:U';
+        f = 'EC/merge:U';
         switch (type_oau(want)) {
           case otype:
             become = {};
@@ -693,14 +693,14 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       };
       for (l = 0, len1 = sources.length; l < len1; l++) {
         source = sources[l];
-        f = ':merge:source-loop';
+        f = 'EC/merge:source-loop';
         dup(dest, source);
       }
       return dest;
     };
     E.login = function() {
       var f, k, o, results;
-      f = ':login';
+      f = 'EC/login';
       E.log(f, oModel);
       results = [];
       for (k in oModel) {
@@ -761,7 +761,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     };
     setModelState = function(s) {
       var base, f, inst_nm, results;
-      f = ':setModelState';
+      f = 'EC/setModelState';
       if (s != null) {
         modelState = s;
       }
@@ -917,7 +917,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     };
     appGetVars = function(flow, track, step) {
       var f, vars;
-      f = ':appGetVars';
+      f = 'EC/appGetVars';
       vars = merge({}, aFlows[flow].v, aFlows[flow].TRACKS[track].v, aFlows[flow].TRACKS[track].STEPS[step].v);
       return vars;
     };
@@ -976,7 +976,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     };
     action = function(action_token, data) {
       var ans, f, final, more;
-      f = ':action:' + action_token;
+      f = 'EC/action:' + action_token;
       E.log(f, data);
       option.c1(inAction);
       inAction = action_token;
@@ -1008,7 +1008,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     };
     _d_doAction = function(action_token, data, original_path) {
       var action_node, ans, d_doActionNode, d_doLeftSide, d_doRightSide, done, err, f, master_data, master_issue, master_message;
-      f = ":_d_doAction(" + action_token + ")";
+      f = "EC/_d_doAction(" + action_token + ")";
       master_issue = new Issue('App');
       master_message = new Issue('App');
       master_data = merge({}, data);
@@ -1274,7 +1274,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     Issue.prototype.add = function(token, msgs) {
       var f;
-      f = ':Issue.add:' + this.t_view + ':' + this.t_action;
+      f = 'EC/Issue.add:' + this.t_view + ':' + this.t_action;
       E.log(f, 'params:type/msgs', token, msgs);
       switch (typeof msgs) {
         case 'undefined':
@@ -1293,7 +1293,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     Issue.prototype.addObj = function(issue_obj) {
       var f, issue, j, len, new_issue, ref;
-      f = ':Issue.addObj:' + this.t_view + '#' + this.t_action;
+      f = 'EC/Issue.addObj:' + this.t_view + '#' + this.t_action;
       if (typeof issue_obj !== 'object' || !('issue_list' in issue_obj)) {
         return;
       }
@@ -1441,7 +1441,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     ModelJS.prototype.invalidateTables = function(tbl_nms, not_tbl_names) {
       var deleted_tbl_nms, f, j, len, nm;
-      f = ':ModelJS.invalidateTables~' + this.view_nm;
+      f = 'EC/ModelJS.invalidateTables~' + this.view_nm;
       if (not_tbl_names == null) {
         not_tbl_names = [];
       }
@@ -1594,7 +1594,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     App$Base.prototype.goTo = function(flow, t, s) {
       var f, was;
-      f = 'goTo';
+      f = 'BM/App.goTo';
       was = this.f + "/" + this.t + "/" + this.s;
       this.f = flow;
       this.t = t;
@@ -1610,7 +1610,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     App$Base.prototype.go = function(path) {
       var f, flow, ref, s, t;
-      f = 'go:' + path;
+      f = 'BM/App.go:' + path;
       ref = path.split('/'), flow = ref[0], t = ref[1], s = ref[2];
       if (!flow) {
         flow = this.f;
@@ -1643,7 +1643,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     App$Base.prototype.action = function(ctx, act, p) {
       var code, f, i, m, path, q, r, ref, route;
-      f = ":App.action:" + act;
+      f = "BM/App.action:" + act;
       r = ctx.r, i = ctx.i, m = ctx.m;
       switch (act) {
         case 'path':
@@ -1758,7 +1758,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     Fist.prototype.event = function(name, act, fistNm, fieldNm, p) {
       var f, field, fist, had_issue, invalidate, invalidate2, tmp_val, was_issue, was_val;
-      f = 'event:' + act + '-' + fistNm + '/' + fieldNm;
+      f = 'BM/Fist.event:' + act + '-' + fistNm + '/' + fieldNm;
       E.log(f, p);
       if (name !== 'Fist') {
         BLOWUP();
@@ -1886,7 +1886,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     Fist.prototype.fistValidate = function(ctx, fistNm, row) {
       var ans, errors, f, field, fieldNm, fist, hval, invalidate, nm, r, ref, ref1, ref2;
-      f = 'fistValidate:' + fistNm + ((row != null ? row.length : void 0) ? ':' + row : '');
+      f = 'BM/Fist.fistValidate:' + fistNm + ((row != null ? row.length : void 0) ? ':' + row : '');
       E.log(f);
       r = ctx;
       fist = this._getFist(fistNm, row);
@@ -1960,7 +1960,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     Fist.prototype._makeField = function(fist, field, ix, row) {
       var choice_type, choices, defaults, f, fl, i, ref, ref1, rows, s;
-      f = '_makeField';
+      f = 'BM/Fist._makeField';
       defaults = {
         is_first: ix === 0,
         focus: fist.fnm === field.nm,
@@ -2007,7 +2007,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     Fist.prototype._getFist = function(p_fist, p_row, from_event) {
       var db_value_hash, f, field, fieldNm, fist, i, len, nm, rec, ref, ref1, ref2, ref3, rnm;
-      f = '_getFist:' + p_fist + ((p_row != null ? p_row.length : void 0) ? ':' + p_row : '');
+      f = 'BM/Fist._getFist:' + p_fist + ((p_row != null ? p_row.length : void 0) ? ':' + p_row : '');
       rnm = p_fist + ((p_row != null ? p_row.length : void 0) ? ':' + p_row : '');
       if (!(rnm in this.fist)) {
         if (from_event === true) {
@@ -2215,7 +2215,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     Tab.prototype.event = function(name, type, groupNm, itemNm, data) {
       var changed, f, group, ref;
-      f = 'event';
+      f = 'BM/Tab.event';
       E.log(f, {
         name: name,
         type: type,
@@ -2368,7 +2368,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
   E.ex$collapse = function(el, isInit, ctx, val, p1, p2) {
     var f, g, height, i, ref;
-    f = 'A_ex_collapse';
+    f = 'BM/Tab:ex$collapse';
     ref = val.split(':'), g = ref[0], i = ref[1];
     E.log(f, {
       g: g,
@@ -2431,7 +2431,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.nest_up = function(who) {
       var f;
-      f = 'nest_up:' + who;
+      f = 'BM/View.nest_up:' + who;
       if (this.defer_it_cnt === 0) {
         if (this.in_run) {
           BLOWUP();
@@ -2453,7 +2453,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.nest_dn = function(who) {
       var f;
-      f = 'nest_dn:' + who;
+      f = 'BM/View.nest_dn:' + who;
       if (this.defer_it_cnt > 0) {
         this.defer_it_cnt--;
       }
@@ -2466,7 +2466,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.run = function() {
       var f, flow, layout, modal, ref, ref1, ref2, step, track, who;
-      f = 'run';
+      f = 'BM/View.run';
       who = 'R';
       ref = E.App().getStepPath(), flow = ref[0], track = ref[1], step = ref[2];
       if (modal = E.appFindAttr(flow, track, step, 'modal')) {
@@ -2494,7 +2494,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.saveInfo = function() {
       var f, saved_info;
-      f = 'saveInfo';
+      f = 'BM/View.saveInfo';
       saved_info = E.merge({}, {
         I: this.I,
         P: this.P
@@ -2504,7 +2504,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.restoreInfo = function(saved_info) {
       var f, nm, results;
-      f = 'restoreInfo';
+      f = 'BM/View.restoreInfo';
       this.resetInfo();
       this.P = saved_info.P;
       this.I = saved_info.I;
@@ -2519,7 +2519,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype._getMyRow = function(I) {
       var f;
-      f = '_getMyRow';
+      f = 'BM/View._getMyRow';
       if (I.m != null) {
         return (E[I.m](I.o))[I.c];
       }
@@ -2533,7 +2533,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.getTable = function(nm) {
       var f, i, len, p, rVal, ref;
-      f = 'Base:M/View.getTable:' + nm;
+      f = 'BM/View.getTable:' + nm;
       switch (nm) {
         case 'If':
           return [this.N];
@@ -2555,63 +2555,14 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       if (!(this.did_run && deleted_tbl_nms.length)) {
         return;
       }
-      f = 'Base:M/View.invalidateTables';
+      f = 'BM/View.invalidateTables';
       m.startComputation();
       m.endComputation();
     };
 
-
-    /* JCS: TODO FIGURE OUT IF DYNAMIC OR DEFER IS REALLY EVER NEEDED AGAIN - MITHRIL MAKES EVERYTHING DYNAMIC, NO? AND DATA-EX-* ATTRS DO DEFER, YES?
-    	#JCS:DEFER:DYNAMIC
-    	 * Wraper for page/part content which needs special treatment (dyanmic='div', epic:defer's, etc.)
-    	wrap: (view, attrs, content, defer, has_root)->
-    		f= 'wrap'
-    		if defer.length
-    			inside= E.merge [], defer
-    			attrs.config= (element, isInit, context) =>
-    				f= 'Base:M/View..config:'+ view
-    				for defer in inside
-    					E.log f, defer
-    					@doDefer defer, element, isInit, context
-    		if 'dynamic' of attrs # Always render the container, even if content is null
-    			tag: attrs.dynamic, attrs: attrs, children: content
-    		else
-    			return '' unless content
-    			if has_root
-    				 * TODO WHAT IS GOING ON WITH attrs TO wrap IF CONTENT HAS ATTRS? (part=)
-    				E.log f, 'has-root-content', {view,attrs,content,defer,has_root}
-    				BLOWUP() if 'A' isnt E.type_oau content
-    				 * TODO E2 FIGURE OUT WHY I COMMENTED THIS OUT; ALSO, PLAN IS TO USE DATA-EX-* ATTRS PER ELEMENT, NOT <E-DEFER
-    				#content[0].attrs.config= attrs.config # Pass the defer logic to the part's div
-    				content
-    			else
-    				tag: 'div', attrs: attrs, children: content
-    	doDefer: (defer_obj, element, isInit, context) =>
-    		if 'A' is E.type_oau defer_obj.defer
-    			E.log 'WARNING', 'Got an array for defer', defer_obj.defer
-    			return 'WAS-ARRAY'
-    		defer_obj.func element, isInit, context, defer_obj.attrs if defer_obj.func
-    	T_defer: ( attrs, content) -> # TODO IMPLEMENT DEFER LOGIC ATTRS?
-    		f= 'Base:M/View.T_defer:'
-    		f_content= @handleIt content
-    		#_log f, content, f_content
-    		 * When epic tags are inside defer, you get nested arrays that need to be joined (w/o commas)
-    		if 'A' is E.type_oau f_content
-    			sep= ''
-    			ans= ''
-    			joiner= (a) ->
-    				for e in a
-    					if 'A' is E.type_oau e then joiner e else ans+= sep+ e
-    			joiner f_content
-    			#_log f, 'join', ans
-    			f_content= ans
-    		@D[ @D.length- 1].push {attrs, func: new Function 'element', 'isInit', 'context', 'attrs', f_content}
-    		'' # No content to display for these
-     */
-
     View$Base.prototype.handleIt = function(content) {
       var f;
-      f = 'handleIt';
+      f = 'BM/View.handleIt';
       if (typeof content === 'function') {
         content = content();
       }
@@ -2620,7 +2571,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.formatFromSpec = function(val, spec, custom_spec) {
       var f, left, ref, right, str;
-      f = 'formatFromSpec';
+      f = 'BM/View.formatFromSpec';
       switch (spec) {
         case '':
           if (custom_spec) {
@@ -2686,7 +2637,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.weed = function(attrs) {
       var clean_attrs, f, nm, val;
-      f = 'weed';
+      f = 'BM/View.weed';
       clean_attrs = {};
       for (nm in attrs) {
         val = attrs[nm];
@@ -2703,7 +2654,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.kids = function(kids) {
       var ans, f, i, ix, kid, len, out, who;
-      f = 'kids';
+      f = 'BM/View.kids';
       who = 'K';
       out = [];
       for (ix = i = 0, len = kids.length; i < len; ix = ++i) {
@@ -2737,7 +2688,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.loadPartAttrs = function(attrs, full) {
       var attr, f, result, val;
-      f = 'Base:M/View.loadPartAttrs';
+      f = 'BM/View.loadPartAttrs';
       result = {};
       for (attr in attrs) {
         val = attrs[attr];
@@ -2751,7 +2702,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.T_page = function(attrs) {
       var d_load, f, name, view;
-      f = 'T_page';
+      f = 'BM/View.T_page';
       if (this.frame_inx < this.frames.length) {
         d_load = E.oLoader.d_layout(name = this.frames[this.frame_inx++]);
         view = (this.frame_inx < this.frames.length ? 'Frame' : 'Layout') + '/' + name;
@@ -2765,14 +2716,14 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     View$Base.prototype.T_part = function(attrs) {
       var d_load, f, view;
       view = attrs.part;
-      f = 'T_part:' + view;
+      f = 'BM/View.T_part:' + view;
       d_load = E.oLoader.d_part(view);
       return this.piece_handle('Part/' + view, attrs, d_load, true);
     };
 
     View$Base.prototype.piece_handle = function(view, attrs, obj, is_part) {
       var can_componentize, content, f, saved_info;
-      f = 'piece_handle';
+      f = 'BM/View.piece_handle';
       if (obj != null ? obj.then : void 0) {
         return this.D_piece(view, attrs, obj, is_part);
       }
@@ -2800,7 +2751,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.D_piece = function(view, attrs, d_load, is_part) {
       var d_result, f, saved_info, who;
-      f = 'D_piece';
+      f = 'BM/View.D_piece';
       who = 'P';
       this.nest_up(who + view);
       saved_info = this.saveInfo();
@@ -2891,7 +2842,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         issue = true;
       }
       if (issue) {
-        console.log('ISSUE T_if', attrs);
+        console.error('ISSUE T_if', attrs);
       }
       if ('name' in attrs) {
         this.N[attrs.name] = is_true;
@@ -2931,7 +2882,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.T_foreach = function(attrs, content_f) {
       var count, f, i, len, limit, ref, result, rh_alias, row, tbl;
-      f = 'T_foreach';
+      f = 'BM/View.T_foreach';
       ref = this._accessModelTable(attrs.table, attrs.alias), tbl = ref[0], rh_alias = ref[1];
       if (tbl.length === 0) {
         return '';
@@ -2957,7 +2908,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.T_fist = function(attrs, content_f) {
       var ans, content, f, fist, foreach_attrs, masterAlias, model, part, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, rh_1, rh_alias, subTable, table, tbl;
-      f = 'T_fist';
+      f = 'BM/View.T_fist';
       E.log(f, attrs, content_f);
       fist = E.fistDef[attrs.fist];
       model = (ref = fist.event) != null ? ref : 'Fist';
@@ -2994,7 +2945,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.ex = function(el, isInit, ctx) {
       var attrs, d, e, f, i, ix, nm, p1, p2, ref, ref1, results, val;
-      f = 'ex';
+      f = 'BM/View.ex';
       attrs = el.attributes;
       results = [];
       for (ix = i = 0, ref = attrs.length; 0 <= ref ? i < ref : i > ref; ix = 0 <= ref ? ++i : --i) {
@@ -3035,7 +2986,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     Wist.prototype.loadTable = function(tbl_nm) {
       var f;
-      f = "Wist:loadTable:" + tbl_nm;
+      f = "BM/Wist.loadTable:" + tbl_nm;
       E.log(f);
       return this.Table[tbl_nm] = (this._getWist(tbl_nm)).table;
     };
@@ -3075,7 +3026,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
   dataAction = function(type, data_action, data_params) {
     var action_specs, base, do_action, f, group, i, interesting, item, len, one_spec, prevent, ref, spec_action, spec_type;
-    f = 'Base:E/dataAction:on[data-e-action]' + type;
+    f = 'BE/dataAction:' + type;
     if (typeof (base = E.option).activity === "function") {
       base.activity(type);
     }
@@ -3152,7 +3103,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         }
       }
       if (results === false) {
-        console.log('NO FILE FOUND! ' + nm);
+        console.error('NO FILE FOUND! ' + nm);
       }
       return results;
     };
@@ -3233,7 +3184,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     RenderStrategy$Base.prototype.handleEvent = function(event_obj) {
       var attrs, data_action, data_params, f, files, i, ix, j, len, nm, old_params, prevent, rec, ref, ref1, ref2, ref3, target, touch, type, val, x, y;
-      f = 'E/RenderStrategy.handleEvent: ';
+      f = 'BE/RenderStrategy.handleEvent: ';
       E.log(f, 'top', this.redraw_guard, (event_obj != null ? event_obj : window.event).type);
       if (event_obj == null) {
         event_obj = window.event;
@@ -3377,7 +3328,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     RenderStrategy$Base.prototype.onPopState = function(event) {
       var f;
-      f = 'E/RenderStrategy.onPopState: ';
+      f = 'BE/RenderStrategy.onPopState: ';
       E.log(f, {
         was_popped: this.was_popped,
         very_first: this.very_first
@@ -3411,7 +3362,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     RenderStrategy$Base.prototype.m_redraw = function() {
       var f;
-      f = 'E/RenderStrategy.m_redraw: ';
+      f = 'BE/RenderStrategy.m_redraw: ';
       this.redraw_guard++;
       if (this.redraw_guard !== 1) {
         E.log(f, 'GUARD REDRAW', this.redraw_guard);
@@ -3440,7 +3391,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     RenderStrategy$Base.prototype.render = function(modal, content) {
       var container, f, start;
-      f = 'E/RenderStrategy.render: ';
+      f = 'BE/RenderStrategy.render: ';
       start = new Date().getTime();
       E.log(f, 'START RENDER', start, modal);
       if (modal) {
@@ -3465,7 +3416,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       path = E.App().getStepPath();
       str_path = path.join('/');
       history = str_path === this.last_path ? 'replace' : true;
-      f = 'E/RenderStrategy.handleRenderState:' + history + ':' + str_path;
+      f = 'BE/RenderStrategy.handleRenderState:' + history + ':' + str_path;
       E.log(f, {
         vf: this.very_first,
         wp: this.was_popped
@@ -3556,7 +3507,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     RestAPI.prototype.D_Request = function(method, route, data, header_obj_in) {
       var f, header_obj, promise, status;
-      f = 'E/RestAPI$Base.D_Request';
+      f = 'BE/RestAPI.D_Request';
       header_obj = E.merge({}, this.opts.app_headers, header_obj_in != null ? header_obj_in : {});
       status = {
         code: false,
@@ -3601,7 +3552,9 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         };
       })(this));
       return promise.then(function(result) {
-        console.log(f, result);
+        E.log(f, {
+          result: result
+        });
         return result;
       });
     };
@@ -4013,7 +3966,7 @@ Part: {
 
     Devl.prototype.action = function(ctx, act, p) {
       var dummy, f, incr, ref;
-      f = 'dM:Devl(' + act + ')';
+      f = 'DM/Devl.action:' + act;
       switch (act) {
         case 'toggle':
           return this.opts[p.what] = !this.opts[p.what];
@@ -4074,7 +4027,7 @@ Part: {
 
     Devl.prototype.loadTable = function(tbl_nm) {
       var cols, f, i, inst, is_sub, len, len1, nm, open, rcol, rec, rec_s, ref, ref1, row, row_inx, rrow, rval, sub_tnm, table, tnm, tnm_s, tref, trow;
-      f = 'dM:Devl.loadTable(' + tbl_nm + ')';
+      f = 'DM/Devl.loadTable:' + tbl_nm;
       switch (tbl_nm) {
         case 'Opts':
           return this.Table[tbl_nm] = [this.opts];
@@ -4643,7 +4596,7 @@ Part: {
 
     LoadStrategy.prototype.D_loadAsync = function() {
       var el, f, file, file_list, j, k, l, len, len1, len2, len3, m, pkg, ref, ref1, ref2, ref3, ref4, ref5, sub, type, url, work;
-      f = 'Dev:E/LoadStrategy.loadAsync';
+      f = 'DE/LoadStrategy.D_loadAsync';
       ref = this.appconfs;
       for (j = 0, len = ref.length; j < len; j++) {
         pkg = ref[j];
@@ -4709,7 +4662,7 @@ Part: {
 
     LoadStrategy.prototype.inline = function(type, nm) {
       var el, f, id;
-      f = 'inline';
+      f = 'DE/LoadStrategy.inline';
       el = document.getElementById(id = 'view-' + type + '-' + nm);
       if (el) {
         return el.innerHTML;
@@ -4719,7 +4672,7 @@ Part: {
 
     LoadStrategy.prototype.preLoaded = function(pkg, type, nm) {
       var f, r, ref, ref1;
-      f = 'preLoaded';
+      f = 'DE/LoadStrategy.preLoaded';
       r = (ref = E['view$' + pkg]) != null ? (ref1 = ref[type]) != null ? ref1[nm] : void 0 : void 0;
       return r;
     };
@@ -4736,7 +4689,7 @@ Part: {
 
     LoadStrategy.prototype.d_get = function(type, nm) {
       var f, fn, full_nm, full_nm_alt, j, k, len, len1, pkg, promise, ref, ref1, type_alt, uncompiled;
-      f = 'd_get';
+      f = 'DE/LoadStrategy.d_get';
       full_nm = type + '/' + nm + '.html';
       if (this.cache[full_nm] != null) {
         return this.cache[full_nm];
@@ -4813,7 +4766,7 @@ Part: {
 
     LoadStrategy.prototype.D_getFile = function(pkg, nm) {
       var f, path;
-      f = 'D_getFile';
+      f = 'DE/LoadStrategy.D_getFile';
       path = (this.makePkgDir(pkg)) + '/';
       return new Promise(function(resolve, reject) {
         var xhr;
@@ -5020,7 +4973,7 @@ Part: {
 
   FindAttrs = function(file_info, str) {
     var attr_obj, attr_split, attrs_need_cleaning, className, data_e_action, empty, eq, event_attrs_shortcuts, f, good, grp, i, nm, pane, parts, quo, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, ref8, start, style_obj;
-    f = ':parse.FindAttrs:';
+    f = 'DE/ParseFile.FindAttrs:';
     event_attrs_shortcuts = ['data-e-click', 'data-e-rclick', 'data-e-change', 'data-e-dblclick', 'data-e-enter', 'data-e-escape', 'data-e-keyup', 'data-e-focus', 'data-e-blur', 'data-e-event'];
     str = ' ' + str;
     str = str.replace(/\se-/gm, ' data-e-');
@@ -5198,7 +5151,7 @@ Part: {
 
   ParseFile = function(file_stats, file_contents) {
     var T_EPIC, T_M1, T_M2, T_STYLE, T_TEXT, after, after_comment, after_script, attr_clean, attrs, base_nm, children, content, counter, doChildren, dom_close, dom_nms, dom_pre_tags, empty, etags, f, flavor, i, nextCounter, oi, parts, pre_count, prev_children, ref, ref1, stats, t, tag_names_for_debugger, tag_wait, text, whole_tag;
-    f = ':Dev.E/ParseFile.ParseFile~' + file_stats;
+    f = 'DE/ParseFile:' + file_stats;
     counter = 0;
     nextCounter = function() {
       return ++counter;

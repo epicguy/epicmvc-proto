@@ -47,7 +47,7 @@
 
     View$Base.prototype.nest_up = function(who) {
       var f;
-      f = 'nest_up:' + who;
+      f = 'BM/View.nest_up:' + who;
       if (this.defer_it_cnt === 0) {
         if (this.in_run) {
           BLOWUP();
@@ -69,7 +69,7 @@
 
     View$Base.prototype.nest_dn = function(who) {
       var f;
-      f = 'nest_dn:' + who;
+      f = 'BM/View.nest_dn:' + who;
       if (this.defer_it_cnt > 0) {
         this.defer_it_cnt--;
       }
@@ -82,7 +82,7 @@
 
     View$Base.prototype.run = function() {
       var f, flow, layout, modal, ref, ref1, ref2, step, track, who;
-      f = 'run';
+      f = 'BM/View.run';
       who = 'R';
       ref = E.App().getStepPath(), flow = ref[0], track = ref[1], step = ref[2];
       if (modal = E.appFindAttr(flow, track, step, 'modal')) {
@@ -110,7 +110,7 @@
 
     View$Base.prototype.saveInfo = function() {
       var f, saved_info;
-      f = 'saveInfo';
+      f = 'BM/View.saveInfo';
       saved_info = E.merge({}, {
         I: this.I,
         P: this.P
@@ -120,7 +120,7 @@
 
     View$Base.prototype.restoreInfo = function(saved_info) {
       var f, nm, results;
-      f = 'restoreInfo';
+      f = 'BM/View.restoreInfo';
       this.resetInfo();
       this.P = saved_info.P;
       this.I = saved_info.I;
@@ -135,7 +135,7 @@
 
     View$Base.prototype._getMyRow = function(I) {
       var f;
-      f = '_getMyRow';
+      f = 'BM/View._getMyRow';
       if (I.m != null) {
         return (E[I.m](I.o))[I.c];
       }
@@ -149,7 +149,7 @@
 
     View$Base.prototype.getTable = function(nm) {
       var f, i, len, p, rVal, ref;
-      f = 'Base:M/View.getTable:' + nm;
+      f = 'BM/View.getTable:' + nm;
       switch (nm) {
         case 'If':
           return [this.N];
@@ -171,63 +171,14 @@
       if (!(this.did_run && deleted_tbl_nms.length)) {
         return;
       }
-      f = 'Base:M/View.invalidateTables';
+      f = 'BM/View.invalidateTables';
       m.startComputation();
       m.endComputation();
     };
 
-
-    /* JCS: TODO FIGURE OUT IF DYNAMIC OR DEFER IS REALLY EVER NEEDED AGAIN - MITHRIL MAKES EVERYTHING DYNAMIC, NO? AND DATA-EX-* ATTRS DO DEFER, YES?
-    	#JCS:DEFER:DYNAMIC
-    	 * Wraper for page/part content which needs special treatment (dyanmic='div', epic:defer's, etc.)
-    	wrap: (view, attrs, content, defer, has_root)->
-    		f= 'wrap'
-    		if defer.length
-    			inside= E.merge [], defer
-    			attrs.config= (element, isInit, context) =>
-    				f= 'Base:M/View..config:'+ view
-    				for defer in inside
-    					E.log f, defer
-    					@doDefer defer, element, isInit, context
-    		if 'dynamic' of attrs # Always render the container, even if content is null
-    			tag: attrs.dynamic, attrs: attrs, children: content
-    		else
-    			return '' unless content
-    			if has_root
-    				 * TODO WHAT IS GOING ON WITH attrs TO wrap IF CONTENT HAS ATTRS? (part=)
-    				E.log f, 'has-root-content', {view,attrs,content,defer,has_root}
-    				BLOWUP() if 'A' isnt E.type_oau content
-    				 * TODO E2 FIGURE OUT WHY I COMMENTED THIS OUT; ALSO, PLAN IS TO USE DATA-EX-* ATTRS PER ELEMENT, NOT <E-DEFER
-    				#content[0].attrs.config= attrs.config # Pass the defer logic to the part's div
-    				content
-    			else
-    				tag: 'div', attrs: attrs, children: content
-    	doDefer: (defer_obj, element, isInit, context) =>
-    		if 'A' is E.type_oau defer_obj.defer
-    			E.log 'WARNING', 'Got an array for defer', defer_obj.defer
-    			return 'WAS-ARRAY'
-    		defer_obj.func element, isInit, context, defer_obj.attrs if defer_obj.func
-    	T_defer: ( attrs, content) -> # TODO IMPLEMENT DEFER LOGIC ATTRS?
-    		f= 'Base:M/View.T_defer:'
-    		f_content= @handleIt content
-    		#_log f, content, f_content
-    		 * When epic tags are inside defer, you get nested arrays that need to be joined (w/o commas)
-    		if 'A' is E.type_oau f_content
-    			sep= ''
-    			ans= ''
-    			joiner= (a) ->
-    				for e in a
-    					if 'A' is E.type_oau e then joiner e else ans+= sep+ e
-    			joiner f_content
-    			#_log f, 'join', ans
-    			f_content= ans
-    		@D[ @D.length- 1].push {attrs, func: new Function 'element', 'isInit', 'context', 'attrs', f_content}
-    		'' # No content to display for these
-     */
-
     View$Base.prototype.handleIt = function(content) {
       var f;
-      f = 'handleIt';
+      f = 'BM/View.handleIt';
       if (typeof content === 'function') {
         content = content();
       }
@@ -236,7 +187,7 @@
 
     View$Base.prototype.formatFromSpec = function(val, spec, custom_spec) {
       var f, left, ref, right, str;
-      f = 'formatFromSpec';
+      f = 'BM/View.formatFromSpec';
       switch (spec) {
         case '':
           if (custom_spec) {
@@ -302,7 +253,7 @@
 
     View$Base.prototype.weed = function(attrs) {
       var clean_attrs, f, nm, val;
-      f = 'weed';
+      f = 'BM/View.weed';
       clean_attrs = {};
       for (nm in attrs) {
         val = attrs[nm];
@@ -319,7 +270,7 @@
 
     View$Base.prototype.kids = function(kids) {
       var ans, f, i, ix, kid, len, out, who;
-      f = 'kids';
+      f = 'BM/View.kids';
       who = 'K';
       out = [];
       for (ix = i = 0, len = kids.length; i < len; ix = ++i) {
@@ -353,7 +304,7 @@
 
     View$Base.prototype.loadPartAttrs = function(attrs, full) {
       var attr, f, result, val;
-      f = 'Base:M/View.loadPartAttrs';
+      f = 'BM/View.loadPartAttrs';
       result = {};
       for (attr in attrs) {
         val = attrs[attr];
@@ -367,7 +318,7 @@
 
     View$Base.prototype.T_page = function(attrs) {
       var d_load, f, name, view;
-      f = 'T_page';
+      f = 'BM/View.T_page';
       if (this.frame_inx < this.frames.length) {
         d_load = E.oLoader.d_layout(name = this.frames[this.frame_inx++]);
         view = (this.frame_inx < this.frames.length ? 'Frame' : 'Layout') + '/' + name;
@@ -381,14 +332,14 @@
     View$Base.prototype.T_part = function(attrs) {
       var d_load, f, view;
       view = attrs.part;
-      f = 'T_part:' + view;
+      f = 'BM/View.T_part:' + view;
       d_load = E.oLoader.d_part(view);
       return this.piece_handle('Part/' + view, attrs, d_load, true);
     };
 
     View$Base.prototype.piece_handle = function(view, attrs, obj, is_part) {
       var can_componentize, content, f, saved_info;
-      f = 'piece_handle';
+      f = 'BM/View.piece_handle';
       if (obj != null ? obj.then : void 0) {
         return this.D_piece(view, attrs, obj, is_part);
       }
@@ -416,7 +367,7 @@
 
     View$Base.prototype.D_piece = function(view, attrs, d_load, is_part) {
       var d_result, f, saved_info, who;
-      f = 'D_piece';
+      f = 'BM/View.D_piece';
       who = 'P';
       this.nest_up(who + view);
       saved_info = this.saveInfo();
@@ -507,7 +458,7 @@
         issue = true;
       }
       if (issue) {
-        console.log('ISSUE T_if', attrs);
+        console.error('ISSUE T_if', attrs);
       }
       if ('name' in attrs) {
         this.N[attrs.name] = is_true;
@@ -547,7 +498,7 @@
 
     View$Base.prototype.T_foreach = function(attrs, content_f) {
       var count, f, i, len, limit, ref, result, rh_alias, row, tbl;
-      f = 'T_foreach';
+      f = 'BM/View.T_foreach';
       ref = this._accessModelTable(attrs.table, attrs.alias), tbl = ref[0], rh_alias = ref[1];
       if (tbl.length === 0) {
         return '';
@@ -573,7 +524,7 @@
 
     View$Base.prototype.T_fist = function(attrs, content_f) {
       var ans, content, f, fist, foreach_attrs, masterAlias, model, part, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, rh_1, rh_alias, subTable, table, tbl;
-      f = 'T_fist';
+      f = 'BM/View.T_fist';
       E.log(f, attrs, content_f);
       fist = E.fistDef[attrs.fist];
       model = (ref = fist.event) != null ? ref : 'Fist';
@@ -610,7 +561,7 @@
 
     View$Base.prototype.ex = function(el, isInit, ctx) {
       var attrs, d, e, f, i, ix, nm, p1, p2, ref, ref1, results, val;
-      f = 'ex';
+      f = 'BM/View.ex';
       attrs = el.attributes;
       results = [];
       for (ix = i = 0, ref = attrs.length; 0 <= ref ? i < ref : i > ref; ix = 0 <= ref ? ++i : --i) {

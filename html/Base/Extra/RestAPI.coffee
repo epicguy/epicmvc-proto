@@ -38,7 +38,7 @@ class RestAPI
 	# @param data -   data to be sent with request
 	# @param header_obj - hashed by header name
 	D_Request: (method, route, data, header_obj_in)->
-		f= 'E/RestAPI$Base.D_Request'
+		f= 'BE/RestAPI.D_Request'
 		header_obj= E.merge {}, @opts.app_headers,( header_obj_in ? {})
 		status= code: false, text: false, ok: false
 		promise= new Promise (resolve, reject)=>
@@ -62,7 +62,7 @@ class RestAPI
 			formData.append nm, val for nm,val of data
 			xhr.send formData # TODO Someday figure out when to do JSON, and when to do FormData (using e.g. header_obj ?)
 		promise.then (result)->
-			console.log f, result
+			E.log f, {result}
 			result
 
 	# Shortcuts that populate the Authrorization header

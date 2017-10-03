@@ -44,7 +44,7 @@
 
     Devl.prototype.action = function(ctx, act, p) {
       var dummy, f, incr, ref;
-      f = 'dM:Devl(' + act + ')';
+      f = 'DM/Devl.action:' + act;
       switch (act) {
         case 'toggle':
           return this.opts[p.what] = !this.opts[p.what];
@@ -105,7 +105,7 @@
 
     Devl.prototype.loadTable = function(tbl_nm) {
       var cols, f, i, inst, is_sub, len, len1, nm, open, rcol, rec, rec_s, ref, ref1, row, row_inx, rrow, rval, sub_tnm, table, tnm, tnm_s, tref, trow;
-      f = 'dM:Devl.loadTable(' + tbl_nm + ')';
+      f = 'DM/Devl.loadTable:' + tbl_nm;
       switch (tbl_nm) {
         case 'Opts':
           return this.Table[tbl_nm] = [this.opts];

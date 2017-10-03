@@ -10,7 +10,7 @@ class LoadStrategy
 	makePkgDir: (pkg)->
 		E.option.loadDirs[ pkg]+ if (E.option.loadDirs[ pkg].slice -1) is '/' then pkg else ''
 	D_loadAsync: () -> # Load up all the Model/Extra code stuff - caller should delay after
-		f= 'Dev:E/LoadStrategy.loadAsync'
+		f= 'DE/LoadStrategy.D_loadAsync'
 		# Insert script tags for all MANIFEST entries of each package-app-config file
 		for pkg in @appconfs
 			continue if pkg not of E.option.loadDirs
@@ -48,13 +48,13 @@ class LoadStrategy
 				return
 			next 0
 	inline: (type,nm) ->
-		f= 'inline'
+		f= 'DE/LoadStrategy.inline'
 		el= document.getElementById id= 'view-'+ type+ '-'+ nm
 		#E.log f, 'inline el=', id, el
 		return el.innerHTML if el
 		null
 	preLoaded: (pkg,type,nm) ->
-		f= 'preLoaded'
+		f= 'DE/LoadStrategy.preLoaded'
 		#E.log f, 'looking for ', pkg, type, nm
 		r= E['view$'+pkg]?[type]?[nm]
 		#E.log f, 'found', (if r?.preloaded then 'PRELOADED' else 'broken'), r
@@ -66,7 +66,7 @@ class LoadStrategy
 		return parsed
 	# This supports e.g. <script type="x/template" id="view-Layout-default"><:page/></script>
 	d_get: (type,nm) ->
-		f= 'd_get'
+		f= 'DE/LoadStrategy.d_get'
 		full_nm= type+ '/'+ nm+ '.html'
 		return @cache[ full_nm] if @cache[ full_nm]? # Note, could be a promise if same part asked again
 
@@ -114,7 +114,7 @@ class LoadStrategy
 		return promise
 
 	D_getFile: (pkg,nm) -> # Must return a promise
-		f= 'D_getFile'
+		f= 'DE/LoadStrategy.D_getFile'
 		path= (@makePkgDir pkg)+ '/'
 		new Promise (resolve, reject)->
 			xhr= new XMLHttpRequest()

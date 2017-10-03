@@ -15,6 +15,7 @@ E.ex$timeago= (el, isInit, ctx, val, p1, p2) ->
 # Example: what you want: <h1 oncontextmenu="return false;">Right click here</h1>
 # What you will need to do: <h1 data-ex-attr-oncontextmenu-func="return false;">Right click here</h1>
 E.ex$attr= (el, beenHere, ctx, value, attr_nm, cast_to) ->
+	f= 'PE/ex$attr'
 	return if beenHere
 	attr_nm= E.camelCase attr_nm, '_'
 	switch cast_to
@@ -22,14 +23,14 @@ E.ex$attr= (el, beenHere, ctx, value, attr_nm, cast_to) ->
 			value= (new Function 'p1', 'p2', 'p3', value)
 		when 'int'
 			value= parseInt value
-	E.log "ex$attr: attr_nm=", attr_nm, " cast_to=", cast_to, " value=", value
+	E.log f, {attr_nm, cast_to, value}
 	el[ attr_nm]= value
 	return
 
 # Generic version of fixing a scrollable div. Use for any of 'Top','Bottom','Right','Left'
 # Example: data-ex-scroll="Top" (will set element.scollTop= 0
 E.ex$scroll= (el, isInit, ctx, val, p1, p2)->
-	f= 'E.ex$scroll:'
+	f= 'PE/ex$scroll:'
 	E.log f, {isInit, val, p1, p2}
 
 	direction= 'scroll'+ val

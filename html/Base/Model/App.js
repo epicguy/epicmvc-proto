@@ -34,7 +34,7 @@
 
     App$Base.prototype.goTo = function(flow, t, s) {
       var f, was;
-      f = 'goTo';
+      f = 'BM/App.goTo';
       was = this.f + "/" + this.t + "/" + this.s;
       this.f = flow;
       this.t = t;
@@ -50,7 +50,7 @@
 
     App$Base.prototype.go = function(path) {
       var f, flow, ref, s, t;
-      f = 'go:' + path;
+      f = 'BM/App.go:' + path;
       ref = path.split('/'), flow = ref[0], t = ref[1], s = ref[2];
       if (!flow) {
         flow = this.f;
@@ -83,7 +83,7 @@
 
     App$Base.prototype.action = function(ctx, act, p) {
       var code, f, i, m, path, q, r, ref, route;
-      f = ":App.action:" + act;
+      f = "BM/App.action:" + act;
       r = ctx.r, i = ctx.i, m = ctx.m;
       switch (act) {
         case 'path':

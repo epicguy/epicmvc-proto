@@ -6,7 +6,7 @@ class Wist extends E.ModelJS
 		super view_nm, options
 		@wist= {} # Wist as both 'hash' and 'table' with 'token' added to hash e.g. hash:{token:},table:[]
 	loadTable: (tbl_nm) ->
-		f= "Wist:loadTable:#{tbl_nm}"
+		f= "BM/Wist.loadTable:#{tbl_nm}"
 		E.log f
 		@Table[ tbl_nm]=( @_getWist tbl_nm).table
 	_getWist: (wistNm) ->

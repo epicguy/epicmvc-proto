@@ -36,7 +36,7 @@ class RenderStrategy$Base
 		@init()
 		true
 	handleEvent: (event_obj) =>
-		f= 'E/RenderStrategy.handleEvent: '
+		f= 'BE/RenderStrategy.handleEvent: '
 		E.log f, 'top', @redraw_guard, (event_obj ? window.event).type
 		# Getting all events, need to weed out to 'data-e-action' nodes
 		event_obj?= window.event # IE < 9
@@ -114,7 +114,7 @@ class RenderStrategy$Base
 		new_msg= if new_msg.length then  new_msg.join "\n" else null
 		window.onbeforeunload= -> new_msg
 	onPopState: (event) =>
-		f= 'E/RenderStrategy.onPopState: '
+		f= 'BE/RenderStrategy.onPopState: '
 		E.log f, was_popped: @was_popped, very_first: @very_first, true, state: if event is true then 'X' else event.state
 		if event is true or not event.state # Special processing - making sure this logic happens in FF as initial load
 			if @was_popped or not @very_first # We did handle it already
@@ -131,7 +131,7 @@ class RenderStrategy$Base
 		return
 
 	m_redraw: =>
-		f= 'E/RenderStrategy.m_redraw: '
+		f= 'BE/RenderStrategy.m_redraw: '
 		@redraw_guard++
 		if @redraw_guard isnt 1
 			E.log f, 'GUARD REDRAW', @redraw_guard
@@ -150,7 +150,7 @@ class RenderStrategy$Base
 			console.error 'RenderStrategy$Base m_redraw', err
 
 	render: (modal, content) ->
-		f= 'E/RenderStrategy.render: '
+		f= 'BE/RenderStrategy.render: '
 		start= new Date().getTime() #%#
 		E.log f, 'START RENDER', start, modal
 		if modal
@@ -172,7 +172,7 @@ class RenderStrategy$Base
 		str_path= path.join '/'
 		history= if str_path is @last_path then 'replace' else true
 		# History can be: true, false, 'replace'
-		f= 'E/RenderStrategy.handleRenderState:'+ history+ ':'+ str_path
+		f= 'BE/RenderStrategy.handleRenderState:'+ history+ ':'+ str_path
 		# Put a 'hash' into location bar, to match our current app location, for history
 		E.log f, vf: @very_first, wp: @was_popped
 		return if not history
