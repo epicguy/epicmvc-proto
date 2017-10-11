@@ -355,7 +355,7 @@ app= (undef) ->
 				(next_node= choice; break) if (typeof choice.when) is 'string' and choice.when is (master_data.success ? master_data.ok)
 				matches= true
 				for k,val of choice.when
-					(matches= false; break;) if master_data[k] isnt val
+					(matches= false; break) if master_data[k] isnt val
 				(next_node= choice; break) if matches
 			if next_node
 				#E.log f, 'd_doRightSide:', {next_node}
