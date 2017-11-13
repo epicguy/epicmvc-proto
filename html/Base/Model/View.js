@@ -119,18 +119,16 @@
     };
 
     View$Base.prototype.restoreInfo = function(saved_info) {
-      var f, nm, results;
+      var f, nm;
       f = 'BM/View.restoreInfo';
       this.resetInfo();
       this.P = saved_info.P;
       this.I = saved_info.I;
-      results = [];
       for (nm in this.I) {
         if (!(nm in this.R)) {
-          results.push(this.R[nm] = this._getMyRow(this.I[nm]));
+          this.R[nm] = this._getMyRow(this.I[nm]);
         }
       }
-      return results;
     };
 
     View$Base.prototype._getMyRow = function(I) {
@@ -162,7 +160,8 @@
           }
           return [rVal];
         default:
-          return E.option.m3(this.view_nm, nm);
+          E.option.m3(this.view_nm, nm);
+          return [];
       }
     };
 
@@ -240,7 +239,7 @@
     View$Base.prototype.v2 = function(table_ref, col_nm, format_spec, custom_spec) {
       var ans;
       if (col_nm[0] === '_') {
-        ans = this.R[table_ref]._[(col_nm.slice(1)).toLowerCase()];
+        ans = this.R[table_ref]._[col_nm.slice(1)];
       } else {
         ans = this.R[table_ref][col_nm];
       }
@@ -338,31 +337,17 @@
     };
 
     View$Base.prototype.piece_handle = function(view, attrs, obj, is_part) {
-      var can_componentize, content, f, saved_info;
+      var content, f, saved_info;
       f = 'BM/View.piece_handle';
       if (obj != null ? obj.then : void 0) {
         return this.D_piece(view, attrs, obj, is_part);
       }
-      content = obj.content, can_componentize = obj.can_componentize;
+      content = obj;
       saved_info = this.saveInfo();
       this.P.push(this.loadPartAttrs(attrs));
       content = this.handleIt(content);
       this.restoreInfo(saved_info);
       return content;
-
-      /* JCS:DEFER:DYNAMIC 
-      		defer= @D.pop()
-      		#E.log f, 'defer', view, defer
-      		if can_componentize or not is_part or attrs.dynamic or defer.length
-      			#E.log f, 'defer YES', view, defer
-      			if defer.length and not can_componentize and not attrs.dynamic
-      				E.log "WARNING: DEFER logic in (#{view}); wrapping DIV tag."
-      			result= @wrap view, attrs, content, defer, can_componentize
-      		else
-      			#E.log f, 'defer NO!', view, defer
-      			result= content
-      		result
-       */
     };
 
     View$Base.prototype.D_piece = function(view, attrs, d_load, is_part) {

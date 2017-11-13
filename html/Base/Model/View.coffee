@@ -56,7 +56,6 @@ class View$Base extends E.ModelJS
 		@R= {}   # 'Row' [table-name-alias|subtable-name-alias]['m'odel or 'p'arent, row-'c'ount, 'o'riginal-name
 		@I= {}   # 'Info' [table-name-alias|subtable-nam-aliase]= single-row
 		@P= [{}] # 'Parts' Push p:attrs with each part, then pop; (top level is row w/o attrs)
-		#JCS:DEFER:DYNAMIC @D= [[]] # 'Defer' Stack arrays of defers as we render parts
 		return
 	saveInfo: () ->
 		f= 'BM/View.saveInfo'
@@ -67,17 +66,19 @@ class View$Base extends E.ModelJS
 		f= 'BM/View.restoreInfo'
 		#E.log f, 'saved_info', saved_info
 		@resetInfo()
-		@P= saved_info.P # TODO IS THIS SAFE?
-		@I= saved_info.I # TODO IS THIS SAFE?
+		@P= saved_info.P
+		@I= saved_info.I
 		# Rebuild 'R'
 		@R[ nm]= @_getMyRow @I[ nm] for nm of @I when nm not of @R
 		#E.log f, 'restored:P,I,R', @P, @I, @R
+		return
 	_getMyRow: (I) ->
 		f= 'BM/View._getMyRow'
 		#E.log f, I
 		return (E[ I.m] I.o)[ I.c] if I.m? # I'm a top level table, get from model
 		@R[ I.p]= @_getMyRow @I[ I.p] if I.p not of @R # Load parent if needed
 		return @R[ I.p][ I.o][ I.c] if I.p and I.p of @R # Parent already loaded, return it's row
+		# TODO WHAT HAPPENS WHEN THE IF ABOVE FAILS? WHAT IS RETURNED?
 	getTable: (nm) ->
 		f= 'BM/View.getTable:'+ nm
 		#E.log f, @P if nm is 'Part'
@@ -88,7 +89,9 @@ class View$Base extends E.ModelJS
 				rVal= {}
 				E.merge rVal, p for p in @P
 				[rVal]
-			else E.option.m3 @view_nm , nm #%#
+			else
+				E.option.m3 @view_nm , nm #%#
+				[] # Return consitent value so production acts like dev, even if caller is wrong
 	invalidateTables: (view_nm, tbl_nms, deleted_tbl_nms) ->
 		return unless @did_run and deleted_tbl_nms.length
 		f= 'BM/View.invalidateTables'
@@ -135,7 +138,7 @@ class View$Base extends E.ModelJS
 	v2: (table_ref, col_nm, format_spec, custom_spec) ->
 		#console.log 'G2:', {table_ref, col_nm, format_spec, custom_spec}
 		if col_nm[ 0] is '_' # For e.g. &Table/_COUNT;
-			ans= @R[ table_ref]._[ (col_nm.slice 1).toLowerCase()] # TODO COMPATABLITY, REMOVE LOWER CASE
+			ans= @R[ table_ref]._[ col_nm.slice 1]
 		else
 			ans= @R[ table_ref][ col_nm]
 		if format_spec? then @formatFromSpec ans, format_spec, custom_spec else ans
@@ -207,27 +210,13 @@ class View$Base extends E.ModelJS
 		#E.log f, view, obj, "typeof content:", typeof obj.content, " has then?", (if obj?.then then 'yes' else 'no')
 		return @D_piece view, attrs, obj, is_part if obj?.then # Was a thenable
 		#E.log f, view #, new Date().getTime()- @start #, obj
-		{content,can_componentize}= obj
+		content= obj
 		#E.log f, 'AFTER ASSIGN', view, obj if obj is false
 		saved_info= @saveInfo()
 		@P.push @loadPartAttrs attrs
-		# JCS:DEFER:DYNAMIC @D.push []
 		content= @handleIt content
 		@restoreInfo saved_info
 		content
-		### JCS:DEFER:DYNAMIC 
-		defer= @D.pop()
-		#E.log f, 'defer', view, defer
-		if can_componentize or not is_part or attrs.dynamic or defer.length
-			#E.log f, 'defer YES', view, defer
-			if defer.length and not can_componentize and not attrs.dynamic
-				E.log "WARNING: DEFER logic in (#{view}); wrapping DIV tag."
-			result= @wrap view, attrs, content, defer, can_componentize
-		else
-			#E.log f, 'defer NO!', view, defer
-			result= content
-		result
-		###
 	D_piece: (view, attrs, d_load, is_part) ->
 		f= 'BM/View.D_piece'
 		who= 'P'
@@ -245,13 +234,13 @@ class View$Base extends E.ModelJS
 		, (err)=>
 			console.error 'D_piece', err
 			@nest_dn who+ view+ ' IN-ERROR'
-			return @_Err? 'tag', 'page/part', attrs, err # TODO THIS IS USING EXTENDED DEV METHOD!!!!!
+			return @_Err? 'tag', 'page/part', attrs, err # @_Err may be defined by a super-class (like Dev)
 			throw err
 		d_result
 
 	T_if_true: ( attrs, content) -> if @N[ attrs.name] then @handleIt content() else ''
 	T_if_false: ( attrs, content) -> if @N[ attrs.name] then '' else @handleIt content
-	T_if: ( attrs, content) => # TODO
+	T_if: ( attrs, content) =>
 		#console.log 'T_if', attrs, content?.length
 		issue= false
 		is_true= false

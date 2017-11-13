@@ -5,22 +5,24 @@ E= if exports? then require 'E' else window.E
 # To transform EpicMvc tags and HTML for Mithril:
 #  1) Remove all <!-- comments
 #  2) Remove <script> tag stuff (no longer allowed)
-#  3) All tags must be closed properly (like XHMTL) so we could do that for folks (<br> to <br/>, <img>, etc.)
+#  3) All tags must be closed properly (like XHMTL) (but we do the expected ones (<br> to <br/>, <img>, <e-page>, <e-part>, etc.)
 #
-#  4) All tags are functions: <[/]epic:tag_name> => oE.T_tag_name(attr,function(){return content}), <div> => m('div',attrs,content)
-#  5.1) All attributes must be a object passed as first param to the tag
+#  4) All tags are flagged for logic calls: <[/]e-tag_name> => [T_EPIC, tag_name, attr, [more content]], <div> => [T_M1 'div', attrs, content]
+#  5.1) All attributes must be an object optionally passed as first param to the tag
 #  5.2) All child nodes must be passed as array to 'm'
-#  6) Epic:tag_name's that have bodies (if, foreach) require body to be wrapped in function(?){return(...)}
+#  6) Result of tags is nested arrays of either T_EPIC or T_M1 or some special ones like T_STYLE
 #
-#  7) &M/T/c; 2/3 converted to v2/v3 function calls
+#  7) Text in text nodes or attribute values are flagged as T_V1 or T_V2 or T_Vjoin
+#  7.1) <div attr="&M/T/c|a 1|b 2;" -> ...[T_M1, 'div', { attr: [T_V3, "M/T/c|a 1|b 2"] } ]
+#  7.2) <div attr="&T/c|true x;" -> ...[T_M1, 'div', { attr: [T_V2, "T/c|true x"] } ]
+#  7.3) <div attr="&T/c;-middle-&M/T/c;" -> ...[T_M1, 'div', { attr: [T_Vjoin, T_V2, "T/c", "-middle-", T_V3, "M/T/c"] } ]
 #  8) class= everywhere, to className= (and for= htmlFor=) (breaks: &T/c#.class="hide"; vs. class="&T/c#.hide;"
-#  8.1) attr's with e.g. - in them, must be quoted
-#  8.2) Attr's with leading - are 'special', use m2 function; allows that attr to be remove if value falsey
-#  9) Style= attrs must not be strings but objects, with camelCase e.g. style={{fontSize:'1em'}}
-
-# Access to globals as closure, even from nodejs: (updated below)
+#  8.2) Attr's with leading ? are 'special', include a weed: ['attr']; allows that attr to be remove if value is empty (or false?)
+#  9) Style= attrs must not be strings but objects, with camelCase e.g. style:{ fontSize:'1em' }
 
 # Parse attribute list
+
+# TODO v4 CONSIDER REMOVING SOME OF THESE UTIL FUNCTIONS SINCE WE'LL BE USING JSON
 
 # Make an Object into a string of Javascript i.e. {a:'stuff',b:'other'} (Smaller than JSON)
 mkNm= (nm) -> if nm.match /^[a-zA-Z_]*$/ then nm else sq nm
@@ -36,9 +38,9 @@ findStyleVal= (i, a) -> # returns: [true, 'string-value', top, i] ['error-msg', 
 	# Find nm
 	start= i
 	while i< a.length
-		break if (p= a[ i++].trim()) isnt ''
-	return [false] if p is ''
-	return [s+ 'name', start, i] unless i< a.length
+		break if (p= a[ i++].trim()) isnt '' # Stop at first non-white space (newline, space, tab), capture in 'p'
+	return [false] if p is '' # Must have hit the end, return EOF
+	return [s+ 'name', start, i] unless i< a.length # TODO MORE COMMENTS IN THIS FUNCTION
 	nm= E.camelCase p
 	# Find ':'
 	start= i
@@ -55,7 +57,7 @@ findStyleVal= (i, a) -> # returns: [true, 'string-value', top, i] ['error-msg', 
 	str=( parts.join '').trim()
 	[true, top, i, nm, str]
 
-findStyles= (file_info, parts) -> # Hash of styles w/EpicVars expressions if needed
+FindStyles= (file_info, parts) -> # Hash of styles w/EpicVars expressions if needed
 	# Example: float:'left',marginRight:8px
 	styles= {}
 	i= 0
@@ -72,39 +74,59 @@ nm_map=
 	'class':'className', 'for':'htmlFor', defaultvalue:'defaultValue', defaultchecked:'defaultChecked'
 	colspan:'colSpan', cellpadding:'cellPadding', cellspacing:'cellSpacing', maxlength: 'maxLength', tabindex: 'tabIndex'
 
-FindAttrVal= (i, a) -> # false if eof, 'string' if error, else [i, attr-name, quote-char, val-as-parts]
+# FindAttrVal gets the next "attribute = value" string in the passed parts
+#  - @a parts are a 'split' of interesting delimiters (interesting to this function, and parsing styles (FindStyleVal)
+#   * using... attr_split= str.trim().split /([\s="':;])/
+#   * then... class="a:'b'" id='x' / (to) (class)(=)(")(a)(:)(')(b)(')(")( )(id)(=)(')(x)(')( /)
+#  - @i is where we last left off looking for these attr=val parts
+# Returns:
+#  - [false] if eof, ['error-string', start, i] if error, else [true, start-i, end-i, attr-name, equals, quote-char, val-as-parts]
+#
+FindAttrVal= (i, a) ->
 	# Look for 'attr-name'
 	top= start= i
 	while i< a.length
-		break if (p= a[ i++].trim()) isnt ''
-	return [false] unless i< a.length
-	return ['attr-name', start, i] if p is ''
+		break if (p= a[ i++].trim()) isnt '' # Stop on first non-white space part
+	return [false] unless i< a.length # When no more parts, were done? return EOF
+	return ['attr-name', start, i] if p is '' # We have more parts, but the name is empty, error 'attr-name'
 	# TODO COULD CONFIRM attr-name (p) IS VALID SET OF CHARS (I.E. NOT '=' or '"')
 	p.toLowerCase()
-	nm= nm_map[ p] ?p
+	nm= nm_map[ p] ?p # This is the 'nm' part of nm="val-parts"
 	# Look for '='
 	start= i
 	while i< a.length
-		break unless (p= a[ i++].trim()) is ''
+		break unless (p= a[ i++].trim()) is '' # Skip to next non-white part
 	if p isnt '='
-		return [true, start, i- 1, nm, '=', '"', ['false']] if nm in [ 'selected', 'autofocus']
-		return ['equals', start, i, nm]
+		return [true, start, i- 1, nm, '=', '"', [false]] if nm in [ 'selected', 'autofocus'] # Special case, simulate parts list w/just false
+		return ['equals', start, i, nm] # No equal sign? Error 'equals'
 	# Look for open-quote
 	start= i
 	while i< a.length
-		break unless (p= a[ i++].trim()) is ''
-	return ['open-quote', start, i, nm, '='] unless p is '"' or p is "'"
+		break unless (p= a[ i++].trim()) is '' # First non-white space value should be our single or double quote
+	return ['open-quote', start, i, nm, '='] unless p is '"' or p is "'" # Not single or double quote? Error 'open-quote'
 	quo= p
 	# Look for close-quote (collect parts)
 	start= i
 	parts= []
 	while i< a.length
-		break if (p= a[ i++]) is quo
+		break if (p= a[ i++]) is quo # Accpet all parts until the matching quote - stop on this quote or end of parts
 		parts.push p
-	return ['close-quote', start, i, nm, '=', quo] if p isnt quo
-	[true, top, i, nm, '=', quo, parts]
+	return ['close-quote', start, i, nm, '=', quo] if p isnt quo # Did we reach the matching quote? Error 'close-quote'
+	[true, top, i, nm, '=', quo, parts] # All good, return the start/end indexes, attr-nm '=' type-of-quote [parts-array]
 
+#
+# This function handles everything found after the tag and before the '>', i.e. <tag(ALL OF THIS AND MAYBE /)>
+# - Fixes shortcuts of e-something (to) data-e-something; also ex-thing (to) data-ex-thing
+# - Collects shortcuts of e-(dom-event)="action" (to) data-e-action="(dom-event):action" for e.g. e-click="close"
+# - Detect leading '?' on attr names (special handling)
+# - Detects the slash on the end, which indicates a self-closing tag (passes that back to caller)
+# - Expands several 'shortcuts' to support bootstrap-type widgits (tab, drop(down), collapse, modal)
+#  * These map to events, class settings, and possibly ex functions
+# - Special data-ex-name-p1-p2="val"... handling to map to E.ex$name( element, wasHere, ctx, val, p1, p2)
+# - Supports multiple values eventually going into data-e-action, or class (className) attributes
+#
 # TODO TEST attr='"' attr="'" checked another== a=x/> or checked/>
+#
 FindAttrs= (file_info, str)->
 	f= 'DE/ParseFile.FindAttrs:'
 	# For data-e-action="click:action-name"
@@ -113,12 +135,17 @@ FindAttrs= (file_info, str)->
 		'data-e-escape', 'data-e-keyup', 'data-e-focus', 'data-e-blur', 'data-e-event'
 	]
 	str= ' '+ str
-	str= str.replace /\se-/gm, ' data-e-'
+	str= str.replace /\se-/gm, ' data-e-' # TODO SUPPORT LEADING '?'
 	str= str.replace /\sex-/gm, ' data-ex-'
+	#
+	# This is the "big" one (attr_split) - creates 'parts' that will be checked for snytax etc.
+	# class="a:'b'" id='x' / (to) (class)(=)(")(a)(:)(')(b)(')(")( )(id)(=)(')(x)(')( /)
+	#
 	attr_split= str.trim().split /([\s="':;])/
 	empty= if attr_split[ attr_split.length- 1] is '/' then '/' else ''
-	attrs_need_cleaning= false # If an attr nm has leading dash, flag to clean from list if value is empty/false/undef/null (m2)
 	attr_split.pop() if empty is '/'
+
+	attrs_need_cleaning= false # If an attr nm has leading '?', flag to clean from list if value is empty/false/undef/null (m2)
 	attr_obj= {}
 	className= []
 	data_e_action= []
@@ -135,11 +162,11 @@ FindAttrs= (file_info, str)->
 		if nm is 'data-e-action' # Allow users to use this attribute directly
 			data_e_action.push parts.join ''
 			continue
-		if nm is 'config'
+		if nm is 'config' # Special Mithril function name; users can put their own in here
 			attr_obj[ nm]= parts.join ''
 			continue
-		if nm is 'style'
-			style_obj= findStyles file_info, parts
+		if nm is 'style' # Special handling; Mithril requires the style attrs to be in an object
+			style_obj= FindStyles file_info, parts
 			attr_obj[ nm]= mkObj style_obj
 			continue
 
@@ -202,7 +229,7 @@ FindAttrs= (file_info, str)->
 
 		# ex-USER-DEFINED="anything"
 		# before: <input ex-some="thing">
-		# after: <input data-ex-some="thing" config=oE.ex> (Calls E.ex$some('thing',...))
+		# after: <input data-ex-some-p1-p2="thing" config=oE.ex> (Calls E.ex$some(...,'thing', p1, p2))
 		if 'data-ex-' is nm.slice 0, 8
 			attr_obj.config= 'oE.ex' # Mithril style extention using 'config'
 
@@ -262,15 +289,13 @@ doError= (file_stats, text) ->
 	throw Error text+ ' in '+ file_stats
 ParseFile= (file_stats, file_contents) ->
 	f= 'DE/ParseFile:'+file_stats
-	counter= 0
-	nextCounter= -> ++counter
-	etags= ['page','part', 'if', 'if_true', 'if_false', 'foreach', 'fist', 'defer', 'comment']
+	etags= ['page', 'part', 'if', 'if_true', 'if_false', 'foreach', 'fist', ]
 	T_EPIC= 0
 	T_M1= 1
 	T_M2= 2
 	T_STYLE= 3
 	T_TEXT= 4
-	stats= text: 0, dom: 0, epic: 0, defer: 0
+	stats= text: 0, dom: 0, epic: 0
 	dom_pre_tags= [ 'pre', 'code']
 	dom_nms= [
 		# 'html','head','title','base','link','meta'	 # Document
@@ -310,28 +335,6 @@ ParseFile= (file_stats, file_contents) ->
 	after_script= after_comment.replace( /<\/script>/gm, '\x02').replace /<script[^\x02]*\x02/gm, ''
 	after= after_script
 
-	# TODO COMPATABILITY MODE, EH?
-	#after= after.replace /<epic:/g, '<e-'
-	#after= after.replace /<\/epic:/g, '</e-'
-	#after= after.replace /<e-page_part/g, '<e-part'
-	#after= after.replace /<e-form_part/g, '<e-fist'
-	#after= after.replace /<e-dyno_form/g, '<e-fist'
-	#after= after.replace /\sform="/g, 'fist="'
-	#after= after.replace /\sp:/g, ' e-'
-	#after= after.replace /Tag\/If/g, 'View/If'
-	#after= after.replace /Tag\/Part/g, 'View/Part'
-	#after= after.replace /\ size="/g, ' ?size="'
-	#after= after.replace /data-action=/g, 'e-action='
-	#after= after.replace /Pageflow\//g, 'App/'
-
-	# link/form action w/action=
-	#after= after.replace /\saction=/g, ' e-action='
-	#after= after.replace /e-link_action/g, 'a'
-	#after= after.replace /e-form_action/g, 'button' # TODO WILL THIS WORK ACROSS THE BOARD?
-
-	# Var sepcs #.. to #?, or #[not ?].
-	#after= after.replace /(&(?:[^\/;#]+\/){1,2}[^\/;#]+#)[.]/g, '$1?'
-
 	# Create array of 4 parts: non-tag-content, leading-slash, tag-name, attrs
 	# End of 'attrs' may have a '/' (or is '/' if leading-slash is '/')
 	parts= after.split /<(\/?)([:a-z_0-9-]+)([^>]*)>/
@@ -340,25 +343,20 @@ ParseFile= (file_stats, file_contents) ->
 	tag_wait= [] # Holds back list of indexes while doing a nested tag
 	children= [] # Current list of child expressions - can be text, DOM tags or Epic tags
 	while i< parts.length- 1
-		if tag_wait.length and tag_wait[ tag_wait.length- 1][ 1] is 'defer'
-			children.push [T_TEXT, (findVars parts[ i]).join( '+')]
-		else
-			text= parts[ i]
-			text= text.replace(/^\s+|\s+$/gm, ' ') if pre_count is 0
-			if text.length and text isnt ' ' and text isnt '  ' # Not just whitespace
-				if tag_wait.length
-					children.push [T_TEXT, (findVars text).join( '+')]
-				else
-					children.push [T_M1, 'span', {}, (findVars text).join( '+')]
-				stats.text++ unless tag_wait.length
+		text= parts[ i]
+		text= text.replace(/^\s+|\s+$/gm, ' ') if pre_count is 0
+		if text.length and text isnt ' ' and text isnt '  ' # Not just whitespace
+			if tag_wait.length
+				children.push [T_TEXT, (findVars text).join( '+')]
+			else
+				children.push [T_M1, 'span', {}, (findVars text).join( '+')]
+			stats.text++ unless tag_wait.length
 		if parts[ i+ 1]== '/' # Close tag
 			if not tag_wait.length
 				# TODO ERRORS COULD INCLUDE LINE NUMBERS AND EVEN FILE-TEXT SNIPIT
 				doError file_stats, "Close tag found when none expected close=#{parts[i+2]}"
 			[oi, base_nm, attrs, prev_children, flavor]= tag_wait.pop()
 			pre_count-- if base_nm in dom_pre_tags
-			if base_nm is 'defer'
-				stats.defer++
 			if parts[ i+ 2] isnt parts[ oi+ 2]
 				tag_names_for_debugger= open: parts[ oi+ 2], close: parts[ i+ 2]
 				doError file_stats, "Mismatched tags open=#{parts[oi+2]}, close=#{parts[i+2]}"
@@ -391,7 +389,7 @@ ParseFile= (file_stats, file_contents) ->
 					doError file_stats, "UNKNONW EPIC TAG (#{base_nm}) : Expected one of #{etags.join()}"
 			else
 				base_nm= parts[ i+ 2]
-				if base_nm in ['img', 'br', 'input', 'hr']
+				if base_nm in dom_close
 					empty= '/' # Force as no-body or self-closing
 				if base_nm not in dom_nms
 					doError file_stats, 'Unknown tag name "'+ base_nm+ '" in '+ file_stats
@@ -399,7 +397,6 @@ ParseFile= (file_stats, file_contents) ->
 					#E.log f, 'attr_clean', attrs
 					flavor= T_M2
 			if empty is '/' # This tag is the child, no need to push things
-				stats.defer++ if base_nm is 'defer'
 				whole_tag= [flavor, base_nm, attrs, []]
 				children.push whole_tag
 				(if flavor is T_EPIC then stats.epic++ else stats.dom++) unless tag_wait.length
@@ -418,7 +415,7 @@ ParseFile= (file_stats, file_contents) ->
 		stats.text++
 	#E.log f, 'before do', children.length, stats, children
 	# Give to loadStrategy (or compiler) to handle as in-browser or minimized JavaScript
-	# Caller expects: content,can_componentize,defer
+	# Caller expects: content
 	#
 	# Now, try to create a texual representation
 	# Return oE.kids(['page',{},function(){[]}),{tag:'div',attrs:{}},'text',{tag:'style',attrs:{},children:[]},
@@ -453,6 +450,6 @@ ParseFile= (file_stats, file_contents) ->
 		stuff
 	content= 'return '+ doChildren children
 	#E.log f, 'final', content
-	return  content: content, defer: stats.defer, can_componentize: children.length is 1 and stats.epic is 0
+	return  content
 
 E.Extra.ParseFile= ParseFile
