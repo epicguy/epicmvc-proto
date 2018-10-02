@@ -1,0 +1,31 @@
+{
+  "name": "epic",
+  "version": "2.4.0",
+  "description": "MVC Framework",
+  "main": "html/EpicCore.coffee",
+  "dependencies": {
+    "@babel/polyfill": "^7.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.1.2",
+    "@babel/core": "^7.1.2",
+    "@babel/preset-env": "^7.1.0",
+    "jest": "^23.6.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/epicguy/epicmvc-proto.git"
+  },
+  "keywords": [
+    "MVC"
+  ],
+  "author": "James Shelby",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/epicguy/epicmvc-proto/issues"
+  },
+  "homepage": "https://github.com/epicguy/epicmvc-proto#readme"
+}

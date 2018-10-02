@@ -21,3 +21,5 @@ tools/tmp?.js
 
 tools/util/node_modules
 .idea/
+
+node_modules
