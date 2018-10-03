@@ -29,3 +29,9 @@ This project is under construction
 ## License
 
 I will likely release it under the MIT License when I get it banged into shape
+
+## Requirement
+
+Using Node JS 8.12.0
+
+Jest for testing
