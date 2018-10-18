@@ -14,7 +14,7 @@ for FILE in EpicCore
 do
   echo -n "$FILE "
   echo -ne "/*${FILE}*/" >> $MinOut
-  cat $EpicMvc/${FILE}.coffee |grep -vE "\s(f= ['\"])|(E.log f)" |grep -v "#%#" |coffee --compile --stdio |uglifyjs -m -nc >> $MinOut
+  cat $EpicMvc/${FILE}.coffee |grep -vE "\s(f= ['\"])|(E.log f)" |grep -v "#%#" |coffee --compile --stdio |uglifyjs -m -c >> $MinOut
   echo >> $MinOut
 done
 echo done.
