@@ -1,5 +1,5 @@
+#!/bin/bash -e
 
-set -e
 # Build single version of all of EpicMvc w/o uglify
 # Note: to prep, you want to do e.g. ln ../html DevEpic
 

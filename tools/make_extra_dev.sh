@@ -1,5 +1,5 @@
+#!/bin/bash -e
 
-set -e
 # Build single version of Optional stuff (extra packages) w/o uglify
 
 ECHO() {
