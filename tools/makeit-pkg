@@ -30,12 +30,13 @@ then
   cat $DevHtmlPkg/copyright.js >> $MinOut
 fi
 
+PKG=`echo -n $DevHtmlPkg | grep -oE "[^/]*$"`
 echo -n ':JavaScript: '
 for ONE_FILE in $JSS
 do
-  A_FILE=`echo $ONE_FILE | cut -d/ -f4-`
+  A_FILE=`echo $ONE_FILE | grep -oE "$PKG/.*"`
   echo -n "$A_FILE "
-  E_FILE=`echo $ONE_FILE | cut -d/ -f3-`
+  E_FILE=$A_FILE #`echo $ONE_FILE | cut -d/ -f3-`
   echo -ne "/*$E_FILE*/" >> $MinOut
   cat $ONE_FILE >> $MinOut # Don't skip copyright notice, at the top, as a comment (i.e. not -nc)
   echo >> $MinOut
@@ -45,9 +46,9 @@ echo done.
 echo -n ':CoffeeScript: '
 for ONE_FILE in $COFFEE
 do
-  A_FILE=`echo $ONE_FILE | cut -d/ -f4- | cut -d. -f1`
+  A_FILE=`echo $ONE_FILE | grep -oE "$PKG/.*"`
   echo -n "$A_FILE "
-  E_FILE=`echo $ONE_FILE | cut -d/ -f3-`
+  E_FILE=$A_FILE #`echo $ONE_FILE | cut -d/ -f1-`
   echo -ne "/*$E_FILE*/" >> $MinOut
   cat $ONE_FILE | coffee --compile --stdio >> $MinOut
   echo >> $MinOut

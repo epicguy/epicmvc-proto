@@ -450,6 +450,6 @@ ParseFile= (file_stats, file_contents) ->
 		stuff
 	content= 'return '+ doChildren children
 	#E.log f, 'final', content
-	return  content
+	return {content}
 
 E.Extra.ParseFile= ParseFile

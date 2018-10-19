@@ -6,16 +6,6 @@
 
   _log2 = function() {};
 
-  _log = console.error;
-
-  _log = function(s) {
-    return process.stderr.write(s + "\n");
-  };
-
-  _log2 = function(s) {
-    return process.stderr.write(s + " ");
-  };
-
   fs = require('fs');
 
   dev_dir = '../' + process.argv[3];
@@ -56,29 +46,38 @@
       var full_nm, out;
       _log("Layout: " + nm);
       full_nm = this.getLayoNm(nm);
-      return out = E.Extra.ParseFile(full_nm, this.getFile(full_nm));
+      out = E.Extra.ParseFile(full_nm, this.getFile(full_nm));
+      _log2(out);
+      return out;
     };
 
     MockLoadStrategy.prototype.page = function(nm) {
       var full_nm, out;
       _log("Page: " + nm);
       full_nm = this.getPageNm(nm);
-      return out = E.Extra.ParseFile(full_nm, this.getFile(full_nm));
+      out = E.Extra.ParseFile(full_nm, this.getFile(full_nm));
+      _log2(out);
+      return out;
     };
 
     MockLoadStrategy.prototype.part = function(nm) {
       var full_nm, out;
       full_nm = this.getPartNm(nm);
-      return out = E.Extra.ParseFile(full_nm, this.getFile(full_nm));
+      out = E.Extra.ParseFile(full_nm, this.getFile(full_nm));
+      _log2(out);
+      return out;
     };
 
     MockLoadStrategy.prototype.readdir = function(type) {
       var f, files, i, len, p, path_part, ref, results1;
       f = 'MockLoadStrategy.readdir';
+      _log2(f, '>', type);
       path_part = type;
+      _log2(f, '@path path_part', this.path, path_part);
       if (!fs.existsSync(this.path + path_part)) {
         return [];
       }
+      _log2(this.path + path_part);
       files = fs.readdirSync(this.path + path_part);
       ref = (function() {
         var j, len, results2;
@@ -102,9 +101,10 @@
   })();
 
   doObj = function(obj) {
-    var content;
-    content = "function(){" + obj.content + "}";
-    return "{preloaded:1,can_componentize:" + obj.can_componentize + ",defer:" + obj.defer + ",content:" + content + "}";
+    _log2(JSON.stringify({
+      obj: obj
+    }));
+    return "{content:function(){" + obj.content + "}}";
   };
 
   doIt = function(dev_dir, pkg_nm) {

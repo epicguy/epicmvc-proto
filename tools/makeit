@@ -1,20 +1,21 @@
 #!/bin/sh -e
+NM=makeit.....
 
 EpicMvc=$1
 MinOut=$2
 
 for FILE in mithril
 do
-  echo -n "$FILE "
+  echo $NM "$FILE "
   cat $EpicMvc/${FILE}.js |uglifyjs -m >> $MinOut
   echo >> $MinOut
 done
 
 for FILE in EpicCore
 do
-  echo -n "$FILE "
+  echo $NM "$FILE "
   echo -ne "/*${FILE}*/" >> $MinOut
-  cat $EpicMvc/${FILE}.coffee |grep -vE "\s(f= ['\"])|(E.log f)" |grep -v "#%#" |coffee --compile --stdio |uglifyjs >> -m $MinOut
+  cat $EpicMvc/${FILE}.coffee |grep -vE "\s(f= ['\"])|(E.log f)" |grep -v "#%#" |coffee --compile --stdio |uglifyjs -m >> $MinOut
   echo >> $MinOut
 done
-echo done.
+echo $NM done.

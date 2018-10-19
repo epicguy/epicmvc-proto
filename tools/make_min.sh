@@ -2,9 +2,9 @@
 
 # Build single version of all of EpicMvc w/ uglify
 # Note: to prep, you want to do e.g. ln ../html DevEpic
-
+NM=make_min.sh.....
 ECHO() {
-  echo $*
+  echo '----: ' $*
   $*
 }
 
@@ -12,13 +12,15 @@ EpicDir=../html
 # OneEpic=../EpicMvc-One-2.0.0-%MD5_EPICMVC%.js
 OneEpic=$EpicDir/EpicMvc-Base-latest-min.js
 
+echo $NM "Copyright..."
 cat copyright.js > $OneEpic
+echo $NM "makeit..."
 ./makeit DevEpic $OneEpic
 
 PKG=Base
-echo "Building:    $PKG"
+echo $NM "Building:    $PKG"
 ./makeit-pkg2 $EpicDir/$PKG $OneEpic
-echo "Compressing: $PKG/view"
+echo $NM "Compressing: $PKG/view" "... USING: ./makeit-view $EpicDir $EpicDir $PKG >> $OneEpic"
 ./makeit-view $EpicDir $EpicDir $PKG >> $OneEpic
 
 #KEY=%MD5_EPICMVC%

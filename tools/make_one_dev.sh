@@ -11,6 +11,7 @@ ECHO() {
 EpicDir=../html
 # OneEpic=../EpicMvc-One-2.0.0-%MD5_EPICMVC%.js
 OneEpic=$EpicDir/EpicMvc-BaseDev-latest.js
+echo "Creating: $OneEpic ..."
 
 cat copyright.js > $OneEpic
 ./makeit2 DevEpic $OneEpic
@@ -31,3 +32,5 @@ echo "Compressing: $PKG/view"
 #FILE=$OneEpic
 #MD5=`md5sum $FILE | cut -c1-5`
 #ECHO mv $FILE `echo $FILE | awk "{print gensub(\"$KEY\",\"$MD5\",1)}"`
+
+echo "$OneEpic done."

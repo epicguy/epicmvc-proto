@@ -528,7 +528,9 @@
       return stuff;
     };
     content = 'return ' + doChildren(children);
-    return content;
+    return {
+      content: content
+    };
   };
 
   E.Extra.ParseFile = ParseFile;

@@ -1,4 +1,6 @@
 #!/bin/sh -e
 cd util
 
+# Note: echo here to stdout will cause caller to include this output in the code results file
+#echo $NM "USING: node makeit-view2.js $*"
 node makeit-view2.js $*
