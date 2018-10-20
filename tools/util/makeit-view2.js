@@ -104,7 +104,7 @@
     _log2(JSON.stringify({
       obj: obj
     }));
-    return "{content:function(){" + obj.content + "}}";
+    return "{preloaded:1,content:function(){" + obj.content + "}}";
   };
 
   doIt = function(dev_dir, pkg_nm) {

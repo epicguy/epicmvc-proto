@@ -154,7 +154,7 @@ app= (undef) ->
 	setModelState= (s) ->
 		f= 'EC/setModelState'
 		modelState= s if s?
-		#E.log f, s, modelState
+		#E.log f, {s, modelState}
 		for inst_nm of oModel
 			oModel[ inst_nm].restoreState? modelState[ inst_nm]
 
@@ -264,7 +264,7 @@ app= (undef) ->
 		final= () ->
 			m.endComputation() # Causes a render
 		more= (action_result) ->
-			E.log f, 'cb:', action_result[ 0], action_result[ 1]
+			E.log f+ ':cb', {action_result}
 			E.App().setIssues action_result[ 0]
 			E.App().setMessages action_result[ 1]
 			inAction= false
@@ -283,30 +283,30 @@ app= (undef) ->
 
 	_d_doAction= (action_token, data, original_path) ->
 		f= "EC/_d_doAction(#{action_token})"
-		#E.log f, data, original_path
+		#E.log f, {data, original_path}
 		master_issue= new Issue 'App'
 		master_message= new Issue 'App'
 		master_data= merge {}, data
 		action_node= appFindAction original_path, action_token
-		E.log f, 'got node:', action_node
+		E.log f+ 'got node', {action_node}
 		# WARNING: "No app. entry for action_token (#{action_token}) on path (#{original_path})"
 		option.ca1 action_token, original_path, action_node #if not action_node? #%#
 		return [master_issue, master_message] if not action_node? # No recognized action
 
 		d_doLeftSide= (action_node)->
-			#E.log f, 'd_doLeftSide:', {action_node}
+			E.log f+ 'd_doLeftSide:', {action_node}
 			# Process 'fist:' or 'clear:'
 			for what in ['fist','clear'] # TODO CONSIDER HANDLING clear: AS A doRightSide ACTIVITY, SO AFER do: PROCESING
 				continue if what not of action_node
 				option.ca4 action_token, original_path, action_node, what #%#
 				fist= action_node[ what]
 				fist_model= E.fistDef[ fist].event ? 'Fist'
-				#E.log f, 'd_doLeftSide:', {what, fist, fist_model, master_data}
+				E.log f+ 'd_doLeftSide', {what, fist, fist_model, master_data}
 				if what is 'clear'
 					E[fist_model]().fistClear fist, master_data.row
 				else
 					E[fist_model]().fistValidate r= {}, fist, master_data.row
-					#E.log f, 'd_doLeftSide:', {what,r}
+					E.log f+ 'd_doLeftSide', {what,r}
 					E.merge master_data, r
 					return unless r.fist$success is 'SUCCESS'
 			# Process 'pass:' (just a syntax check)

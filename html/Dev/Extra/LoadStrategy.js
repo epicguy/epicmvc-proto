@@ -30,7 +30,7 @@
 
     LoadStrategy.prototype.D_loadAsync = function() {
       var el, f, file, file_list, j, k, l, len, len1, len2, len3, m, pkg, ref, ref1, ref2, ref3, ref4, ref5, sub, type, url, work;
-      f = 'DE/LoadStrategy.D_loadAsync';
+      f = 'DE/LoadStrategy.D_loadAsync:';
       ref = this.appconfs;
       for (j = 0, len = ref.length; j < len; j++) {
         pkg = ref[j];
@@ -69,6 +69,9 @@
               sub = type === 'root' ? '' : type + '/';
               url = (this.makePkgDir(pkg)) + '/' + sub + file + '.js';
               work.push(url);
+              E.log(f + 'to do', {
+                url: url
+              });
             }
           }
         }
@@ -77,11 +80,16 @@
         var next;
         next = function(ix) {
           if (ix >= work.length) {
-            E.log(f, ix, 'done.');
+            E.log(f + 'done.', {
+              ix: ix
+            });
             resolve(null);
             return;
           }
-          E.log(f, 'doing', ix, work[ix]);
+          E.log(f + 'doing', {
+            ix: ix,
+            work: work[ix]
+          });
           el = document.createElement('script');
           el.setAttribute('type', 'text/javascript');
           el.setAttribute('src', work[ix]);
@@ -96,8 +104,12 @@
 
     LoadStrategy.prototype.inline = function(type, nm) {
       var el, f, id;
-      f = 'DE/LoadStrategy.inline';
+      f = 'DE/LoadStrategy.inline:';
       el = document.getElementById(id = 'view-' + type + '-' + nm);
+      E.log(f, {
+        id: id,
+        el: el
+      });
       if (el) {
         return el.innerHTML;
       }
@@ -106,8 +118,17 @@
 
     LoadStrategy.prototype.preLoaded = function(pkg, type, nm) {
       var f, r, ref, ref1;
-      f = 'DE/LoadStrategy.preLoaded';
+      f = 'DE/LoadStrategy.preLoaded:';
+      E.log(f + 'looking for', {
+        pkg: pkg,
+        type: type,
+        nm: nm
+      });
       r = (ref = E['view$' + pkg]) != null ? (ref1 = ref[type]) != null ? ref1[nm] : void 0 : void 0;
+      E.log(f + 'found', {
+        preloaded: ((r != null ? r.preloaded : void 0) ? 'PRELOADED' : 'broken'),
+        r: r
+      });
       return r;
     };
 
@@ -123,8 +144,13 @@
 
     LoadStrategy.prototype.d_get = function(type, nm) {
       var f, fn, full_nm, full_nm_alt, j, k, len, len1, pkg, promise, ref, ref1, type_alt, uncompiled;
-      f = 'DE/LoadStrategy.d_get';
+      f = 'DE/LoadStrategy.d_get:';
       full_nm = type + '/' + nm + '.html';
+      E.log(f, {
+        type: type,
+        nm: nm,
+        full_nm: full_nm
+      });
       if (this.cache[full_nm] != null) {
         return this.cache[full_nm];
       }
@@ -142,6 +168,11 @@
             (function(_this) {
               return (function(pkg) {
                 return promise = promise.then(function(result) {
+                  E.log(f + 'THEN-', {
+                    pkg: pkg,
+                    full_nm_alt: full_nm_alt,
+                    result: 'S' === E.type_oau(result) ? result.slice(0, 40) : result
+                  });
                   if (result !== false) {
                     return result;
                   }
@@ -160,6 +191,11 @@
         return function(pkg) {
           return promise = promise.then(function(result) {
             var compiled;
+            E.log(f + 'THEN-', {
+              pkg: pkg,
+              full_nm: full_nm,
+              result: 'S' === E.type_oau(result) ? result.slice(0, 40) : result
+            });
             if (result !== false) {
               return result;
             }
@@ -180,6 +216,10 @@
       promise = promise.then((function(_this) {
         return function(result) {
           var parsed;
+          E.log(f + 'THEN-COMPILE', {
+            full_nm: full_nm,
+            result: result
+          });
           if (result !== false) {
             parsed = (result != null ? result.preloaded : void 0) ? result : _this.compile(full_nm, result);
           } else {
@@ -187,6 +227,10 @@
             console.error('ERROR', 'NO FILE FOUND! ', full_nm);
             parsed = false;
           }
+          E.log(f + 'DEFER-L', {
+            result: result,
+            parsed: parsed
+          });
           _this.cache[full_nm] = parsed;
           return parsed;
         };
@@ -200,7 +244,7 @@
 
     LoadStrategy.prototype.D_getFile = function(pkg, nm) {
       var f, path;
-      f = 'DE/LoadStrategy.D_getFile';
+      f = 'DE/LoadStrategy.D_getFile:';
       path = (this.makePkgDir(pkg)) + '/';
       return new Promise(function(resolve, reject) {
         var xhr;

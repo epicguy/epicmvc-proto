@@ -134,7 +134,7 @@
     }
     if (p !== '=') {
       if (nm === 'selected' || nm === 'autofocus') {
-        return [true, start, i - 1, nm, '=', '"', [false]];
+        return [true, start, i - 1, nm, '=', '"', ['false']];
       }
       return ['equals', start, i, nm];
     }

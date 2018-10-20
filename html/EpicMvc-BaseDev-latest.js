@@ -2432,12 +2432,19 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     View$Base.prototype.nest_up = function(who) {
       var f;
       f = 'BM/View.nest_up:' + who;
+      E.log(f, {
+        defer_it_cnt: this.defer_it_cnt
+      });
       if (this.defer_it_cnt === 0) {
         if (this.in_run) {
           BLOWUP();
         }
         this.in_run = true;
         this.start = new Date().getTime();
+        E.log(f + 'START RUN', {
+          frames: this.frames,
+          start: this.start
+        });
         this.defer_it = {
           promise: null,
           resolve: null
@@ -2454,19 +2461,29 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     View$Base.prototype.nest_dn = function(who) {
       var f;
       f = 'BM/View.nest_dn:' + who;
+      E.log(f, {
+        defer_it_cnt: this.defer_it_cnt
+      });
       if (this.defer_it_cnt > 0) {
         this.defer_it_cnt--;
       }
       if (this.defer_it_cnt === 0) {
-        E.log(f, 'END RUN', this.defer_content, new Date().getTime() - this.start);
+        E.log(f + 'END RUN', {
+          defer_content: this.defer_content,
+          date_diff: new Date().getTime() - this.start
+        });
         this.in_run = false;
+        E.log(f + 'RESOLVE', {
+          modal: this.modal,
+          defer_content: this.defer_content
+        });
         return this.defer_it.resolve([this.modal, this.defer_content]);
       }
     };
 
     View$Base.prototype.run = function() {
       var f, flow, layout, modal, ref, ref1, ref2, step, track, who;
-      f = 'BM/View.run';
+      f = 'BM/View.run:';
       who = 'R';
       ref = E.App().getStepPath(), flow = ref[0], track = ref[1], step = ref[2];
       if (modal = E.appFindAttr(flow, track, step, 'modal')) {
@@ -2482,6 +2499,9 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       this.resetInfo();
       this.nest_up(who);
       this.defer_content = this.kids([['page', {}]]);
+      E.log(f + 'after @kids', {
+        defer_content: this.defer_content
+      });
       this.nest_dn(who);
       return this.defer_it.promise;
     };
@@ -2494,17 +2514,23 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.saveInfo = function() {
       var f, saved_info;
-      f = 'BM/View.saveInfo';
+      f = 'BM/View.saveInfo:';
       saved_info = E.merge({}, {
         I: this.I,
         P: this.P
+      });
+      E.log(f, {
+        saved_info: saved_info
       });
       return saved_info;
     };
 
     View$Base.prototype.restoreInfo = function(saved_info) {
       var f, nm;
-      f = 'BM/View.restoreInfo';
+      f = 'BM/View.restoreInfo:';
+      E.log(f, {
+        saved_info: saved_info
+      });
       this.resetInfo();
       this.P = saved_info.P;
       this.I = saved_info.I;
@@ -2513,11 +2539,19 @@ else if (typeof define === "function" && define.amd) define(function() {return m
           this.R[nm] = this._getMyRow(this.I[nm]);
         }
       }
+      E.log(f + 'restored:', {
+        P: this.P,
+        I: this.I,
+        R: this.R
+      });
     };
 
     View$Base.prototype._getMyRow = function(I) {
       var f;
-      f = 'BM/View._getMyRow';
+      f = 'BM/View._getMyRow:';
+      E.log(f, {
+        I: I
+      });
       if (I.m != null) {
         return (E[I.m](I.o))[I.c];
       }
@@ -2532,6 +2566,11 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     View$Base.prototype.getTable = function(nm) {
       var f, i, len, p, rVal, ref;
       f = 'BM/View.getTable:' + nm;
+      if (nm === 'Part') {
+        E.log(f, {
+          P: this.P
+        });
+      }
       switch (nm) {
         case 'If':
           return [this.N];
@@ -2554,23 +2593,39 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       if (!(this.did_run && deleted_tbl_nms.length)) {
         return;
       }
-      f = 'BM/View.invalidateTables';
+      f = 'BM/View.invalidateTables:';
+      E.log(f, {
+        view_nm: view_nm,
+        tbl_nms: tbl_nms,
+        deleted_tbl_nms: deleted_tbl_nms
+      });
       m.startComputation();
       m.endComputation();
     };
 
     View$Base.prototype.handleIt = function(content) {
       var f;
-      f = 'BM/View.handleIt';
+      f = 'BM/View.handleIt:';
+      E.log(f + 'top', {
+        typeof_content: typeof content
+      });
       if (typeof content === 'function') {
         content = content();
       }
+      E.log(f + 'bottom', {
+        content: content
+      });
       return content;
     };
 
     View$Base.prototype.formatFromSpec = function(val, spec, custom_spec) {
       var f, left, ref, right, str;
-      f = 'BM/View.formatFromSpec';
+      f = 'BM/View.formatFromSpec:';
+      E.log(f, {
+        val: val,
+        spec: spec,
+        custom_spec: custom_spec
+      });
       switch (spec) {
         case '':
           if (custom_spec) {
@@ -2636,7 +2691,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.weed = function(attrs) {
       var clean_attrs, f, nm, val;
-      f = 'BM/View.weed';
+      f = 'BM/View.weed:';
       clean_attrs = {};
       for (nm in attrs) {
         val = attrs[nm];
@@ -2648,24 +2703,40 @@ else if (typeof define === "function" && define.amd) define(function() {return m
           }
         }
       }
+      E.log(f, {
+        clean_attrs: clean_attrs
+      });
       return clean_attrs;
     };
 
     View$Base.prototype.kids = function(kids) {
       var ans, f, i, ix, kid, len, out, who;
-      f = 'BM/View.kids';
+      f = 'BM/View.kids:';
       who = 'K';
+      E.log(f + 'top', {
+        kids_length: kids.length
+      });
       out = [];
       for (ix = i = 0, len = kids.length; i < len; ix = ++i) {
         kid = kids[ix];
+        E.log(f, {
+          date_diff: new Date().getTime() - this.start
+        });
         if ('A' === E.type_oau(kid)) {
           out.push(ix);
           ans = this['T_' + kid[0]](kid[1], kid[2]);
+          E.log(f + 'CHECK FOR THEN', {
+            then: ((ans != null ? ans.then : void 0) ? 'YES' : 'NO'),
+            ans: ans
+          });
           if (ans != null ? ans.then : void 0) {
             this.nest_up(who);
             (function(_this) {
               return (function(ix) {
                 return ans.then(function(result) {
+                  E.log(f + 'THEN', {
+                    result: result
+                  });
                   out[ix] = result;
                   return _this.nest_dn(who);
                 }, function(err) {
@@ -2687,7 +2758,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.loadPartAttrs = function(attrs, full) {
       var attr, f, result, val;
-      f = 'BM/View.loadPartAttrs';
+      f = 'BM/View.loadPartAttrs:';
       result = {};
       for (attr in attrs) {
         val = attrs[attr];
@@ -2701,7 +2772,11 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.T_page = function(attrs) {
       var d_load, f, name, view;
-      f = 'BM/View.T_page';
+      f = 'BM/View.T_page:';
+      E.log(f, {
+        attrs: attrs,
+        date_diff: new Date().getTime() - this.start
+      });
       if (this.frame_inx < this.frames.length) {
         d_load = E.oLoader.d_layout(name = this.frames[this.frame_inx++]);
         view = (this.frame_inx < this.frames.length ? 'Frame' : 'Layout') + '/' + name;
@@ -2716,17 +2791,35 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       var d_load, f, view;
       view = attrs.part;
       f = 'BM/View.T_part:' + view;
+      E.log(f, {
+        date_diff: new Date().getTime() - this.start
+      });
       d_load = E.oLoader.d_part(view);
       return this.piece_handle('Part/' + view, attrs, d_load, true);
     };
 
     View$Base.prototype.piece_handle = function(view, attrs, obj, is_part) {
       var content, f, saved_info;
-      f = 'BM/View.piece_handle';
+      f = 'BM/View.piece_handle:';
+      E.log(f, {
+        view: view,
+        obj: obj,
+        typeof_content: typeof obj.content,
+        has_then: ((obj != null ? obj.then : void 0) ? 'yes' : 'no')
+      });
       if (obj != null ? obj.then : void 0) {
         return this.D_piece(view, attrs, obj, is_part);
       }
-      content = obj;
+      E.log(f, {
+        view: view
+      });
+      content = obj.content;
+      if (obj === false) {
+        E.log(f + 'AFTER ASSIGN', {
+          view: view,
+          obj: obj
+        });
+      }
       saved_info = this.saveInfo();
       this.P.push(this.loadPartAttrs(attrs));
       content = this.handleIt(content);
@@ -2736,13 +2829,16 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.D_piece = function(view, attrs, d_load, is_part) {
       var d_result, f, saved_info, who;
-      f = 'BM/View.D_piece';
+      f = 'BM/View.D_piece:';
       who = 'P';
       this.nest_up(who + view);
       saved_info = this.saveInfo();
       d_result = d_load.then((function(_this) {
         return function(obj) {
           var result;
+          E.log(f + 'THEN', {
+            obj: obj
+          });
           try {
             if (obj != null ? obj.then : void 0) {
               BLOWUP();
@@ -2867,7 +2963,10 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.T_foreach = function(attrs, content_f) {
       var count, f, i, len, limit, ref, result, rh_alias, row, tbl;
-      f = 'BM/View.T_foreach';
+      f = 'BM/View.T_foreach:';
+      E.log(f, {
+        attrs: attrs
+      });
       ref = this._accessModelTable(attrs.table, attrs.alias), tbl = ref[0], rh_alias = ref[1];
       if (tbl.length === 0) {
         return '';
@@ -2893,15 +2992,21 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.T_fist = function(attrs, content_f) {
       var ans, content, f, fist, foreach_attrs, masterAlias, model, part, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, rh_1, rh_alias, subTable, table, tbl;
-      f = 'BM/View.T_fist';
-      E.log(f, attrs, content_f);
+      f = 'BM/View.T_fist:';
+      E.log(f, {
+        attrs: attrs,
+        content_f: content_f
+      });
       fist = E.fistDef[attrs.fist];
       model = (ref = fist.event) != null ? ref : 'Fist';
       table = attrs.fist + (((ref1 = attrs.row) != null ? ref1.length : void 0) ? ':' + attrs.row : '');
       subTable = (ref2 = (ref3 = attrs.via) != null ? ref3 : fist.via) != null ? ref2 : 'Control';
       masterAlias = '__Fist';
       ref4 = this._accessModelTable(model + '/' + table, masterAlias), tbl = ref4[0], rh_alias = ref4[1];
-      E.log(f, 'tbl,rh_alias (master)', tbl, rh_alias);
+      E.log(f, {
+        tbl: tbl,
+        rh_alias: rh_alias
+      });
       this.R[rh_alias] = tbl[0];
       this.I[rh_alias].c = 0;
       rh_1 = rh_alias;
@@ -2930,7 +3035,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
     View$Base.prototype.ex = function(el, isInit, ctx) {
       var attrs, d, e, f, i, ix, nm, p1, p2, ref, ref1, results, val;
-      f = 'BM/View.ex';
+      f = 'BM/View.ex:';
       attrs = el.attributes;
       results = [];
       for (ix = i = 0, ref = attrs.length; 0 <= ref ? i < ref : i > ref; ix = 0 <= ref ? ++i : --i) {
@@ -2939,7 +3044,12 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         }
         ref1 = attrs[ix].name.split('-'), d = ref1[0], e = ref1[1], nm = ref1[2], p1 = ref1[3], p2 = ref1[4];
         val = attrs[ix].value;
-        E.log(f, attrs[ix].name, val, p1, p2);
+        E.log(f, {
+          name: attrs[ix].name,
+          val: val,
+          p1: p1,
+          p2: p2
+        });
         E.option.ex1(nm, attrs[ix].name);
         results.push(E['ex$' + nm](el, isInit, ctx, val, p1, p2));
       }
@@ -3612,9 +3722,9 @@ else if (typeof define === "function" && define.amd) define(function() {return m
 
 E.view$Base={
 Layout: {
-"default":{content:function(){return oE.kids([['page',{}]])}}},
+"default":{preloaded:1,content:function(){return oE.kids([['page',{}]])}}},
 Page: {
-"default":{content:function(){return [{tag:'b',attrs:{},children:['A Base Page']}]}}},
+"default":{preloaded:1,content:function(){return [{tag:'b',attrs:{},children:['A Base Page']}]}}},
 Part: {
 }};
 
@@ -4581,7 +4691,7 @@ Part: {
 
     LoadStrategy.prototype.D_loadAsync = function() {
       var el, f, file, file_list, j, k, l, len, len1, len2, len3, m, pkg, ref, ref1, ref2, ref3, ref4, ref5, sub, type, url, work;
-      f = 'DE/LoadStrategy.D_loadAsync';
+      f = 'DE/LoadStrategy.D_loadAsync:';
       ref = this.appconfs;
       for (j = 0, len = ref.length; j < len; j++) {
         pkg = ref[j];
@@ -4620,6 +4730,9 @@ Part: {
               sub = type === 'root' ? '' : type + '/';
               url = (this.makePkgDir(pkg)) + '/' + sub + file + '.js';
               work.push(url);
+              E.log(f + 'to do', {
+                url: url
+              });
             }
           }
         }
@@ -4628,11 +4741,16 @@ Part: {
         var next;
         next = function(ix) {
           if (ix >= work.length) {
-            E.log(f, ix, 'done.');
+            E.log(f + 'done.', {
+              ix: ix
+            });
             resolve(null);
             return;
           }
-          E.log(f, 'doing', ix, work[ix]);
+          E.log(f + 'doing', {
+            ix: ix,
+            work: work[ix]
+          });
           el = document.createElement('script');
           el.setAttribute('type', 'text/javascript');
           el.setAttribute('src', work[ix]);
@@ -4647,8 +4765,12 @@ Part: {
 
     LoadStrategy.prototype.inline = function(type, nm) {
       var el, f, id;
-      f = 'DE/LoadStrategy.inline';
+      f = 'DE/LoadStrategy.inline:';
       el = document.getElementById(id = 'view-' + type + '-' + nm);
+      E.log(f, {
+        id: id,
+        el: el
+      });
       if (el) {
         return el.innerHTML;
       }
@@ -4657,8 +4779,17 @@ Part: {
 
     LoadStrategy.prototype.preLoaded = function(pkg, type, nm) {
       var f, r, ref, ref1;
-      f = 'DE/LoadStrategy.preLoaded';
+      f = 'DE/LoadStrategy.preLoaded:';
+      E.log(f + 'looking for', {
+        pkg: pkg,
+        type: type,
+        nm: nm
+      });
       r = (ref = E['view$' + pkg]) != null ? (ref1 = ref[type]) != null ? ref1[nm] : void 0 : void 0;
+      E.log(f + 'found', {
+        preloaded: ((r != null ? r.preloaded : void 0) ? 'PRELOADED' : 'broken'),
+        r: r
+      });
       return r;
     };
 
@@ -4674,8 +4805,13 @@ Part: {
 
     LoadStrategy.prototype.d_get = function(type, nm) {
       var f, fn, full_nm, full_nm_alt, j, k, len, len1, pkg, promise, ref, ref1, type_alt, uncompiled;
-      f = 'DE/LoadStrategy.d_get';
+      f = 'DE/LoadStrategy.d_get:';
       full_nm = type + '/' + nm + '.html';
+      E.log(f, {
+        type: type,
+        nm: nm,
+        full_nm: full_nm
+      });
       if (this.cache[full_nm] != null) {
         return this.cache[full_nm];
       }
@@ -4693,6 +4829,11 @@ Part: {
             (function(_this) {
               return (function(pkg) {
                 return promise = promise.then(function(result) {
+                  E.log(f + 'THEN-', {
+                    pkg: pkg,
+                    full_nm_alt: full_nm_alt,
+                    result: 'S' === E.type_oau(result) ? result.slice(0, 40) : result
+                  });
                   if (result !== false) {
                     return result;
                   }
@@ -4711,6 +4852,11 @@ Part: {
         return function(pkg) {
           return promise = promise.then(function(result) {
             var compiled;
+            E.log(f + 'THEN-', {
+              pkg: pkg,
+              full_nm: full_nm,
+              result: 'S' === E.type_oau(result) ? result.slice(0, 40) : result
+            });
             if (result !== false) {
               return result;
             }
@@ -4731,6 +4877,10 @@ Part: {
       promise = promise.then((function(_this) {
         return function(result) {
           var parsed;
+          E.log(f + 'THEN-COMPILE', {
+            full_nm: full_nm,
+            result: result
+          });
           if (result !== false) {
             parsed = (result != null ? result.preloaded : void 0) ? result : _this.compile(full_nm, result);
           } else {
@@ -4738,6 +4888,10 @@ Part: {
             console.error('ERROR', 'NO FILE FOUND! ', full_nm);
             parsed = false;
           }
+          E.log(f + 'DEFER-L', {
+            result: result,
+            parsed: parsed
+          });
           _this.cache[full_nm] = parsed;
           return parsed;
         };
@@ -4751,7 +4905,7 @@ Part: {
 
     LoadStrategy.prototype.D_getFile = function(pkg, nm) {
       var f, path;
-      f = 'DE/LoadStrategy.D_getFile';
+      f = 'DE/LoadStrategy.D_getFile:';
       path = (this.makePkgDir(pkg)) + '/';
       return new Promise(function(resolve, reject) {
         var xhr;
@@ -4928,7 +5082,7 @@ Part: {
     }
     if (p !== '=') {
       if (nm === 'selected' || nm === 'autofocus') {
-        return [true, start, i - 1, nm, '=', '"', [false]];
+        return [true, start, i - 1, nm, '=', '"', ['false']];
       }
       return ['equals', start, i, nm];
     }
@@ -5333,10 +5487,10 @@ Part: {
 
 E.view$Dev={
 Layout: {
-"BaseDevl":{content:function(){return oE.kids([{tag:'h5',attrs:{},children:['I\'m an \'outer\' template']},['page',{}]])}},
-"bdevl":{content:function(){return oE.kids([{tag:'style',attrs:{},children:m.trust(' .dbg-part { border: solid 8px #888; }\n.dbg-tag-error-box { border: solid 2px #C44; font-weight: bold;}\n.dbg-tag-error-msg { color: red; }\n.dbg-tag-box { border: solid 2px #44C; }\n.dbg-part-box { font-size: .5em;\n -webkit-box-shadow: 10px 10px 5px #888;\n padding: 5px 5px 5px 15px;\n width: 10px;\n height: 10px;\n z-index: 99999;\n}\n.red { color: red; }\n.btn-group { background-color: #CCC; border-radius: 6px; }\n.dbg-toolbar .btn { padding: 6px 2px; }\n.dbg-toolbar:hover {\n top: -7px;\n}\n.dbg-toolbar {\n overflow-y: hidden;\n top: -46px;\n transition-property: top;\n transition-duration: .5s;\n} ')},{tag:'div',attrs:{style:{position:'fixed',zIndex:'9999',backgroundColor:'#484848',fontSize:'10px',padding:'10px 10px 0 10px',right:'0'},className:'dbg-toolbar'},children:[{tag:'div',attrs:{className:'btn-toolbar'},children:[{tag:'div',attrs:{className:'btn-group'},children:[{tag:'a',attrs:{'data-e-what':'file',className:'btn btn-mini','data-e-action':'click:dbg_refresh'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-repeat icon-repeat'},children:[]}]},{tag:'a',attrs:{'data-e-what':'file',className:'btn btn-mini','data-e-action':'click:dbg_toggle'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-file icon-file '+oE.v3('Devl','Opts','file','?red')},children:[]}]},{tag:'a',attrs:{'data-e-what':'tag',className:'btn btn-mini','data-e-action':'click:dbg_toggle'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-chevron-left icon-chevron-left '+oE.v3('Devl','Opts','tag','?red')},children:[]}]},{tag:'a',attrs:{'data-e-what':'tag2',className:'btn btn-mini','data-e-action':'click:dbg_toggle'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-chevron-right icon-chevron-right '+oE.v3('Devl','Opts','tag2','?red')},children:[]}]},{tag:'a',attrs:{'data-e-what':'form',className:'btn btn-mini','data-e-action':'click:dbg_toggle'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-edit icon-edit '+oE.v3('Devl','Opts','form','?red')},children:[]}]},{tag:'a',attrs:{'data-e-what':'model',className:'btn btn-mini','data-e-action':'click:dbg_toggle'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-list-alt icon-list-alt '+oE.v3('Devl','Opts','model','?red')},children:[]}]}]}]},{tag:'div',attrs:{style:{textAlign:'center',color:'#FFF',letterSpacing:'5px',fontSize:'10px',height:'18px',paddingLeft:'4px',marginTop:'-3px'}},children:['EPIC']}]},['if',{set:oE.v3('Devl','Opts','model')},function(){return [{tag:'table',attrs:{width:'100%'},children:[{tag:'tr',attrs:{},children:[{tag:'td',attrs:{width:'20%',style:{backgroundColor:'#90C0FF',verticalAlign:'top',paddingTop:'75px',paddingBottom:'20px'}},children:oE.kids([['part',{part:'dbg_model',dynamic:'div'}]])},{tag:'td',attrs:{width:'100%',style:{verticalAlign:'top',position:'relative'}},children:oE.kids([['page',{}]])}]}]}]}],['if',{not_set:oE.v3('Devl','Opts','model')},function(){return oE.kids([['page',{}]])}]])}}},
+"BaseDevl":{preloaded:1,content:function(){return oE.kids([{tag:'h5',attrs:{},children:['I\'m an \'outer\' template']},['page',{}]])}},
+"bdevl":{preloaded:1,content:function(){return oE.kids([{tag:'style',attrs:{},children:m.trust(' .dbg-part { border: solid 8px #888; }\n.dbg-tag-error-box { border: solid 2px #C44; font-weight: bold;}\n.dbg-tag-error-msg { color: red; }\n.dbg-tag-box { border: solid 2px #44C; }\n.dbg-part-box { font-size: .5em;\n -webkit-box-shadow: 10px 10px 5px #888;\n padding: 5px 5px 5px 15px;\n width: 10px;\n height: 10px;\n z-index: 99999;\n}\n.red { color: red; }\n.btn-group { background-color: #CCC; border-radius: 6px; }\n.dbg-toolbar .btn { padding: 6px 2px; }\n.dbg-toolbar:hover {\n top: -7px;\n}\n.dbg-toolbar {\n overflow-y: hidden;\n top: -46px;\n transition-property: top;\n transition-duration: .5s;\n} ')},{tag:'div',attrs:{style:{position:'fixed',zIndex:'9999',backgroundColor:'#484848',fontSize:'10px',padding:'10px 10px 0 10px',right:'0'},className:'dbg-toolbar'},children:[{tag:'div',attrs:{className:'btn-toolbar'},children:[{tag:'div',attrs:{className:'btn-group'},children:[{tag:'a',attrs:{'data-e-what':'file',className:'btn btn-mini','data-e-action':'click:dbg_refresh'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-repeat icon-repeat'},children:[]}]},{tag:'a',attrs:{'data-e-what':'file',className:'btn btn-mini','data-e-action':'click:dbg_toggle'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-file icon-file '+oE.v3('Devl','Opts','file','?red')},children:[]}]},{tag:'a',attrs:{'data-e-what':'tag',className:'btn btn-mini','data-e-action':'click:dbg_toggle'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-chevron-left icon-chevron-left '+oE.v3('Devl','Opts','tag','?red')},children:[]}]},{tag:'a',attrs:{'data-e-what':'tag2',className:'btn btn-mini','data-e-action':'click:dbg_toggle'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-chevron-right icon-chevron-right '+oE.v3('Devl','Opts','tag2','?red')},children:[]}]},{tag:'a',attrs:{'data-e-what':'form',className:'btn btn-mini','data-e-action':'click:dbg_toggle'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-edit icon-edit '+oE.v3('Devl','Opts','form','?red')},children:[]}]},{tag:'a',attrs:{'data-e-what':'model',className:'btn btn-mini','data-e-action':'click:dbg_toggle'},children:[{tag:'span',attrs:{className:'glyphicon glyphicon-list-alt icon-list-alt '+oE.v3('Devl','Opts','model','?red')},children:[]}]}]}]},{tag:'div',attrs:{style:{textAlign:'center',color:'#FFF',letterSpacing:'5px',fontSize:'10px',height:'18px',paddingLeft:'4px',marginTop:'-3px'}},children:['EPIC']}]},['if',{set:oE.v3('Devl','Opts','model')},function(){return [{tag:'table',attrs:{width:'100%'},children:[{tag:'tr',attrs:{},children:[{tag:'td',attrs:{width:'20%',style:{backgroundColor:'#90C0FF',verticalAlign:'top',paddingTop:'75px',paddingBottom:'20px'}},children:oE.kids([['part',{part:'dbg_model',dynamic:'div'}]])},{tag:'td',attrs:{width:'100%',style:{verticalAlign:'top',position:'relative'}},children:oE.kids([['page',{}]])}]}]}]}],['if',{not_set:oE.v3('Devl','Opts','model')},function(){return oE.kids([['page',{}]])}]])}}},
 Page: {
 },
 Part: {
-"dbg_model":{content:function(){return [{tag:'style',attrs:{},children:m.trust(' ul.dbg-model.nav, ul.dbg-model.nav ul { margin-bottom: 0; border: 0; }\nul.dbg-model.nav li a, ul.dbg-model.nav ul li a { padding: 0; border: 0; }\nul.dbg-model.nav ul li a { padding-left: 15px; } ')},{tag:'ul',attrs:{className:'dbg-model nav nav-tabs nav-stacked'},children:oE.kids([['foreach',{table:'Devl/Model'},function(){return [{tag:'li',attrs:{},children:oE.kids([{tag:'a',attrs:{'data-e-name':oE.v2('Model','name'),'data-e-action':'click:dbg_open_model'},children:[' ['+oE.v2('Model','tables')+'] '+oE.v2('Model','name')+' ('+oE.v2('Model','inst')+') ']},['if',{set:oE.v2('Model','is_open')},function(){return [{tag:'ul',attrs:{className:'nav nav-tabs nav-stacked'},children:oE.kids([['foreach',{table:'Model/Table'},function(){return [{tag:'li',attrs:{},children:oE.kids([{tag:'a',attrs:{'data-e-name':oE.v2('Table','name'),'data-e-action':'click:dbg_open_table'},children:[{tag:'span',attrs:{title:oE.v2('Table','cols')},children:['['+oE.v2('Table','rows')+'] '+oE.v2('Table','name')]}]},['if',{set:oE.v2('Table','is_open')},function(){return [{tag:'table',attrs:{border:'1',style:{fontSize:'8pt',lineHeight:'1'}},children:[{tag:'tbody',attrs:{},children:oE.kids([{tag:'tr',attrs:{},children:[{tag:'th',attrs:{},children:oE.kids([['if',{set:oE.v2('Table','by_col')},function(){return [{tag:'a',attrs:{'data-e-action':'click:dbg_table_by_row'},children:[' Row ']}]}],['if',{not_set:oE.v2('Table','by_col')},function(){return oE.kids([' Column ',['if',{set:oE.v2('Table','is_sub')},function(){return [{tag:'a',attrs:{style:{padding:'0'},'data-e-action':'click:dbg_close_subtable'},children:['^']}]}]])}]])},{tag:'th',attrs:{},children:['T']},{tag:'th',attrs:{},children:oE.kids([['if',{val:oE.v2('Table','rows'),eq:'1'},function(){return [' Value ']}],['if',{val:oE.v2('Table','rows'),ne:'1'},function(){return oE.kids([['if',{set:oE.v2('Table','by_col')},function(){return ['   '+oE.v2('Table','curr_col')+'   ']}],['if',{not_set:oE.v2('Table','by_col')},function(){return [{tag:'a',attrs:{'data-e-action':'click:dbg_table_left'},children:['<']},'   Value (row '+oE.v2('Table','row_cnt')+')   ',{tag:'a',attrs:{'data-e-action':'click:dbg_table_right'},children:['>']}]}]])}]])}]},['if',{not_set:oE.v2('Table','by_col')},function(){return oE.kids([['foreach',{table:'Table/Cols'},function(){return [{tag:'tr',attrs:{},children:oE.kids([{tag:'th',attrs:{},children:oE.kids([['if',{val:oE.v2('Table','rows'),eq:'1'},function(){return [' '+oE.v2('Cols','col')+' ']}],['if',{val:oE.v2('Table','rows'),ne:'1'},function(){return [{tag:'a',attrs:{'data-e-col':oE.v2('Cols','col'),'data-e-action':'click:dbg_table_col_set'},children:[oE.v2('Cols','col')]}]}]])},['if',{set:oE.v2('Cols','val')},function(){return [{tag:'td',attrs:{style:{color:'green'}},children:[oE.v2('Cols','type','1')]}]}],['if',{not_set:oE.v2('Cols','val')},function(){return [{tag:'td',attrs:{style:{color:'red'}},children:[oE.v2('Cols','type','1')]}]}],{tag:'td',attrs:{title:oE.v2('Cols','type')},children:oE.kids([['if',{val:oE.v2('Cols','type'),eq:'object'},function(){return oE.kids([['if',{not_set:oE.v2('Cols','len')},function(){return [' Table [ empty ]']}],['if',{set:oE.v2('Cols','len')},function(){return oE.kids([{tag:'a',attrs:{'data-e-name':oE.v2('Cols','col'),style:{padding:'0'},'data-e-action':'click:dbg_open_subtable'},children:['Table']},' ['+oE.v2('Cols','len')+' row',['if',{val:oE.v2('Cols','len'),ne:'1'},function(){return ['s']}],'] '])}]])}],['if',{val:oE.v2('Cols','type'),ne:'object'},function(){return [' '+oE.v2('Cols','val')+' ']}]])}])}]}]])}],['if',{set:oE.v2('Table','by_col')},function(){return oE.kids([['foreach',{table:'Table/Rows'},function(){return [{tag:'tr',attrs:{},children:oE.kids([{tag:'th',attrs:{},children:[oE.v2('Rows','row')]},['if',{set:oE.v2('Rows','val')},function(){return [{tag:'td',attrs:{style:{color:'green'}},children:[oE.v2('Rows','type','1')]}]}],['if',{not_set:oE.v2('Rows','val')},function(){return [{tag:'td',attrs:{style:{color:'red'}},children:[oE.v2('Rows','type','1')]}]}],{tag:'td',attrs:{title:oE.v2('Rows','type')},children:oE.kids([['if',{val:oE.v2('Rows','type'),eq:'object'},function(){return oE.kids(['Table [ ',['if',{set:oE.v2('Rows','len')},function(){return oE.kids([oE.v2('Rows','len')+' row',['if',{val:oE.v2('Rows','len'),ne:'1'},function(){return ['s']}]])}],['if',{not_set:oE.v2('Rows','len')},function(){return ['empty']}],' ]'])}],['if',{val:oE.v2('Rows','type'),ne:'object'},function(){return [' '+oE.v2('Rows','val')+' ']}]])}])}]}]])}]])}]}]}]])}]}]])}]}]])}]}]])}]}}}};
+"dbg_model":{preloaded:1,content:function(){return [{tag:'style',attrs:{},children:m.trust(' ul.dbg-model.nav, ul.dbg-model.nav ul { margin-bottom: 0; border: 0; }\nul.dbg-model.nav li a, ul.dbg-model.nav ul li a { padding: 0; border: 0; }\nul.dbg-model.nav ul li a { padding-left: 15px; } ')},{tag:'ul',attrs:{className:'dbg-model nav nav-tabs nav-stacked'},children:oE.kids([['foreach',{table:'Devl/Model'},function(){return [{tag:'li',attrs:{},children:oE.kids([{tag:'a',attrs:{'data-e-name':oE.v2('Model','name'),'data-e-action':'click:dbg_open_model'},children:[' ['+oE.v2('Model','tables')+'] '+oE.v2('Model','name')+' ('+oE.v2('Model','inst')+') ']},['if',{set:oE.v2('Model','is_open')},function(){return [{tag:'ul',attrs:{className:'nav nav-tabs nav-stacked'},children:oE.kids([['foreach',{table:'Model/Table'},function(){return [{tag:'li',attrs:{},children:oE.kids([{tag:'a',attrs:{'data-e-name':oE.v2('Table','name'),'data-e-action':'click:dbg_open_table'},children:[{tag:'span',attrs:{title:oE.v2('Table','cols')},children:['['+oE.v2('Table','rows')+'] '+oE.v2('Table','name')]}]},['if',{set:oE.v2('Table','is_open')},function(){return [{tag:'table',attrs:{border:'1',style:{fontSize:'8pt',lineHeight:'1'}},children:[{tag:'tbody',attrs:{},children:oE.kids([{tag:'tr',attrs:{},children:[{tag:'th',attrs:{},children:oE.kids([['if',{set:oE.v2('Table','by_col')},function(){return [{tag:'a',attrs:{'data-e-action':'click:dbg_table_by_row'},children:[' Row ']}]}],['if',{not_set:oE.v2('Table','by_col')},function(){return oE.kids([' Column ',['if',{set:oE.v2('Table','is_sub')},function(){return [{tag:'a',attrs:{style:{padding:'0'},'data-e-action':'click:dbg_close_subtable'},children:['^']}]}]])}]])},{tag:'th',attrs:{},children:['T']},{tag:'th',attrs:{},children:oE.kids([['if',{val:oE.v2('Table','rows'),eq:'1'},function(){return [' Value ']}],['if',{val:oE.v2('Table','rows'),ne:'1'},function(){return oE.kids([['if',{set:oE.v2('Table','by_col')},function(){return ['   '+oE.v2('Table','curr_col')+'   ']}],['if',{not_set:oE.v2('Table','by_col')},function(){return [{tag:'a',attrs:{'data-e-action':'click:dbg_table_left'},children:['<']},'   Value (row '+oE.v2('Table','row_cnt')+')   ',{tag:'a',attrs:{'data-e-action':'click:dbg_table_right'},children:['>']}]}]])}]])}]},['if',{not_set:oE.v2('Table','by_col')},function(){return oE.kids([['foreach',{table:'Table/Cols'},function(){return [{tag:'tr',attrs:{},children:oE.kids([{tag:'th',attrs:{},children:oE.kids([['if',{val:oE.v2('Table','rows'),eq:'1'},function(){return [' '+oE.v2('Cols','col')+' ']}],['if',{val:oE.v2('Table','rows'),ne:'1'},function(){return [{tag:'a',attrs:{'data-e-col':oE.v2('Cols','col'),'data-e-action':'click:dbg_table_col_set'},children:[oE.v2('Cols','col')]}]}]])},['if',{set:oE.v2('Cols','val')},function(){return [{tag:'td',attrs:{style:{color:'green'}},children:[oE.v2('Cols','type','1')]}]}],['if',{not_set:oE.v2('Cols','val')},function(){return [{tag:'td',attrs:{style:{color:'red'}},children:[oE.v2('Cols','type','1')]}]}],{tag:'td',attrs:{title:oE.v2('Cols','type')},children:oE.kids([['if',{val:oE.v2('Cols','type'),eq:'object'},function(){return oE.kids([['if',{not_set:oE.v2('Cols','len')},function(){return [' Table [ empty ]']}],['if',{set:oE.v2('Cols','len')},function(){return oE.kids([{tag:'a',attrs:{'data-e-name':oE.v2('Cols','col'),style:{padding:'0'},'data-e-action':'click:dbg_open_subtable'},children:['Table']},' ['+oE.v2('Cols','len')+' row',['if',{val:oE.v2('Cols','len'),ne:'1'},function(){return ['s']}],'] '])}]])}],['if',{val:oE.v2('Cols','type'),ne:'object'},function(){return [' '+oE.v2('Cols','val')+' ']}]])}])}]}]])}],['if',{set:oE.v2('Table','by_col')},function(){return oE.kids([['foreach',{table:'Table/Rows'},function(){return [{tag:'tr',attrs:{},children:oE.kids([{tag:'th',attrs:{},children:[oE.v2('Rows','row')]},['if',{set:oE.v2('Rows','val')},function(){return [{tag:'td',attrs:{style:{color:'green'}},children:[oE.v2('Rows','type','1')]}]}],['if',{not_set:oE.v2('Rows','val')},function(){return [{tag:'td',attrs:{style:{color:'red'}},children:[oE.v2('Rows','type','1')]}]}],{tag:'td',attrs:{title:oE.v2('Rows','type')},children:oE.kids([['if',{val:oE.v2('Rows','type'),eq:'object'},function(){return oE.kids(['Table [ ',['if',{set:oE.v2('Rows','len')},function(){return oE.kids([oE.v2('Rows','len')+' row',['if',{val:oE.v2('Rows','len'),ne:'1'},function(){return ['s']}]])}],['if',{not_set:oE.v2('Rows','len')},function(){return ['empty']}],' ]'])}],['if',{val:oE.v2('Rows','type'),ne:'object'},function(){return [' '+oE.v2('Rows','val')+' ']}]])}])}]}]])}]])}]}]}]])}]}]])}]}]])}]}]])}]}}}};
 

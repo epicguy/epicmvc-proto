@@ -97,7 +97,7 @@ FindAttrVal= (i, a) ->
 	while i< a.length
 		break unless (p= a[ i++].trim()) is '' # Skip to next non-white part
 	if p isnt '='
-		return [true, start, i- 1, nm, '=', '"', [false]] if nm in [ 'selected', 'autofocus'] # Special case, simulate parts list w/just false
+		return [true, start, i- 1, nm, '=', '"', ['false']] if nm in [ 'selected', 'autofocus'] # Special case, simulate parts list w/just false
 		return ['equals', start, i, nm] # No equal sign? Error 'equals'
 	# Look for open-quote
 	start= i

@@ -59,7 +59,7 @@ class MockLoadStrategy
 
 doObj= (obj) ->
 	_log2 JSON.stringify {obj}
-	"{content:function(){#{obj.content}}}"
+	"{preloaded:1,content:function(){#{obj.content}}}"
 
 doIt= (dev_dir,pkg_nm) ->
 	f= 'doIt'

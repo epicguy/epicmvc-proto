@@ -14,26 +14,26 @@ class View$Base extends E.ModelJS
 		@start= false #A global timestamp for run:
 	nest_up: (who) ->
 		f= 'BM/View.nest_up:'+ who
-		#E.log f, @defer_it_cnt
+		E.log f, {@defer_it_cnt}
 		if @defer_it_cnt is 0
 			BLOWUP() if @in_run
 			@in_run= true
 			@start= new Date().getTime() #%#
-			#E.log f, 'START RUN', @frames, @start
+			E.log f+ 'START RUN', {@frames, @start}
 			@defer_it= promise: null, resolve: null # Old style Promise.deferred()
 			@defer_it.promise= new Promise (resolve, reject)=> @defer_it.resolve= resolve
 		@defer_it_cnt++
 	nest_dn: (who) ->
 		f= 'BM/View.nest_dn:'+ who
-		#E.log f, @defer_it_cnt
+		E.log f, {@defer_it_cnt}
 		@defer_it_cnt-- if @defer_it_cnt > 0
 		if @defer_it_cnt is 0
-			E.log f, 'END RUN', @defer_content, new Date().getTime()- @start
+			E.log f+ 'END RUN', {@defer_content, date_diff: new Date().getTime()- @start}
 			@in_run= false
-			#E.log f, 'RESOLVE', @modal, @defer_content
+			E.log f+ 'RESOLVE', {@modal, @defer_content}
 			@defer_it.resolve [@modal, @defer_content]
 	run: ->
-		f= 'BM/View.run'
+		f= 'BM/View.run:'
 		who= 'R'
 		[flow, track, step]= E.App().getStepPath()
 		if modal= E.appFindAttr flow, track, step,  'modal'
@@ -48,7 +48,7 @@ class View$Base extends E.ModelJS
 		@resetInfo()
 		@nest_up who
 		@defer_content= @kids [['page',{}]]
-		#E.log f, 'after @kids, @defer_content=', @defer_content
+		E.log f+ 'after @kids', {@defer_content}
 		@nest_dn who
 		@defer_it.promise
 	resetInfo: () ->
@@ -58,30 +58,30 @@ class View$Base extends E.ModelJS
 		@P= [{}] # 'Parts' Push p:attrs with each part, then pop; (top level is row w/o attrs)
 		return
 	saveInfo: () ->
-		f= 'BM/View.saveInfo'
+		f= 'BM/View.saveInfo:'
 		saved_info= E.merge {}, I: @I, P: @P
-		#E.log f, saved_info
+		E.log f, {saved_info}
 		saved_info
 	restoreInfo: (saved_info) ->
-		f= 'BM/View.restoreInfo'
-		#E.log f, 'saved_info', saved_info
+		f= 'BM/View.restoreInfo:'
+		E.log f, {saved_info}
 		@resetInfo()
 		@P= saved_info.P
 		@I= saved_info.I
 		# Rebuild 'R'
 		@R[ nm]= @_getMyRow @I[ nm] for nm of @I when nm not of @R
-		#E.log f, 'restored:P,I,R', @P, @I, @R
+		E.log f+ 'restored:', {@P, @I, @R}
 		return
 	_getMyRow: (I) ->
-		f= 'BM/View._getMyRow'
-		#E.log f, I
+		f= 'BM/View._getMyRow:'
+		E.log f, {I}
 		return (E[ I.m] I.o)[ I.c] if I.m? # I'm a top level table, get from model
 		@R[ I.p]= @_getMyRow @I[ I.p] if I.p not of @R # Load parent if needed
 		return @R[ I.p][ I.o][ I.c] if I.p and I.p of @R # Parent already loaded, return it's row
 		# TODO WHAT HAPPENS WHEN THE IF ABOVE FAILS? WHAT IS RETURNED?
 	getTable: (nm) ->
 		f= 'BM/View.getTable:'+ nm
-		#E.log f, @P if nm is 'Part'
+		E.log f, {@P} if nm is 'Part'
 		switch nm
 			when 'If' then [@N]
 			when 'Part'
@@ -94,20 +94,20 @@ class View$Base extends E.ModelJS
 				[] # Return consitent value so production acts like dev, even if caller is wrong
 	invalidateTables: (view_nm, tbl_nms, deleted_tbl_nms) ->
 		return unless @did_run and deleted_tbl_nms.length
-		f= 'BM/View.invalidateTables'
-		#E.log f, view_nm, tbl_nms, deleted_tbl_nms #, (if E.inClick then 'IN')
+		f= 'BM/View.invalidateTables:'
+		E.log f, {view_nm, tbl_nms, deleted_tbl_nms} #, (if E.inClick then 'IN')
 		m.startComputation()
 		m.endComputation()
 		return
 	handleIt: (content) =>
-		f= 'BM/View.handleIt'
-		#E.log f, 'top',( typeof content) #, content
+		f= 'BM/View.handleIt:'
+		E.log f+ 'top', typeof_content: ( typeof content) #, content
 		content= content() if typeof content is 'function'
-		#E.log f, 'bottom',( typeof content), content
+		E.log f+ 'bottom', {content}
 		content
 	formatFromSpec: (val, spec, custom_spec) ->
-		f= 'BM/View.formatFromSpec'
-		#E.log f, val, spec, custom_spec
+		f= 'BM/View.formatFromSpec:'
+		E.log f, {val, spec, custom_spec}
 		switch spec
 			when ''
 				if custom_spec
@@ -144,31 +144,31 @@ class View$Base extends E.ModelJS
 		if format_spec? then @formatFromSpec ans, format_spec, custom_spec else ans
 	# When attrs may have leading '?' for special treatment
 	weed: (attrs) ->
-		f= 'BM/View.weed'
+		f= 'BM/View.weed:'
 		clean_attrs= {}
 		for nm,val of attrs
 			if nm[ 0] isnt '?'
 				clean_attrs[ nm]= val
 			else
 				clean_attrs[ nm.slice 1]= val if val
-		#E.log f, clean_attrs
+		E.log f, {clean_attrs}
 		clean_attrs
 	kids: (kids) ->
-		f= 'BM/View.kids'
+		f= 'BM/View.kids:'
 		who= 'K'
-		#E.log f, 'top', kids.length
+		E.log f+ 'top', kids_length: kids.length
 		# Build a new array, with either a copy if 'object' or 'text', else array is T_ funcs w/promises
 		out= []
 		for kid,ix in kids
-			#E.log f, new Date().getTime()- @start
+			E.log f, date_diff: new Date().getTime()- @start
 			if 'A' is E.type_oau kid # Arrays are the parser's indication of an epic tag
 				out.push ix #['TBD',kid[ 0],kid[ 1]] # Place holder in 'out' for later population
 				ans= @['T_'+ kid[ 0]] kid[ 1], kid[ 2]
-				#E.log f, 'CHECK FOR THEN', (if ans?.then then 'YES' else 'NO'), ans
+				E.log f+ 'CHECK FOR THEN', {then: (if ans?.then then 'YES' else 'NO'), ans}
 				if ans?.then # A promise eh?
 					@nest_up who
 					do (ix) => ans.then (result) =>
-						#E.log f, 'THEN', result
+						E.log f+ 'THEN', {result}
 						out[ ix]= result; @nest_dn who
 					, (err)=>
 						console.error 'kids', err
@@ -180,15 +180,15 @@ class View$Base extends E.ModelJS
 
 	# Process data-e-any="value" into hash of 'any: value'
 	loadPartAttrs: (attrs,full) ->
-		f= 'BM/View.loadPartAttrs'
+		f= 'BM/View.loadPartAttrs:'
 		result= {}
 		for attr,val of attrs
 			continue if 'data-e-' isnt attr.slice 0, 7
 			result[ if full then attr else attr.slice 7]= val
 		result
 	T_page: ( attrs) =>
-		f= 'BM/View.T_page'
-		#E.log f, attrs, new Date().getTime()- @start
+		f= 'BM/View.T_page:'
+		E.log f, {attrs, date_diff: new Date().getTime()- @start}
 		if @frame_inx< @frames.length
 			d_load= E.oLoader.d_layout name= @frames[ @frame_inx++]
 			view= (if @frame_inx< @frames.length then 'Frame' else 'Layout')+ '/'+ name
@@ -200,30 +200,30 @@ class View$Base extends E.ModelJS
 	T_part: ( attrs) ->
 		view= attrs.part
 		f= 'BM/View.T_part:'+ view
-		#E.log f, new Date().getTime()- @start
+		E.log f, date_diff: new Date().getTime()- @start
 		d_load= E.oLoader.d_part view
 		@piece_handle 'Part/'+ view, attrs, d_load, true
 
 	# This step, may be happen in a .then, or immeadiate
 	piece_handle: (view, attrs, obj, is_part) ->
-		f= 'BM/View.piece_handle'
-		#E.log f, view, obj, "typeof content:", typeof obj.content, " has then?", (if obj?.then then 'yes' else 'no')
+		f= 'BM/View.piece_handle:'
+		E.log f, {view, obj, typeof_content: typeof obj.content, has_then: (if obj?.then then 'yes' else 'no')}
 		return @D_piece view, attrs, obj, is_part if obj?.then # Was a thenable
-		#E.log f, view #, new Date().getTime()- @start #, obj
-		content= obj
-		#E.log f, 'AFTER ASSIGN', view, obj if obj is false
+		E.log f, {view} #, new Date().getTime()- @start #, obj
+		content= obj.content # TODO WHEN WE WANT TO HAVE JUST THE CONTENT RETURNED IN PARSEFILE THEN DROP THE .content
+		E.log f+ 'AFTER ASSIGN', {view, obj} if obj is false
 		saved_info= @saveInfo()
 		@P.push @loadPartAttrs attrs
 		content= @handleIt content
 		@restoreInfo saved_info
 		content
 	D_piece: (view, attrs, d_load, is_part) ->
-		f= 'BM/View.D_piece'
+		f= 'BM/View.D_piece:'
 		who= 'P'
 		@nest_up who+ view
 		saved_info= @saveInfo()
 		d_result= d_load.then (obj) =>
-			#E.log f, 'THEN', obj
+			E.log f+ 'THEN', {obj}
 			try
 				BLOWUP() if obj?.then # THIS WOULD CAUSE A LOOP BACK TO  US
 				@restoreInfo saved_info
@@ -291,8 +291,8 @@ class View$Base extends E.ModelJS
 		[tbl, rh_alias]
 
 	T_foreach: (attrs, content_f) ->
-		f= 'BM/View.T_foreach'
-		#E.log f, attrs
+		f= 'BM/View.T_foreach:'
+		E.log f, {attrs}
 		[tbl, rh_alias]= @_accessModelTable attrs.table, attrs.alias
 		return '' if tbl.length is 0 # No rows means no output
 		result= []
@@ -306,15 +306,15 @@ class View$Base extends E.ModelJS
 		delete @R[ rh_alias]
 		return result
 	T_fist: (attrs, content_f) -> # Could have children, or a part=, or default to fist_default, (or E.fistDef[nm].part ?)
-		f= 'BM/View.T_fist'
-		E.log f, attrs, content_f
+		f= 'BM/View.T_fist:'
+		E.log f, {attrs, content_f}
 		fist= E.fistDef[ attrs.fist]
 		model= fist.event ? 'Fist'
 		table= attrs.fist+ if attrs.row?.length then ':'+ attrs.row else ''
 		subTable= attrs.via ? fist.via ? 'Control'
 		masterAlias= '__Fist'
 		[tbl, rh_alias]= @_accessModelTable model+ '/'+ table, masterAlias
-		E.log f, 'tbl,rh_alias (master)', tbl, rh_alias
+		E.log f, {tbl, rh_alias}
 		@R[ rh_alias]= tbl[ 0]
 		@I[ rh_alias].c= 0 # For save info
 		rh_1= rh_alias
@@ -332,12 +332,12 @@ class View$Base extends E.ModelJS
 		ans
 	# Referenced by parser as: oE.ex
 	ex: (el, isInit, ctx) => # Mithril config function
-		f= 'BM/View.ex'
+		f= 'BM/View.ex:'
 		attrs= el.attributes
 		for ix in [0...attrs.length] when 'data-ex-' is attrs[ ix].name.slice 0, 8
 			[d,e,nm,p1,p2]= attrs[ ix].name.split '-'
 			val= attrs[ ix].value
-			E.log f, attrs[ ix].name, val, p1, p2
+			E.log f, {name: attrs[ ix].name, val, p1, p2}
 			E.option.ex1 nm, attrs[ ix].name #%#
 			E['ex$'+ nm] el, isInit, ctx, val, p1, p2
 

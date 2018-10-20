@@ -48,12 +48,19 @@
     View$Base.prototype.nest_up = function(who) {
       var f;
       f = 'BM/View.nest_up:' + who;
+      E.log(f, {
+        defer_it_cnt: this.defer_it_cnt
+      });
       if (this.defer_it_cnt === 0) {
         if (this.in_run) {
           BLOWUP();
         }
         this.in_run = true;
         this.start = new Date().getTime();
+        E.log(f + 'START RUN', {
+          frames: this.frames,
+          start: this.start
+        });
         this.defer_it = {
           promise: null,
           resolve: null
@@ -70,19 +77,29 @@
     View$Base.prototype.nest_dn = function(who) {
       var f;
       f = 'BM/View.nest_dn:' + who;
+      E.log(f, {
+        defer_it_cnt: this.defer_it_cnt
+      });
       if (this.defer_it_cnt > 0) {
         this.defer_it_cnt--;
       }
       if (this.defer_it_cnt === 0) {
-        E.log(f, 'END RUN', this.defer_content, new Date().getTime() - this.start);
+        E.log(f + 'END RUN', {
+          defer_content: this.defer_content,
+          date_diff: new Date().getTime() - this.start
+        });
         this.in_run = false;
+        E.log(f + 'RESOLVE', {
+          modal: this.modal,
+          defer_content: this.defer_content
+        });
         return this.defer_it.resolve([this.modal, this.defer_content]);
       }
     };
 
     View$Base.prototype.run = function() {
       var f, flow, layout, modal, ref, ref1, ref2, step, track, who;
-      f = 'BM/View.run';
+      f = 'BM/View.run:';
       who = 'R';
       ref = E.App().getStepPath(), flow = ref[0], track = ref[1], step = ref[2];
       if (modal = E.appFindAttr(flow, track, step, 'modal')) {
@@ -98,6 +115,9 @@
       this.resetInfo();
       this.nest_up(who);
       this.defer_content = this.kids([['page', {}]]);
+      E.log(f + 'after @kids', {
+        defer_content: this.defer_content
+      });
       this.nest_dn(who);
       return this.defer_it.promise;
     };
@@ -110,17 +130,23 @@
 
     View$Base.prototype.saveInfo = function() {
       var f, saved_info;
-      f = 'BM/View.saveInfo';
+      f = 'BM/View.saveInfo:';
       saved_info = E.merge({}, {
         I: this.I,
         P: this.P
+      });
+      E.log(f, {
+        saved_info: saved_info
       });
       return saved_info;
     };
 
     View$Base.prototype.restoreInfo = function(saved_info) {
       var f, nm;
-      f = 'BM/View.restoreInfo';
+      f = 'BM/View.restoreInfo:';
+      E.log(f, {
+        saved_info: saved_info
+      });
       this.resetInfo();
       this.P = saved_info.P;
       this.I = saved_info.I;
@@ -129,11 +155,19 @@
           this.R[nm] = this._getMyRow(this.I[nm]);
         }
       }
+      E.log(f + 'restored:', {
+        P: this.P,
+        I: this.I,
+        R: this.R
+      });
     };
 
     View$Base.prototype._getMyRow = function(I) {
       var f;
-      f = 'BM/View._getMyRow';
+      f = 'BM/View._getMyRow:';
+      E.log(f, {
+        I: I
+      });
       if (I.m != null) {
         return (E[I.m](I.o))[I.c];
       }
@@ -148,6 +182,11 @@
     View$Base.prototype.getTable = function(nm) {
       var f, i, len, p, rVal, ref;
       f = 'BM/View.getTable:' + nm;
+      if (nm === 'Part') {
+        E.log(f, {
+          P: this.P
+        });
+      }
       switch (nm) {
         case 'If':
           return [this.N];
@@ -170,23 +209,39 @@
       if (!(this.did_run && deleted_tbl_nms.length)) {
         return;
       }
-      f = 'BM/View.invalidateTables';
+      f = 'BM/View.invalidateTables:';
+      E.log(f, {
+        view_nm: view_nm,
+        tbl_nms: tbl_nms,
+        deleted_tbl_nms: deleted_tbl_nms
+      });
       m.startComputation();
       m.endComputation();
     };
 
     View$Base.prototype.handleIt = function(content) {
       var f;
-      f = 'BM/View.handleIt';
+      f = 'BM/View.handleIt:';
+      E.log(f + 'top', {
+        typeof_content: typeof content
+      });
       if (typeof content === 'function') {
         content = content();
       }
+      E.log(f + 'bottom', {
+        content: content
+      });
       return content;
     };
 
     View$Base.prototype.formatFromSpec = function(val, spec, custom_spec) {
       var f, left, ref, right, str;
-      f = 'BM/View.formatFromSpec';
+      f = 'BM/View.formatFromSpec:';
+      E.log(f, {
+        val: val,
+        spec: spec,
+        custom_spec: custom_spec
+      });
       switch (spec) {
         case '':
           if (custom_spec) {
@@ -252,7 +307,7 @@
 
     View$Base.prototype.weed = function(attrs) {
       var clean_attrs, f, nm, val;
-      f = 'BM/View.weed';
+      f = 'BM/View.weed:';
       clean_attrs = {};
       for (nm in attrs) {
         val = attrs[nm];
@@ -264,24 +319,40 @@
           }
         }
       }
+      E.log(f, {
+        clean_attrs: clean_attrs
+      });
       return clean_attrs;
     };
 
     View$Base.prototype.kids = function(kids) {
       var ans, f, i, ix, kid, len, out, who;
-      f = 'BM/View.kids';
+      f = 'BM/View.kids:';
       who = 'K';
+      E.log(f + 'top', {
+        kids_length: kids.length
+      });
       out = [];
       for (ix = i = 0, len = kids.length; i < len; ix = ++i) {
         kid = kids[ix];
+        E.log(f, {
+          date_diff: new Date().getTime() - this.start
+        });
         if ('A' === E.type_oau(kid)) {
           out.push(ix);
           ans = this['T_' + kid[0]](kid[1], kid[2]);
+          E.log(f + 'CHECK FOR THEN', {
+            then: ((ans != null ? ans.then : void 0) ? 'YES' : 'NO'),
+            ans: ans
+          });
           if (ans != null ? ans.then : void 0) {
             this.nest_up(who);
             (function(_this) {
               return (function(ix) {
                 return ans.then(function(result) {
+                  E.log(f + 'THEN', {
+                    result: result
+                  });
                   out[ix] = result;
                   return _this.nest_dn(who);
                 }, function(err) {
@@ -303,7 +374,7 @@
 
     View$Base.prototype.loadPartAttrs = function(attrs, full) {
       var attr, f, result, val;
-      f = 'BM/View.loadPartAttrs';
+      f = 'BM/View.loadPartAttrs:';
       result = {};
       for (attr in attrs) {
         val = attrs[attr];
@@ -317,7 +388,11 @@
 
     View$Base.prototype.T_page = function(attrs) {
       var d_load, f, name, view;
-      f = 'BM/View.T_page';
+      f = 'BM/View.T_page:';
+      E.log(f, {
+        attrs: attrs,
+        date_diff: new Date().getTime() - this.start
+      });
       if (this.frame_inx < this.frames.length) {
         d_load = E.oLoader.d_layout(name = this.frames[this.frame_inx++]);
         view = (this.frame_inx < this.frames.length ? 'Frame' : 'Layout') + '/' + name;
@@ -332,17 +407,35 @@
       var d_load, f, view;
       view = attrs.part;
       f = 'BM/View.T_part:' + view;
+      E.log(f, {
+        date_diff: new Date().getTime() - this.start
+      });
       d_load = E.oLoader.d_part(view);
       return this.piece_handle('Part/' + view, attrs, d_load, true);
     };
 
     View$Base.prototype.piece_handle = function(view, attrs, obj, is_part) {
       var content, f, saved_info;
-      f = 'BM/View.piece_handle';
+      f = 'BM/View.piece_handle:';
+      E.log(f, {
+        view: view,
+        obj: obj,
+        typeof_content: typeof obj.content,
+        has_then: ((obj != null ? obj.then : void 0) ? 'yes' : 'no')
+      });
       if (obj != null ? obj.then : void 0) {
         return this.D_piece(view, attrs, obj, is_part);
       }
-      content = obj;
+      E.log(f, {
+        view: view
+      });
+      content = obj.content;
+      if (obj === false) {
+        E.log(f + 'AFTER ASSIGN', {
+          view: view,
+          obj: obj
+        });
+      }
       saved_info = this.saveInfo();
       this.P.push(this.loadPartAttrs(attrs));
       content = this.handleIt(content);
@@ -352,13 +445,16 @@
 
     View$Base.prototype.D_piece = function(view, attrs, d_load, is_part) {
       var d_result, f, saved_info, who;
-      f = 'BM/View.D_piece';
+      f = 'BM/View.D_piece:';
       who = 'P';
       this.nest_up(who + view);
       saved_info = this.saveInfo();
       d_result = d_load.then((function(_this) {
         return function(obj) {
           var result;
+          E.log(f + 'THEN', {
+            obj: obj
+          });
           try {
             if (obj != null ? obj.then : void 0) {
               BLOWUP();
@@ -483,7 +579,10 @@
 
     View$Base.prototype.T_foreach = function(attrs, content_f) {
       var count, f, i, len, limit, ref, result, rh_alias, row, tbl;
-      f = 'BM/View.T_foreach';
+      f = 'BM/View.T_foreach:';
+      E.log(f, {
+        attrs: attrs
+      });
       ref = this._accessModelTable(attrs.table, attrs.alias), tbl = ref[0], rh_alias = ref[1];
       if (tbl.length === 0) {
         return '';
@@ -509,15 +608,21 @@
 
     View$Base.prototype.T_fist = function(attrs, content_f) {
       var ans, content, f, fist, foreach_attrs, masterAlias, model, part, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, rh_1, rh_alias, subTable, table, tbl;
-      f = 'BM/View.T_fist';
-      E.log(f, attrs, content_f);
+      f = 'BM/View.T_fist:';
+      E.log(f, {
+        attrs: attrs,
+        content_f: content_f
+      });
       fist = E.fistDef[attrs.fist];
       model = (ref = fist.event) != null ? ref : 'Fist';
       table = attrs.fist + (((ref1 = attrs.row) != null ? ref1.length : void 0) ? ':' + attrs.row : '');
       subTable = (ref2 = (ref3 = attrs.via) != null ? ref3 : fist.via) != null ? ref2 : 'Control';
       masterAlias = '__Fist';
       ref4 = this._accessModelTable(model + '/' + table, masterAlias), tbl = ref4[0], rh_alias = ref4[1];
-      E.log(f, 'tbl,rh_alias (master)', tbl, rh_alias);
+      E.log(f, {
+        tbl: tbl,
+        rh_alias: rh_alias
+      });
       this.R[rh_alias] = tbl[0];
       this.I[rh_alias].c = 0;
       rh_1 = rh_alias;
@@ -546,7 +651,7 @@
 
     View$Base.prototype.ex = function(el, isInit, ctx) {
       var attrs, d, e, f, i, ix, nm, p1, p2, ref, ref1, results, val;
-      f = 'BM/View.ex';
+      f = 'BM/View.ex:';
       attrs = el.attributes;
       results = [];
       for (ix = i = 0, ref = attrs.length; 0 <= ref ? i < ref : i > ref; ix = 0 <= ref ? ++i : --i) {
@@ -555,7 +660,12 @@
         }
         ref1 = attrs[ix].name.split('-'), d = ref1[0], e = ref1[1], nm = ref1[2], p1 = ref1[3], p2 = ref1[4];
         val = attrs[ix].value;
-        E.log(f, attrs[ix].name, val, p1, p2);
+        E.log(f, {
+          name: attrs[ix].name,
+          val: val,
+          p1: p1,
+          p2: p2
+        });
         E.option.ex1(nm, attrs[ix].name);
         results.push(E['ex$' + nm](el, isInit, ctx, val, p1, p2));
       }
