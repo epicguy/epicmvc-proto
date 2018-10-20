@@ -338,7 +338,7 @@ app= (undef) ->
 					master_data[ nm]= val for nm,val of ctx.r # We just polute the one object
 					master_issue.addObj ctx.i
 					master_message.addObj ctx.m
-				E.log f, 'd_doLeftSide: after model called:', {view_nm,view_act,master_data,ans,r:ctx.r}
+				E.log f+ 'd_doLeftSide: after model called:', {view_nm,view_act,master_data,ans,r:ctx.r}
 				return if ans?.then? then ans.then d_cb else d_cb ans
 
 		d_doRightSide= (action_node)->
@@ -358,7 +358,7 @@ app= (undef) ->
 					(matches= false; break) if master_data[k] isnt val
 				(next_node= choice; break) if matches
 			if next_node
-				#E.log f, 'd_doRightSide:', {next_node}
+				#E.log f+ 'd_doRightSide', {next_node}
 				return d_doActionNode next_node
 			return
 
@@ -417,7 +417,7 @@ class Issue
 		issue
 	add: (token, msgs) ->
 		f= 'EC/Issue.add:'+@t_view+':'+@t_action
-		E.log f, 'params:type/msgs', token, msgs
+		E.log f, {token, msgs}
 		switch typeof msgs
 			when 'undefined' then msgs= []
 			when 'string' then msgs= [ msgs ]
@@ -425,7 +425,7 @@ class Issue
 	addObj: (issue_obj) ->
 		f= 'EC/Issue.addObj:'+ @t_view+'#'+@t_action
 		return if typeof issue_obj isnt 'object' or not ('issue_list' of issue_obj)
-		#E.log f, 'issue_list', issue_obj.issue_list
+		#E.log f, issue_list: issue_obj.issue_list
 		for issue in issue_obj.issue_list
 			new_issue= E.merge {}, issue
 			new_issue.t_view?= @t_view
@@ -496,7 +496,7 @@ class ModelJS
 		E.merge {}, st # clone and return
 	invalidateTables: (tbl_nms,not_tbl_names) -> # Use true for all
 		f= 'EC/ModelJS.invalidateTables~'+ @view_nm
-		#E.log f, tbl_nms, not_tbl_names
+		#E.log f, {tbl_nms, not_tbl_names}
 		not_tbl_names?= []
 		tbl_nms= (nm for nm of @Table when not (nm in not_tbl_names)) if tbl_nms is true
 		deleted_tbl_nms= []

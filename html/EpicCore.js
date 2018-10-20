@@ -533,7 +533,7 @@
             master_issue.addObj(ctx.i);
             return master_message.addObj(ctx.m);
           };
-          E.log(f, 'd_doLeftSide: after model called:', {
+          E.log(f + 'd_doLeftSide: after model called:', {
             view_nm: view_nm,
             view_act: view_act,
             master_data: master_data,
@@ -715,7 +715,10 @@
     Issue.prototype.add = function(token, msgs) {
       var f;
       f = 'EC/Issue.add:' + this.t_view + ':' + this.t_action;
-      E.log(f, 'params:type/msgs', token, msgs);
+      E.log(f, {
+        token: token,
+        msgs: msgs
+      });
       switch (typeof msgs) {
         case 'undefined':
           msgs = [];

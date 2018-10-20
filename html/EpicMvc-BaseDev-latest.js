@@ -985,7 +985,9 @@ else if (typeof define === "function" && define.amd) define(function() {return m
         return m.endComputation();
       };
       more = function(action_result) {
-        E.log(f, 'cb:', action_result[0], action_result[1]);
+        E.log(f + ':cb', {
+          action_result: action_result
+        });
         E.App().setIssues(action_result[0]);
         E.App().setMessages(action_result[1]);
         return inAction = false;
@@ -1013,13 +1015,18 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       master_message = new Issue('App');
       master_data = merge({}, data);
       action_node = appFindAction(original_path, action_token);
-      E.log(f, 'got node:', action_node);
+      E.log(f + 'got node', {
+        action_node: action_node
+      });
       option.ca1(action_token, original_path, action_node);
       if (action_node == null) {
         return [master_issue, master_message];
       }
       d_doLeftSide = function(action_node) {
         var ans, copy_to, ctx, d_cb, fist, fist_model, i, is_macro, ix, l, len1, len2, mg, n, name, nms, p, r, ref1, ref2, ref3, ref4, ref5, val, view_act, view_nm, what;
+        E.log(f + 'd_doLeftSide:', {
+          action_node: action_node
+        });
         ref1 = ['fist', 'clear'];
         for (l = 0, len1 = ref1.length; l < len1; l++) {
           what = ref1[l];
@@ -1029,10 +1036,20 @@ else if (typeof define === "function" && define.amd) define(function() {return m
           option.ca4(action_token, original_path, action_node, what);
           fist = action_node[what];
           fist_model = (ref2 = E.fistDef[fist].event) != null ? ref2 : 'Fist';
+          E.log(f + 'd_doLeftSide', {
+            what: what,
+            fist: fist,
+            fist_model: fist_model,
+            master_data: master_data
+          });
           if (what === 'clear') {
             E[fist_model]().fistClear(fist, master_data.row);
           } else {
             E[fist_model]().fistValidate(r = {}, fist, master_data.row);
+            E.log(f + 'd_doLeftSide', {
+              what: what,
+              r: r
+            });
             E.merge(master_data, r);
             if (r.fist$success !== 'SUCCESS') {
               return;
@@ -1093,7 +1110,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
             master_issue.addObj(ctx.i);
             return master_message.addObj(ctx.m);
           };
-          E.log(f, 'd_doLeftSide: after model called:', {
+          E.log(f + 'd_doLeftSide: after model called:', {
             view_nm: view_nm,
             view_act: view_act,
             master_data: master_data,
@@ -1275,7 +1292,10 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     Issue.prototype.add = function(token, msgs) {
       var f;
       f = 'EC/Issue.add:' + this.t_view + ':' + this.t_action;
-      E.log(f, 'params:type/msgs', token, msgs);
+      E.log(f, {
+        token: token,
+        msgs: msgs
+      });
       switch (typeof msgs) {
         case 'undefined':
           msgs = [];
