@@ -7,7 +7,7 @@ module.exports = {
 	testRegex: '/__tests__/[^/]*(\\.js|\\.coffee|[^d]\\.ts)$',
 	moduleFileExtensions: ['js', 'json', 'node', 'coffee', 'ts'],
 	rootDir: process.cwd(),
-	roots: ['<rootDir>/html', '<rootDir>/scripts'],
+	roots: ['<rootDir>', '<rootDir>/scripts'],
 	collectCoverageFrom: ['html/**/*.js'],
 	timers: 'fakee',
 };
