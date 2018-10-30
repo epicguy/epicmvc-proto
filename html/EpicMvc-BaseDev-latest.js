@@ -1,4 +1,5 @@
-/* Copyright 2007-2017 by James Shelby, shelby (at:) dtsol.com; All rights reserved. */
+/* Copyright 2007-2018 by James Shelby, shelby (at:) dtsol.com; All rights reserved. */
+/* VERSION 2.4.1 */
 // JCS: Version http://lhorie.github.io/mithril/archive/v0.2.0/
 
 var m = (function app(window, undefined) {
