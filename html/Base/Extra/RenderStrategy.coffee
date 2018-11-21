@@ -10,6 +10,7 @@ ESCAPE_KEY= 27
 # Strategy(s) for rendering content
 class RenderStrategy$Base
 	constructor: () ->
+		@hash_prefix= '#!/'
 		@very_first= true
 		@was_popped= false
 		@was_modal= false
@@ -118,16 +119,16 @@ class RenderStrategy$Base
 		E.log f, was_popped: @was_popped, very_first: @very_first, true, state: if event is true then 'X' else event.state
 		if event is true or not event.state # Special processing - making sure this logic happens in FF as initial load
 			if @was_popped or not @very_first # We did handle it already
-				E.action 'browser_rehash', hash: location.hash.substr 1
+				E.action 'browser_rehash', hash: location.hash.substr  @hash_prefix.length
 				return
 		@was_popped= true
 		if @very_first
-			E.action 'browser_hash', hash: location.hash.substr 1
+			E.action 'browser_hash', hash: location.hash.substr @hash_prefix.length
 		else
 			E.setModelState event.state if event.state
 			m.startComputation() # Optionally call @m_redraw
 			m.endComputation()
-			E.action 'browser_navhash', hash: location.hash.substr 1
+			E.action 'browser_navhash', hash: location.hash.substr @hash_prefix.length
 		return
 
 	m_redraw: =>
@@ -188,9 +189,9 @@ class RenderStrategy$Base
 		# iOS/phonegap did not like file:// URLS being pushed/replaced
 		if window.location.protocol isnt 'file:'
 			if @very_first or history is 'replace'
-				window.history.replaceState? model_state, displayHash, '#'+displayHash
+				window.history.replaceState? model_state, displayHash, @hash_prefix + displayHash
 			else if not @was_popped and history is true # action, create history item
-				window.history.pushState? model_state, displayHash, '#'+displayHash
+				window.history.pushState? model_state, displayHash, @hash_prefix + displayHash
 				window.document.title= displayHash
 		@last_path= str_path
 		return
