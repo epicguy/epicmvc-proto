@@ -38,7 +38,7 @@ do
   echo -n "$A_FILE "
   E_FILE=`echo $ONE_FILE | grep -o [^/]*/[^/]*$`
   echo -ne "/*$E_FILE*/" >> $MinOut
-  uglifyjs -m --comments all $ONE_FILE >> $MinOut # Don't skip copyright notice, at the top, as a comment (i.e. not -nc)
+  terser -c -m --comments all $ONE_FILE >> $MinOut # Don't skip copyright notice, at the top, as a comment (i.e. not -nc)
   echo >> $MinOut
 done
 echo done.
@@ -51,7 +51,7 @@ do
   echo -n "$A_FILE "
   E_FILE=$A_FILE # `echo $ONE_FILE | grep -o [^/]*/[^/]*/[^/]*$`
   echo -ne "/*$E_FILE*/" >> $MinOut
-  cat $ONE_FILE | grep -vE "\s(f= ['\"])|(E.log f)" |grep -v "#%#" | coffee --compile --stdio |uglifyjs -m >> $MinOut
+  cat $ONE_FILE | grep -vE "\s(f= ['\"])|(E.log f)" |grep -v "#%#" | coffee --compile --stdio | terser -c -m >> $MinOut
   echo >> $MinOut
 done
 echo done.

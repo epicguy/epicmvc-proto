@@ -7,7 +7,7 @@ MinOut=$2
 for FILE in mithril
 do
   echo $NM "$FILE "
-  cat $EpicMvc/${FILE}.js |uglifyjs -m >> $MinOut
+  cat $EpicMvc/${FILE}.js | terser -c -m' >> $MinOut
   echo >> $MinOut
 done
 
@@ -15,7 +15,7 @@ for FILE in EpicCore
 do
   echo $NM "$FILE "
   echo -ne "/*${FILE}*/" >> $MinOut
-  cat $EpicMvc/${FILE}.coffee |grep -vE "\s(f= ['\"])|(E.log f)" |grep -v "#%#" |coffee --compile --stdio |uglifyjs -m >> $MinOut
+  cat $EpicMvc/${FILE}.coffee |grep -vE "\s(f= ['\"])|(E.log f)" |grep -v "#%#" |coffee --compile --stdio | terser -c -m' >> $MinOut
   echo >> $MinOut
 done
 echo $NM done.
